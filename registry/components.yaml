@@ -1,0 +1,316 @@
+# Zer0 component registry — canonical cross-system facts.
+# Implementation docs live in each repo; this file is the map.
+
+components:
+  oh-my-pi:
+    name: OMP (Oh My Pi)
+    repo: kvnloo/oh-my-pi
+    kind: runtime
+    status: canary
+    execution: canary
+    owner: Runtime
+    summary: >
+      Coding agent runtime: CLI, RPC, RLM context spill, Jev decisions,
+      Handsfree HUD, Live voice, and computer-use stage manager.
+    required: true
+    profiles: [minimal, core, personal, desktop, compute, full]
+    depends_on: []
+    integrates_with: [tokenomics, z0intelligence, aodl, kerdoios, agenttrace]
+    provides:
+      - omp.session.aggregate
+      - cu.stage_intent.v0
+    consumes:
+      - tokenomics.event.v0
+      - z0int.decision_receipt.v1
+      - aodl.intent.v1
+      - kerdoios.route.v1
+    install:
+      clone: https://github.com/kvnloo/oh-my-pi.git
+      branch: rfc/interactive-performance-stack
+      ref: d707478d4c5c72784c058a0163b616988f559230
+      command: bun install && bun run build
+    verify:
+      command: bun test packages/coding-agent/test/rlm-tokenomics-bridge.test.ts
+    docs:
+      readme: README.md
+      architecture: docs/rfc-interactive-performance-stack.md
+    boundaries:
+      owns: [coding agent runtime, voice/stage/CU, RLM spill, Jev hotpath]
+      not_here: [token measurement, routing policy store, research KB]
+
+  tokenomics:
+    name: Tokenomics
+    repo: kvnloo/tokenomics
+    kind: measurement
+    status: experimental
+    execution: live
+    owner: Measurement
+    summary: >
+      Vendor-neutral measurement kernel for token, cost, latency,
+      and verified-task economics with reconciliation reports.
+    required: false
+    profiles: [core, personal, desktop, compute, research, full]
+    depends_on: []
+    integrates_with: [oh-my-pi, z0intelligence, kerdoios, agenttrace, flow]
+    provides:
+      - tokenomics.event.v0
+      - tokenomics.report.v1
+    consumes:
+      - z0int.decision_receipt.v1
+      - flow_prediction.v1
+    install:
+      clone: https://github.com/kvnloo/tokenomics.git
+      branch: master
+      ref: e67d76fe2f1d52a5911abc8974489a10e89bb431
+      command: pip install -e packages/python && npm install -w packages/typescript
+    verify:
+      command: tokenomics report --range today
+    docs:
+      architecture: packages/python/src/tokenomics/report.py
+      integration: docs/MIGRATION.md
+    boundaries:
+      owns: [usage attribution, savings reports, reconciliation]
+      not_here: [routing policy, provider execution, agent runtime]
+
+  flow:
+    name: Flow
+    repo: kvnloo/.files
+    kind: desktop
+    status: experimental
+    execution: shadow
+    owner: Desktop
+    summary: >
+      Predictive desktop UX: context episodes, prediction horizons,
+      prepare cache, and routine suggestion miner (workspace copilot).
+    required: false
+    profiles: [desktop, full]
+    depends_on: [oh-my-pi]
+    integrates_with: [tokenomics, z0intelligence]
+    provides:
+      - flow_prediction.v1
+      - os.next_context.v0
+    consumes:
+      - tokenomics.event.v0
+      - z0int.decision_receipt.v1
+    install:
+      clone: https://github.com/kvnloo/.files.git
+      branch: feat/workspace-copilot-flow
+      ref: 5259013185d97422022fc225fa70245595b046ea
+      command: echo 'Flow scripts live in scripts/workspace_flow.py — see component README'
+    verify:
+      command: python3 scripts/workspace_flow.py --help
+    docs:
+      readme: scripts/workspace_flow.py
+    boundaries:
+      owns: [OS prediction, prepare, routine mining]
+      not_here: [agent runtime, token accounting, training loops]
+
+  z0intelligence:
+    name: z0intelligence
+    repo: kvnloo/z0intelligence
+    kind: intelligence
+    status: experimental
+    execution: log_only
+    owner: Personal Intelligence
+    summary: >
+      Personal learned policy: specialists, routines, autoresearch,
+      and decision receipts for routing and promotion.
+    required: false
+    profiles: [personal, research, full]
+    depends_on: [tokenomics]
+    integrates_with: [oh-my-pi, kerdoios, evolution-lab, tokenomics]
+    provides:
+      - z0int.decision_receipt.v1
+    consumes:
+      - tokenomics.report.v1
+      - flow_prediction.v1
+    install:
+      clone: https://github.com/kvnloo/z0intelligence.git
+      branch: master
+      ref: 5e7cf4a2d6faf6e537dbfbb52d90bf50410cea63
+      command: pip install -e .
+    verify:
+      command: python3 -m z0int --help
+    boundaries:
+      owns: [personal policy, routine promotion, specialists]
+      not_here: [coding agent runtime, OS prediction, measurement kernel]
+
+  kerdoios:
+    name: Kerdoios
+    repo: kvnloo/kerdoios
+    kind: compute
+    status: experimental
+    execution: live
+    owner: Compute
+    summary: >
+      Compute and provider allocation — routes work to frontier vs local
+      models with cost/latency awareness.
+    required: false
+    profiles: [compute, full]
+    depends_on: [tokenomics]
+    integrates_with: [oh-my-pi, z0intelligence, aodl, tokenomics]
+    provides:
+      - kerdoios.route.v1
+    consumes:
+      - tokenomics.event.v0
+      - z0int.decision_receipt.v1
+    install:
+      clone: https://github.com/kvnloo/kerdoios.git
+      branch: main
+      ref: e3100ae4b779253c3ff3e9a95cc79f0321edb784
+      command: pip install -e .
+    boundaries:
+      owns: [provider routing, allocation policy]
+      not_here: [provider execution, token measurement, agent runtime]
+
+  evolution-lab:
+    name: Evolution Lab
+    repo: kvnloo/evolution-lab
+    kind: research
+    status: experimental
+    execution: shadow
+    owner: Research
+    summary: >
+      Automatic AI research loop: hypothesis search, experiment runners,
+      and verified candidate promotion.
+    required: false
+    profiles: [research, full]
+    depends_on: [z0intelligence, tokenomics]
+    integrates_with: [frontier-kb, z0intelligence]
+    provides: []
+    consumes:
+      - tokenomics.report.v1
+      - z0int.decision_receipt.v1
+    install:
+      clone: https://github.com/kvnloo/evolution-lab.git
+      branch: main
+      ref: 8cf7acff719470b74f20c90fd6e5f7cdb11c134a
+      command: pip install -e .
+    boundaries:
+      owns: [experiment search, autoresearch orchestration]
+      not_here: [production runtime, personal traces]
+
+  frontier-kb:
+    name: frontier-kb
+    repo: kvnloo/frontier-kb
+    kind: research
+    status: experimental
+    execution: shadow
+    owner: Research
+    summary: >
+      Research knowledge base: papers, external systems, hypotheses,
+      and kill criteria — not private user traces.
+    required: false
+    profiles: [research, full]
+    depends_on: []
+    integrates_with: [evolution-lab]
+    provides: []
+    consumes: []
+    install:
+      clone: https://github.com/kvnloo/frontier-kb.git
+      branch: main
+      ref: aac71e8f73cbfe78118d2dd399ecceece2e42e71
+      command: echo 'Knowledge base — see README for ingest workflow'
+    boundaries:
+      owns: [research evidence, external references]
+      not_here: [private user traces, runtime code]
+
+  aodl:
+    name: AODL
+    repo: kvnloo/aodl
+    kind: contract
+    status: experimental
+    execution: shadow
+    owner: Contracts
+    summary: >
+      Typed intent and plan schema — contracts only, not runtime execution.
+    required: false
+    profiles: [full]
+    depends_on: []
+    integrates_with: [oh-my-pi, kerdoios]
+    provides:
+      - aodl.intent.v1
+    consumes: []
+    install:
+      clone: https://github.com/kvnloo/aodl.git
+      branch: main
+      ref: 8e41ef024262339d28a968d71113fc52819d4bd4
+      command: pip install -e .
+    boundaries:
+      owns: [typed intent/plan contracts]
+      not_here: [runtime implementation, provider execution]
+
+  agenttrace:
+    name: AgentTrace
+    repo: kvnloo/agenttrace
+    kind: observability
+    status: experimental
+    execution: log_only
+    owner: Observability
+    summary: >
+      Historical agent TUI and span export for debugging and audit.
+    required: false
+    profiles: [full]
+    depends_on: []
+    integrates_with: [oh-my-pi, tokenomics]
+    provides:
+      - agenttrace.span.v0
+    consumes:
+      - tokenomics.event.v0
+    install:
+      clone: https://github.com/kvnloo/agenttrace.git
+      branch: main
+      ref: a34dea2b6ff7e2133b9e548b93d30bfe6ccf6ff5
+      command: pip install -e .
+    boundaries:
+      owns: [agent span history, TUI]
+      not_here: [live runtime, measurement kernel]
+
+  memento:
+    name: Memento
+    repo: kvnloo/memento
+    kind: memory
+    status: idea
+    execution: shadow
+    owner: Memory
+    summary: >
+      Visual private history and episodic recall (design stage).
+    required: false
+    profiles: []
+    depends_on: [z0intelligence]
+    integrates_with: [flow]
+    provides: []
+    consumes: []
+    install:
+      clone: https://github.com/kvnloo/memento.git
+      branch: main
+      ref: 513a80c2ba155115dfcea0bc808b0c41a1fd4380
+      command: echo 'Not yet installable — status idea'
+    boundaries:
+      owns: [visual private history]
+      not_here: [research KB, agent runtime]
+
+  openjev:
+    name: OpenJev
+    repo: kvnloo/openjev
+    kind: decision
+    status: experimental
+    execution: shadow
+    owner: Decision
+    summary: >
+      Local typed decision heads (logit-based choice) for hotpath routing.
+      Often consumed via OMP/Jev integration.
+    required: false
+    profiles: []
+    depends_on: []
+    integrates_with: [oh-my-pi, z0intelligence]
+    provides: []
+    consumes: []
+    install:
+      clone: https://github.com/kvnloo/openjev.git
+      branch: master
+      ref: 5e7cf4a2d6faf6e537dbfbb52d90bf50410cea63
+      command: pip install -e .
+    boundaries:
+      owns: [local SLM decision heads]
+      not_here: [agent runtime, measurement]

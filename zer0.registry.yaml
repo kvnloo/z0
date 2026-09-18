@@ -1,0 +1,91 @@
+# Agent-consumable Zer0 registry summary (hand-synced; generate from components.yaml in future)
+version: 1
+ecosystem: zer0
+canonical_repo: kvnloo/z0
+
+rules:
+  - Implementation docs live with implementations
+  - Architecture and onboarding live in z0
+  - Token claims require Tokenomics evidence
+  - AODL is contracts only, not runtime
+  - z0 is map/installer only, never business logic
+
+profiles:
+  minimal: [oh-my-pi]
+  core: [oh-my-pi, tokenomics]
+  personal: [oh-my-pi, tokenomics, z0intelligence]
+  desktop: [oh-my-pi, tokenomics, flow]
+  compute: [oh-my-pi, tokenomics, kerdoios]
+  research: [z0intelligence, tokenomics, evolution-lab, frontier-kb]
+  full:
+    - oh-my-pi
+    - tokenomics
+    - z0intelligence
+    - flow
+    - kerdoios
+    - evolution-lab
+    - frontier-kb
+    - aodl
+    - agenttrace
+
+components:
+  oh-my-pi:
+    repo: kvnloo/oh-my-pi
+    kind: runtime
+    status: canary
+    execution: canary
+  tokenomics:
+    repo: kvnloo/tokenomics
+    kind: measurement
+    status: experimental
+    execution: live
+  flow:
+    repo: kvnloo/.files
+    kind: desktop
+    status: experimental
+    execution: shadow
+  z0intelligence:
+    repo: kvnloo/z0intelligence
+    kind: intelligence
+    status: experimental
+    execution: log_only
+  kerdoios:
+    repo: kvnloo/kerdoios
+    kind: compute
+    status: experimental
+    execution: live
+  evolution-lab:
+    repo: kvnloo/evolution-lab
+    kind: research
+    status: experimental
+    execution: shadow
+  frontier-kb:
+    repo: kvnloo/frontier-kb
+    kind: research
+    status: experimental
+    execution: shadow
+  aodl:
+    repo: kvnloo/aodl
+    kind: contract
+    status: experimental
+    execution: shadow
+  agenttrace:
+    repo: kvnloo/agenttrace
+    kind: observability
+    status: experimental
+    execution: log_only
+  memento:
+    repo: kvnloo/memento
+    kind: memory
+    status: idea
+    execution: shadow
+
+interfaces:
+  - tokenomics.event.v0
+  - tokenomics.report.v1
+  - z0int.decision_receipt.v1
+  - flow_prediction.v1
+  - aodl.intent.v1
+  - kerdoios.route.v1
+  - omp.session.aggregate
+  - cu.stage_intent.v0

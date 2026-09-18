@@ -1,0 +1,17 @@
+# Canonical Zer0 component maturity vocabulary.
+# status = artifact maturity; execution = rollout mode (orthogonal).
+
+status:
+  idea: Concept or design note only; no install target.
+  prototype: Works in demos; APIs unstable; may lack tests.
+  experimental: Usable with caveats; breaking changes likely.
+  canary: Default for active integration branches; dogfooded internally.
+  stable: Semver-ish stability; documented upgrade path.
+  deprecated: Still present; do not start new work here.
+  reference: Illustrative or historical; not a product surface.
+
+execution:
+  shadow: Emits side-channel telemetry only; no user-visible effect.
+  log_only: Records decisions; does not act on them.
+  canary: Partial live path; gated or opt-in.
+  live: Default production path when installed.

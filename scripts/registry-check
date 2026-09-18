@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+export PYTHONPATH="${ROOT}/lib${PYTHONPATH:+:$PYTHONPATH}"
+python3 - <<'PY'
+from z0 import registry
+comps = registry.components()
+profs = registry.profiles()
+for name in profs:
+    resolved = registry.resolve_profile(name)
+    for cid in resolved:
+        assert cid in comps, f"profile {name} references unknown {cid}"
+print(f"ok: {len(comps)} components, {len(profs)} profiles")
+PY

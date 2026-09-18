@@ -1,0 +1,52 @@
+# Install profiles — resolved component sets, not a package manager.
+
+profiles:
+  minimal:
+    summary: OMP only — the coding agent runtime.
+    components:
+      - oh-my-pi
+
+  core:
+    summary: Normal Zer0 user — agent + measurement.
+    components:
+      - oh-my-pi
+      - tokenomics
+
+  personal:
+    summary: Personalization and learned policy.
+    extends: core
+    components:
+      - z0intelligence
+
+  desktop:
+    summary: Predictive desktop + Handsfree voice (OMP subsystems).
+    extends: core
+    components:
+      - flow
+
+  compute:
+    summary: Model/provider routing and cost optimization.
+    extends: core
+    components:
+      - kerdoios
+
+  research:
+    summary: Autonomous optimization and research knowledge.
+    components:
+      - z0intelligence
+      - tokenomics
+      - evolution-lab
+      - frontier-kb
+
+  full:
+    summary: All stable/canary components (excludes idea/reference-only).
+    components:
+      - oh-my-pi
+      - tokenomics
+      - z0intelligence
+      - flow
+      - kerdoios
+      - evolution-lab
+      - frontier-kb
+      - aodl
+      - agenttrace

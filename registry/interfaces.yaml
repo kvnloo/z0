@@ -1,0 +1,42 @@
+# Cross-component interface contracts (names only; schemas live in owning repos).
+
+interfaces:
+  tokenomics.event.v0:
+    owner: tokenomics
+    summary: Vendor-neutral usage / cost / latency event envelope.
+
+  tokenomics.report.v1:
+    owner: tokenomics
+    summary: Aggregated savings, reconciliation, and coverage report.
+
+  z0int.decision_receipt.v1:
+    owner: z0intelligence
+    summary: Structured decision receipt for routing and policy audit.
+
+  flow_prediction.v1:
+    owner: flow
+    summary: OS-context prediction with horizon metadata and gates.
+
+  os.next_context.v0:
+    owner: flow
+    summary: Shadow prediction of next desktop context episode.
+
+  aodl.intent.v1:
+    owner: aodl
+    summary: Typed intent / plan contract (not runtime execution).
+
+  omp.session.aggregate:
+    owner: oh-my-pi
+    summary: Session-level token rollup for Tokenomics reconciliation.
+
+  cu.stage_intent.v0:
+    owner: oh-my-pi
+    summary: Handsfree / computer-use window and layout intent.
+
+  kerdoios.route.v1:
+    owner: kerdoios
+    summary: Model/provider routing decision with cost estimate.
+
+  agenttrace.span.v0:
+    owner: agenttrace
+    summary: Historical agent span for observability export.

@@ -1,0 +1,45 @@
+graph TD
+  oh_my_pi["OMP (Oh My Pi)"]
+  tokenomics["Tokenomics"]
+  flow["Flow"]
+  z0intelligence["z0intelligence"]
+  kerdoios["Kerdoios"]
+  evolution_lab["Evolution Lab"]
+  frontier_kb["frontier-kb"]
+  aodl["AODL"]
+  agenttrace["AgentTrace"]
+  memento["Memento"]
+  openjev["OpenJev"]
+  oh_my_pi -.-> tokenomics
+  oh_my_pi -.-> z0intelligence
+  oh_my_pi -.-> aodl
+  oh_my_pi -.-> kerdoios
+  oh_my_pi -.-> agenttrace
+  tokenomics -.-> oh_my_pi
+  tokenomics -.-> z0intelligence
+  tokenomics -.-> kerdoios
+  tokenomics -.-> agenttrace
+  tokenomics -.-> flow
+  oh_my_pi --> flow
+  flow -.-> tokenomics
+  flow -.-> z0intelligence
+  z0intelligence -.-> oh_my_pi
+  z0intelligence -.-> kerdoios
+  z0intelligence -.-> evolution_lab
+  z0intelligence -.-> tokenomics
+  kerdoios -.-> oh_my_pi
+  kerdoios -.-> z0intelligence
+  kerdoios -.-> aodl
+  kerdoios -.-> tokenomics
+  tokenomics --> evolution_lab
+  evolution_lab -.-> frontier_kb
+  evolution_lab -.-> z0intelligence
+  frontier_kb -.-> evolution_lab
+  aodl -.-> oh_my_pi
+  aodl -.-> kerdoios
+  agenttrace -.-> oh_my_pi
+  agenttrace -.-> tokenomics
+  z0intelligence --> memento
+  memento -.-> flow
+  openjev -.-> oh_my_pi
+  openjev -.-> z0intelligence
