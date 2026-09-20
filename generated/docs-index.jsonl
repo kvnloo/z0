@@ -18,4 +18,4 @@
 {"id": "guides.optimize-tokens", "path": "docs/guides/optimize-tokens.md", "title": "Optimize Tokens", "components": ["oh-my-pi", "tokenomics"]}
 {"id": "reference.component-registry", "path": "docs/reference/component-registry.md", "title": "Component Registry", "components": []}
 {"id": "reference.glossary", "path": "docs/reference/glossary.md", "title": "Glossary", "components": ["tokenomics"]}
-{"id": "reference.ownership", "path": "docs/reference/ownership.md", "title": "Ownership", "components": ["oh-my-pi", "tokenomics", "flow", "z0intelligence", "kerdoios", "evolution-lab", "frontier-kb", "aodl", "agenttrace", "memento"]}
+{"id": "reference.ownership", "path": "docs/reference/ownership.md", "title": "Ownership", "components": ["oh-my-pi", "tokenomics", "flow", "z0intelligence", "kerdoios", "evolution-lab", "frontier-kb", "aodl", "agenttrace", "memento", "openjev"]}
