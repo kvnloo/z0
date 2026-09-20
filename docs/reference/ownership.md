@@ -1,27 +1,23 @@
-# Where does this belong?
+# Ownership map
 
-| I need to change… | Owner component |
-|-------------------|-----------------|
-| Coding agent runtime | `oh-my-pi` |
-| Voice / Stage / computer use | `oh-my-pi` |
-| Context spill / RLM | `oh-my-pi` |
-| OS prediction / prepare | `flow` |
-| Personal learned policy | `z0intelligence` |
-| Routine promotion | `z0intelligence` |
-| Token / cost measurement | `tokenomics` |
-| Compute / provider allocation | `kerdoios` |
-| Experiment search | `evolution-lab` |
-| Research knowledge | `frontier-kb` |
-| Typed intent / plan schema | `aodl` |
-| Historical agent TUI | `agenttrace` |
-| Visual private history | `memento` |
+This page is generated from each component's `boundaries` entry in `registry/components.yaml`. If this page is wrong, fix the registry rather than this file.
 
-## Do NOT put…
+| Component | Owns | Explicitly does not own |
+|-----------|------|--------------------------|
+| `agenttrace` | agent span history, TUI | live runtime, measurement kernel |
+| `aodl` | typed intent/plan/observed contracts, fail-closed validation, harness ids | runtime implementation, scheduling, provider execution |
+| `evolution-lab` | experiment search, autoresearch orchestration | production runtime, personal traces |
+| `flow` | OS prediction, prepare, routine mining | agent runtime, token accounting, training loops |
+| `frontier-kb` | research evidence, external references | private user traces, runtime code |
+| `kerdoios` | resource inventory, hard filtering, quota/capacity, placement, execution portfolios | provider gateway execution, task scheduling, token measurement, agent runtime |
+| `memento` | visual private history | research KB, agent runtime |
+| `oh-my-pi` | coding agent runtime, voice/stage/CU, RLM spill, Jev hotpath | token measurement, routing policy store, research KB |
+| `openjev` | local SLM decision heads | agent runtime, measurement |
+| `tokenomics` | usage attribution, savings reports, reconciliation | routing policy, provider execution, agent runtime |
+| `z0intelligence` | personal policy, routine promotion, specialists | coding agent runtime, OS prediction, measurement kernel |
 
-| Anti-pattern | Correct owner |
-|--------------|---------------|
-| Routing policy in Tokenomics | `kerdoios` / `z0intelligence` |
-| Training logic in Flow | `evolution-lab` |
-| Provider execution in Kerdoios | OMP / provider adapters |
-| Runtime implementation in AODL | `oh-my-pi` |
-| Private user traces in frontier-kb | `memento` / `z0intelligence` |
+## Rule
+
+Every cross-repo fact should have one authoritative owner. Other repos may consume, reference, or observe that fact, but should not silently redefine it.
+
+_Generated from `registry/components.yaml`. Do not edit by hand._
