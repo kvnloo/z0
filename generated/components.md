@@ -1,12 +1,12 @@
 # Component registry
 
-| ID | Name | Kind | Status | Execution | Repo | Stable ref |
+| ID | Name | Kind | Status | Execution | Repo | Tested ref |
 |----|------|------|--------|-----------|------|------------|
 | `agenttrace` | AgentTrace | observability | experimental | log_only | `kvnloo/agenttrace` | `a34dea2b6ff7` |
-| `aodl` | AODL | contract | experimental | shadow | `kvnloo/aodl` | `8e41ef024262` |
+| `aodl` | AODL | contract | experimental | shadow | `kvnloo/aodl` | `549f2a1c17e6` |
 | `evolution-lab` | Evolution Lab | research | experimental | shadow | `kvnloo/evolution-lab` | `8cf7acff7194` |
 | `flow` | Flow | desktop | experimental | shadow | `kvnloo/.files` | `5259013185d9` |
-| `frontier-kb` | frontier-kb | research | experimental | shadow | `kvnloo/frontier-kb` | `aac71e8f73cb` |
+| `frontier-kb` | frontier-kb | research | experimental | shadow | `kvnloo/frontier-kb` | `22b4c0f1088a` |
 | `kerdoios` | Kerdoios | compute | experimental | live | `kvnloo/kerdoios` | `e3100ae4b779` |
 | `memento` | Memento | memory | idea | shadow | `kvnloo/memento` | `513a80c2ba15` |
 | `oh-my-pi` | OMP (Oh My Pi) | runtime | canary | canary | `kvnloo/oh-my-pi` | `d707478d4c5c` |
