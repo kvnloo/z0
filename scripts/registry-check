@@ -14,7 +14,7 @@ errors = []
 for name in profs:
     try:
         resolved = registry.resolve_profile(name)
-    except KeyError as exc:
+    except (KeyError, ValueError) as exc:
         errors.append(f"profile {name}: {exc}")
         continue
     for cid in resolved:
