@@ -20,17 +20,17 @@ profiles:
   - oh-my-pi
   - tokenomics
   personal:
+  - oh-my-pi
+  - tokenomics
   - z0intelligence
-  - oh-my-pi
-  - tokenomics
   desktop:
+  - oh-my-pi
+  - tokenomics
   - flow
-  - oh-my-pi
-  - tokenomics
   compute:
-  - kerdoios
   - oh-my-pi
   - tokenomics
+  - kerdoios
   research:
   - z0intelligence
   - tokenomics
