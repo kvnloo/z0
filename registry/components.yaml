@@ -143,8 +143,8 @@ components:
     execution: live
     owner: Compute
     summary: >
-      Compute and provider allocation — routes work to frontier vs local
-      models with cost/latency awareness.
+      Resource placement across heterogeneous compute: inventory, hard constraints,
+      quota/capacity, Pareto selection, and execution portfolios.
     required: false
     profiles: [compute, full]
     depends_on: [tokenomics]
@@ -160,8 +160,8 @@ components:
       ref: e3100ae4b779253c3ff3e9a95cc79f0321edb784
       command: pip install -e .
     boundaries:
-      owns: [provider routing, allocation policy]
-      not_here: [provider execution, token measurement, agent runtime]
+      owns: [resource inventory, hard filtering, quota/capacity, placement, execution portfolios]
+      not_here: [provider gateway execution, task scheduling, token measurement, agent runtime]
 
   evolution-lab:
     name: Evolution Lab
@@ -209,7 +209,7 @@ components:
     install:
       clone: https://github.com/kvnloo/frontier-kb.git
       branch: main
-      ref: aac71e8f73cbfe78118d2dd399ecceece2e42e71
+      ref: 22b4c0f1088abfef6184840cb79a0a6a6aceda44
       command: echo 'Knowledge base — see README for ingest workflow'
     boundaries:
       owns: [research evidence, external references]
@@ -223,7 +223,8 @@ components:
     execution: shadow
     owner: Contracts
     summary: >
-      Typed intent and plan schema — contracts only, not runtime execution.
+      Typed orchestration IR and fail-closed contract for intent, compiled plans,
+      and observed runtime state — not runtime execution.
     required: false
     profiles: [full]
     depends_on: []
@@ -234,11 +235,11 @@ components:
     install:
       clone: https://github.com/kvnloo/aodl.git
       branch: main
-      ref: 8e41ef024262339d28a968d71113fc52819d4bd4
+      ref: 549f2a1c17e6d6f0ddc69a49c9dedd3689face32
       command: pip install -e .
     boundaries:
-      owns: [typed intent/plan contracts]
-      not_here: [runtime implementation, provider execution]
+      owns: [typed intent/plan/observed contracts, fail-closed validation, harness ids]
+      not_here: [runtime implementation, scheduling, provider execution]
 
   agenttrace:
     name: AgentTrace
@@ -259,9 +260,9 @@ components:
       - tokenomics.event.v0
     install:
       clone: https://github.com/kvnloo/agenttrace.git
-      branch: main
+      branch: master
       ref: a34dea2b6ff7e2133b9e548b93d30bfe6ccf6ff5
-      command: pip install -e .
+      command: cargo build --release -p agenttrace
     boundaries:
       owns: [agent span history, TUI]
       not_here: [live runtime, measurement kernel]
