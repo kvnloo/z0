@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import yaml
+
 from . import registry
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -45,7 +47,7 @@ def component_table() -> str:
     lines = [
         "# Component registry",
         "",
-        "| ID | Name | Kind | Status | Execution | Repo | Stable ref |",
+        "| ID | Name | Kind | Status | Execution | Repo | Tested ref |",
         "|----|------|------|--------|-----------|------|------------|",
     ]
     for cid, meta in sorted(registry.components().items()):
@@ -97,37 +99,74 @@ def install_matrix() -> str:
 
 def ownership_table() -> str:
     lines = [
-        "# Where does this belong?",
+        "# Ownership map",
         "",
-        "| I need to change… | Owner component |",
-        "|-------------------|-----------------|",
-        "| Coding agent runtime | `oh-my-pi` |",
-        "| Voice / Stage / computer use | `oh-my-pi` |",
-        "| Context spill / RLM | `oh-my-pi` |",
-        "| OS prediction / prepare | `flow` |",
-        "| Personal learned policy | `z0intelligence` |",
-        "| Routine promotion | `z0intelligence` |",
-        "| Token / cost measurement | `tokenomics` |",
-        "| Compute / provider allocation | `kerdoios` |",
-        "| Experiment search | `evolution-lab` |",
-        "| Research knowledge | `frontier-kb` |",
-        "| Typed intent / plan schema | `aodl` |",
-        "| Historical agent TUI | `agenttrace` |",
-        "| Visual private history | `memento` |",
+        "This page is generated from each component's `boundaries` entry in `registry/components.yaml`. "
+        "If this page is wrong, fix the registry rather than this file.",
         "",
-        "## Do NOT put…",
-        "",
-        "| Anti-pattern | Correct owner |",
-        "|--------------|---------------|",
-        "| Routing policy in Tokenomics | `kerdoios` / `z0intelligence` |",
-        "| Training logic in Flow | `evolution-lab` |",
-        "| Provider execution in Kerdoios | OMP / provider adapters |",
-        "| Runtime implementation in AODL | `oh-my-pi` |",
-        "| Private user traces in frontier-kb | `memento` / `z0intelligence` |",
-        "",
+        "| Component | Owns | Explicitly does not own |",
+        "|-----------|------|--------------------------|",
     ]
+    for cid, meta in sorted(registry.components().items()):
+        bounds = meta.get("boundaries", {})
+        owns = ", ".join(bounds.get("owns", [])) or "—"
+        not_here = ", ".join(bounds.get("not_here", [])) or "—"
+        lines.append(f"| `{cid}` | {owns} | {not_here} |")
+    lines.extend(
+        [
+            "",
+            "## Rule",
+            "",
+            "Every cross-repo fact should have one authoritative owner. Other repos may consume, "
+            "reference, or observe that fact, but should not silently redefine it.",
+            "",
+            "_Generated from `registry/components.yaml`. Do not edit by hand._",
+            "",
+        ]
+    )
     return "\n".join(lines)
 
+
+def agent_registry_yaml() -> str:
+    comps = {}
+    for cid, meta in sorted(registry.components().items()):
+        comps[cid] = {
+            "repo": meta.get("repo"),
+            "kind": meta.get("kind"),
+            "status": meta.get("status"),
+            "execution": meta.get("execution"),
+            "owner": meta.get("owner"),
+            "boundaries": meta.get("boundaries", {}),
+        }
+
+    data = {
+        "version": 1,
+        "ecosystem": "zer0",
+        "canonical_repo": "kvnloo/z0",
+        "generated_from": [
+            "registry/components.yaml",
+            "registry/profiles.yaml",
+            "registry/interfaces.yaml",
+        ],
+        "rules": [
+            "Implementation docs live with implementations",
+            "Architecture and onboarding live in z0",
+            "Token/cost claims require Tokenomics evidence",
+            "Verified-success claims require an independent verifier",
+            "AODL owns portable contracts, not runtime execution",
+            "z0 maps the system; it does not run the system",
+        ],
+        "profiles": {
+            name: registry.resolve_profile(name)
+            for name in registry.profiles()
+        },
+        "components": comps,
+        "interfaces": sorted(registry.interfaces()),
+    }
+    return (
+        "# GENERATED FILE — edit registry/*.yaml, then run ./z0 docs generate\n"
+        + yaml.safe_dump(data, sort_keys=False, allow_unicode=True)
+    )
 
 def docs_index_jsonl() -> str:
     entries = []
@@ -160,6 +199,7 @@ def write_all() -> list[Path]:
         GENERATED / "install-matrix.md": install_matrix(),
         DOCS_GEN / "ownership.md": ownership_table(),
         GENERATED / "docs-index.jsonl": docs_index_jsonl(),
+        ROOT / "zer0.registry.yaml": agent_registry_yaml(),
     }
     written: list[Path] = []
     for path, content in outputs.items():
