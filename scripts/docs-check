@@ -3,4 +3,4 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 "$ROOT/scripts/docs-generate"
 cd "$ROOT"
-git diff --exit-code generated/ docs/reference/ownership.md
+git diff --exit-code generated/ docs/reference/ownership.md zer0.registry.yaml
