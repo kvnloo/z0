@@ -4,11 +4,67 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 export PYTHONPATH="${ROOT}/lib${PYTHONPATH:+:$PYTHONPATH}"
 python3 - <<'PY'
 from z0 import registry
+
 comps = registry.components()
 profs = registry.profiles()
+ifaces = registry.interfaces()
+
+errors = []
+
 for name in profs:
-    resolved = registry.resolve_profile(name)
+    try:
+        resolved = registry.resolve_profile(name)
+    except (KeyError, ValueError) as exc:
+        errors.append(f"profile {name}: {exc}")
+        continue
     for cid in resolved:
-        assert cid in comps, f"profile {name} references unknown {cid}"
-print(f"ok: {len(comps)} components, {len(profs)} profiles")
+        if cid not in comps:
+            errors.append(f"profile {name} references unknown component {cid}")
+
+for cid, meta in comps.items():
+    if not meta.get("repo"):
+        errors.append(f"component {cid} missing repo")
+
+    bounds = meta.get("boundaries")
+    if not isinstance(bounds, dict):
+        errors.append(f"component {cid} missing boundaries")
+    else:
+        if not bounds.get("owns"):
+            errors.append(f"component {cid} boundaries.owns is empty")
+        if not bounds.get("not_here"):
+            errors.append(f"component {cid} boundaries.not_here is empty")
+
+    for dep in meta.get("depends_on", []):
+        if dep not in comps:
+            errors.append(f"component {cid} depends_on unknown component {dep}")
+    for peer in meta.get("integrates_with", []):
+        if peer not in comps:
+            errors.append(f"component {cid} integrates_with unknown component {peer}")
+
+    for iface in meta.get("provides", []):
+        if iface not in ifaces:
+            errors.append(f"component {cid} provides unknown interface {iface}")
+        elif ifaces[iface].get("owner") != cid:
+            errors.append(
+                f"interface {iface} owner is {ifaces[iface].get('owner')}, "
+                f"but {cid} lists it under provides"
+            )
+    for iface in meta.get("consumes", []):
+        if iface not in ifaces:
+            errors.append(f"component {cid} consumes unknown interface {iface}")
+
+for iface, meta in ifaces.items():
+    owner = meta.get("owner")
+    if owner not in comps:
+        errors.append(f"interface {iface} has unknown owner {owner}")
+        continue
+    if iface not in comps[owner].get("provides", []):
+        errors.append(f"interface {iface} is owned by {owner} but missing from its provides list")
+
+if errors:
+    for error in errors:
+        print(f"error: {error}")
+    raise SystemExit(1)
+
+print(f"ok: {len(comps)} components, {len(profs)} profiles, {len(ifaces)} interfaces")
 PY

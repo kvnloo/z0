@@ -1,91 +1,217 @@
-# Agent-consumable Zer0 registry summary (hand-synced; generate from components.yaml in future)
+# GENERATED FILE — edit registry/*.yaml, then run ./z0 docs generate
 version: 1
 ecosystem: zer0
 canonical_repo: kvnloo/z0
-
+generated_from:
+- registry/components.yaml
+- registry/profiles.yaml
+- registry/interfaces.yaml
 rules:
-  - Implementation docs live with implementations
-  - Architecture and onboarding live in z0
-  - Token claims require Tokenomics evidence
-  - AODL is contracts only, not runtime
-  - z0 is map/installer only, never business logic
-
+- Implementation docs live with implementations
+- Architecture and onboarding live in z0
+- Token/cost claims require Tokenomics evidence
+- Verified-success claims require an independent verifier
+- AODL owns portable contracts, not runtime execution
+- z0 maps the system; it does not run the system
 profiles:
-  minimal: [oh-my-pi]
-  core: [oh-my-pi, tokenomics]
-  personal: [oh-my-pi, tokenomics, z0intelligence]
-  desktop: [oh-my-pi, tokenomics, flow]
-  compute: [oh-my-pi, tokenomics, kerdoios]
-  research: [z0intelligence, tokenomics, evolution-lab, frontier-kb]
+  minimal:
+  - oh-my-pi
+  core:
+  - oh-my-pi
+  - tokenomics
+  personal:
+  - oh-my-pi
+  - tokenomics
+  - z0intelligence
+  desktop:
+  - oh-my-pi
+  - tokenomics
+  - flow
+  compute:
+  - oh-my-pi
+  - tokenomics
+  - kerdoios
+  research:
+  - z0intelligence
+  - tokenomics
+  - evolution-lab
+  - frontier-kb
   full:
-    - oh-my-pi
-    - tokenomics
-    - z0intelligence
-    - flow
-    - kerdoios
-    - evolution-lab
-    - frontier-kb
-    - aodl
-    - agenttrace
-
+  - oh-my-pi
+  - tokenomics
+  - z0intelligence
+  - flow
+  - kerdoios
+  - evolution-lab
+  - frontier-kb
+  - aodl
+  - agenttrace
 components:
-  oh-my-pi:
-    repo: kvnloo/oh-my-pi
-    kind: runtime
-    status: canary
-    execution: canary
-  tokenomics:
-    repo: kvnloo/tokenomics
-    kind: measurement
-    status: experimental
-    execution: live
-  flow:
-    repo: kvnloo/.files
-    kind: desktop
-    status: experimental
-    execution: shadow
-  z0intelligence:
-    repo: kvnloo/z0intelligence
-    kind: intelligence
-    status: experimental
-    execution: log_only
-  kerdoios:
-    repo: kvnloo/kerdoios
-    kind: compute
-    status: experimental
-    execution: live
-  evolution-lab:
-    repo: kvnloo/evolution-lab
-    kind: research
-    status: experimental
-    execution: shadow
-  frontier-kb:
-    repo: kvnloo/frontier-kb
-    kind: research
-    status: experimental
-    execution: shadow
-  aodl:
-    repo: kvnloo/aodl
-    kind: contract
-    status: experimental
-    execution: shadow
   agenttrace:
     repo: kvnloo/agenttrace
     kind: observability
     status: experimental
     execution: log_only
+    owner: Observability
+    boundaries:
+      owns:
+      - agent span history
+      - TUI
+      not_here:
+      - live runtime
+      - measurement kernel
+  aodl:
+    repo: kvnloo/aodl
+    kind: contract
+    status: experimental
+    execution: shadow
+    owner: Contracts
+    boundaries:
+      owns:
+      - typed intent/plan/observed contracts
+      - fail-closed validation
+      - harness ids
+      not_here:
+      - runtime implementation
+      - scheduling
+      - provider execution
+  evolution-lab:
+    repo: kvnloo/evolution-lab
+    kind: research
+    status: experimental
+    execution: shadow
+    owner: Research
+    boundaries:
+      owns:
+      - experiment search
+      - autoresearch orchestration
+      not_here:
+      - production runtime
+      - personal traces
+  flow:
+    repo: kvnloo/.files
+    kind: desktop
+    status: experimental
+    execution: shadow
+    owner: Desktop
+    boundaries:
+      owns:
+      - OS prediction
+      - prepare
+      - routine mining
+      not_here:
+      - agent runtime
+      - token accounting
+      - training loops
+  frontier-kb:
+    repo: kvnloo/frontier-kb
+    kind: research
+    status: experimental
+    execution: shadow
+    owner: Research
+    boundaries:
+      owns:
+      - research evidence
+      - external references
+      not_here:
+      - private user traces
+      - runtime code
+  kerdoios:
+    repo: kvnloo/kerdoios
+    kind: compute
+    status: experimental
+    execution: live
+    owner: Compute
+    boundaries:
+      owns:
+      - resource inventory
+      - hard filtering
+      - quota/capacity
+      - placement
+      - execution portfolios
+      not_here:
+      - provider gateway execution
+      - task scheduling
+      - token measurement
+      - agent runtime
   memento:
     repo: kvnloo/memento
     kind: memory
     status: idea
     execution: shadow
-
+    owner: Memory
+    boundaries:
+      owns:
+      - visual private history
+      not_here:
+      - research KB
+      - agent runtime
+  oh-my-pi:
+    repo: kvnloo/oh-my-pi
+    kind: runtime
+    status: canary
+    execution: canary
+    owner: Runtime
+    boundaries:
+      owns:
+      - coding agent runtime
+      - voice/stage/CU
+      - RLM spill
+      - Jev hotpath
+      not_here:
+      - token measurement
+      - routing policy store
+      - research KB
+  openjev:
+    repo: kvnloo/openjev
+    kind: decision
+    status: experimental
+    execution: shadow
+    owner: Decision
+    boundaries:
+      owns:
+      - local SLM decision heads
+      not_here:
+      - agent runtime
+      - measurement
+  tokenomics:
+    repo: kvnloo/tokenomics
+    kind: measurement
+    status: experimental
+    execution: live
+    owner: Measurement
+    boundaries:
+      owns:
+      - usage attribution
+      - savings reports
+      - reconciliation
+      not_here:
+      - routing policy
+      - provider execution
+      - agent runtime
+  z0intelligence:
+    repo: kvnloo/z0intelligence
+    kind: intelligence
+    status: experimental
+    execution: log_only
+    owner: Personal Intelligence
+    boundaries:
+      owns:
+      - personal policy
+      - routine promotion
+      - specialists
+      not_here:
+      - coding agent runtime
+      - OS prediction
+      - measurement kernel
 interfaces:
-  - tokenomics.event.v0
-  - tokenomics.report.v1
-  - z0int.decision_receipt.v1
-  - flow_prediction.v1
-  - aodl.intent.v1
-  - kerdoios.route.v1
-  - omp.session.aggregate
-  - cu.stage_intent.v0
+- agenttrace.span.v0
+- aodl.intent.v1
+- cu.stage_intent.v0
+- flow_prediction.v1
+- kerdoios.route.v1
+- omp.session.aggregate
+- os.next_context.v0
+- tokenomics.event.v0
+- tokenomics.report.v1
+- z0int.decision_receipt.v1
