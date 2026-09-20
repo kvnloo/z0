@@ -35,21 +35,36 @@ def maturity() -> dict[str, dict[str, str]]:
 
 
 def resolve_profile(name: str) -> list[str]:
-    """Expand profile + extends chain into ordered component ids."""
+    """Expand profile inheritance parent-first into ordered component ids."""
     profs = profiles()
     if name not in profs:
         raise KeyError(f"unknown profile: {name}")
-    seen: list[str] = []
-    stack = [name]
-    while stack:
-        current = stack.pop()
-        spec = profs[current]
-        if "extends" in spec:
-            stack.append(spec["extends"])
+
+    resolved: list[str] = []
+    visiting: set[str] = set()
+    visited: set[str] = set()
+
+    def visit(profile: str) -> None:
+        if profile not in profs:
+            raise KeyError(f"unknown profile: {profile}")
+        if profile in visiting:
+            raise ValueError(f"profile inheritance cycle at {profile}")
+        if profile in visited:
+            return
+
+        visiting.add(profile)
+        spec = profs[profile]
+        parent = spec.get("extends")
+        if parent:
+            visit(str(parent))
         for cid in spec.get("components", []):
-            if cid not in seen:
-                seen.append(cid)
-    return seen
+            if cid not in resolved:
+                resolved.append(cid)
+        visiting.remove(profile)
+        visited.add(profile)
+
+    visit(name)
+    return resolved
 
 
 def z0_home() -> Path:
