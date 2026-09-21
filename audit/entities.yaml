@@ -1,0 +1,455 @@
+# Declared universe for the current-state reality sweep.
+#
+# This file states WHICH entities belong to the Zer0 network and what each one
+# is expected to be. It deliberately does NOT state current branch/HEAD/PR
+# facts: those are observed by `scripts/reality-sweep` and written to
+# `audit/reality-ledger.json`, so this file cannot drift from the repos.
+#
+# kind:
+#   owned_component   a Zer0-owned surface with its own semantic responsibility
+#   upstream_system   an external system Zer0 depends on or executes through
+#   catalog_source    an authority Zer0 must DISCOVER facts from, never recopy
+#   interaction_surface  a human/agent-facing surface, not an executor
+#   legacy_or_donor   superseded, donor-only, or research provenance
+#   reference_only    named for context; no dependency or adapter claimed
+#
+# relationship (to the network, not to z0 the repo):
+#   owned | executes_via | consumes_contract | emits_contract | discovers_from
+#   | governed_by | measured_by | evaluated_by | publishes_evidence_to
+#   | provides_research_evidence | legacy_of | reference_to
+#
+# expected_status is an ASSERTION to be checked against observed reality.
+# Mismatch between expected_status and observed status is a finding, not a fix.
+
+entities:
+  # ---- registry / architecture -------------------------------------------
+  - id: z0
+    kind: owned_component
+    repo: kvnloo/z0
+    plane: architecture
+    owns: [registry truth, profiles, generated architecture, install matrix, onboarding]
+    not_here: [runtime execution, model/provider catalogs, telemetry semantics]
+    expected_status: merged
+    capability_ref: {kind: default}
+
+  - id: z0archy
+    kind: owned_component
+    repo: kvnloo/z0archy
+    plane: architecture
+    owns: [architecture visualization of the typed registry graph]
+    not_here: [registry truth]
+    expected_status: unknown
+    capability_ref: {kind: default}
+
+  # ---- contracts ----------------------------------------------------------
+  - id: aodl
+    kind: owned_component
+    repo: kvnloo/aodl
+    plane: contracts
+    owns: [typed intent IR, compiled plan, observed state, harness catalog, fail-closed validation]
+    not_here: [model selection, routing policy, provider catalogs]
+    relationship: governed_by
+    expected_status: merged
+    capability_ref: {kind: default}
+
+  # ---- cognition ----------------------------------------------------------
+  - id: z0intelligence
+    kind: owned_component
+    repo: kvnloo/z0intelligence
+    plane: cognition
+    owns: [semantic model selection, escalation, context resolution, DecisionBackend,
+           local SLM portfolio, JEV/NanoJev/OpenJev contracts, cognition receipts,
+           promotion activation into shadow/canary/active]
+    not_here: [daily provider quota accounting, GPU placement, token measurement]
+    expected_status: merged
+    capability_ref: {kind: default}
+    note: >
+      The GitHub repo kvnloo/openjev redirects here; the old registry listed
+      `openjev` as an independent component with repo kvnloo/openjev.
+
+  - id: openjev
+    kind: legacy_or_donor
+    repo: kvnloo/openjev
+    plane: cognition
+    owns: []
+    not_here: [independent decision ownership]
+    relationship: legacy_of
+    legacy_of: z0intelligence
+    expected_status: superseded
+    capability_ref: {kind: superseded, superseded_by: kvnloo/z0intelligence}
+    note: "Repo renamed to kvnloo/z0intelligence; retained only as alias provenance."
+
+  - id: NanoJev
+    kind: upstream_system
+    repo: kvnloo/NanoJev
+    plane: cognition
+    relationship: reference_to
+    expected_status: unknown
+    capability_ref: {kind: external}
+    note: "Fork; JEV-family implementation used behind z0int decision contracts."
+
+  - id: laya
+    kind: upstream_system
+    repo: kvnloo/laya
+    plane: cognition
+    relationship: reference_to
+    expected_status: unknown
+    capability_ref: {kind: external}
+
+  - id: laya-coreml
+    kind: upstream_system
+    repo: kvnloo/laya-coreml
+    plane: cognition
+    relationship: reference_to
+    expected_status: unknown
+    capability_ref: {kind: external}
+
+  - id: laya-mlx
+    kind: upstream_system
+    repo: kvnloo/laya-mlx
+    plane: cognition
+    relationship: reference_to
+    expected_status: unknown
+    capability_ref: {kind: external}
+
+  - id: jev-ultrafast
+    kind: upstream_system
+    repo: kvnloo/jev-ultrafast
+    plane: cognition
+    relationship: reference_to
+    expected_status: unknown
+    capability_ref: {kind: external}
+
+  # ---- context / evidence -------------------------------------------------
+  - id: rlm
+    kind: owned_component
+    repo: kvnloo/oh-my-pi
+    plane: context
+    owns: [addressable evidence plane, evidence handles, context virtualization]
+    not_here: [provider transport, canonical transcript]
+    relationship: consumes_contract
+    expected_status: branch_only
+    capability_ref: {kind: branch, name: exp/rlm-evidence-addressing, repo: kvnloo/oh-my-pi}
+    note: >
+      RLM has no repo of its own; it lives as branches on the OMP fork.
+      The sweep must enumerate those branches rather than assume one lineage.
+
+  # ---- execution ----------------------------------------------------------
+  - id: oh-my-pi
+    kind: upstream_system
+    repo: kvnloo/oh-my-pi
+    plane: execution
+    relationship: executes_via
+    owns: [upstream OMP coding-agent runtime]
+    not_here: [Zer0 routing policy, Zer0 measurement semantics]
+    expected_status: unknown
+    capability_ref: {kind: external, note: "fork; PR #77 rfc/interactive-performance-stack is the Zer0 stack"}
+    note: "Fork carrying Zer0 RLM/context extension branches."
+
+  - id: deepseek-harness
+    kind: upstream_system
+    repo: kvnloo/deepseek-harness
+    plane: execution
+    relationship: executes_via
+    owns: [DSH execution, provider adapters, llm-pi-ai provider/model catalog authority]
+    not_here: [Zer0 routing, quota allocation, measurement semantics]
+    expected_status: unknown
+    capability_ref: {kind: external}
+    note: "Fork; upstream deepseek-ai/deepseek-harness. Absent from the current registry."
+
+  - id: hermes-agent
+    kind: upstream_system
+    repo: NousResearch/hermes-agent
+    plane: execution
+    relationship: executes_via
+    expected_status: unknown
+    capability_ref: {kind: external}
+    note: "Upstream; several Zer0 systems ship as Hermes plugins."
+
+  # ---- measurement --------------------------------------------------------
+  - id: tokenomics
+    kind: owned_component
+    repo: kvnloo/tokenomics
+    plane: measurement
+    owns: [token/cost/latency semantics, verified outcomes, context economics,
+           experiment identity, receipt schema]
+    not_here: [OTel transport, provider catalogs, routing]
+    relationship: measured_by
+    expected_status: merged
+    capability_ref: {kind: default}
+
+  - id: agenttrace
+    kind: upstream_system
+    repo: kvnloo/agenttrace
+    plane: measurement
+    relationship: reference_to
+    expected_status: unknown
+    capability_ref: {kind: external}
+    note: "Fork; observational consumer/TUI, not the neutral metric authority."
+
+  # ---- resource placement -------------------------------------------------
+  - id: kerdoios
+    kind: owned_component
+    repo: kvnloo/kerdoios
+    plane: resources
+    owns: [resource inventory, hard constraints, quota/capacity, cost/capability/privacy
+           dimensions, Pareto/portfolio allocation, reservations, placement]
+    not_here: [provider execution, generic model gateway, token measurement]
+    expected_status: merged
+    capability_ref: {kind: default}
+    note: "Ships as a Hermes plugin; the logical capability is harness-neutral."
+
+  # ---- evaluation / training / publication --------------------------------
+  - id: evolution-lab
+    kind: owned_component
+    repo: kvnloo/evolution-lab
+    plane: evaluation
+    owns: [experiment execution, frozen grouped comparisons, training/search,
+           qualification evidence for promotion]
+    not_here: [activation/deployment state, publication of frozen studies]
+    relationship: evaluated_by
+    expected_status: branch_only
+    capability_ref: {kind: branch, name: experiment/q-route-v0}
+
+  - id: z0evals
+    kind: owned_component
+    repo: kvnloo/z0evals
+    plane: evaluation
+    owns: [frozen reproducible studies, publication, immutable evidence]
+    not_here: [activated routing policy, training]
+    relationship: publishes_evidence_to
+    expected_status: merged
+    capability_ref: {kind: default}
+
+  # ---- research -----------------------------------------------------------
+  - id: frontier-kb
+    kind: owned_component
+    repo: kvnloo/frontier-kb
+    plane: research
+    owns: [public research evidence across harnesses]
+    not_here: [architecture truth, runtime policy]
+    relationship: provides_research_evidence
+    expected_status: merged
+    capability_ref: {kind: default}
+
+  # ---- interaction --------------------------------------------------------
+  - id: dash
+    kind: interaction_surface
+    repo: kvnloo/dash
+    plane: interaction
+    owns: [multi-harness phone control surface]
+    not_here: [execution, intent ownership]
+    relationship: consumes_contract
+    expected_status: merged
+    capability_ref: {kind: default}
+
+  - id: ripple
+    kind: interaction_surface
+    repo: kvnloo/ripple
+    plane: interaction
+    owns: [ephemeral intent surface]
+    not_here: [AODL ownership]
+    relationship: consumes_contract
+    expected_status: merged
+    capability_ref: {kind: default}
+
+  # ---- governance ---------------------------------------------------------
+  - id: verified-oss-loop
+    kind: owned_component
+    repo: kvnloo/verified-oss-loop
+    plane: governance
+    owns: [contribution/evidence governance protocol]
+    not_here: [runtime]
+    relationship: reference_to
+    expected_status: unknown
+    capability_ref: {kind: default}
+
+  # ---- Hermes-side infrastructure ----------------------------------------
+  - id: hermes-keel
+    kind: owned_component
+    repo: kvnloo/hermes-keel
+    plane: execution
+    owns: [performance-based execution kernel for Hermes]
+    not_here: [harness catalog]
+    relationship: executes_via
+    expected_status: unknown
+    capability_ref: {kind: default}
+
+  - id: hermes-mesh-keel
+    kind: owned_component
+    repo: kvnloo/hermes-mesh-keel
+    plane: execution
+    owns: [signed transport/authorization infrastructure]
+    not_here: [production activation]
+    relationship: executes_via
+    expected_status: unknown
+    capability_ref: {kind: default}
+    note: "Pre-activation experimental infrastructure; must not be described as active."
+
+  - id: hermes-jev-skills
+    kind: owned_component
+    repo: kvnloo/hermes-jev-skills
+    plane: cognition
+    owns: [Jev-powered routing/memory/compaction/skill selection for Hermes]
+    not_here: [decision ownership]
+    relationship: consumes_contract
+    expected_status: branch_only
+    capability_ref: {kind: branch, name: hermes-jev/omp-adapter}
+
+  - id: kvnloo-skills
+    kind: owned_component
+    repo: kvnloo/kvnloo-skills
+    plane: cognition
+    owns: [personal Hermes skills]
+    not_here: [architecture]
+    relationship: reference_to
+    expected_status: unknown
+    capability_ref: {kind: default}
+
+  # ---- SoL-Pi mechanism family (no canonical component repo) -------------
+  - id: sol-pi
+    kind: legacy_or_donor
+    repo: kvnloo/SoL-Pi
+    plane: research
+    owns: []
+    not_here: [a shipped Zer0 component]
+    relationship: legacy_of
+    expected_status: external_upstream
+    capability_ref: {kind: external}
+    note: >
+      Upstream NVlabs/SoL-Pi fork. There is no canonical `sol-pi` component;
+      the mechanisms are Action Fusion, ObservationPack and verified reduction.
+
+  - id: sol-pi-omp
+    kind: owned_component
+    repo: kvnloo/sol-pi-omp
+    plane: context
+    owns: [OMP-loadable SoL-Pi wrapper: Action Fusion + ObservationPack]
+    not_here: [canonical context plane]
+    relationship: implements
+    expected_status: open_pr
+    capability_ref: {kind: pr, number: 1}
+
+  - id: sol-pi-hermes
+    kind: owned_component
+    repo: kvnloo/sol-pi-hermes
+    plane: context
+    owns: [Hermes plugin port of the SoL-Pi mechanisms]
+    not_here: [canonical context plane]
+    relationship: implements
+    expected_status: merged
+    capability_ref: {kind: default}
+
+  # ---- misclassified / to verify -----------------------------------------
+  - id: memento
+    kind: legacy_or_donor
+    repo: kvnloo/memento
+    plane: memory
+    owns: []
+    not_here: [runtime memory authority]
+    relationship: legacy_of
+    expected_status: external_upstream
+    capability_ref: {kind: external, note: "fork, upstream last active 2024"}
+    note: >
+      Fork of the Memento screen recorder, last upstream activity 2024.
+      Future prospective-sensor candidate only; not current runtime memory.
+
+  - id: blueprint
+    kind: reference_only
+    repo: kvnloo/blueprint
+    plane: product
+    relationship: reference_to
+    expected_status: unknown
+    capability_ref: {kind: default, note: "referent disputed: description says product blueprint monorepo"}
+    note: >
+      REFERENT VERIFIED (sweep 2026-09-21): the repo description says "Product
+      blueprint monorepo: architecture, brand, specs", but its open PRs are the
+      vertical-farming / ATLAS soil-to-cell digital twin (PR #16 "Lead the
+      pretotype with ATLAS / soil-to-cell"). It is a product line, NOT core Zer0
+      architecture; treat as an owned product surface or move out of the almanac.
+      The stale description is itself a finding.
+
+  - id: solarpunk
+    kind: legacy_or_donor
+    repo: kvnloo/solarpunk
+    plane: legacy
+    relationship: legacy_of
+    expected_status: unknown
+    capability_ref: {kind: default, note: "empty description; ZEROS/HF/GT branches suggest legacy donor"}
+
+  - id: o8
+    kind: upstream_system
+    repo: kvnloo/o8
+    plane: execution
+    relationship: executes_via
+    expected_status: external_upstream
+    capability_ref: {kind: external}
+    note: "Fork; multi-harness control room and AODL catalog member."
+
+  - id: firstmate
+    kind: upstream_system
+    repo: kvnloo/firstmate
+    plane: execution
+    relationship: reference_to
+    expected_status: external_upstream
+    capability_ref: {kind: external}
+    note: "Fork; agent distro, not itself a harness."
+
+  - id: flow
+    kind: owned_component
+    repo: kvnloo/.files
+    plane: context
+    owns: [predicted OS/context state]
+    not_here: [OMP coupling]
+    relationship: emits_contract
+    expected_status: unknown
+    capability_ref: {kind: default}
+
+  # ---- delegated catalog authorities (discover, never recopy) ------------
+  - id: huggingface
+    kind: catalog_source
+    plane: models
+    authority: huggingface.co
+    relationship: discovers_from
+    discovers: [model identity, config, files]
+    cache_policy: derived
+
+  - id: vllm
+    kind: catalog_source
+    plane: models
+    authority: vllm-project/vllm
+    relationship: discovers_from
+    discovers: [served models, supported architectures]
+    cache_policy: derived
+
+  - id: ollama
+    kind: catalog_source
+    plane: models
+    authority: ollama
+    relationship: discovers_from
+    discovers: [installed models, model details]
+    cache_policy: runtime
+
+  - id: litellm
+    kind: catalog_source
+    plane: models
+    authority: BerriAI/litellm
+    relationship: discovers_from
+    discovers: [provider/model metadata, cost tables]
+    cache_policy: derived
+
+  - id: openrouter
+    kind: catalog_source
+    plane: models
+    authority: openrouter.ai
+    relationship: discovers_from
+    discovers: [live provider inventory, pricing]
+    cache_policy: live_only
+
+  - id: opentelemetry
+    kind: catalog_source
+    plane: measurement
+    authority: open-telemetry
+    relationship: discovers_from
+    discovers: [telemetry transport]
+    cache_policy: none

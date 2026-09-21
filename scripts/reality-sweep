@@ -1,0 +1,377 @@
+#!/usr/bin/env python3
+"""Observe current reality for every entity in audit/entities.yaml.
+
+Writes audit/reality-ledger.json. Never mutates any repository, never reads
+credentials, never fetches from a private endpoint. A GitHub lookup that fails
+is recorded as an observation, not raised.
+
+The entity declares WHERE its capability's work is claimed to live
+(`capability_ref`). This script resolves that claim against the repos and the
+local checkouts. Mechanical observation never upgrades a claim it cannot see.
+
+Usage:
+    python3 scripts/reality-sweep            # write the ledger
+    python3 scripts/reality-sweep --check    # exit 1 if expected_status != observed
+"""
+from __future__ import annotations
+
+import argparse
+import concurrent.futures as cf
+import json
+import os
+import subprocess
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+
+HOME = os.path.expanduser("~")
+
+
+SAMPLE = 25
+LOCAL_SAMPLE = 8
+
+
+def bounded(names, limit: int = SAMPLE) -> dict:
+    """A ledger records the FACT (how many) plus a bounded sample, never the
+    whole list: one local checkout here carries ~42k task branches."""
+    names = list(names)
+    return {"count": len(names), "sample": names[:limit],
+            "truncated": max(0, len(names) - limit)}
+
+
+def portable(path: str) -> str:
+    """Normalize a machine path so the committed ledger carries no absolute
+    home path. Local-state disclosure is intentional, machine layout is not."""
+    if not path:
+        return path
+    if path == HOME or path.startswith(HOME + os.sep):
+        return "~" + path[len(HOME):]
+    return path
+ENTITIES = ROOT / "audit" / "entities.yaml"
+LEDGER = ROOT / "audit" / "reality-ledger.json"
+
+LOCAL_ROOTS = [
+    "/home/kvn/tmp",
+    "/home/kvn/zer0",
+    "/mnt/zer0models/workspace",
+    "/mnt/zer0models/repos",
+    "/mnt/zer0models/workspaces",
+]
+
+STATUSES = [
+    "merged", "open_pr", "branch_only", "local_only",
+    "planned", "legacy", "superseded", "external_upstream",
+    "missing", "unknown",
+]
+
+
+def sh(cmd, timeout=60):
+    try:
+        p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+        return p.returncode, (p.stdout or "") + (p.stderr or "")
+    except Exception as exc:
+        return 1, f"{type(exc).__name__}: {exc}"
+
+
+def gh_json(args):
+    rc, out = sh(["gh", "api", *args], timeout=90)
+    if rc != 0:
+        return False, out.strip()[:300]
+    try:
+        return True, json.loads(out)
+    except Exception:
+        return False, out.strip()[:300]
+
+
+def discover_local_checkouts():
+    seen = {}
+    for root in LOCAL_ROOTS:
+        if not os.path.isdir(root):
+            continue
+        rc, out = sh(["find", root, "-maxdepth", "4", "-name", ".git",
+                      "-not", "-path", "*/node_modules/*"], timeout=240)
+        if rc != 0:
+            continue
+        for line in out.splitlines():
+            g = line.strip()
+            if not g:
+                continue
+            d = os.path.dirname(g)
+            _, remote = sh(["git", "-C", d, "remote", "get-url", "origin"], timeout=20)
+            remote = remote.strip()
+            if "github.com" not in remote:
+                continue
+            slug = remote.rstrip("/").removesuffix(".git").split("github.com")[-1].lstrip(":/")
+            if slug.count("/") != 1:
+                continue
+            _, branch = sh(["git", "-C", d, "rev-parse", "--abbrev-ref", "HEAD"], timeout=20)
+            _, sha = sh(["git", "-C", d, "rev-parse", "HEAD"], timeout=20)
+            _, dirty = sh(["git", "-C", d, "status", "--porcelain"], timeout=30)
+            _, last = sh(["git", "-C", d, "log", "-1", "--format=%cI"], timeout=20)
+            _, wts = sh(["git", "-C", d, "worktree", "list", "--porcelain"], timeout=30)
+            _, branches = sh(["git", "-C", d, "for-each-ref",
+                              "--format=%(refname:short)", "refs/heads"], timeout=30)
+            seen.setdefault(slug, []).append({
+                "path": portable(d),
+                "real_path": d,
+                "branch": branch.strip(),
+                "head": sha.strip(),
+                "dirty": bool(dirty.strip()),
+                "dirty_files": len([x for x in dirty.splitlines() if x.strip()]),
+                "last_commit": last.strip(),
+                "worktrees": bounded(sorted(portable(w.removeprefix("worktree "))
+                                            for w in wts.splitlines()
+                                            if w.startswith("worktree "))),
+                "local_branches": bounded(sorted(b for b in branches.splitlines() if b.strip())),
+            })
+    return seen
+
+
+def observe_github(slug):
+    ok, repo = gh_json([f"repos/{slug}"])
+    if not ok:
+        return {"exists": False, "error": repo}
+    default = (repo.get("default_branch") or "main")
+    out = {
+        "exists": True,
+        "is_fork": bool(repo.get("fork")),
+        "archived": bool(repo.get("archived")),
+        "private": bool(repo.get("private")),
+        "default_branch": default,
+        "pushed_at": repo.get("pushed_at"),
+        "description": (repo.get("description") or "")[:200],
+        "upstream": ((repo.get("parent") or {}).get("full_name")),
+        "open_issues": repo.get("open_issues_count"),
+    }
+    ok, commit = gh_json([f"repos/{slug}/commits/{default}"])
+    if ok and isinstance(commit, dict):
+        out["head_sha"] = commit.get("sha")
+        out["head_date"] = ((commit.get("commit") or {}).get("committer") or {}).get("date")
+    ok, prs = gh_json([f"repos/{slug}/pulls?state=open&per_page=100"])
+    if ok and isinstance(prs, list):
+        rows = [{"number": p["number"], "title": p["title"][:100],
+                 "head": p["head"]["ref"], "base": p["base"]["ref"],
+                 "draft": bool(p.get("draft"))} for p in prs]
+        out["open_prs"] = bounded(rows)
+        out["open_pr_count"] = len(prs)
+        out["open_pr_bot_count"] = sum(1 for p in prs if p["head"]["ref"].startswith("dependabot/"))
+    ok, brs = gh_json([f"repos/{slug}/branches?per_page=100"])
+    if ok and isinstance(brs, list):
+        out["remote_branches"] = bounded([b["name"] for b in brs])
+    return out
+
+
+def resolve_pr(slug, number):
+    ok, pr = gh_json([f"repos/{slug}/pulls/{number}"])
+    if not ok:
+        return {"state": "unknown", "error": pr}
+    return {"number": number, "state": pr.get("state"),
+            "merged": bool(pr.get("merged_at")),
+            "head": (pr.get("head") or {}).get("ref"),
+            "base": (pr.get("base") or {}).get("ref"),
+            "title": (pr.get("title") or "")[:120],
+            "draft": bool(pr.get("draft")),
+            "updated_at": pr.get("updated_at")}
+
+
+def branch_exists_remote(slug: str, name: str) -> bool:
+    """Exact existence check. Never infer presence from a sampled branch list:
+    one fork here has >100 remote branches, so sampling produces false negatives."""
+    rc, out = sh(["gh", "api", f"repos/{slug}/branches/{name}", "--jq", ".name"], timeout=45)
+    return rc == 0 and out.strip().strip('"') == name
+
+
+def branch_exists_local(local: list[dict], name: str) -> bool:
+    """Exact local check; the sampled list is not authoritative either."""
+    for c in local:
+        rc, _ = sh(["git", "-C", c.get("real_path") or os.path.expanduser(c["path"]),
+                    "rev-parse", "--verify", "--quiet", f"refs/heads/{name}"], timeout=20)
+        if rc == 0:
+            return True
+    return False
+
+
+def observed_status(entity, gh, local):
+    ev = []
+    ref = entity.get("capability_ref") or {"kind": "default"}
+    kind = ref.get("kind", "default")
+    detail = {"ref": ref}
+
+    if kind != "external" and not gh.get("exists"):
+        return "missing", [f"declared capability_ref but repo lookup failed: {gh.get('error')}"], detail
+
+    if local:
+        ev.append("local checkout(s): " + ", ".join(
+            f"{c['path']}@{c['branch']}" + (" (dirty)" if c["dirty"] else "") for c in local[:4]))
+    else:
+        ev.append("no local checkout on this machine")
+
+    if kind == "external":
+        ev.append(f"fork={gh.get('is_fork')} upstream={gh.get('upstream')}")
+        return "external_upstream", ev, detail
+
+    if kind == "superseded":
+        target = ref.get("superseded_by")
+        ok, tgt = (gh_json([f"repos/{target}"]) if target else (False, None))
+        detail["superseded_by"] = target
+        detail["superseded_by_reachable"] = bool(ok and isinstance(tgt, dict))
+        if ok and isinstance(tgt, dict):
+            detail["superseded_by_default_branch"] = tgt.get("default_branch")
+        ev.append(f"superseded by {target} (reachable={detail['superseded_by_reachable']})")
+        return "superseded", ev, detail
+
+    if kind == "default":
+        ev.append(f"capability claimed on default branch '{gh.get('default_branch')}' "
+                  f"head={str(gh.get('head_sha'))[:10]} ({str(gh.get('head_date'))[:10]})")
+        return "merged", ev, detail
+
+    if kind == "pr":
+        pr = resolve_pr(entity["repo"], int(ref["number"]))
+        detail["pr"] = pr
+        ev.append(f"capability PR #{ref['number']}: state={pr.get('state')} "
+                  f"merged={pr.get('merged')} draft={pr.get('draft')}")
+        if pr.get("merged"):
+            return "merged", ev, detail
+        if pr.get("state") == "open":
+            return "open_pr", ev, detail
+        return "branch_only", ev, detail
+
+    if kind == "branch":
+        name = ref["name"]
+        repo = ref.get("repo") or entity["repo"]
+        local_counts = sum((c.get("local_branches") or {}).get("count", 0) for c in local)
+        remote_counts = (gh.get("remote_branches") or {}).get("count", 0)
+        has_local = branch_exists_local(local, name)
+        has_remote = branch_exists_remote(repo, name) if repo != entity["repo"] or gh.get("exists") else False
+        detail["branch_present"] = {"local": has_local, "remote": has_remote,
+                                    "local_branch_total": local_counts,
+                                    "remote_branch_total": remote_counts,
+                                    "checked_against": repo}
+        ev.append(f"capability branch '{name}': local={has_local} remote={has_remote} "
+                  f"(totals: {local_counts} local / {remote_counts} remote, checked against {repo})")
+        if not (has_local or has_remote):
+            ev.append("declared capability branch not found; status is a claim, not an observation")
+            return "branch_only", ev, detail
+        pr = next((p for p in (gh.get("open_prs") or {}).get("sample", [])
+                   if p.get("head") == name), None)
+        if pr:
+            detail["pr"] = pr
+            ev.append(f"open PR #{pr['number']} carries this branch")
+            return "open_pr", ev, detail
+        return "branch_only", ev, detail
+
+    if kind == "local_only":
+        path = ref.get("path")
+        exists = bool(path) and os.path.isdir(path)
+        detail["path"] = path
+        detail["path_exists"] = exists
+        ev.append(f"local-only artifact at {path} (present={exists})")
+        return ("local_only" if exists else "missing"), ev, detail
+
+    ev.append(f"unrecognised capability_ref kind '{kind}'")
+    return "unknown", ev, detail
+
+
+def stranded_work(gh, local, kind):
+    """Zer0's own stranded work. An upstream's PR backlog is not ours to enumerate."""
+    if kind == "external":
+        return []
+    out = []
+    default = gh.get("default_branch")
+    for p in (gh.get("open_prs") or {}).get("sample", []):
+        out.append({"kind": "pr", "ref": f"#{p['number']}", "head": p["head"],
+                    "base": p["base"], "draft": p["draft"], "title": p["title"],
+                    "dependency_automation": p["head"].startswith("dependabot/")})
+    for c in local:
+        for b in (c.get("local_branches") or {}).get("sample", []):
+            if b == default:
+                continue
+            if not any(p["head"] == b for p in (gh.get("open_prs") or {}).get("sample", [])):
+                out.append({"kind": "local_branch", "ref": b, "path": portable(c["path"])})
+    return out
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--check", action="store_true")
+    args = ap.parse_args()
+
+    try:
+        import yaml
+    except ImportError:
+        print("reality-sweep: PyYAML is required", file=sys.stderr)
+        return 2
+
+    decl = yaml.safe_load(ENTITIES.read_text(encoding="utf-8"))
+    entities = decl["entities"]
+
+    print(f"discovering local checkouts under {len(LOCAL_ROOTS)} roots ...", file=sys.stderr)
+    checkouts = discover_local_checkouts()
+
+    def one(e):
+        if e.get("kind") == "catalog_source":
+            # Delegated authority: Zer0 stores the relationship, not the facts.
+            return {**e, "observed": {
+                "github": {"exists": False, "reason": "delegated catalog authority, not a repo"},
+                "local_checkouts": [], "status": "external_upstream",
+                "evidence": [f"authority={e.get('authority')} discovers={e.get('discovers')} "
+                             f"cache_policy={e.get('cache_policy')}"],
+                "resolution": {"kind": "catalog_source"}, "stranded_work": []}}
+        slug = e.get("repo")
+        gh = observe_github(slug) if slug else {"exists": False, "error": "no repo declared"}
+        local = checkouts.get(slug or "", [])
+        status, evidence, detail = observed_status(e, gh, local)
+        kind = (e.get("capability_ref") or {}).get("kind")
+        # The ledger records the FACT about local state and a bounded sample;
+        # one machine here holds 161 checkouts of a single fork.
+        local_summary = {
+            "count": len(local),
+            "dirty_count": sum(1 for c in local if c["dirty"]),
+            "clean_on_default_count": sum(
+                1 for c in local if not c["dirty"] and c["branch"] == gh.get("default_branch")),
+            "paths": bounded(sorted(c["path"] for c in local), LOCAL_SAMPLE),
+            "sample": [{k: v for k, v in c.items() if k != "real_path"}
+                       for c in local[:LOCAL_SAMPLE]],
+        }
+        return {**e,
+                "observed": {"github": gh, "local_checkouts": local_summary, "status": status,
+                             "evidence": evidence, "resolution": detail,
+                             "stranded_work": stranded_work(gh, local, kind)}}
+
+    with cf.ThreadPoolExecutor(max_workers=8) as pool:
+        results = list(pool.map(one, entities))
+
+    counts = {}
+    for r in results:
+        counts[r["observed"]["status"]] = counts.get(r["observed"]["status"], 0) + 1
+
+    ledger = {
+        "schema": "z0.reality-ledger.v1",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_by": "scripts/reality-sweep",
+        "statuses": STATUSES,
+        "counts": counts,
+        "entities": results,
+    }
+    LEDGER.write_text(json.dumps(ledger, indent=2, sort_keys=False) + "\n", encoding="utf-8")
+    print(f"wrote {LEDGER.relative_to(ROOT)}: {len(results)} entities {counts}", file=sys.stderr)
+
+    # `unknown` is an honest "not yet asserted", not a drift to report.
+    drift = [r for r in results
+             if r.get("expected_status") not in (None, "", "unknown", "-")
+             and r["observed"]["status"] != r["expected_status"]]
+    print(f"\n=== expected vs observed ({len(drift)} mismatches) ===")
+    for r in results:
+        exp = r.get("expected_status", "-")
+        obs = r["observed"]["status"]
+        mark = "  " if exp in (None, "-", "unknown") or exp == obs else "!!"
+        print(f"{mark} {r['id']:20} expected={str(exp):18} observed={obs}")
+    if args.check and drift:
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
