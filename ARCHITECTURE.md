@@ -32,6 +32,20 @@
 | Private traces | `memento` / `z0intelligence` (not frontier-kb) |
 | Usage events | `tokenomics` |
 
+## Execution and evaluation planes
+
+Runtime authority and evaluation evidence are deliberately separate. See [docs/reference/evaluation-plane.md](docs/reference/evaluation-plane.md).
+
+```text
+execution:  intent -> harness/controller -> tools/artifacts -> verifier/outcome
+evaluation: replayable events -> counters + semantic observers + outcomes
+                                      -> Evolution Lab -> credited promotion
+```
+
+JEV is the seed semantic observer/reference backend for this evaluation plane. A JEV answer is a probabilistic reading, not verified truth. z0intelligence owns the typed observer/backend contract; Tokenomics owns objective measurement semantics; Evolution Lab owns grouped experiments and promotion gates. AODL may provide authored intent/workflow context but is not a required JEV runtime hop.
+
+Security authority stays outside learned observers: capability policy, sandboxing, scoped credentials, deterministic validation, and explicit approval remain authoritative.
+
 ## Failure boundaries
 
 - `z0 doctor` reports drift; it does not fix it
