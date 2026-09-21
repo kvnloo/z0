@@ -10,7 +10,7 @@ components:
     execution: canary
     owner: Runtime
     summary: >
-      Coding agent runtime: CLI, RPC, RLM context spill, Jev decisions,
+      Coding agent runtime: CLI, RPC, RLM context spill, typed judgment hooks,
       Handsfree HUD, Live voice, and computer-use stage manager.
     required: true
     profiles: [minimal, core, personal, desktop, compute, full]
@@ -35,8 +35,8 @@ components:
       readme: README.md
       architecture: docs/rfc-interactive-performance-stack.md
     boundaries:
-      owns: [coding agent runtime, voice/stage/CU, RLM spill, Jev hotpath]
-      not_here: [token measurement, routing policy store, research KB]
+      owns: [coding agent runtime, voice/stage/CU, RLM spill, judgment integration hooks]
+      not_here: [semantic observer truth, eval promotion, token measurement, routing policy store, research KB]
 
   tokenomics:
     name: Tokenomics
@@ -46,8 +46,8 @@ components:
     execution: live
     owner: Measurement
     summary: >
-      Vendor-neutral measurement kernel for token, cost, latency,
-      and verified-task economics with reconciliation reports.
+      Vendor-neutral measurement kernel for objective token, cost, latency,
+      retry/resource counters and independently verified-task economics.
     required: false
     profiles: [core, personal, desktop, compute, research, full]
     depends_on: []
@@ -69,8 +69,8 @@ components:
       architecture: packages/python/src/tokenomics/report.py
       integration: docs/MIGRATION.md
     boundaries:
-      owns: [usage attribution, savings reports, reconciliation]
-      not_here: [routing policy, provider execution, agent runtime]
+      owns: [objective counters, usage attribution, verified-outcome semantics, savings reports, reconciliation]
+      not_here: [semantic labeling, routing policy, provider execution, agent runtime]
 
   flow:
     name: Flow
@@ -113,8 +113,8 @@ components:
     execution: log_only
     owner: Personal Intelligence
     summary: >
-      Personal learned policy: specialists, routines, autoresearch,
-      and decision receipts for routing and promotion.
+      Semantic observer and specialist substrate: typed DecisionBackend questions,
+      probabilistic readings, replay/evaluation receipts, routines, and promoted specialists.
     required: false
     profiles: [personal, research, full]
     depends_on: [tokenomics]
@@ -132,8 +132,8 @@ components:
     verify:
       command: python3 -m z0int --help
     boundaries:
-      owns: [personal policy, routine promotion, specialists]
-      not_here: [coding agent runtime, OS prediction, measurement kernel]
+      owns: [typed observer and DecisionBackend contracts, semantic readings, replay/evaluation receipts, personal policy, specialist runtime interfaces, routines]
+      not_here: [verified ground truth, experiment promotion authority, coding agent runtime, OS prediction, measurement kernel]
 
   kerdoios:
     name: Kerdoios
@@ -171,8 +171,8 @@ components:
     execution: shadow
     owner: Research
     summary: >
-      Automatic AI research loop: hypothesis search, experiment runners,
-      and verified candidate promotion.
+      Automatic AI research loop: grouped replay/splits, hypothesis search,
+      candidate comparison, calibration/Pareto analysis, and verified promotion gates.
     required: false
     profiles: [research, full]
     depends_on: [z0intelligence, tokenomics]
@@ -187,8 +187,8 @@ components:
       ref: 8cf7acff719470b74f20c90fd6e5f7cdb11c134a
       command: pip install -e .
     boundaries:
-      owns: [experiment search, autoresearch orchestration]
-      not_here: [production runtime, personal traces]
+      owns: [grouped evaluation design, experiment search, candidate comparison, calibration, promotion gates, autoresearch orchestration]
+      not_here: [semantic observer contract, production runtime, personal traces]
 
   frontier-kb:
     name: frontier-kb
@@ -198,8 +198,8 @@ components:
     execution: shadow
     owner: Research
     summary: >
-      Research knowledge base: papers, external systems, hypotheses,
-      and kill criteria — not private user traces.
+      Research knowledge base: papers, external systems, JEV evidence/failure modes,
+      hypotheses, experiment provenance, and kill criteria — not private user traces.
     required: false
     profiles: [research, full]
     depends_on: []
@@ -212,8 +212,8 @@ components:
       ref: 22b4c0f1088abfef6184840cb79a0a6a6aceda44
       command: echo 'Knowledge base — see README for ingest workflow'
     boundaries:
-      owns: [research evidence, external references]
-      not_here: [private user traces, runtime code]
+      owns: [research evidence, observer failure modes, experiment rationale, external references]
+      not_here: [private user traces, runtime code, eval ground truth]
 
   aodl:
     name: AODL
@@ -299,8 +299,8 @@ components:
     execution: shadow
     owner: Decision
     summary: >
-      Local typed decision heads (logit-based choice) for hotpath routing.
-      Often consumed via OMP/Jev integration.
+      Legacy/research local typed decision-head implementation.
+      Consume through z0intelligence's canonical DecisionBackend/observer contract.
     required: false
     profiles: []
     depends_on: []
@@ -313,5 +313,5 @@ components:
       ref: 5e7cf4a2d6faf6e537dbfbb52d90bf50410cea63
       command: pip install -e .
     boundaries:
-      owns: [local SLM decision heads]
-      not_here: [agent runtime, measurement]
+      owns: [legacy local SLM decision-head implementation]
+      not_here: [canonical observer contract, verified truth, security authority, eval promotion, agent runtime, measurement]
