@@ -46,6 +46,8 @@ JEV is the seed semantic observer/reference backend for this evaluation plane. A
 
 Security authority stays outside learned observers: capability policy, sandboxing, scoped credentials, deterministic validation, and explicit approval remain authoritative.
 
+Current dogfood surface: [`kvnloo/hermes-jev-skills`](https://github.com/kvnloo/hermes-jev-skills) integrates through public Hermes plugin seams. The rollout order is live shadow/low-risk dogfooding first, trace capture second, then formal replay/evaluation and specialist promotion.
+
 ## Failure boundaries
 
 - `z0 doctor` reports drift; it does not fix it
