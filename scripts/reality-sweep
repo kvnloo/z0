@@ -52,12 +52,17 @@ def portable(path: str) -> str:
 ENTITIES = ROOT / "audit" / "entities.yaml"
 LEDGER = ROOT / "audit" / "reality-ledger.json"
 
+# Roots scanned for local checkouts. Derived from $HOME so the script is not
+# tied to one machine; Z0_SWEEP_ROOTS (os.pathsep-separated) extends or replaces
+# them. Only repos with a github.com origin are recorded.
 LOCAL_ROOTS = [
-    "/home/kvn/tmp",
-    "/home/kvn/zer0",
-    "/mnt/zer0models/workspace",
-    "/mnt/zer0models/repos",
-    "/mnt/zer0models/workspaces",
+    p for p in (
+        os.environ.get("Z0_SWEEP_ROOTS", "").split(os.pathsep)
+        or [os.path.join(HOME, "tmp"),
+            os.path.join(HOME, "zer0"),
+            os.path.join(HOME, "src"),
+            os.path.join(HOME, "repos")]
+    ) if p
 ]
 
 STATUSES = [
