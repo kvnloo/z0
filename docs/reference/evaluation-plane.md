@@ -116,14 +116,21 @@ Destructive actions, credentials, payments, deployment and other privileged capa
 | harnesses | execution and replayable event emission |
 | JEV / NanoJev / OpenJev / rules / fly / mushroom | candidate observer or bounded specialist implementations, never truth by identity |
 
-## First experiment
+## Activation order: dogfood first
 
-The first cross-stack proof should reproduce a simple comparison on frozen historical traces:
+The first live slice is the existing Hermes JEV plugin in [kvnloo/hermes-jev-skills](https://github.com/kvnloo/hermes-jev-skills), not a new observer framework.
 
-1. objective counters only;
-2. semantic observer readings only;
-3. counters plus semantic observer readings.
+Use a reversible, bounded hot-path decision such as model routing:
 
-Predict future/outcome-grounded quantities without leaking future information. Measure calibration and repeated-observer stability as well as top-line prediction quality.
+```text
+Hermes turn
+    -> deterministic constraints / pinned-model rules
+    -> hermes-jev-skills route.decide(...)
+    -> confident bounded decision? use it : preserve existing Hermes path
+```
 
-This is the bridge from J1/J1.1 backend parity work to J2 outcome-grounded replay.
+Start with shadow/low-risk dogfooding, then enable the bounded route where the logs look sane. Fail open on timeout, error, malformed output, unsupported state, or low confidence. Security and privileged authority remain outside JEV.
+
+Capture compact replayable receipts while dogfooding. Only after real traces exist should Evolution Lab run the formal comparison of baseline Hermes, JEV-routed Hermes, and later NanoJev/OpenJev/specialist candidates against outcome-grounded signals.
+
+The first formal eval therefore uses **dogfood traces**, not a synthetic benchmark as a prerequisite to activation. Compare objective counters only, semantic readings only, and the combination; measure end-to-end latency saved, frontier-model calls avoided, cost, fallback/correction rate, calibration, and verified task outcome.
