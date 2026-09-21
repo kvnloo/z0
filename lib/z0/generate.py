@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from . import registry
+from . import cognition, registry
 
 ROOT = Path(__file__).resolve().parents[2]
 GENERATED = ROOT / "generated"
@@ -150,6 +150,22 @@ def docs_index_jsonl() -> str:
     return "\n".join(json.dumps(e) for e in entries) + ("\n" if entries else "")
 
 
+def cognition_portfolio() -> str:
+    """Reference view of the local cognition portfolio.
+
+    Rendered WITHOUT a manifest on purpose: the model list is owned by
+    z0intelligence and must never be committed into z0. Use
+    `./z0 cognition portfolio` to read the live manifest.
+
+    ``manifest_source`` is pinned to a constant so the committed artifact does
+    not depend on which machine ran the generator.
+    """
+    return cognition.render_markdown(
+        None,
+        manifest_source="referenced only — z0 never stores the model list (unresolved at generation time)",
+    )
+
+
 def write_all() -> list[Path]:
     GENERATED.mkdir(parents=True, exist_ok=True)
     DOCS_GEN.mkdir(parents=True, exist_ok=True)
@@ -158,6 +174,8 @@ def write_all() -> list[Path]:
         GENERATED / "components.md": component_table(),
         GENERATED / "interfaces.md": interfaces_md(),
         GENERATED / "install-matrix.md": install_matrix(),
+        GENERATED / "cognition-portfolio.md": cognition_portfolio(),
+        GENERATED / "cognition-flow.mmd": cognition.flow_mermaid(),
         DOCS_GEN / "ownership.md": ownership_table(),
         GENERATED / "docs-index.jsonl": docs_index_jsonl(),
     }

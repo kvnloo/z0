@@ -1,3 +1,4 @@
+{"id": "architecture.local-cognition", "path": "docs/architecture/local-cognition.md", "title": "Local Cognition", "components": ["tokenomics", "flow", "z0intelligence", "kerdoios", "frontier-kb", "aodl", "openjev"]}
 {"id": "architecture.measurement-plane", "path": "docs/architecture/measurement-plane.md", "title": "Measurement Plane", "components": ["oh-my-pi", "tokenomics", "z0intelligence"]}
 {"id": "architecture.system-map", "path": "docs/architecture/system-map.md", "title": "System Map", "components": ["tokenomics", "flow", "z0intelligence", "kerdoios", "frontier-kb", "aodl", "agenttrace"]}
 {"id": "components.agenttrace", "path": "docs/components/agenttrace.md", "title": "Agenttrace", "components": ["agenttrace"]}

@@ -1,0 +1,18 @@
+flowchart LR
+  aodl["AODL"]
+  z0intelligence["z0intelligence"]
+  cognition_local["Local cognition (JEV / tiny specialists / orchestrator / general SLM)"]
+  kerdoios["Kerdoios"]
+  omp_hermes["OMP / Hermes"]
+  tokenomics["Tokenomics"]
+  evolution_lab["Evolution Lab"]
+  frontier_kb["frontier-kb"]
+  aodl -->|intent| z0intelligence
+  z0intelligence -->|selected_role| cognition_local
+  cognition_local -->|placement_request| kerdoios
+  kerdoios -->|execution_plan| omp_hermes
+  omp_hermes -->|usage_events| tokenomics
+  tokenomics -->|verified_economics| evolution_lab
+  evolution_lab -->|hypotheses| frontier_kb
+  frontier_kb -->|evidence| evolution_lab
+  evolution_lab -->|promotion_candidates| z0intelligence
