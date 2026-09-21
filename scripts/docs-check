@@ -2,5 +2,6 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 "$ROOT/scripts/docs-generate"
+"$ROOT/scripts/cognition-check"
 cd "$ROOT"
 git diff --exit-code generated/ docs/reference/ownership.md

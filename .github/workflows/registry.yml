@@ -16,4 +16,5 @@ jobs:
       - run: pip install -r requirements.txt
       - run: ./scripts/registry-check
       - run: ./scripts/docs-generate
+      - run: ./scripts/cognition-check
       - run: git diff --exit-code generated/ docs/reference/

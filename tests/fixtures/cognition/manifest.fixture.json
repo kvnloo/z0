@@ -1,0 +1,71 @@
+{
+  "schema": "z0int.local_cognition.v1",
+  "revision": "fixture",
+  "description": "SYNTHETIC fixture for z0's cognition loader test. These are placeholder ids, not real models. Real model data lives only in kvnloo/z0intelligence manifests/local_cognition.v1.json.",
+  "machines": {
+    "fixture-machine": {
+      "gpu": "fixture",
+      "vram_mib": 0
+    }
+  },
+  "role_defaults": {
+    "tiny_action_specialist": "fixture_action_decoder",
+    "bounded_scorer": "fixture_scorer",
+    "general_function_caller": "fixture_caller",
+    "semantic_orchestrator": "fixture_orchestrator",
+    "general_local_fallback": "fixture_caller"
+  },
+  "models": {
+    "fixture_action_decoder": {
+      "model_id": "fixture_action_decoder",
+      "hf": "fixture/action-decoder",
+      "role_tags": ["tiny_action_specialist"],
+      "parameter_count": "0M",
+      "license": "fixture-license",
+      "gated_access": false,
+      "commercial_use": true,
+      "measurements": [],
+      "promotion_state": "candidate"
+    },
+    "fixture_caller": {
+      "model_id": "fixture_caller",
+      "hf": "fixture/caller",
+      "role_tags": ["general_function_caller", "general_local_fallback"],
+      "parameter_count": "0M",
+      "license": "fixture-license",
+      "gated_access": false,
+      "commercial_use": true,
+      "measurements": [
+        {
+          "machine": "fixture-machine",
+          "runtime": "fixture-runtime",
+          "quantization": "Q0",
+          "context": 1
+        }
+      ],
+      "promotion_state": "candidate"
+    },
+    "fixture_orchestrator": {
+      "model_id": "fixture_orchestrator",
+      "hf": "fixture/orchestrator",
+      "role_tags": ["semantic_orchestrator"],
+      "parameter_count": "0M",
+      "license": "fixture-license",
+      "gated_access": true,
+      "commercial_use": false,
+      "measurements": [],
+      "promotion_state": "candidate"
+    },
+    "fixture_scorer": {
+      "model_id": "fixture_scorer",
+      "hf": "fixture/scorer",
+      "role_tags": ["bounded_scorer"],
+      "parameter_count": "0M",
+      "license": null,
+      "gated_access": false,
+      "commercial_use": null,
+      "measurements": [],
+      "promotion_state": "candidate"
+    }
+  }
+}

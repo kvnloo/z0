@@ -1,0 +1,145 @@
+#!/usr/bin/env python3
+"""Fail when the local cognition portfolio is duplicated in z0 instead of referenced.
+
+Ownership this check protects:
+
+  z0             -> stage map + stage owners        (registry/cognition.yaml)
+  z0intelligence -> model list, roles, licences, local measurements, promotion
+  kerdoios       -> placement of an already-selected capability
+  frontier-kb    -> external evidence
+
+It proves the loader reads a z0intelligence-shaped manifest (synthetic fixture),
+that the committed generated portfolio links the canonical source, and that no
+real model id leaked into z0's hand-written surface.
+"""
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "lib"))
+
+from z0 import cognition, registry  # noqa: E402
+
+FIXTURE = ROOT / "tests" / "fixtures" / "cognition" / "manifest.fixture.json"
+
+# Hand-written surfaces. `generated/` is checked separately as reference-only.
+SCANNED = [
+    ROOT / "registry",
+    ROOT / "docs",
+    ROOT / "lib",
+    ROOT / "schemas",
+    ROOT / "scripts",
+    ROOT / "generated",
+    ROOT / "README.md",
+    ROOT / "AGENTS.md",
+    ROOT / "CONTRIBUTING.md",
+    ROOT / "SYSTEM.md",
+    ROOT / "ARCHITECTURE.md",
+    ROOT / "zer0.registry.yaml",
+]
+
+
+def iter_files() -> list[Path]:
+    files: list[Path] = []
+    for target in SCANNED:
+        if target.is_file():
+            if target != FIXTURE:
+                files.append(target)
+            continue
+        if target.is_dir():
+            for path in sorted(target.rglob("*")):
+                if path.is_file() and path != FIXTURE and path.suffix != ".pyc":
+                    files.append(path)
+    return files
+
+
+def main() -> int:
+    problems: list[str] = []
+
+    # 1. Stage owners and flow edges resolve inside the component registry.
+    comps = registry.components()
+    stage_ids = [str(s.get("id")) for s in cognition.stages()]
+    if not stage_ids:
+        problems.append("registry/cognition.yaml declares no stages")
+    for stage in cognition.stages():
+        for key in ("owner", "co_owner"):
+            owner = stage.get(key)
+            if owner and owner not in comps:
+                problems.append(f"stage {stage.get('id')}: {key} {owner!r} is not a registry component")
+    for src, dst, _label in cognition.flow_edges():
+        for node in (src, dst):
+            if node not in stage_ids:
+                problems.append(f"flow edge references undeclared stage {node!r}")
+
+    # 2. The loader must render model rows from a manifest.
+    fixture = cognition.load_manifest(FIXTURE)
+    if fixture is None:
+        problems.append(f"fixture manifest did not load: {FIXTURE}")
+        fixture = {}
+    fixture_ids = sorted((fixture.get("models") or {}).keys())
+    rendered = sorted(row["model_id"] for row in cognition.model_rows(fixture))
+    if not rendered:
+        problems.append("fixture manifest rendered no model rows")
+    if rendered != fixture_ids:
+        problems.append(f"loader rendered {rendered} but fixture declares {fixture_ids}")
+    defaulted = {row["role_default_for"] for row in cognition.model_rows(fixture)}
+    if "tiny_action_specialist" not in defaulted:
+        problems.append("loader did not project role_defaults onto model rows")
+
+    # 3. The committed generated portfolio references the source and stores no models.
+    portfolio = ROOT / "generated" / "cognition-portfolio.md"
+    if not portfolio.is_file():
+        problems.append("generated/cognition-portfolio.md is missing; run ./z0 docs generate")
+        portfolio_text = ""
+    else:
+        portfolio_text = portfolio.read_text(encoding="utf-8")
+        for needle in (
+            cognition.CANONICAL_REPO,
+            cognition.CANONICAL_MANIFEST,
+            cognition.MANIFEST_CLI,
+            cognition.ROLES_CLI,
+        ):
+            if needle not in portfolio_text:
+                problems.append(f"generated portfolio does not reference {needle!r}")
+
+    flow = ROOT / "generated" / "cognition-flow.mmd"
+    if flow.is_file():
+        flow_text = flow.read_text(encoding="utf-8")
+        for node in stage_ids:
+            if node.replace("-", "_") not in flow_text:
+                problems.append(f"generated/cognition-flow.mmd omits stage {node!r}")
+
+    # 4. Duplication guard: ids known from the fixture and, when resolvable,
+    #    from the real z0intelligence manifest must not appear anywhere in z0.
+    real = cognition.load_manifest(allow_cli=True)
+    known = set(fixture_ids) | set((real or {}).get("models") or {})
+    if not known:
+        problems.append("no model ids available to scan; loader is not reading any manifest")
+    for path in iter_files():
+        if path == portfolio and not portfolio_text:
+            continue
+        body = path.read_text(encoding="utf-8", errors="ignore")
+        for model_id in sorted(known):
+            if model_id and model_id in body:
+                problems.append(
+                    f"duplicated model id {model_id!r} in {path.relative_to(ROOT)} "
+                    "— reference z0intelligence instead"
+                )
+
+    report = {
+        "ok": not problems,
+        "stages": len(stage_ids),
+        "fixture_ids": fixture_ids,
+        "real_manifest_resolved": real is not None,
+        "known_ids_scanned": sorted(known),
+        "problems": problems,
+    }
+    print(json.dumps(report))
+    return 0 if report["ok"] else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
