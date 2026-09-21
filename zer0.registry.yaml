@@ -83,9 +83,14 @@ components:
     owner: Research
     boundaries:
       owns:
+      - grouped evaluation design
       - experiment search
+      - candidate comparison
+      - calibration
+      - promotion gates
       - autoresearch orchestration
       not_here:
+      - semantic observer contract
       - production runtime
       - personal traces
   flow:
@@ -112,10 +117,13 @@ components:
     boundaries:
       owns:
       - research evidence
+      - observer failure modes
+      - experiment rationale
       - external references
       not_here:
       - private user traces
       - runtime code
+      - eval ground truth
   kerdoios:
     repo: kvnloo/kerdoios
     kind: compute
@@ -157,8 +165,10 @@ components:
       - coding agent runtime
       - voice/stage/CU
       - RLM spill
-      - Jev hotpath
+      - judgment integration hooks
       not_here:
+      - semantic observer truth
+      - eval promotion
       - token measurement
       - routing policy store
       - research KB
@@ -170,8 +180,12 @@ components:
     owner: Decision
     boundaries:
       owns:
-      - local SLM decision heads
+      - legacy local SLM decision-head implementation
       not_here:
+      - canonical observer contract
+      - verified truth
+      - security authority
+      - eval promotion
       - agent runtime
       - measurement
   tokenomics:
@@ -182,10 +196,13 @@ components:
     owner: Measurement
     boundaries:
       owns:
+      - objective counters
       - usage attribution
+      - verified-outcome semantics
       - savings reports
       - reconciliation
       not_here:
+      - semantic labeling
       - routing policy
       - provider execution
       - agent runtime
@@ -197,10 +214,15 @@ components:
     owner: Personal Intelligence
     boundaries:
       owns:
+      - typed observer and DecisionBackend contracts
+      - semantic readings
+      - replay/evaluation receipts
       - personal policy
-      - routine promotion
-      - specialists
+      - specialist runtime interfaces
+      - routines
       not_here:
+      - verified ground truth
+      - experiment promotion authority
       - coding agent runtime
       - OS prediction
       - measurement kernel

@@ -17,5 +17,6 @@
 {"id": "guides.build-handsfree-desktop", "path": "docs/guides/build-handsfree-desktop.md", "title": "Build Handsfree Desktop", "components": ["oh-my-pi", "flow", "z0intelligence", "memento"]}
 {"id": "guides.optimize-tokens", "path": "docs/guides/optimize-tokens.md", "title": "Optimize Tokens", "components": ["oh-my-pi", "tokenomics"]}
 {"id": "reference.component-registry", "path": "docs/reference/component-registry.md", "title": "Component Registry", "components": []}
+{"id": "reference.evaluation-plane", "path": "docs/reference/evaluation-plane.md", "title": "Evaluation Plane", "components": ["tokenomics", "flow", "z0intelligence", "kerdoios", "frontier-kb", "aodl", "openjev"]}
 {"id": "reference.glossary", "path": "docs/reference/glossary.md", "title": "Glossary", "components": ["tokenomics"]}
 {"id": "reference.ownership", "path": "docs/reference/ownership.md", "title": "Ownership", "components": ["oh-my-pi", "tokenomics", "flow", "z0intelligence", "kerdoios", "evolution-lab", "frontier-kb", "aodl", "agenttrace", "memento", "openjev"]}
