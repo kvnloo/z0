@@ -3,22 +3,45 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 export PYTHONPATH="${ROOT}/lib${PYTHONPATH:+:$PYTHONPATH}"
+export Z0_ROOT="${ROOT}"
 python3 - <<'PY'
+import json
+from pathlib import Path
+
 from z0 import registry
 
 problems = registry.validate()
 comps = registry.components()
 ups = registry.upstreams()
 srcs = registry.sources()
+refs = registry.reference_only()
 profs = registry.profiles()
 
 # Profile expansion must only ever yield installable (owned) components.
 for name in profs:
-    resolved = registry.resolve_profile(name)
-    for cid in resolved:
+    for cid in registry.resolve_profile(name):
         assert cid in comps, f"profile {name} resolves non-installable {cid}"
 
-assert not any(c in ups or c in srcs for c in comps), "component id collides with upstream/source"
+assert not any(c in ups or c in srcs or c in refs for c in comps), \
+    "component id collides with a non-installable entity class"
+
+# The almanac must account for every entity the current-state sweep observed.
+# A repo that exists and is not classified is exactly how the registry drifted
+# into describing three generations of the architecture at once.
+# Z0_ROOT is exported by the wrapper: this script runs on stdin, so __file__
+# is <stdin> and deriving the repo root from it silently points elsewhere.
+import os
+
+ledger = Path(os.environ["Z0_ROOT"]) / "audit" / "reality-ledger.json"
+if ledger.is_file():
+    swept = {e["id"] for e in json.loads(ledger.read_text())["entities"]}
+    known = registry.known_ids()
+    unaccounted = sorted(swept - known)
+    invented = sorted(known - swept)
+    for rid in unaccounted:
+        problems.append(f"swept entity {rid!r} is not classified in the almanac")
+    for rid in invented:
+        problems.append(f"almanac entity {rid!r} was never observed by the sweep")
 
 if problems:
     print(f"registry-check: {len(problems)} problem(s)")
@@ -26,6 +49,8 @@ if problems:
         print(f"  ! {p}")
     raise SystemExit(1)
 
+total = len(comps) + len(ups) + len(srcs) + len(refs)
 print(f"ok: {len(comps)} owned components, {len(ups)} upstreams, "
-      f"{len(srcs)} delegated sources, {len(profs)} profiles")
+      f"{len(srcs)} delegated sources, {len(refs)} reference-only "
+      f"({total} entities), {len(profs)} profiles")
 PY

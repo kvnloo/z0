@@ -204,3 +204,57 @@ upstreams:
     note: >
       The previous registry listed this as `kind: memory`, `status: idea`, and a
       peer component. It is a 2024 screenshot recorder.
+
+# ---------------------------------------------------------------------------
+# REFERENCE-ONLY and DONOR entries.
+#
+# Owned repositories that are NOT part of the Zer0 network: product lines and
+# superseded aliases. They are listed so the almanac accounts for every repo we
+# swept, without pretending they are supported infrastructure.
+# ---------------------------------------------------------------------------
+
+reference_only:
+  blueprint:
+    name: Blueprint
+    repo: kvnloo/blueprint
+    class: reference_only
+    kind: product_line
+    relationship: reference_to
+    summary: >
+      ATLAS / vertical-farming digital-twin product line. Its GitHub description
+      ("Product blueprint monorepo: architecture, brand, specs") is stale and
+      misleading; the open PRs are the soil-to-cell prototype.
+    not_here: [Zer0 architecture, runtime]
+    note: >
+      Referent verified during the current-state sweep. A product line, not
+      network architecture — it must not enter the almanac as a component.
+
+  solarpunk:
+    name: solarpunk
+    repo: kvnloo/solarpunk
+    class: reference_only
+    kind: product_line
+    relationship: reference_to
+    summary: >
+      Actively developed GrowTwin / agritech product repo. Legacy *relative to
+      Zer0 architecture*, which is not the same claim as abandoned.
+    not_here: [Zer0 runtime]
+    note: >
+      442 open PRs and commits through 2026-09. Do not describe it as a dead
+      donor repo; do not describe it as Zer0 infrastructure either.
+
+  openjev:
+    name: OpenJev (alias)
+    repo: kvnloo/openjev
+    class: reference_only
+    kind: superseded_alias
+    relationship: legacy_of
+    superseded_by: z0intelligence
+    summary: >
+      `kvnloo/openjev` resolves to `kvnloo/z0intelligence`. The old registry
+      listed it as an independent decision component owning local SLM decision
+      heads; that was a duplicate ownership claim over one repository.
+    not_here: [independent decision ownership]
+    note: >
+      Ownership converged into z0intelligence's DecisionBackend / cognition
+      surface. Retained only as alias provenance so older references resolve.

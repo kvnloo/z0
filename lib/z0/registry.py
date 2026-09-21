@@ -62,6 +62,11 @@ def sources() -> dict[str, dict[str, Any]]:
     return _load("sources.yaml").get("sources", {})
 
 
+def reference_only() -> dict[str, dict[str, Any]]:
+    """Owned repos that are NOT part of the network: product lines and aliases."""
+    return _load("upstreams.yaml").get("reference_only", {})
+
+
 def profiles() -> dict[str, dict[str, Any]]:
     return _load("profiles.yaml").get("profiles", {})
 
@@ -88,6 +93,7 @@ def entity_kinds() -> dict[str, str]:
     out = {cid: "owned_component" for cid in components()}
     out.update({uid: "upstream_system" for uid in upstreams()})
     out.update({sid: "catalog_source" for sid in sources()})
+    out.update({rid: "reference_only" for rid in reference_only()})
     return out
 
 
@@ -114,6 +120,10 @@ def relationship_edges() -> list[tuple[str, str, str]]:
             edges.append((uid, "consumes_contract", contract))
         for contract in meta.get("emits_contracts") or []:
             edges.append((uid, "emits_contract", contract))
+    for rid, meta in reference_only().items():
+        rel = meta.get("relationship")
+        if rel:
+            edges.append(("z0", rel, rid))
     for sid, meta in sources().items():
         for consumer in meta.get("consumed_by") or []:
             edges.append((consumer, "discovers_from", sid))
@@ -179,6 +189,16 @@ def validate() -> list[str]:
             problems.append(f"source {sid}: missing owns")
         if not (meta.get("does_not_own") or []):
             problems.append(f"source {sid}: missing does_not_own")
+
+    for rid, meta in reference_only().items():
+        for field in ("name", "repo", "class", "kind", "relationship"):
+            if not meta.get(field):
+                problems.append(f"reference_only {rid}: missing {field}")
+        if meta.get("class") != "reference_only":
+            problems.append(f"reference_only {rid}: class must be reference_only")
+        if meta.get("relationship") not in VALID_RELATIONS:
+            problems.append(f"reference_only {rid}: unknown relationship "
+                            f"{meta.get('relationship')!r}")
 
     for name, spec in profiles().items():
         for cid in spec.get("components", []):

@@ -38,6 +38,9 @@ graph TD
   litellm[("LiteLLM<br/><i>source</i>")]
   openrouter[("OpenRouter<br/><i>source</i>")]
   opentelemetry[("OpenTelemetry<br/><i>source</i>")]
+  blueprint[/"Blueprint<br/><i>reference</i>"/]
+  solarpunk[/"solarpunk<br/><i>reference</i>"/]
+  openjev[/"OpenJev (alias)<br/><i>reference</i>"/]
   aodl__intent__v1{"aodl.intent.v1"}
   cu__stage_intent__v0{"cu.stage_intent.v0"}
   omp__session__aggregate{"omp.session.aggregate"}
@@ -98,6 +101,9 @@ graph TD
   z0 -- reference_to --> laya_mlx
   z0 -- reference_to --> jev_ultrafast
   z0 -- reference_to --> memento
+  z0 -- reference_to --> blueprint
+  z0 -- reference_to --> solarpunk
+  z0 -- legacy_of --> openjev
   z0intelligence -- discovers_from --> huggingface
   kerdoios -- discovers_from --> vllm
   kerdoios -- discovers_from --> ollama
@@ -109,6 +115,8 @@ graph TD
   classDef upstream fill:#e3f2fd,stroke:#1565c0;
   classDef source fill:#fff3e0,stroke:#ef6c00;
   classDef contract fill:#f3e5f5,stroke:#6a1b9a;
+  classDef reference fill:#eceff1,stroke:#546e7a,stroke-dasharray: 4 2;
+  class blueprint,solarpunk,openjev reference;
   class z0,z0archy,aodl,z0intelligence,tokenomics,kerdoios,evolution_lab,z0evals,frontier_kb,dash,ripple,flow,hermes_keel,hermes_mesh_keel,hermes_jev_skills,kvnloo_skills,rlm,sol_pi_omp,sol_pi_hermes,verified_oss_loop owned;
   class oh_my_pi,deepseek_harness,hermes_agent,sol_pi,o8,firstmate,agenttrace,NanoJev,laya,laya_coreml,laya_mlx,jev_ultrafast,memento upstream;
   class huggingface,vllm,ollama,litellm,openrouter,opentelemetry source;

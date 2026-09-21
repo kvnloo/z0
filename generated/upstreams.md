@@ -19,4 +19,16 @@ automatically supported infrastructure.
 | `oh-my-pi` | OMP (Oh My Pi) | harness | yes | executes_via | `<fork>` |
 | `sol-pi` | SoL-Pi | research | yes | reference_to | `NVlabs/SoL-Pi` |
 
+## Reference-only and donor entries
+
+Owned repositories that are **not** part of the network: product lines and
+superseded aliases. Listed so the almanac accounts for every repository we
+swept, without pretending they are supported infrastructure.
+
+| ID | Name | Kind | Relationship | Repo |
+|----|------|------|--------------|------|
+| `blueprint` | Blueprint | product_line | reference_to | `kvnloo/blueprint` |
+| `openjev` | OpenJev (alias) | superseded_alias | legacy_of | `kvnloo/openjev` |
+| `solarpunk` | solarpunk | product_line | reference_to | `kvnloo/solarpunk` |
+
 _Generated from `registry/upstreams.yaml`. Do not edit by hand._

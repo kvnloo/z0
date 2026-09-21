@@ -60,10 +60,12 @@ def almanac() -> dict:
             "owned_component": sorted(comps),
             "upstream_system": sorted(ups),
             "catalog_source": sorted(srcs),
+            "reference_only": sorted(registry.reference_only()),
         },
         "components": comps,
         "upstreams": ups,
         "sources": srcs,
+        "reference_only": registry.reference_only(),
         "interfaces": ifaces,
         "profiles": registry.profiles(),
         "relationships": [
@@ -130,7 +132,10 @@ def graph_mermaid() -> str:
         lines.append(f'  {_node(uid)}(["{meta.get("name", uid)}<br/><i>upstream</i>"])')
     for sid, meta in srcs.items():
         lines.append(f'  {_node(sid)}[("{meta.get("name", sid)}<br/><i>source</i>")]')
+    for rid, meta in registry.reference_only().items():
+        lines.append(f'  {_node(rid)}[/"{meta.get("name", rid)}<br/><i>reference</i>"/]')
 
+    refs = registry.reference_only()
     used_contracts = set()
     edges: list[str] = []
     seen: set[tuple[str, str, str]] = set()
@@ -140,9 +145,9 @@ def graph_mermaid() -> str:
             dst_node = _node(dst)
             link = f"  {_node(src)} -- {rel} --> {dst_node}"
         else:
-            if src not in comps and src not in ups and src not in srcs:
+            if src not in comps and src not in ups and src not in srcs and src not in refs:
                 continue
-            if dst not in comps and dst not in ups and dst not in srcs:
+            if dst not in comps and dst not in ups and dst not in srcs and dst not in refs:
                 continue
             link = f"  {_node(src)} -- {rel} --> {_node(dst)}"
         if link in seen:
@@ -159,7 +164,10 @@ def graph_mermaid() -> str:
         "  classDef upstream fill:#e3f2fd,stroke:#1565c0;",
         "  classDef source fill:#fff3e0,stroke:#ef6c00;",
         "  classDef contract fill:#f3e5f5,stroke:#6a1b9a;",
+        "  classDef reference fill:#eceff1,stroke:#546e7a,stroke-dasharray: 4 2;",
     ]
+    if refs:
+        lines.append("  class " + ",".join(_node(r) for r in refs) + " reference;")
     if comps:
         lines.append("  class " + ",".join(_node(c) for c in comps) + " owned;")
     if ups:
@@ -213,6 +221,22 @@ def upstream_table() -> str:
             f"| `{uid}` | {meta.get('name', uid)} | {meta.get('kind', '')} "
             f"| {'yes' if meta.get('is_fork') else 'no'} | {meta.get('relationship', '')} "
             f"| `{meta.get('upstream_repo', '')}` |"
+        )
+    lines += [
+        "",
+        "## Reference-only and donor entries",
+        "",
+        "Owned repositories that are **not** part of the network: product lines and",
+        "superseded aliases. Listed so the almanac accounts for every repository we",
+        "swept, without pretending they are supported infrastructure.",
+        "",
+        "| ID | Name | Kind | Relationship | Repo |",
+        "|----|------|------|--------------|------|",
+    ]
+    for rid, meta in sorted(registry.reference_only().items()):
+        lines.append(
+            f"| `{rid}` | {meta.get('name', rid)} | {meta.get('kind', '')} "
+            f"| {meta.get('relationship', '')} | `{meta.get('repo', '')}` |"
         )
     lines += ["", "_Generated from `registry/upstreams.yaml`. Do not edit by hand._", ""]
     return "\n".join(lines)

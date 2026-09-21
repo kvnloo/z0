@@ -1,11 +1,11 @@
 {"id": "architecture.context-plane", "path": "docs/architecture/context-plane.md", "title": "Context Plane", "entities": ["flow", "rlm", "sol-pi", "sol-pi-hermes", "sol-pi-omp", "tokenomics", "z0", "z0intelligence"]}
-{"id": "architecture.local-cognition", "path": "docs/architecture/local-cognition.md", "title": "Local Cognition", "entities": ["aodl", "flow", "frontier-kb", "kerdoios", "tokenomics", "z0", "z0evals", "z0intelligence"]}
+{"id": "architecture.local-cognition", "path": "docs/architecture/local-cognition.md", "title": "Local Cognition", "entities": ["aodl", "flow", "frontier-kb", "kerdoios", "openjev", "tokenomics", "z0", "z0evals", "z0intelligence"]}
 {"id": "architecture.measurement-plane", "path": "docs/architecture/measurement-plane.md", "title": "Measurement Plane", "entities": ["kerdoios", "opentelemetry", "tokenomics", "z0", "z0intelligence"]}
 {"id": "architecture.system-map", "path": "docs/architecture/system-map.md", "title": "System Map", "entities": ["z0"]}
 {"id": "getting-started.choose-a-profile", "path": "docs/getting-started/choose-a-profile.md", "title": "Choose A Profile", "entities": ["aodl", "dash", "evolution-lab", "flow", "frontier-kb", "kerdoios", "ripple", "rlm", "sol-pi", "sol-pi-hermes", "tokenomics", "z0", "z0evals", "z0intelligence"]}
 {"id": "getting-started.concepts", "path": "docs/getting-started/concepts.md", "title": "Concepts", "entities": ["evolution-lab", "tokenomics", "z0", "z0evals", "z0intelligence"]}
 {"id": "getting-started.five-minute-start", "path": "docs/getting-started/five-minute-start.md", "title": "Five Minute Start", "entities": ["aodl", "tokenomics", "z0"]}
-{"id": "getting-started.what-is-zer0", "path": "docs/getting-started/what-is-zer0.md", "title": "What Is Zer0", "entities": ["aodl", "kerdoios", "rlm", "tokenomics", "z0", "z0evals", "z0intelligence"]}
+{"id": "getting-started.what-is-zer0", "path": "docs/getting-started/what-is-zer0.md", "title": "What Is Zer0", "entities": ["aodl", "kerdoios", "openjev", "rlm", "tokenomics", "z0", "z0evals", "z0intelligence"]}
 {"id": "guides.build-handsfree-desktop", "path": "docs/guides/build-handsfree-desktop.md", "title": "Build Handsfree Desktop", "entities": ["dash", "flow", "memento", "oh-my-pi", "ripple", "z0", "z0intelligence"]}
 {"id": "guides.optimize-tokens", "path": "docs/guides/optimize-tokens.md", "title": "Optimize Tokens", "entities": ["aodl", "rlm", "tokenomics", "z0", "z0intelligence"]}
 {"id": "reference.component-registry", "path": "docs/reference/component-registry.md", "title": "Component Registry", "entities": ["z0"]}
