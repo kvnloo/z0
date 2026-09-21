@@ -355,8 +355,12 @@ def main():
         "counts": counts,
         "entities": results,
     }
-    LEDGER.write_text(json.dumps(ledger, indent=2, sort_keys=False) + "\n", encoding="utf-8")
-    print(f"wrote {LEDGER.relative_to(ROOT)}: {len(results)} entities {counts}", file=sys.stderr)
+    if args.check:
+        # --check is read-only: it must never dirty the committed ledger.
+        print(f"checked {len(results)} entities (ledger not rewritten)", file=sys.stderr)
+    else:
+        LEDGER.write_text(json.dumps(ledger, indent=2, sort_keys=False) + "\n", encoding="utf-8")
+        print(f"wrote {LEDGER.relative_to(ROOT)}: {len(results)} entities {counts}", file=sys.stderr)
 
     # `unknown` is an honest "not yet asserted", not a drift to report.
     drift = [r for r in results
