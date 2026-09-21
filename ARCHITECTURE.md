@@ -28,6 +28,9 @@
 |------|-------|
 | Component boundaries | `z0` registry |
 | Implementation | Each component repo |
+| Local cognition model list | `z0intelligence` (`manifests/local_cognition.v1.json`) — referenced, never copied |
+| Local cognition stage map + owners | `z0` registry (`registry/cognition.yaml`) |
+| Resource placement | `kerdoios` |
 | Research evidence | `frontier-kb` |
 | Private traces | `memento` / `z0intelligence` (not frontier-kb) |
 | Usage events | `tokenomics` |

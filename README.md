@@ -55,6 +55,7 @@ pip install -r requirements.txt   # PyYAML for the CLI
 | `./z0 graph` | Text dependency tree |
 | `./z0 graph --mermaid` | Mermaid for docs |
 | `./z0 docs generate` | Regenerate `generated/` from registry |
+| `./z0 cognition portfolio` | Local cognition dataflow and owners; reads the model list live from z0intelligence (never stores it) |
 
 ## Rule
 

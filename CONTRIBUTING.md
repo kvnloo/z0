@@ -12,13 +12,14 @@
 - Component implementation code
 - Runtime orchestration
 - Model weights or private traces
+- The local cognition model list (model ids, roles, licences, benchmarks, local measurements, promotion state) — that is canonical in `kvnloo/z0intelligence` (`manifests/local_cognition.v1.json`) and is referenced, never copied
 
 ## Workflow
 
-1. Edit `registry/components.yaml` (or profiles/interfaces).
+1. Edit `registry/components.yaml` (or profiles/interfaces/cognition).
 2. Run `./scripts/registry-check`.
 3. Run `./z0 docs generate`.
-4. Run `./scripts/docs-check` (must be clean git diff).
+4. Run `./scripts/docs-check` (must be clean git diff; it also runs `./scripts/cognition-check`).
 5. Open PR.
 
 ## Per-repo manifests (future)
