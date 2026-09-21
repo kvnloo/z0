@@ -30,6 +30,16 @@ def main(argv: list[str] | None = None) -> int:
     p_docs_sub = p_docs.add_subparsers(dest="docs_cmd")
     p_docs_sub.add_parser("generate", help="Regenerate docs from registry")
 
+    p_cog = sub.add_parser(
+        "cognition",
+        help="Local cognition portfolio — stage map, owners, and the z0intelligence manifest",
+    )
+    p_cog_sub = p_cog.add_subparsers(dest="cognition_cmd")
+    p_cog_portfolio = p_cog_sub.add_parser(
+        "portfolio", help="Dataflow plus the live model rows read from z0intelligence"
+    )
+    p_cog_portfolio.add_argument("--json", action="store_true")
+
     args = parser.parse_args(argv)
     if args.cmd == "init":
         return commands.cmd_init(profile=args.profile, dry_run=args.dry_run)
@@ -44,6 +54,8 @@ def main(argv: list[str] | None = None) -> int:
         return commands.cmd_graph(fmt)
     if args.cmd == "docs" and args.docs_cmd == "generate":
         return commands.cmd_docs_generate()
+    if args.cmd == "cognition" and args.cognition_cmd == "portfolio":
+        return commands.cmd_cognition_portfolio(as_json=args.json)
     parser.print_help()
     return 0
 

@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from . import generate, registry
+from . import cognition, generate, registry
 
 
 def _run(cmd: list[str], cwd: Path | None = None, check: bool = True) -> subprocess.CompletedProcess[str]:
@@ -237,4 +237,21 @@ def cmd_docs_generate() -> int:
     written = generate.write_all()
     for path in written:
         print(f"wrote {path.relative_to(generate.ROOT)}")
+    return 0
+
+
+def cmd_cognition_portfolio(as_json: bool = False) -> int:
+    """Read the z0intelligence manifest live. z0 never stores the model list."""
+    manifest = cognition.load_manifest()
+    if as_json:
+        print(json.dumps(cognition.render_json(manifest), indent=2, default=str))
+        return 0
+    if manifest is None:
+        print(
+            "note: z0intelligence manifest not resolved on this machine — reference view only.\n"
+            "      set Z0INT_COGNITION_MANIFEST or Z0INTELLIGENCE_ROOT, clone z0intelligence via "
+            "`./z0 add z0intelligence`, or put `z0int` on PATH.",
+            file=sys.stderr,
+        )
+    print(cognition.render_markdown(manifest, manifest_source=cognition.CANONICAL_REPO), end="")
     return 0
