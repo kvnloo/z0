@@ -1,17 +1,30 @@
-# Component registry
+# Owned components
 
-| ID | Name | Kind | Status | Execution | Repo | Stable ref |
-|----|------|------|--------|-----------|------|------------|
-| `agenttrace` | AgentTrace | observability | experimental | log_only | `kvnloo/agenttrace` | `a34dea2b6ff7` |
-| `aodl` | AODL | contract | experimental | shadow | `kvnloo/aodl` | `8e41ef024262` |
-| `evolution-lab` | Evolution Lab | research | experimental | shadow | `kvnloo/evolution-lab` | `8cf7acff7194` |
-| `flow` | Flow | desktop | experimental | shadow | `kvnloo/.files` | `5259013185d9` |
-| `frontier-kb` | frontier-kb | research | experimental | shadow | `kvnloo/frontier-kb` | `aac71e8f73cb` |
-| `kerdoios` | Kerdoios | compute | experimental | live | `kvnloo/kerdoios` | `e3100ae4b779` |
-| `memento` | Memento | memory | idea | shadow | `kvnloo/memento` | `513a80c2ba15` |
-| `oh-my-pi` | OMP (Oh My Pi) | runtime | canary | canary | `kvnloo/oh-my-pi` | `d707478d4c5c` |
-| `openjev` | OpenJev | decision | experimental | shadow | `kvnloo/openjev` | `5e7cf4a2d6fa` |
-| `tokenomics` | Tokenomics | measurement | experimental | live | `kvnloo/tokenomics` | `e67d76fe2f1d` |
-| `z0intelligence` | z0intelligence | intelligence | experimental | log_only | `kvnloo/z0intelligence` | `5e7cf4a2d6fa` |
+Architecture status is where the *design* lives; implementation status is
+whether it *runs*. `tested_ref` is the last validated install ref — a stale
+`tested_ref` does not make the design stale.
+
+| ID | Name | Plane | Arch / Impl | Repo | tested_ref |
+|----|------|-------|-------------|------|------------|
+| `aodl` | AODL | contracts | merged / live | `kvnloo/aodl` | `549f2a1` |
+| `dash` | Dash | interaction | merged / live | `kvnloo/dash` | `d5d191b` |
+| `evolution-lab` | Evolution Lab | evaluation | branch_only / experimental | `kvnloo/evolution-lab` | `—` |
+| `flow` | Flow | context | merged / experimental | `kvnloo/.files` | `bb5c0ea` |
+| `frontier-kb` | Frontier KB | research | merged / live | `kvnloo/frontier-kb` | `22b4c0f` |
+| `hermes-jev-skills` | Hermes Jev Skills | cognition | branch_only / experimental | `kvnloo/hermes-jev-skills` | `—` |
+| `hermes-keel` | Hermes Keel | execution | merged / experimental | `kvnloo/hermes-keel` | `7f6d84b` |
+| `hermes-mesh-keel` | Hermes Mesh Keel | execution | merged / pre_activation | `kvnloo/hermes-mesh-keel` | `6b4e8d0` |
+| `kerdoios` | Kerdoios | resources | merged / live | `kvnloo/kerdoios` | `b5755ea` |
+| `kvnloo-skills` | kvnloo skills | cognition | merged / live | `kvnloo/kvnloo-skills` | `6654f6b` |
+| `ripple` | Ripple | interaction | merged / experimental | `kvnloo/ripple` | `ea63d72` |
+| `rlm` | RLM | context | branch_only / experimental | `kvnloo/oh-my-pi` | `—` |
+| `sol-pi-hermes` | SoL-Pi for Hermes | context | merged / experimental | `kvnloo/sol-pi-hermes` | `2d94fab` |
+| `sol-pi-omp` | SoL-Pi for OMP | context | open_pr / experimental | `kvnloo/sol-pi-omp` | `—` |
+| `tokenomics` | Tokenomics | measurement | merged / live | `kvnloo/tokenomics` | `9af30ca` |
+| `verified-oss-loop` | Verified OSS Loop | governance | merged / live | `kvnloo/verified-oss-loop` | `7ba2782` |
+| `z0` | z0 | architecture | merged / live | `kvnloo/z0` | `3804bc7` |
+| `z0archy` | z0archy | architecture | merged / experimental | `kvnloo/z0archy` | `—` |
+| `z0evals` | z0evals | evaluation | merged / live | `kvnloo/z0evals` | `5a3be15` |
+| `z0intelligence` | z0intelligence | cognition | merged / experimental | `kvnloo/z0intelligence` | `4f88010` |
 
 _Generated from `registry/components.yaml`. Do not edit by hand._

@@ -30,6 +30,19 @@ def main(argv: list[str] | None = None) -> int:
     p_docs_sub = p_docs.add_subparsers(dest="docs_cmd")
     p_docs_sub.add_parser("generate", help="Regenerate docs from registry")
 
+    p_reg = sub.add_parser(
+        "registry",
+        help="Federated almanac tools — validate, and discover live upstream heads",
+    )
+    p_reg_sub = p_reg.add_subparsers(dest="registry_cmd")
+    p_reg_doctor = p_reg_sub.add_parser(
+        "doctor",
+        help="Validate the registry and report LIVE upstream heads (never committed)",
+    )
+    p_reg_doctor.add_argument("--write", action="store_true",
+                              help="Cache discovered heads under .z0-cache/ (gitignored)")
+    p_reg_doctor.add_argument("--json", action="store_true")
+
     p_cog = sub.add_parser(
         "cognition",
         help="Local cognition portfolio — stage map, owners, and the z0intelligence manifest",
@@ -54,6 +67,8 @@ def main(argv: list[str] | None = None) -> int:
         return commands.cmd_graph(fmt)
     if args.cmd == "docs" and args.docs_cmd == "generate":
         return commands.cmd_docs_generate()
+    if args.cmd == "registry" and args.registry_cmd == "doctor":
+        return commands.cmd_registry_doctor(write_cache=args.write, as_json=args.json)
     if args.cmd == "cognition" and args.cognition_cmd == "portfolio":
         return commands.cmd_cognition_portfolio(as_json=args.json)
     parser.print_help()

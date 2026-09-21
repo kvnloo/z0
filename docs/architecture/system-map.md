@@ -2,34 +2,41 @@
 id: architecture.system-map
 title: System map
 scope: [z0]
-concepts: [ecosystem, dependencies]
+concepts: [ecosystem, dependencies, planes]
 status: canonical
 ---
 
 # System map
 
-```mermaid
-graph TD
-  oh_my_pi["OMP"]
-  tokenomics["Tokenomics"]
-  flow["Flow"]
-  z0intelligence["z0intelligence"]
-  kerdoios["Kerdoios"]
-  evolution_lab["Evolution Lab"]
-  frontier_kb["frontier-kb"]
-  aodl["AODL"]
-  agenttrace["AgentTrace"]
+The graph is **generated** from typed relationships in the registry. There is no
+hand-maintained Mermaid diagram to drift: an ambiguous edge is not expressible,
+because `integrates_with` was replaced by a closed vocabulary.
 
-  oh_my_pi --> tokenomics
-  flow --> tokenomics
-  flow --> z0intelligence
-  z0intelligence --> tokenomics
-  z0intelligence --> kerdoios
-  evolution_lab --> z0intelligence
-  frontier_kb --> evolution_lab
-  oh_my_pi --> aodl
-  oh_my_pi --> z0intelligence
-  agenttrace --> tokenomics
+- **[generated/graph.mmd](../../generated/graph.mmd)** — the typed relationship graph
+- **[generated/almanac.json](../../generated/almanac.json)** — the same facts, machine-readable
+- **[generated/components.md](../../generated/components.md)** — owned components
+- **[generated/upstreams.md](../../generated/upstreams.md)** — external systems
+- **[generated/sources.md](../../generated/sources.md)** — delegated catalog authorities
+
+Regenerate with `./z0 docs generate`; CI fails on drift (`scripts/docs-check`).
+
+## Reading the graph
+
+The shape is planes converging on execution, not one runtime at the root:
+
+```text
+surfaces → intent/authority → execution harnesses
+                                    │
+                    ┌───────────────┴───────────────┐
+              context/evidence                  cognition
+                    └───────────────┬───────────────┘
+                                 execution
+                                    │
+                    ┌───────────────┼───────────────┐
+                placement       measurement      inspection
+                    └───────────────┼───────────────┘
+                    qualify → publish → activate
 ```
 
-Regenerate from registry: `./z0 docs generate` → `generated/graph.mmd`.
+Three harnesses are peers. z0 declares `executes_via` each of them rather than
+making any one of them the architectural root.

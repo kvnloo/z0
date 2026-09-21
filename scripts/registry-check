@@ -1,14 +1,31 @@
 #!/usr/bin/env bash
+# Structural validation of the federated registry. No network access.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 export PYTHONPATH="${ROOT}/lib${PYTHONPATH:+:$PYTHONPATH}"
 python3 - <<'PY'
 from z0 import registry
+
+problems = registry.validate()
 comps = registry.components()
+ups = registry.upstreams()
+srcs = registry.sources()
 profs = registry.profiles()
+
+# Profile expansion must only ever yield installable (owned) components.
 for name in profs:
     resolved = registry.resolve_profile(name)
     for cid in resolved:
-        assert cid in comps, f"profile {name} references unknown {cid}"
-print(f"ok: {len(comps)} components, {len(profs)} profiles")
+        assert cid in comps, f"profile {name} resolves non-installable {cid}"
+
+assert not any(c in ups or c in srcs for c in comps), "component id collides with upstream/source"
+
+if problems:
+    print(f"registry-check: {len(problems)} problem(s)")
+    for p in problems:
+        print(f"  ! {p}")
+    raise SystemExit(1)
+
+print(f"ok: {len(comps)} owned components, {len(ups)} upstreams, "
+      f"{len(srcs)} delegated sources, {len(profs)} profiles")
 PY

@@ -13,9 +13,9 @@ already-selected capability; frontier-kb owns external evidence.
 |-------|-----------------|-------|-------|----------------|
 | `aodl` | `aodl` | Contracts | Decision | Typed intent and plan contract. Contracts only, never runtime execution. |
 | `z0intelligence` | `z0intelligence` | Personal Intelligence | Decision | Which capability/role the turn needs, role defaults, decision receipts and promotion state. |
-| `cognition-local` | `z0intelligence` + `openjev` | Personal Intelligence (decision heads with OpenJev) | Decision | Serve the selected local role. Model list, licences and measurements are the z0intelligence manifest — not stored here. |
+| `cognition-local` | `z0intelligence` | Cognition (DecisionBackend adapters; JEV/NanoJev/OpenJev are implementations) | Decision | Serve the selected local role. Model list, licences and measurements are the z0intelligence manifest — not stored here. |
 | `kerdoios` | `kerdoios` | Compute | Compute | Given an already-selected capability and the current machine state, can it run locally now; which runtime/quant fits; co-resident or not. Never semantic suitability. |
-| `omp-hermes` | `oh-my-pi` | Runtime / Interaction | Interaction | Execute the turn and the tools. Hermes remains an external host harness. |
+| `omp-hermes` | `z0intelligence` | Execution — the selected harness runs the turn (Hermes · DeepSeek Harness · OMP are upstream) | Interaction | Execute the turn and the tools. Hermes remains an external host harness. |
 | `tokenomics` | `tokenomics` | Measurement | Measurement | Vendor-neutral usage, cost, latency and verified-task economics. |
 | `evolution-lab` | `evolution-lab` | Research | Research | Experiment search, candidate lineages, promotion gates. Consumes hypotheses from frontier-kb. |
 | `frontier-kb` | `frontier-kb` | Research | Research | External evidence, source claims and falsifiable hypotheses. Not runtime state. |

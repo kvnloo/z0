@@ -1,0 +1,119 @@
+# Zer0 registry — DELEGATED CATALOG SOURCES.
+#
+# The core rule of z0#1:
+#
+#   Store Zer0-specific relationships and policy.
+#   Fetch upstream facts from the authority that already owns them.
+#
+# Every entry here is a place where a fact Zer0 appears to need ALREADY has a
+# stronger owner. z0 records the relationship, the discovery mechanism and the
+# cache policy. It does not record the facts, and it never treats a cached
+# snapshot as fresher than its source.
+#
+# A `catalog_source` is not a repo, not a component, and never appears in a
+# profile.
+
+schema: z0.registry.source.v1
+
+sources:
+  huggingface:
+    name: Hugging Face Hub
+    kind: model_hub
+    authority:
+      surface: huggingface.co API
+      repo: huggingface/transformers
+    relationship: discovers_from
+    discovers:
+      - model identity and config
+      - model files and revisions
+      - licence and gating metadata
+    cache_policy: derived
+    cache_ttl: 24h
+    owns: [model identity, model files, model metadata]
+    does_not_own: [Zer0 model selection policy, residency policy]
+    consumed_by: [z0intelligence]
+    note: >
+      z0intelligence may pin a small intentional model set: selection +
+      revision + role + residency ARE Zer0-owned facts. Architecture family and
+      file metadata are not.
+
+  vllm:
+    name: vLLM
+    kind: model_server
+    authority:
+      surface: vLLM model registry / runtime API
+      repo: vllm-project/vllm
+    relationship: discovers_from
+    discovers:
+      - currently served models
+      - supported architectures
+    cache_policy: derived
+    cache_ttl: 1h
+    owns: [inference engine, model architecture support]
+    does_not_own: [Zer0 routing policy, verified outcome]
+    consumed_by: [kerdoios]
+
+  ollama:
+    name: Ollama
+    kind: model_server
+    authority:
+      surface: local Ollama HTTP API
+    relationship: discovers_from
+    discovers: [installed models, model details]
+    cache_policy: runtime
+    cache_ttl: null
+    owns: [local model installation state]
+    does_not_own: [Zer0 placement policy]
+    consumed_by: [kerdoios, z0intelligence]
+    note: Local runtime state is discovered on the machine, never committed.
+
+  litellm:
+    name: LiteLLM
+    kind: provider_metadata
+    authority:
+      repo: BerriAI/litellm
+    relationship: discovers_from
+    discovers:
+      - provider and model metadata
+      - model cost tables
+    cache_policy: derived
+    cache_ttl: 24h
+    owns: [provider/model cost metadata]
+    does_not_own: [Zer0 placement, Zer0 spend policy]
+    consumed_by: [kerdoios]
+    note: >
+      Kerdoios consumes this. Kerdoios is explicitly NOT another gateway, and
+      must not grow a parallel cost table.
+
+  openrouter:
+    name: OpenRouter
+    kind: provider_inventory
+    authority:
+      surface: openrouter.ai models API
+    relationship: discovers_from
+    discovers: [live provider inventory, live pricing, free-tier availability]
+    cache_policy: live_only
+    cache_ttl: null
+    owns: [live provider inventory]
+    does_not_own: [Zer0 quota accounting]
+    consumed_by: [kerdoios]
+    note: >
+      Discover live. An offline snapshot is admissible only as a
+      provenance-stamped fallback cache, never as the primary fact.
+
+  opentelemetry:
+    name: OpenTelemetry
+    kind: telemetry_transport
+    authority:
+      surface: OTel specification and SDKs
+      repo: open-telemetry/opentelemetry-specification
+    relationship: discovers_from
+    discovers: [telemetry transport, span/trace wire format]
+    cache_policy: none
+    cache_ttl: null
+    owns: [telemetry transport]
+    does_not_own: [Zer0 measurement semantics, verified outcome]
+    consumed_by: [tokenomics]
+    note: >
+      OTel remains the TRANSPORT. Tokenomics owns Zer0-specific semantics and
+      must not reimplement OTel.

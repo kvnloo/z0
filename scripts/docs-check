@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
+# Fail on drift between the registry and everything generated from it.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+"$ROOT/scripts/registry-check"
 "$ROOT/scripts/docs-generate"
 "$ROOT/scripts/cognition-check"
 cd "$ROOT"
-git diff --exit-code generated/ docs/reference/ownership.md
+git diff --exit-code generated/ docs/reference/ownership.md zer0.registry.yaml

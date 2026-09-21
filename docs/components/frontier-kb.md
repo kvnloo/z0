@@ -1,14 +1,47 @@
 ---
 id: components.frontier-kb
-title: frontier-kb
+title: Frontier KB
 scope: [frontier-kb]
-status: canonical
+status: generated
 ---
 
-# frontier-kb
+# Frontier KB
 
 **Repo:** `kvnloo/frontier-kb`  
-**Status:** experimental/shadow  
-**Stable ref:** `aac71e8`
+**Plane:** research  
+**Architecture status:** `merged`  
+**Implementation status:** `live`  
+**tested_ref:** `22b4c0f` on `main`
 
-See registry entry in `registry/components.yaml` and implementation README in the component repo.
+Cross-harness public research evidence. Research authority, not architecture truth.
+
+## Owns
+
+- public research evidence
+
+## Explicitly does not own
+
+- architecture truth
+- runtime policy
+- private traces
+
+## Relationships
+
+| Type | Target |
+|------|--------|
+| `provides_research_evidence` | `aodl` |
+| `provides_research_evidence` | `rlm` |
+| `provides_research_evidence` | `z0intelligence` |
+
+## Install
+
+```bash
+git clone https://github.com/kvnloo/frontier-kb.git
+git checkout main
+```
+
+## Implementation docs (live in the owning repo)
+
+- `readme`: `README.md`
+
+_Generated from `registry/components.yaml`. Do not edit by hand._

@@ -1,22 +1,13 @@
-{"id": "architecture.local-cognition", "path": "docs/architecture/local-cognition.md", "title": "Local Cognition", "components": ["tokenomics", "flow", "z0intelligence", "kerdoios", "frontier-kb", "aodl", "openjev"]}
-{"id": "architecture.measurement-plane", "path": "docs/architecture/measurement-plane.md", "title": "Measurement Plane", "components": ["oh-my-pi", "tokenomics", "z0intelligence"]}
-{"id": "architecture.system-map", "path": "docs/architecture/system-map.md", "title": "System Map", "components": ["tokenomics", "flow", "z0intelligence", "kerdoios", "frontier-kb", "aodl", "agenttrace"]}
-{"id": "components.agenttrace", "path": "docs/components/agenttrace.md", "title": "Agenttrace", "components": ["agenttrace"]}
-{"id": "components.aodl", "path": "docs/components/aodl.md", "title": "Aodl", "components": ["aodl"]}
-{"id": "components.evolution-lab", "path": "docs/components/evolution-lab.md", "title": "Evolution Lab", "components": ["evolution-lab"]}
-{"id": "components.flow", "path": "docs/components/flow.md", "title": "Flow", "components": ["flow"]}
-{"id": "components.frontier-kb", "path": "docs/components/frontier-kb.md", "title": "Frontier Kb", "components": ["frontier-kb"]}
-{"id": "components.kerdoios", "path": "docs/components/kerdoios.md", "title": "Kerdoios", "components": ["kerdoios"]}
-{"id": "components.memento", "path": "docs/components/memento.md", "title": "Memento", "components": ["memento"]}
-{"id": "components.oh-my-pi", "path": "docs/components/oh-my-pi.md", "title": "Oh My Pi", "components": ["oh-my-pi"]}
-{"id": "components.tokenomics", "path": "docs/components/tokenomics.md", "title": "Tokenomics", "components": ["tokenomics"]}
-{"id": "components.z0intelligence", "path": "docs/components/z0intelligence.md", "title": "Z0Intelligence", "components": ["z0intelligence"]}
-{"id": "getting-started.choose-a-profile", "path": "docs/getting-started/choose-a-profile.md", "title": "Choose A Profile", "components": ["tokenomics", "flow", "z0intelligence", "kerdoios", "frontier-kb"]}
-{"id": "getting-started.concepts", "path": "docs/getting-started/concepts.md", "title": "Concepts", "components": ["tokenomics"]}
-{"id": "getting-started.five-minute-start", "path": "docs/getting-started/five-minute-start.md", "title": "Five Minute Start", "components": ["oh-my-pi", "tokenomics"]}
-{"id": "getting-started.what-is-zer0", "path": "docs/getting-started/what-is-zer0.md", "title": "What Is Zer0", "components": ["tokenomics", "flow", "z0intelligence", "kerdoios"]}
-{"id": "guides.build-handsfree-desktop", "path": "docs/guides/build-handsfree-desktop.md", "title": "Build Handsfree Desktop", "components": ["oh-my-pi", "flow", "z0intelligence", "memento"]}
-{"id": "guides.optimize-tokens", "path": "docs/guides/optimize-tokens.md", "title": "Optimize Tokens", "components": ["oh-my-pi", "tokenomics"]}
-{"id": "reference.component-registry", "path": "docs/reference/component-registry.md", "title": "Component Registry", "components": []}
-{"id": "reference.glossary", "path": "docs/reference/glossary.md", "title": "Glossary", "components": ["tokenomics"]}
-{"id": "reference.ownership", "path": "docs/reference/ownership.md", "title": "Ownership", "components": ["oh-my-pi", "tokenomics", "flow", "z0intelligence", "kerdoios", "evolution-lab", "frontier-kb", "aodl", "agenttrace", "memento"]}
+{"id": "architecture.context-plane", "path": "docs/architecture/context-plane.md", "title": "Context Plane", "entities": ["flow", "rlm", "sol-pi", "sol-pi-hermes", "sol-pi-omp", "tokenomics", "z0", "z0intelligence"]}
+{"id": "architecture.local-cognition", "path": "docs/architecture/local-cognition.md", "title": "Local Cognition", "entities": ["aodl", "flow", "frontier-kb", "kerdoios", "tokenomics", "z0", "z0evals", "z0intelligence"]}
+{"id": "architecture.measurement-plane", "path": "docs/architecture/measurement-plane.md", "title": "Measurement Plane", "entities": ["kerdoios", "opentelemetry", "tokenomics", "z0", "z0intelligence"]}
+{"id": "architecture.system-map", "path": "docs/architecture/system-map.md", "title": "System Map", "entities": ["z0"]}
+{"id": "getting-started.choose-a-profile", "path": "docs/getting-started/choose-a-profile.md", "title": "Choose A Profile", "entities": ["aodl", "dash", "evolution-lab", "flow", "frontier-kb", "kerdoios", "ripple", "rlm", "sol-pi", "sol-pi-hermes", "tokenomics", "z0", "z0evals", "z0intelligence"]}
+{"id": "getting-started.concepts", "path": "docs/getting-started/concepts.md", "title": "Concepts", "entities": ["evolution-lab", "tokenomics", "z0", "z0evals", "z0intelligence"]}
+{"id": "getting-started.five-minute-start", "path": "docs/getting-started/five-minute-start.md", "title": "Five Minute Start", "entities": ["aodl", "tokenomics", "z0"]}
+{"id": "getting-started.what-is-zer0", "path": "docs/getting-started/what-is-zer0.md", "title": "What Is Zer0", "entities": ["aodl", "kerdoios", "rlm", "tokenomics", "z0", "z0evals", "z0intelligence"]}
+{"id": "guides.build-handsfree-desktop", "path": "docs/guides/build-handsfree-desktop.md", "title": "Build Handsfree Desktop", "entities": ["dash", "flow", "memento", "oh-my-pi", "ripple", "z0", "z0intelligence"]}
+{"id": "guides.optimize-tokens", "path": "docs/guides/optimize-tokens.md", "title": "Optimize Tokens", "entities": ["aodl", "rlm", "tokenomics", "z0", "z0intelligence"]}
+{"id": "reference.component-registry", "path": "docs/reference/component-registry.md", "title": "Component Registry", "entities": ["z0"]}
+{"id": "reference.glossary", "path": "docs/reference/glossary.md", "title": "Glossary", "entities": ["z0", "z0evals", "z0intelligence"]}
+{"id": "reference.ownership", "path": "docs/reference/ownership.md", "title": "Ownership", "entities": ["aodl", "dash", "evolution-lab", "flow", "frontier-kb", "hermes-jev-skills", "hermes-keel", "hermes-mesh-keel", "kerdoios", "kvnloo-skills", "ripple", "rlm", "sol-pi", "sol-pi-hermes", "sol-pi-omp", "tokenomics", "verified-oss-loop", "z0", "z0archy", "z0evals", "z0intelligence"]}

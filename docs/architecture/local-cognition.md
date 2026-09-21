@@ -9,9 +9,14 @@ status: canonical
 # Local cognition portfolio
 
 The local cognition portfolio is the set of small models that answer a turn in the
-Zer0 stack: JEV/OpenJev decision heads, tiny action specialists, a semantic
+Zer0 stack: JEV-family decision heads, tiny action specialists, a semantic
 orchestrator, and a general local fallback. This page is the z0 architecture view.
 It is **not** the model list and **not** the runtime registry.
+
+JEV, NanoJev and OpenJev are **implementations behind z0intelligence's
+DecisionBackend contract**, not peers of it. `kvnloo/openjev` was renamed to
+`kvnloo/z0intelligence`, so the old independent `openjev` component no longer
+exists as an owner.
 
 Generated artifact: [`generated/cognition-portfolio.md`](../generated/cognition-portfolio.md)
 (and `generated/cognition-flow.mmd`). Never edit either by hand — run `./z0 docs generate`.
@@ -19,17 +24,18 @@ Generated artifact: [`generated/cognition-portfolio.md`](../generated/cognition-
 ## Dataflow and owners
 
 AODL → z0intelligence → local cognition (JEV / tiny specialists / orchestrator / general SLM)
-→ Kerdoios → OMP/Hermes → Tokenomics → Evolution Lab → frontier-kb.
+→ Kerdoios → selected harness → Tokenomics → Evolution Lab → z0evals → z0intelligence (activate).
 
 | Stage | Owner | Responsibility |
 |-------|-------|----------------|
 | AODL | Contracts | Typed intent and plan contract; never runtime execution |
 | z0intelligence | Personal Intelligence | Which capability/role the turn needs, role defaults, decision receipts, promotion state |
-| Local cognition | Personal Intelligence (decision heads with OpenJev) | Serve the selected local role |
+| Local cognition | Cognition (DecisionBackend adapters) | Serve the selected local role |
 | Kerdoios | Compute | Given an already-selected capability and the current machine state, whether it can run locally now |
-| OMP / Hermes | Runtime / Interaction | Execute the turn and the tools |
+| Harness (Hermes · DeepSeek Harness · OMP) | Execution (upstream) | Execute the turn and the tools |
 | Tokenomics | Measurement | Usage, cost, latency and verified-task economics |
-| Evolution Lab | Research | Experiment search, candidate lineages, promotion gates |
+| Evolution Lab | Research | Experiment search, candidate lineages, **qualification** evidence |
+| z0evals | Research | **Publish** the frozen reproducible study |
 | frontier-kb | Research | External evidence and falsifiable hypotheses |
 
 The stage map and the owner of each stage are z0 registry data
@@ -61,4 +67,8 @@ fails `./scripts/cognition-check`.
   runtime, quant, co-residency, context and concurrency caps. It never decides
   semantics.
 - **frontier-kb** holds external evidence, not runtime state.
-- Promotion state and the serving map stay in z0intelligence. z0 carries neither.
+- **Promotion is three acts**: Evolution Lab *qualifies*, z0evals *publishes*,
+  z0intelligence *activates*. The serving map stays in z0intelligence. z0
+  carries none of them — it carries the boundaries.
+- See [context-plane.md](context-plane.md) for the evidence/context layer that
+  feeds this portfolio.

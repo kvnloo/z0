@@ -52,8 +52,7 @@ stages:
   - id: cognition-local
     name: Local cognition (JEV / tiny specialists / orchestrator / general SLM)
     owner: z0intelligence
-    co_owner: openjev
-    owner_label: Personal Intelligence (decision heads with OpenJev)
+    owner_label: Cognition (DecisionBackend adapters; JEV/NanoJev/OpenJev are implementations)
     plane: Decision
     responsibility: Serve the selected local role. Model list, licences and measurements are the z0intelligence manifest — not stored here.
   - id: kerdoios
@@ -64,8 +63,8 @@ stages:
     responsibility: Given an already-selected capability and the current machine state, can it run locally now; which runtime/quant fits; co-resident or not. Never semantic suitability.
   - id: omp-hermes
     name: OMP / Hermes
-    owner: oh-my-pi
-    owner_label: Runtime / Interaction
+    owner: z0intelligence
+    owner_label: Execution — the selected harness runs the turn (Hermes · DeepSeek Harness · OMP are upstream)
     plane: Interaction
     responsibility: Execute the turn and the tools. Hermes remains an external host harness.
   - id: tokenomics

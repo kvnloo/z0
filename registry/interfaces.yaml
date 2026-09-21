@@ -1,42 +1,114 @@
-# Cross-component interface contracts (names only; schemas live in owning repos).
+# Cross-system contracts.
+#
+# Two classes, kept apart on purpose:
+#
+#   contract  — a GENERIC ecosystem contract. Its owner is a semantic
+#               responsibility, not a repository, and any harness may implement
+#               or consume it.
+#   adapter   — an IMPLEMENTATION-specific wire surface. It names the harness it
+#               belongs to and must never be presented as a shared contract.
+#
+# Schemas live in the owning repo. z0 records the name, the owner and the class.
 
 interfaces:
+  # ---- generic ecosystem contracts ---------------------------------------
+  aodl.intent.v1:
+    class: contract
+    owner: aodl
+    summary: Typed intent / plan contract. Governs execution; is not runtime execution.
+
+  aodl.observed_state.v1:
+    class: contract
+    owner: aodl
+    summary: Observed execution state distinct from the compiled plan.
+
   tokenomics.event.v0:
+    class: contract
     owner: tokenomics
-    summary: Vendor-neutral usage / cost / latency event envelope.
+    summary: Vendor-neutral usage / cost / latency / outcome event envelope.
 
   tokenomics.report.v1:
+    class: contract
     owner: tokenomics
-    summary: Aggregated savings, reconciliation, and coverage report.
+    summary: Aggregated reconciliation, coverage and verified-task report.
 
   z0int.decision_receipt.v1:
+    class: contract
     owner: z0intelligence
-    summary: Structured decision receipt for routing and policy audit.
+    summary: Replayable routing/policy decision receipt (state, candidates, quota, outcome).
 
-  flow_prediction.v1:
+  z0int.cognition.receipt.v1:
+    class: contract
+    owner: z0intelligence
+    summary: Cognition decision receipt including the eligible candidate set and surface verdict.
+
+  kerdoios.placement.v1:
+    class: contract
+    owner: kerdoios
+    summary: Placement decision over a resource portfolio. Allocation, not execution.
+
+  kerdoios.quota_state.v1:
+    class: contract
+    owner: kerdoios
+    summary: Dimensional quota state (rpm/rpd/tpm/tpd) with per-dimension provenance.
+
+  flow.prediction.v1:
+    class: contract
     owner: flow
     summary: OS-context prediction with horizon metadata and gates.
 
-  os.next_context.v0:
-    owner: flow
-    summary: Shadow prediction of next desktop context episode.
+  rlm.evidence_handle.v0:
+    class: contract
+    owner: rlm
+    summary: Addressable handle into the evidence plane, rehydratable on demand.
 
-  aodl.intent.v1:
+  z0evals.study.v1:
+    class: contract
+    owner: z0evals
+    summary: Frozen reproducible study record. Immutable once published.
+
+  harness.execution.v0:
+    class: contract
     owner: aodl
-    summary: Typed intent / plan contract (not runtime execution).
+    summary: >
+      The harness-neutral execution seam. Every harness adapter implements this
+      and nothing above it may special-case a harness.
 
+  # ---- implementation-specific adapters ----------------------------------
   omp.session.aggregate:
+    class: adapter
+    harness: oh-my-pi
     owner: oh-my-pi
-    summary: Session-level token rollup for Tokenomics reconciliation.
+    summary: OMP-specific session-level token rollup for Tokenomics reconciliation.
+
+  omp.rlm.spill.v0:
+    class: adapter
+    harness: oh-my-pi
+    owner: oh-my-pi
+    summary: OMP-specific RLM context-spill surface. Not a shared contract.
 
   cu.stage_intent.v0:
+    class: adapter
+    harness: oh-my-pi
     owner: oh-my-pi
-    summary: Handsfree / computer-use window and layout intent.
+    summary: OMP-specific Handsfree / computer-use window and layout intent.
 
-  kerdoios.route.v1:
-    owner: kerdoios
-    summary: Model/provider routing decision with cost estimate.
+  dsh.llm_pi_ai.catalog:
+    class: adapter
+    harness: deepseek-harness
+    owner: deepseek-harness
+    summary: >
+      DSH llm-pi-ai provider/model catalog. The AUTHORITY for provider and model
+      identity — z0 consumes this rather than mirroring it.
+
+  hermes.plugin.v0:
+    class: adapter
+    harness: hermes-agent
+    owner: hermes-agent
+    summary: Hermes plugin surface. Several Zer0 components ship through it.
 
   agenttrace.span.v0:
+    class: adapter
+    harness: agenttrace
     owner: agenttrace
-    summary: Historical agent span for observability export.
+    summary: Historical agent span for observability export. Observational only.

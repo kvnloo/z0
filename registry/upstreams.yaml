@@ -1,0 +1,206 @@
+# Zer0 registry — UPSTREAM systems.
+#
+# A repository we contribute to is NOT automatically supported infrastructure.
+# An entry belongs here only when there is an actual dependency, adapter,
+# compatibility contract, or explicit reference relationship.
+#
+# These are never installable Zer0 components and never appear in profiles.
+# `upstream_head` is deliberately ABSENT: it is a live fact, discovered by
+# `z0 registry doctor`, and committing it would present a cached snapshot as
+# fresher than its source.
+
+schema: z0.registry.upstream.v1
+
+upstreams:
+  oh-my-pi:
+    name: OMP (Oh My Pi)
+    repo: kvnloo/oh-my-pi
+    upstream_repo: <fork>
+    kind: harness
+    plane: execution
+    is_fork: true
+    relationship: executes_via
+    summary: >
+      Coding-agent runtime. Zer0 executes through it, and the RLM context
+      extension lineage lives on its branches. It is one harness among peers,
+      never a mandatory architectural root.
+    owns: [coding agent runtime]
+    not_here: [Zer0 routing policy, Zer0 measurement semantics, harness catalog]
+    consumes_contracts: [aodl.intent.v1, tokenomics.event.v0]
+    emits_contracts: [omp.session.aggregate, cu.stage_intent.v0]
+    note: >
+      The earlier registry pinned this fork to d707478 on
+      rfc/interactive-performance-stack, which is the head of OPEN PR #77 —
+      an unmerged fork branch presented as architecture truth.
+
+  deepseek-harness:
+    name: DeepSeek Harness
+    repo: kvnloo/deepseek-harness
+    upstream_repo: deepseek-ai/deepseek-harness
+    kind: harness
+    plane: execution
+    is_fork: true
+    relationship: executes_via
+    summary: >
+      Plugin-oriented execution harness: models, tools, sessions, sandboxes and
+      UI are all plugins. Zer0 integrates through its adapter/plugin seams
+      rather than making a Zer0-specific fork its architectural centre.
+    owns: [DSH execution, provider adapters, llm-pi-ai provider/model catalog authority]
+    not_here: [Zer0 routing, quota allocation, measurement semantics]
+    consumes_contracts: [aodl.intent.v1, tokenomics.event.v0]
+    note: >
+      Absent from the previous registry entirely, despite being a primary
+      execution surface. Its llm-pi-ai catalog is the authority for provider and
+      model identity — z0 must consume it, not mirror it.
+
+  hermes-agent:
+    name: Hermes Agent
+    repo: NousResearch/hermes-agent
+    upstream_repo: NousResearch/hermes-agent
+    kind: harness
+    plane: execution
+    is_fork: false
+    relationship: executes_via
+    summary: >
+      Upstream harness. Several Zer0 systems ship as Hermes plugins (Kerdoios
+      today; hermes-jev-skills, hermes-keel), which is an implementation
+      detail of those components, not of the harness abstraction.
+    owns: [Hermes agent runtime]
+    not_here: [Zer0 routing policy, harness catalog]
+    consumes_contracts: [aodl.intent.v1, tokenomics.event.v0]
+
+  sol-pi:
+    name: SoL-Pi
+    repo: kvnloo/SoL-Pi
+    upstream_repo: NVlabs/SoL-Pi
+    kind: research
+    plane: context
+    is_fork: true
+    relationship: reference_to
+    summary: >
+      Upstream research origin of the SoL-Pi mechanism family. There is NO
+      canonical `sol-pi` component in the network: the mechanisms are Action
+      Fusion, observation packing/reduction, verified reduction and context
+      economics, implemented in sol-pi-omp and sol-pi-hermes.
+    owns: [upstream research prototype]
+    not_here: [a shipped Zer0 component]
+
+  o8:
+    name: o8
+    repo: kvnloo/o8
+    upstream_repo: <fork>
+    kind: control_room
+    plane: execution
+    is_fork: true
+    relationship: reference_to
+    summary: Multi-harness control room and AODL catalog member.
+    owns: [upstream control room]
+    not_here: [Zer0-owned surface]
+
+  firstmate:
+    name: Firstmate
+    repo: kvnloo/firstmate
+    upstream_repo: <fork>
+    kind: distro
+    plane: execution
+    is_fork: true
+    relationship: reference_to
+    summary: An agent distro. Explicitly NOT itself a harness — classifying it as one is the category error this file exists to prevent.
+    owns: [agent distribution]
+    not_here: [harness role]
+
+  agenttrace:
+    name: AgentTrace
+    repo: kvnloo/agenttrace
+    upstream_repo: <fork>
+    kind: observability
+    plane: measurement
+    is_fork: true
+    relationship: reference_to
+    summary: >
+      Local-first TUI/CLI over agent-session history. An observational consumer,
+      NOT the neutral metric authority — Tokenomics owns measurement semantics.
+    owns: [agent session history inspection]
+    not_here: [measurement semantics]
+    consumes_contracts: [tokenomics.event.v0]
+
+  NanoJev:
+    name: NanoJev
+    repo: kvnloo/NanoJev
+    upstream_repo: <fork>
+    kind: model
+    plane: cognition
+    is_fork: true
+    relationship: reference_to
+    summary: >
+      JEV-family implementation. A candidate behind z0intelligence's
+      DecisionBackend contract, not an owner of decision policy.
+    owns: [JEV-family implementation]
+    not_here: [decision ownership]
+
+  laya:
+    name: Laya
+    repo: kvnloo/laya
+    upstream_repo: <fork>
+    kind: model
+    plane: cognition
+    is_fork: true
+    relationship: reference_to
+    summary: Typed-decision model family; a DecisionBackend candidate behind z0intelligence.
+    owns: [typed-decision model]
+    not_here: [decision ownership]
+
+  laya-coreml:
+    name: Laya (Core ML)
+    repo: kvnloo/laya-coreml
+    upstream_repo: <fork>
+    kind: model
+    plane: cognition
+    is_fork: true
+    relationship: reference_to
+    summary: Apple Core ML / Neural Engine runtime for Laya typed decisions.
+    owns: [Core ML runtime for Laya]
+    not_here: [decision ownership]
+
+  laya-mlx:
+    name: Laya (MLX)
+    repo: kvnloo/laya-mlx
+    upstream_repo: <fork>
+    kind: model
+    plane: cognition
+    is_fork: true
+    relationship: reference_to
+    summary: Native MLX runtime for Laya typed decision models.
+    owns: [MLX runtime for Laya]
+    not_here: [decision ownership]
+
+  jev-ultrafast:
+    name: Jev Ultrafast
+    repo: kvnloo/jev-ultrafast
+    upstream_repo: <fork>
+    kind: model
+    plane: cognition
+    is_fork: true
+    relationship: reference_to
+    summary: JEV-family latency experiment.
+    owns: [JEV latency experiment]
+    not_here: [decision ownership]
+
+  memento:
+    name: Memento
+    repo: kvnloo/memento
+    upstream_repo: <fork>
+    kind: legacy
+    plane: memory
+    is_fork: true
+    relationship: reference_to
+    summary: >
+      Fork of the Memento screen recorder; upstream last active 2024. A possible
+      FUTURE prospective sensor for screen/computer-use history — emphatically
+      not the current runtime memory authority. Zer0 has no memory authority
+      today.
+    owns: []
+    not_here: [runtime memory authority, research KB]
+    note: >
+      The previous registry listed this as `kind: memory`, `status: idea`, and a
+      peer component. It is a 2024 screenshot recorder.

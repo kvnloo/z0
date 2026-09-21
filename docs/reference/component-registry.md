@@ -1,14 +1,24 @@
 ---
 id: reference.component-registry
-title: Component registry
+title: Registry reference
 scope: [z0]
 status: canonical
 ---
 
-# Component registry
+# Registry reference
 
-Canonical source: [`registry/components.yaml`](../../registry/components.yaml)
+The registry is **federated** — three entity classes in three files.
 
-Generated table: [`generated/components.md`](../../generated/components.md)
+| Class | Source | Generated view |
+|-------|--------|----------------|
+| Owned components | [`registry/components.yaml`](../../registry/components.yaml) | [generated/components.md](../../generated/components.md) |
+| Upstream systems | [`registry/upstreams.yaml`](../../registry/upstreams.yaml) | [generated/upstreams.md](../../generated/upstreams.md) |
+| Delegated sources | [`registry/sources.yaml`](../../registry/sources.yaml) | [generated/sources.md](../../generated/sources.md) |
+| Interfaces | [`registry/interfaces.yaml`](../../registry/interfaces.yaml) | [generated/interfaces.md](../../generated/interfaces.md) |
+| Profiles | [`registry/profiles.yaml`](../../registry/profiles.yaml) | [generated/install-matrix.md](../../generated/install-matrix.md) |
 
-Install matrix: [`generated/install-matrix.md`](../../generated/install-matrix.md)
+Machine-readable: [`generated/almanac.json`](../../generated/almanac.json).
+Ownership map: [`docs/reference/ownership.md`](ownership.md).
+
+Validate with `./scripts/registry-check`; discover live upstream heads with
+`./z0 registry doctor`.

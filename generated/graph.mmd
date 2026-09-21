@@ -1,45 +1,115 @@
 graph TD
-  oh_my_pi["OMP (Oh My Pi)"]
-  tokenomics["Tokenomics"]
-  flow["Flow"]
-  z0intelligence["z0intelligence"]
-  kerdoios["Kerdoios"]
-  evolution_lab["Evolution Lab"]
-  frontier_kb["frontier-kb"]
-  aodl["AODL"]
-  agenttrace["AgentTrace"]
-  memento["Memento"]
-  openjev["OpenJev"]
-  oh_my_pi -.-> tokenomics
-  oh_my_pi -.-> z0intelligence
-  oh_my_pi -.-> aodl
-  oh_my_pi -.-> kerdoios
-  oh_my_pi -.-> agenttrace
-  tokenomics -.-> oh_my_pi
-  tokenomics -.-> z0intelligence
-  tokenomics -.-> kerdoios
-  tokenomics -.-> agenttrace
-  tokenomics -.-> flow
-  oh_my_pi --> flow
-  flow -.-> tokenomics
-  flow -.-> z0intelligence
-  z0intelligence -.-> oh_my_pi
-  z0intelligence -.-> kerdoios
-  z0intelligence -.-> evolution_lab
-  z0intelligence -.-> tokenomics
-  kerdoios -.-> oh_my_pi
-  kerdoios -.-> z0intelligence
-  kerdoios -.-> aodl
-  kerdoios -.-> tokenomics
-  tokenomics --> evolution_lab
-  evolution_lab -.-> frontier_kb
-  evolution_lab -.-> z0intelligence
-  frontier_kb -.-> evolution_lab
-  aodl -.-> oh_my_pi
-  aodl -.-> kerdoios
-  agenttrace -.-> oh_my_pi
-  agenttrace -.-> tokenomics
-  z0intelligence --> memento
-  memento -.-> flow
-  openjev -.-> oh_my_pi
-  openjev -.-> z0intelligence
+  z0(["z0"])
+  z0archy(["z0archy"])
+  aodl(["AODL"])
+  z0intelligence(["z0intelligence"])
+  tokenomics(["Tokenomics"])
+  kerdoios(["Kerdoios"])
+  evolution_lab(["Evolution Lab"])
+  z0evals(["z0evals"])
+  frontier_kb(["Frontier KB"])
+  dash(["Dash"])
+  ripple(["Ripple"])
+  flow(["Flow"])
+  hermes_keel(["Hermes Keel"])
+  hermes_mesh_keel(["Hermes Mesh Keel"])
+  hermes_jev_skills(["Hermes Jev Skills"])
+  kvnloo_skills(["kvnloo skills"])
+  rlm(["RLM"])
+  sol_pi_omp(["SoL-Pi for OMP"])
+  sol_pi_hermes(["SoL-Pi for Hermes"])
+  verified_oss_loop(["Verified OSS Loop"])
+  oh_my_pi(["OMP (Oh My Pi)<br/><i>upstream</i>"])
+  deepseek_harness(["DeepSeek Harness<br/><i>upstream</i>"])
+  hermes_agent(["Hermes Agent<br/><i>upstream</i>"])
+  sol_pi(["SoL-Pi<br/><i>upstream</i>"])
+  o8(["o8<br/><i>upstream</i>"])
+  firstmate(["Firstmate<br/><i>upstream</i>"])
+  agenttrace(["AgentTrace<br/><i>upstream</i>"])
+  NanoJev(["NanoJev<br/><i>upstream</i>"])
+  laya(["Laya<br/><i>upstream</i>"])
+  laya_coreml(["Laya (Core ML)<br/><i>upstream</i>"])
+  laya_mlx(["Laya (MLX)<br/><i>upstream</i>"])
+  jev_ultrafast(["Jev Ultrafast<br/><i>upstream</i>"])
+  memento(["Memento<br/><i>upstream</i>"])
+  huggingface[("Hugging Face Hub<br/><i>source</i>")]
+  vllm[("vLLM<br/><i>source</i>")]
+  ollama[("Ollama<br/><i>source</i>")]
+  litellm[("LiteLLM<br/><i>source</i>")]
+  openrouter[("OpenRouter<br/><i>source</i>")]
+  opentelemetry[("OpenTelemetry<br/><i>source</i>")]
+  aodl__intent__v1{"aodl.intent.v1"}
+  cu__stage_intent__v0{"cu.stage_intent.v0"}
+  omp__session__aggregate{"omp.session.aggregate"}
+  tokenomics__event__v0{"tokenomics.event.v0"}
+  z0 -- governs --> z0archy
+  z0archy -- reference_to --> z0
+  aodl -- emits_contract --> dash
+  aodl -- emits_contract --> ripple
+  z0intelligence -- consumes_contract --> aodl
+  z0intelligence -- consumes_contract --> tokenomics
+  z0intelligence -- measured_by --> tokenomics
+  z0intelligence -- evaluated_by --> evolution_lab
+  z0intelligence -- reference_to --> rlm
+  tokenomics -- measured_by --> kerdoios
+  kerdoios -- consumes_contract --> tokenomics
+  evolution_lab -- qualifies --> z0evals
+  evolution_lab -- trains_for --> z0intelligence
+  z0evals -- publishes_evidence_to --> z0intelligence
+  z0evals -- reference_to --> evolution_lab
+  frontier_kb -- provides_research_evidence --> aodl
+  frontier_kb -- provides_research_evidence --> rlm
+  frontier_kb -- provides_research_evidence --> z0intelligence
+  dash -- consumes_contract --> aodl
+  dash -- consumes_contract --> ripple
+  ripple -- consumes_contract --> aodl
+  flow -- emits_contract --> z0intelligence
+  hermes_keel -- executes_via --> hermes_agent
+  hermes_mesh_keel -- executes_via --> hermes_agent
+  hermes_jev_skills -- consumes_contract --> z0intelligence
+  hermes_jev_skills -- executes_via --> hermes_agent
+  kvnloo_skills -- executes_via --> hermes_agent
+  rlm -- depends_on --> oh_my_pi
+  rlm -- emits_contract --> z0intelligence
+  sol_pi_omp -- implements --> sol_pi
+  sol_pi_omp -- depends_on --> oh_my_pi
+  sol_pi_hermes -- implements --> sol_pi
+  sol_pi_hermes -- executes_via --> hermes_agent
+  verified_oss_loop -- reference_to --> frontier_kb
+  z0 -- executes_via --> oh_my_pi
+  oh_my_pi -- consumes_contract --> aodl__intent__v1
+  oh_my_pi -- consumes_contract --> tokenomics__event__v0
+  oh_my_pi -- emits_contract --> omp__session__aggregate
+  oh_my_pi -- emits_contract --> cu__stage_intent__v0
+  z0 -- executes_via --> deepseek_harness
+  deepseek_harness -- consumes_contract --> aodl__intent__v1
+  deepseek_harness -- consumes_contract --> tokenomics__event__v0
+  z0 -- executes_via --> hermes_agent
+  hermes_agent -- consumes_contract --> aodl__intent__v1
+  hermes_agent -- consumes_contract --> tokenomics__event__v0
+  z0 -- reference_to --> sol_pi
+  z0 -- reference_to --> o8
+  z0 -- reference_to --> firstmate
+  z0 -- reference_to --> agenttrace
+  agenttrace -- consumes_contract --> tokenomics__event__v0
+  z0 -- reference_to --> NanoJev
+  z0 -- reference_to --> laya
+  z0 -- reference_to --> laya_coreml
+  z0 -- reference_to --> laya_mlx
+  z0 -- reference_to --> jev_ultrafast
+  z0 -- reference_to --> memento
+  z0intelligence -- discovers_from --> huggingface
+  kerdoios -- discovers_from --> vllm
+  kerdoios -- discovers_from --> ollama
+  z0intelligence -- discovers_from --> ollama
+  kerdoios -- discovers_from --> litellm
+  kerdoios -- discovers_from --> openrouter
+  tokenomics -- discovers_from --> opentelemetry
+  classDef owned fill:#e8f5e9,stroke:#2e7d32;
+  classDef upstream fill:#e3f2fd,stroke:#1565c0;
+  classDef source fill:#fff3e0,stroke:#ef6c00;
+  classDef contract fill:#f3e5f5,stroke:#6a1b9a;
+  class z0,z0archy,aodl,z0intelligence,tokenomics,kerdoios,evolution_lab,z0evals,frontier_kb,dash,ripple,flow,hermes_keel,hermes_mesh_keel,hermes_jev_skills,kvnloo_skills,rlm,sol_pi_omp,sol_pi_hermes,verified_oss_loop owned;
+  class oh_my_pi,deepseek_harness,hermes_agent,sol_pi,o8,firstmate,agenttrace,NanoJev,laya,laya_coreml,laya_mlx,jev_ultrafast,memento upstream;
+  class huggingface,vllm,ollama,litellm,openrouter,opentelemetry source;
+  class aodl__intent__v1,cu__stage_intent__v0,omp__session__aggregate,tokenomics__event__v0 contract;

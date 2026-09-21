@@ -1,0 +1,1805 @@
+{
+  "schema": "z0.almanac.v1",
+  "canonical_repo": "kvnloo/z0",
+  "generated_from": [
+    "registry/components.yaml",
+    "registry/upstreams.yaml",
+    "registry/sources.yaml",
+    "registry/interfaces.yaml",
+    "registry/profiles.yaml"
+  ],
+  "notes": [
+    "tested_ref is the ref this repo VALIDATED for install.",
+    "upstream_head is a LIVE fact and is deliberately not stored here; run `z0 registry doctor` to discover it.",
+    "architecture_status is semantic and is independent of tested_ref.",
+    "Delegated sources record the relationship and cache policy only. The facts live at the authority."
+  ],
+  "entity_classes": {
+    "owned_component": [
+      "aodl",
+      "dash",
+      "evolution-lab",
+      "flow",
+      "frontier-kb",
+      "hermes-jev-skills",
+      "hermes-keel",
+      "hermes-mesh-keel",
+      "kerdoios",
+      "kvnloo-skills",
+      "ripple",
+      "rlm",
+      "sol-pi-hermes",
+      "sol-pi-omp",
+      "tokenomics",
+      "verified-oss-loop",
+      "z0",
+      "z0archy",
+      "z0evals",
+      "z0intelligence"
+    ],
+    "upstream_system": [
+      "NanoJev",
+      "agenttrace",
+      "deepseek-harness",
+      "firstmate",
+      "hermes-agent",
+      "jev-ultrafast",
+      "laya",
+      "laya-coreml",
+      "laya-mlx",
+      "memento",
+      "o8",
+      "oh-my-pi",
+      "sol-pi"
+    ],
+    "catalog_source": [
+      "huggingface",
+      "litellm",
+      "ollama",
+      "openrouter",
+      "opentelemetry",
+      "vllm"
+    ]
+  },
+  "components": {
+    "z0": {
+      "name": "z0",
+      "repo": "kvnloo/z0",
+      "plane": "architecture",
+      "architecture_status": "merged",
+      "implementation_status": "live",
+      "owner": "Architecture",
+      "summary": "The network almanac: reconciled registry truth, install profiles, generated architecture and the onboarding entry point. Stores Zer0 relationships and policy; fetches upstream facts from the authority that already owns them.\n",
+      "owns": [
+        "registry truth",
+        "profiles",
+        "generated architecture",
+        "install matrix",
+        "onboarding"
+      ],
+      "not_here": [
+        "runtime execution",
+        "provider catalogs",
+        "telemetry semantics"
+      ],
+      "relationships": [
+        {
+          "type": "governs",
+          "to": "z0archy"
+        }
+      ],
+      "profiles": [
+        "minimal",
+        "core",
+        "personal",
+        "desktop",
+        "compute",
+        "research",
+        "full"
+      ],
+      "install": {
+        "clone": "https://github.com/kvnloo/z0.git",
+        "branch": "main",
+        "tested_ref": "3804bc7",
+        "command": "python3 -m pip install -e ."
+      },
+      "verify": {
+        "command": "./scripts/registry-check && ./scripts/docs-check"
+      },
+      "docs": {
+        "readme": "README.md",
+        "architecture": "ARCHITECTURE.md"
+      }
+    },
+    "z0archy": {
+      "name": "z0archy",
+      "repo": "kvnloo/z0archy",
+      "plane": "architecture",
+      "architecture_status": "merged",
+      "implementation_status": "experimental",
+      "owner": "Architecture",
+      "summary": "Visualisation surface for the generated typed relationship graph.",
+      "owns": [
+        "architecture visualization"
+      ],
+      "not_here": [
+        "registry truth"
+      ],
+      "relationships": [
+        {
+          "type": "reference_to",
+          "to": "z0"
+        }
+      ],
+      "profiles": [
+        "research",
+        "full"
+      ],
+      "install": {
+        "clone": "https://github.com/kvnloo/z0archy.git",
+        "branch": "main"
+      },
+      "docs": {
+        "readme": "README.md"
+      }
+    },
+    "aodl": {
+      "name": "AODL",
+      "repo": "kvnloo/aodl",
+      "plane": "contracts",
+      "architecture_status": "merged",
+      "implementation_status": "live",
+      "owner": "Contracts",
+      "summary": "Typed intent IR, compiled plan and observed state with fail-closed validation. Also owns the harness catalog and the Mesh Registry, which z0 CONSUMES rather than duplicating.\n",
+      "owns": [
+        "typed intent IR",
+        "compiled plan",
+        "observed state",
+        "harness catalog",
+        "mesh registry",
+        "fail-closed validation"
+      ],
+      "not_here": [
+        "model selection",
+        "routing policy",
+        "provider catalogs",
+        "runtime execution"
+      ],
+      "relationships": [
+        {
+          "type": "emits_contract",
+          "to": "dash"
+        },
+        {
+          "type": "emits_contract",
+          "to": "ripple"
+        }
+      ],
+      "profiles": [
+        "core",
+        "personal",
+        "desktop",
+        "research",
+        "full"
+      ],
+      "install": {
+        "clone": "https://github.com/kvnloo/aodl.git",
+        "branch": "main",
+        "tested_ref": "549f2a1",
+        "command": "python3 -m pip install -e ."
+      },
+      "verify": {
+        "command": "python3 -m pytest -q"
+      },
+      "docs": {
+        "readme": "README.md"
+      }
+    },
+    "z0intelligence": {
+      "name": "z0intelligence",
+      "repo": "kvnloo/z0intelligence",
+      "plane": "cognition",
+      "architecture_status": "merged",
+      "implementation_status": "experimental",
+      "owner": "Cognition",
+      "summary": "The cognition plane: semantic model selection and escalation, context resolution, bounded DecisionBackend contracts, the local SLM portfolio, cognition receipts, and ACTIVATION of qualified policies into shadow/canary/active. JEV/NanoJev/OpenJev are implementations behind these contracts, not peers of them.\n",
+      "owns": [
+        "semantic model selection",
+        "escalation policy",
+        "context resolution",
+        "DecisionBackend contracts",
+        "local SLM portfolio",
+        "cognition receipts",
+        "activation (shadow / canary / active)"
+      ],
+      "not_here": [
+        "provider daily-quota accounting",
+        "RPM/RPD/TPM/TPD",
+        "GPU and resource placement",
+        "token measurement"
+      ],
+      "relationships": [
+        {
+          "type": "consumes_contract",
+          "to": "aodl"
+        },
+        {
+          "type": "consumes_contract",
+          "to": "tokenomics"
+        },
+        {
+          "type": "measured_by",
+          "to": "tokenomics"
+        },
+        {
+          "type": "evaluated_by",
+          "to": "evolution-lab"
+        },
+        {
+          "type": "reference_to",
+          "to": "rlm"
+        }
+      ],
+      "profiles": [
+        "personal",
+        "research",
+        "full"
+      ],
+      "install": {
+        "clone": "https://github.com/kvnloo/z0intelligence.git",
+        "branch": "master",
+        "tested_ref": "4f88010",
+        "command": "python3 -m pip install -e ."
+      },
+      "verify": {
+        "command": "python3 -m pytest tests/test_cognition_candidates.py -q"
+      },
+      "docs": {
+        "readme": "README.md",
+        "portfolio": "docs/local-cognition-portfolio.md"
+      }
+    },
+    "tokenomics": {
+      "name": "Tokenomics",
+      "repo": "kvnloo/tokenomics",
+      "plane": "measurement",
+      "architecture_status": "merged",
+      "implementation_status": "live",
+      "owner": "Measurement",
+      "summary": "Vendor-neutral measurement contracts: multi-harness traces, verified outcomes, context economics, experiment identity, quota reconciliation and OTel transport. Owns Zer0-specific semantics; OpenTelemetry remains only the transport.\n",
+      "owns": [
+        "token/cost/latency semantics",
+        "verified outcome",
+        "context economics",
+        "experiment identity",
+        "receipt schema"
+      ],
+      "not_here": [
+        "OTel transport",
+        "provider catalogs",
+        "routing",
+        "execution"
+      ],
+      "relationships": [
+        {
+          "type": "measured_by",
+          "to": "kerdoios"
+        }
+      ],
+      "profiles": [
+        "core",
+        "personal",
+        "desktop",
+        "compute",
+        "research",
+        "full"
+      ],
+      "install": {
+        "clone": "https://github.com/kvnloo/tokenomics.git",
+        "branch": "master",
+        "tested_ref": "9af30ca",
+        "command": "python3 -m pip install -e packages/python"
+      },
+      "verify": {
+        "command": "python3 -m pytest packages/python/tests -q"
+      },
+      "docs": {
+        "readme": "README.md"
+      }
+    },
+    "kerdoios": {
+      "name": "Kerdoios",
+      "repo": "kvnloo/kerdoios",
+      "plane": "resources",
+      "architecture_status": "merged",
+      "implementation_status": "live",
+      "owner": "Resources",
+      "summary": "Resource placement: inventory, hard constraints, dimensional quota/capacity (RPM/RPD/TPM/TPD), cost/capability/privacy dimensions, Pareto selection, reservations and expiry-aware allocation. It is NOT an LLM gateway and does NOT execute providers. Currently shipped as a Hermes plugin; the logical capability is harness-neutral.\n",
+      "owns": [
+        "resource inventory",
+        "hard constraint filtering",
+        "quota and capacity ledger",
+        "Pareto / portfolio allocation",
+        "reservations",
+        "placement"
+      ],
+      "not_here": [
+        "provider execution",
+        "generic model gateway",
+        "token measurement",
+        "routing policy"
+      ],
+      "relationships": [
+        {
+          "type": "consumes_contract",
+          "to": "tokenomics"
+        }
+      ],
+      "profiles": [
+        "compute",
+        "full"
+      ],
+      "install": {
+        "clone": "https://github.com/kvnloo/kerdoios.git",
+        "branch": "main",
+        "tested_ref": "b5755ea",
+        "command": "python3 -m pip install -e ."
+      },
+      "verify": {
+        "command": "python3 -m unittest discover -s tests"
+      },
+      "docs": {
+        "readme": "README.md",
+        "placement": "docs/local-cognition-placement.md"
+      }
+    },
+    "evolution-lab": {
+      "name": "Evolution Lab",
+      "repo": "kvnloo/evolution-lab",
+      "plane": "evaluation",
+      "architecture_status": "branch_only",
+      "implementation_status": "experimental",
+      "owner": "Research",
+      "summary": "Experiment execution: frozen grouped comparisons, training/search, and the QUALIFICATION decision \u2014 whether a candidate clears the frozen gates, producing promotion evidence. It neither publishes studies nor activates anything.\n",
+      "owns": [
+        "experiment execution",
+        "frozen grouped comparisons",
+        "training and search",
+        "qualification evidence"
+      ],
+      "not_here": [
+        "activation/deployment state",
+        "publication of frozen studies"
+      ],
+      "relationships": [
+        {
+          "type": "qualifies",
+          "to": "z0evals"
+        },
+        {
+          "type": "trains_for",
+          "to": "z0intelligence"
+        }
+      ],
+      "profiles": [
+        "research",
+        "full"
+      ],
+      "install": {
+        "clone": "https://github.com/kvnloo/evolution-lab.git",
+        "branch": "main",
+        "command": "python3 -m pip install -e ."
+      },
+      "verify": {
+        "command": "python3 -m unittest discover -s tests"
+      },
+      "docs": {
+        "readme": "README.md"
+      }
+    },
+    "z0evals": {
+      "name": "z0evals",
+      "repo": "kvnloo/z0evals",
+      "plane": "evaluation",
+      "architecture_status": "merged",
+      "implementation_status": "live",
+      "owner": "Research",
+      "summary": "Frozen reproducible studies and publication: immutable, citable, re-runnable evidence including slm-router-v0. It neither trains nor activates.\n",
+      "owns": [
+        "frozen studies",
+        "publication",
+        "immutable evidence"
+      ],
+      "not_here": [
+        "activated routing policy",
+        "training"
+      ],
+      "relationships": [
+        {
+          "type": "publishes_evidence_to",
+          "to": "z0intelligence"
+        },
+        {
+          "type": "reference_to",
+          "to": "evolution-lab"
+        }
+      ],
+      "profiles": [
+        "research",
+        "full"
+      ],
+      "install": {
+        "clone": "https://github.com/kvnloo/z0evals.git",
+        "branch": "main",
+        "tested_ref": "5a3be15"
+      },
+      "docs": {
+        "readme": "README.md"
+      }
+    },
+    "frontier-kb": {
+      "name": "Frontier KB",
+      "repo": "kvnloo/frontier-kb",
+      "plane": "research",
+      "architecture_status": "merged",
+      "implementation_status": "live",
+      "owner": "Research",
+      "summary": "Cross-harness public research evidence. Research authority, not architecture truth.\n",
+      "owns": [
+        "public research evidence"
+      ],
+      "not_here": [
+        "architecture truth",
+        "runtime policy",
+        "private traces"
+      ],
+      "relationships": [
+        {
+          "type": "provides_research_evidence",
+          "to": "aodl"
+        },
+        {
+          "type": "provides_research_evidence",
+          "to": "rlm"
+        },
+        {
+          "type": "provides_research_evidence",
+          "to": "z0intelligence"
+        }
+      ],
+      "profiles": [
+        "research",
+        "full"
+      ],
+      "install": {
+        "clone": "https://github.com/kvnloo/frontier-kb.git",
+        "branch": "main",
+        "tested_ref": "22b4c0f"
+      },
+      "docs": {
+        "readme": "README.md"
+      }
+    },
+    "dash": {
+      "name": "Dash",
+      "repo": "kvnloo/dash",
+      "plane": "interaction",
+      "architecture_status": "merged",
+      "implementation_status": "live",
+      "owner": "Interaction",
+      "summary": "Multi-harness phone control surface. A surface, not an executor.",
+      "owns": [
+        "multi-harness phone control surface"
+      ],
+      "not_here": [
+        "execution",
+        "intent ownership"
+      ],
+      "relationships": [
+        {
+          "type": "consumes_contract",
+          "to": "aodl"
+        },
+        {
+          "type": "consumes_contract",
+          "to": "ripple"
+        }
+      ],
+      "profiles": [
+        "desktop",
+        "personal",
+        "full"
+      ],
+      "install": {
+        "clone": "https://github.com/kvnloo/dash.git",
+        "branch": "main",
+        "tested_ref": "d5d191b"
+      },
+      "docs": {
+        "readme": "README.md"
+      }
+    },
+    "ripple": {
+      "name": "Ripple",
+      "repo": "kvnloo/ripple",
+      "plane": "interaction",
+      "architecture_status": "merged",
+      "implementation_status": "experimental",
+      "owner": "Interaction",
+      "summary": "Ephemeral intent surface mounted by Dash. Consumes AODL as data; does not own it.",
+      "owns": [
+        "ephemeral intent surface"
+      ],
+      "not_here": [
+        "AODL ownership",
+        "execution"
+      ],
+      "relationships": [
+        {
+          "type": "consumes_contract",
+          "to": "aodl"
+        }
+      ],
+      "profiles": [
+        "desktop",
+        "personal",
+        "full"
+      ],
+      "install": {
+        "clone": "https://github.com/kvnloo/ripple.git",
+        "branch": "main",
+        "tested_ref": "ea63d72"
+      },
+      "docs": {
+        "readme": "README.md"
+      }
+    },
+    "flow": {
+      "name": "Flow",
+      "repo": "kvnloo/.files",
+      "plane": "context",
+      "architecture_status": "merged",
+      "implementation_status": "experimental",
+      "owner": "Context",
+      "summary": "Predicted OS/context state feeding z0intelligence and context compilation. Harness-neutral; the OMP coupling is incidental and must not become architectural.\n",
+      "owns": [
+        "predicted OS/context state"
+      ],
+      "not_here": [
+        "OMP coupling",
+        "training logic"
+      ],
+      "relationships": [
+        {
+          "type": "emits_contract",
+          "to": "z0intelligence"
+        }
+      ],
+      "profiles": [
+        "desktop",
+        "full"
+      ],
+      "install": {
+        "clone": "https://github.com/kvnloo/.files.git",
+        "branch": "master",
+        "tested_ref": "bb5c0ea"
+      },
+      "docs": {
+        "readme": "README.md"
+      }
+    },
+    "hermes-keel": {
+      "name": "Hermes Keel",
+      "repo": "kvnloo/hermes-keel",
+      "plane": "execution",
+      "architecture_status": "merged",
+      "implementation_status": "experimental",
+      "owner": "Execution",
+      "summary": "Performance-based execution kernel for Hermes Agent.",
+      "owns": [
+        "Hermes execution kernel"
+      ],
+      "not_here": [
+        "harness catalog"
+      ],
+      "relationships": [
+        {
+          "type": "executes_via",
+          "to": "hermes-agent"
+        }
+      ],
+      "profiles": [
+        "full"
+      ],
+      "install": {
+        "clone": "https://github.com/kvnloo/hermes-keel.git",
+        "branch": "main",
+        "tested_ref": "7f6d84b"
+      },
+      "docs": {
+        "readme": "README.md"
+      }
+    },
+    "hermes-mesh-keel": {
+      "name": "Hermes Mesh Keel",
+      "repo": "kvnloo/hermes-mesh-keel",
+      "plane": "execution",
+      "architecture_status": "merged",
+      "implementation_status": "pre_activation",
+      "owner": "Execution",
+      "summary": "Signed transport and authorization infrastructure. PRE-ACTIVATION: this must not be described as production-active anywhere.\n",
+      "owns": [
+        "signed transport",
+        "authorization"
+      ],
+      "not_here": [
+        "production activation"
+      ],
+      "relationships": [
+        {
+          "type": "executes_via",
+          "to": "hermes-agent"
+        }
+      ],
+      "profiles": [
+        "research",
+        "full"
+      ],
+      "install": {
+        "clone": "https://github.com/kvnloo/hermes-mesh-keel.git",
+        "branch": "main",
+        "tested_ref": "6b4e8d0"
+      },
+      "docs": {
+        "readme": "README.md"
+      }
+    },
+    "hermes-jev-skills": {
+      "name": "Hermes Jev Skills",
+      "repo": "kvnloo/hermes-jev-skills",
+      "plane": "cognition",
+      "architecture_status": "branch_only",
+      "implementation_status": "experimental",
+      "owner": "Cognition",
+      "summary": "Jev-powered routing, memory, compaction and skill selection for Hermes.",
+      "owns": [
+        "Hermes Jev skills"
+      ],
+      "not_here": [
+        "decision ownership"
+      ],
+      "relationships": [
+        {
+          "type": "consumes_contract",
+          "to": "z0intelligence"
+        },
+        {
+          "type": "executes_via",
+          "to": "hermes-agent"
+        }
+      ],
+      "profiles": [
+        "personal",
+        "full"
+      ],
+      "install": {
+        "clone": "https://github.com/kvnloo/hermes-jev-skills.git",
+        "branch": "main"
+      },
+      "docs": {
+        "readme": "README.md"
+      }
+    },
+    "kvnloo-skills": {
+      "name": "kvnloo skills",
+      "repo": "kvnloo/kvnloo-skills",
+      "plane": "cognition",
+      "architecture_status": "merged",
+      "implementation_status": "live",
+      "owner": "Cognition",
+      "summary": "Personal Hermes skills (Hyprland UI testing and follow-ons).",
+      "owns": [
+        "personal Hermes skills"
+      ],
+      "not_here": [
+        "architecture"
+      ],
+      "relationships": [
+        {
+          "type": "executes_via",
+          "to": "hermes-agent"
+        }
+      ],
+      "profiles": [
+        "personal",
+        "full"
+      ],
+      "install": {
+        "clone": "https://github.com/kvnloo/kvnloo-skills.git",
+        "branch": "main",
+        "tested_ref": "6654f6b"
+      },
+      "docs": {
+        "readme": "README.md"
+      }
+    },
+    "rlm": {
+      "name": "RLM",
+      "repo": "kvnloo/oh-my-pi",
+      "plane": "context",
+      "architecture_status": "branch_only",
+      "implementation_status": "experimental",
+      "owner": "Context",
+      "summary": "The addressable evidence/context plane: evidence handles, cognitive-state compilation and context virtualization. It has NO repo of its own \u2014 it lives as branches on the OMP fork, which currently carries 102 local branches across six checkouts. One lineage must be designated canonical before anything about \"the RLM design\" is claimed.\n",
+      "owns": [
+        "addressable evidence plane",
+        "evidence handles",
+        "context virtualization",
+        "selected retrieval"
+      ],
+      "not_here": [
+        "provider transport",
+        "canonical transcript"
+      ],
+      "relationships": [
+        {
+          "type": "depends_on",
+          "to": "oh-my-pi"
+        },
+        {
+          "type": "emits_contract",
+          "to": "z0intelligence"
+        }
+      ],
+      "profiles": [
+        "core",
+        "personal",
+        "research",
+        "full"
+      ],
+      "install": {
+        "clone": "https://github.com/kvnloo/oh-my-pi.git",
+        "branch": "exp/rlm-evidence-addressing",
+        "tested_ref": null
+      },
+      "docs": {
+        "readme": "README.md"
+      }
+    },
+    "sol-pi-omp": {
+      "name": "SoL-Pi for OMP",
+      "repo": "kvnloo/sol-pi-omp",
+      "plane": "context",
+      "architecture_status": "open_pr",
+      "implementation_status": "experimental",
+      "owner": "Context",
+      "summary": "OMP-loadable implementation of the SoL-Pi mechanism family \u2014 Action Fusion and ObservationPack \u2014 without patching the harness.\n",
+      "owns": [
+        "Action Fusion",
+        "ObservationPack"
+      ],
+      "not_here": [
+        "canonical context plane"
+      ],
+      "relationships": [
+        {
+          "type": "implements",
+          "to": "sol-pi"
+        },
+        {
+          "type": "depends_on",
+          "to": "oh-my-pi"
+        }
+      ],
+      "profiles": [
+        "research",
+        "full"
+      ],
+      "install": {
+        "clone": "https://github.com/kvnloo/sol-pi-omp.git",
+        "branch": "main"
+      },
+      "docs": {
+        "readme": "README.md"
+      }
+    },
+    "sol-pi-hermes": {
+      "name": "SoL-Pi for Hermes",
+      "repo": "kvnloo/sol-pi-hermes",
+      "plane": "context",
+      "architecture_status": "merged",
+      "implementation_status": "experimental",
+      "owner": "Context",
+      "summary": "Standalone Hermes plugin port of the SoL-Pi mechanism family.",
+      "owns": [
+        "Action Fusion",
+        "ObservationPack"
+      ],
+      "not_here": [
+        "canonical context plane"
+      ],
+      "relationships": [
+        {
+          "type": "implements",
+          "to": "sol-pi"
+        },
+        {
+          "type": "executes_via",
+          "to": "hermes-agent"
+        }
+      ],
+      "profiles": [
+        "research",
+        "full"
+      ],
+      "install": {
+        "clone": "https://github.com/kvnloo/sol-pi-hermes.git",
+        "branch": "main",
+        "tested_ref": "2d94fab"
+      },
+      "docs": {
+        "readme": "README.md"
+      }
+    },
+    "verified-oss-loop": {
+      "name": "Verified OSS Loop",
+      "repo": "kvnloo/verified-oss-loop",
+      "plane": "governance",
+      "architecture_status": "merged",
+      "implementation_status": "live",
+      "owner": "Governance",
+      "summary": "Project-neutral protocol for roadmap-driven, evidence-backed human and agent contribution. Governance/reference infrastructure, not runtime.\n",
+      "owns": [
+        "contribution and evidence governance"
+      ],
+      "not_here": [
+        "runtime"
+      ],
+      "relationships": [
+        {
+          "type": "reference_to",
+          "to": "frontier-kb"
+        }
+      ],
+      "profiles": [
+        "full"
+      ],
+      "install": {
+        "clone": "https://github.com/kvnloo/verified-oss-loop.git",
+        "branch": "main",
+        "tested_ref": "7ba2782"
+      },
+      "docs": {
+        "readme": "README.md"
+      }
+    }
+  },
+  "upstreams": {
+    "oh-my-pi": {
+      "name": "OMP (Oh My Pi)",
+      "repo": "kvnloo/oh-my-pi",
+      "upstream_repo": "<fork>",
+      "kind": "harness",
+      "plane": "execution",
+      "is_fork": true,
+      "relationship": "executes_via",
+      "summary": "Coding-agent runtime. Zer0 executes through it, and the RLM context extension lineage lives on its branches. It is one harness among peers, never a mandatory architectural root.\n",
+      "owns": [
+        "coding agent runtime"
+      ],
+      "not_here": [
+        "Zer0 routing policy",
+        "Zer0 measurement semantics",
+        "harness catalog"
+      ],
+      "consumes_contracts": [
+        "aodl.intent.v1",
+        "tokenomics.event.v0"
+      ],
+      "emits_contracts": [
+        "omp.session.aggregate",
+        "cu.stage_intent.v0"
+      ],
+      "note": "The earlier registry pinned this fork to d707478 on rfc/interactive-performance-stack, which is the head of OPEN PR #77 \u2014 an unmerged fork branch presented as architecture truth.\n"
+    },
+    "deepseek-harness": {
+      "name": "DeepSeek Harness",
+      "repo": "kvnloo/deepseek-harness",
+      "upstream_repo": "deepseek-ai/deepseek-harness",
+      "kind": "harness",
+      "plane": "execution",
+      "is_fork": true,
+      "relationship": "executes_via",
+      "summary": "Plugin-oriented execution harness: models, tools, sessions, sandboxes and UI are all plugins. Zer0 integrates through its adapter/plugin seams rather than making a Zer0-specific fork its architectural centre.\n",
+      "owns": [
+        "DSH execution",
+        "provider adapters",
+        "llm-pi-ai provider/model catalog authority"
+      ],
+      "not_here": [
+        "Zer0 routing",
+        "quota allocation",
+        "measurement semantics"
+      ],
+      "consumes_contracts": [
+        "aodl.intent.v1",
+        "tokenomics.event.v0"
+      ],
+      "note": "Absent from the previous registry entirely, despite being a primary execution surface. Its llm-pi-ai catalog is the authority for provider and model identity \u2014 z0 must consume it, not mirror it.\n"
+    },
+    "hermes-agent": {
+      "name": "Hermes Agent",
+      "repo": "NousResearch/hermes-agent",
+      "upstream_repo": "NousResearch/hermes-agent",
+      "kind": "harness",
+      "plane": "execution",
+      "is_fork": false,
+      "relationship": "executes_via",
+      "summary": "Upstream harness. Several Zer0 systems ship as Hermes plugins (Kerdoios today; hermes-jev-skills, hermes-keel), which is an implementation detail of those components, not of the harness abstraction.\n",
+      "owns": [
+        "Hermes agent runtime"
+      ],
+      "not_here": [
+        "Zer0 routing policy",
+        "harness catalog"
+      ],
+      "consumes_contracts": [
+        "aodl.intent.v1",
+        "tokenomics.event.v0"
+      ]
+    },
+    "sol-pi": {
+      "name": "SoL-Pi",
+      "repo": "kvnloo/SoL-Pi",
+      "upstream_repo": "NVlabs/SoL-Pi",
+      "kind": "research",
+      "plane": "context",
+      "is_fork": true,
+      "relationship": "reference_to",
+      "summary": "Upstream research origin of the SoL-Pi mechanism family. There is NO canonical `sol-pi` component in the network: the mechanisms are Action Fusion, observation packing/reduction, verified reduction and context economics, implemented in sol-pi-omp and sol-pi-hermes.\n",
+      "owns": [
+        "upstream research prototype"
+      ],
+      "not_here": [
+        "a shipped Zer0 component"
+      ]
+    },
+    "o8": {
+      "name": "o8",
+      "repo": "kvnloo/o8",
+      "upstream_repo": "<fork>",
+      "kind": "control_room",
+      "plane": "execution",
+      "is_fork": true,
+      "relationship": "reference_to",
+      "summary": "Multi-harness control room and AODL catalog member.",
+      "owns": [
+        "upstream control room"
+      ],
+      "not_here": [
+        "Zer0-owned surface"
+      ]
+    },
+    "firstmate": {
+      "name": "Firstmate",
+      "repo": "kvnloo/firstmate",
+      "upstream_repo": "<fork>",
+      "kind": "distro",
+      "plane": "execution",
+      "is_fork": true,
+      "relationship": "reference_to",
+      "summary": "An agent distro. Explicitly NOT itself a harness \u2014 classifying it as one is the category error this file exists to prevent.",
+      "owns": [
+        "agent distribution"
+      ],
+      "not_here": [
+        "harness role"
+      ]
+    },
+    "agenttrace": {
+      "name": "AgentTrace",
+      "repo": "kvnloo/agenttrace",
+      "upstream_repo": "<fork>",
+      "kind": "observability",
+      "plane": "measurement",
+      "is_fork": true,
+      "relationship": "reference_to",
+      "summary": "Local-first TUI/CLI over agent-session history. An observational consumer, NOT the neutral metric authority \u2014 Tokenomics owns measurement semantics.\n",
+      "owns": [
+        "agent session history inspection"
+      ],
+      "not_here": [
+        "measurement semantics"
+      ],
+      "consumes_contracts": [
+        "tokenomics.event.v0"
+      ]
+    },
+    "NanoJev": {
+      "name": "NanoJev",
+      "repo": "kvnloo/NanoJev",
+      "upstream_repo": "<fork>",
+      "kind": "model",
+      "plane": "cognition",
+      "is_fork": true,
+      "relationship": "reference_to",
+      "summary": "JEV-family implementation. A candidate behind z0intelligence's DecisionBackend contract, not an owner of decision policy.\n",
+      "owns": [
+        "JEV-family implementation"
+      ],
+      "not_here": [
+        "decision ownership"
+      ]
+    },
+    "laya": {
+      "name": "Laya",
+      "repo": "kvnloo/laya",
+      "upstream_repo": "<fork>",
+      "kind": "model",
+      "plane": "cognition",
+      "is_fork": true,
+      "relationship": "reference_to",
+      "summary": "Typed-decision model family; a DecisionBackend candidate behind z0intelligence.",
+      "owns": [
+        "typed-decision model"
+      ],
+      "not_here": [
+        "decision ownership"
+      ]
+    },
+    "laya-coreml": {
+      "name": "Laya (Core ML)",
+      "repo": "kvnloo/laya-coreml",
+      "upstream_repo": "<fork>",
+      "kind": "model",
+      "plane": "cognition",
+      "is_fork": true,
+      "relationship": "reference_to",
+      "summary": "Apple Core ML / Neural Engine runtime for Laya typed decisions.",
+      "owns": [
+        "Core ML runtime for Laya"
+      ],
+      "not_here": [
+        "decision ownership"
+      ]
+    },
+    "laya-mlx": {
+      "name": "Laya (MLX)",
+      "repo": "kvnloo/laya-mlx",
+      "upstream_repo": "<fork>",
+      "kind": "model",
+      "plane": "cognition",
+      "is_fork": true,
+      "relationship": "reference_to",
+      "summary": "Native MLX runtime for Laya typed decision models.",
+      "owns": [
+        "MLX runtime for Laya"
+      ],
+      "not_here": [
+        "decision ownership"
+      ]
+    },
+    "jev-ultrafast": {
+      "name": "Jev Ultrafast",
+      "repo": "kvnloo/jev-ultrafast",
+      "upstream_repo": "<fork>",
+      "kind": "model",
+      "plane": "cognition",
+      "is_fork": true,
+      "relationship": "reference_to",
+      "summary": "JEV-family latency experiment.",
+      "owns": [
+        "JEV latency experiment"
+      ],
+      "not_here": [
+        "decision ownership"
+      ]
+    },
+    "memento": {
+      "name": "Memento",
+      "repo": "kvnloo/memento",
+      "upstream_repo": "<fork>",
+      "kind": "legacy",
+      "plane": "memory",
+      "is_fork": true,
+      "relationship": "reference_to",
+      "summary": "Fork of the Memento screen recorder; upstream last active 2024. A possible FUTURE prospective sensor for screen/computer-use history \u2014 emphatically not the current runtime memory authority. Zer0 has no memory authority today.\n",
+      "owns": [],
+      "not_here": [
+        "runtime memory authority",
+        "research KB"
+      ],
+      "note": "The previous registry listed this as `kind: memory`, `status: idea`, and a peer component. It is a 2024 screenshot recorder.\n"
+    }
+  },
+  "sources": {
+    "huggingface": {
+      "name": "Hugging Face Hub",
+      "kind": "model_hub",
+      "authority": {
+        "surface": "huggingface.co API",
+        "repo": "huggingface/transformers"
+      },
+      "relationship": "discovers_from",
+      "discovers": [
+        "model identity and config",
+        "model files and revisions",
+        "licence and gating metadata"
+      ],
+      "cache_policy": "derived",
+      "cache_ttl": "24h",
+      "owns": [
+        "model identity",
+        "model files",
+        "model metadata"
+      ],
+      "does_not_own": [
+        "Zer0 model selection policy",
+        "residency policy"
+      ],
+      "consumed_by": [
+        "z0intelligence"
+      ],
+      "note": "z0intelligence may pin a small intentional model set: selection + revision + role + residency ARE Zer0-owned facts. Architecture family and file metadata are not.\n"
+    },
+    "vllm": {
+      "name": "vLLM",
+      "kind": "model_server",
+      "authority": {
+        "surface": "vLLM model registry / runtime API",
+        "repo": "vllm-project/vllm"
+      },
+      "relationship": "discovers_from",
+      "discovers": [
+        "currently served models",
+        "supported architectures"
+      ],
+      "cache_policy": "derived",
+      "cache_ttl": "1h",
+      "owns": [
+        "inference engine",
+        "model architecture support"
+      ],
+      "does_not_own": [
+        "Zer0 routing policy",
+        "verified outcome"
+      ],
+      "consumed_by": [
+        "kerdoios"
+      ]
+    },
+    "ollama": {
+      "name": "Ollama",
+      "kind": "model_server",
+      "authority": {
+        "surface": "local Ollama HTTP API"
+      },
+      "relationship": "discovers_from",
+      "discovers": [
+        "installed models",
+        "model details"
+      ],
+      "cache_policy": "runtime",
+      "cache_ttl": null,
+      "owns": [
+        "local model installation state"
+      ],
+      "does_not_own": [
+        "Zer0 placement policy"
+      ],
+      "consumed_by": [
+        "kerdoios",
+        "z0intelligence"
+      ],
+      "note": "Local runtime state is discovered on the machine, never committed."
+    },
+    "litellm": {
+      "name": "LiteLLM",
+      "kind": "provider_metadata",
+      "authority": {
+        "repo": "BerriAI/litellm"
+      },
+      "relationship": "discovers_from",
+      "discovers": [
+        "provider and model metadata",
+        "model cost tables"
+      ],
+      "cache_policy": "derived",
+      "cache_ttl": "24h",
+      "owns": [
+        "provider/model cost metadata"
+      ],
+      "does_not_own": [
+        "Zer0 placement",
+        "Zer0 spend policy"
+      ],
+      "consumed_by": [
+        "kerdoios"
+      ],
+      "note": "Kerdoios consumes this. Kerdoios is explicitly NOT another gateway, and must not grow a parallel cost table.\n"
+    },
+    "openrouter": {
+      "name": "OpenRouter",
+      "kind": "provider_inventory",
+      "authority": {
+        "surface": "openrouter.ai models API"
+      },
+      "relationship": "discovers_from",
+      "discovers": [
+        "live provider inventory",
+        "live pricing",
+        "free-tier availability"
+      ],
+      "cache_policy": "live_only",
+      "cache_ttl": null,
+      "owns": [
+        "live provider inventory"
+      ],
+      "does_not_own": [
+        "Zer0 quota accounting"
+      ],
+      "consumed_by": [
+        "kerdoios"
+      ],
+      "note": "Discover live. An offline snapshot is admissible only as a provenance-stamped fallback cache, never as the primary fact.\n"
+    },
+    "opentelemetry": {
+      "name": "OpenTelemetry",
+      "kind": "telemetry_transport",
+      "authority": {
+        "surface": "OTel specification and SDKs",
+        "repo": "open-telemetry/opentelemetry-specification"
+      },
+      "relationship": "discovers_from",
+      "discovers": [
+        "telemetry transport",
+        "span/trace wire format"
+      ],
+      "cache_policy": "none",
+      "cache_ttl": null,
+      "owns": [
+        "telemetry transport"
+      ],
+      "does_not_own": [
+        "Zer0 measurement semantics",
+        "verified outcome"
+      ],
+      "consumed_by": [
+        "tokenomics"
+      ],
+      "note": "OTel remains the TRANSPORT. Tokenomics owns Zer0-specific semantics and must not reimplement OTel.\n"
+    }
+  },
+  "interfaces": {
+    "aodl.intent.v1": {
+      "class": "contract",
+      "owner": "aodl",
+      "summary": "Typed intent / plan contract. Governs execution; is not runtime execution."
+    },
+    "aodl.observed_state.v1": {
+      "class": "contract",
+      "owner": "aodl",
+      "summary": "Observed execution state distinct from the compiled plan."
+    },
+    "tokenomics.event.v0": {
+      "class": "contract",
+      "owner": "tokenomics",
+      "summary": "Vendor-neutral usage / cost / latency / outcome event envelope."
+    },
+    "tokenomics.report.v1": {
+      "class": "contract",
+      "owner": "tokenomics",
+      "summary": "Aggregated reconciliation, coverage and verified-task report."
+    },
+    "z0int.decision_receipt.v1": {
+      "class": "contract",
+      "owner": "z0intelligence",
+      "summary": "Replayable routing/policy decision receipt (state, candidates, quota, outcome)."
+    },
+    "z0int.cognition.receipt.v1": {
+      "class": "contract",
+      "owner": "z0intelligence",
+      "summary": "Cognition decision receipt including the eligible candidate set and surface verdict."
+    },
+    "kerdoios.placement.v1": {
+      "class": "contract",
+      "owner": "kerdoios",
+      "summary": "Placement decision over a resource portfolio. Allocation, not execution."
+    },
+    "kerdoios.quota_state.v1": {
+      "class": "contract",
+      "owner": "kerdoios",
+      "summary": "Dimensional quota state (rpm/rpd/tpm/tpd) with per-dimension provenance."
+    },
+    "flow.prediction.v1": {
+      "class": "contract",
+      "owner": "flow",
+      "summary": "OS-context prediction with horizon metadata and gates."
+    },
+    "rlm.evidence_handle.v0": {
+      "class": "contract",
+      "owner": "rlm",
+      "summary": "Addressable handle into the evidence plane, rehydratable on demand."
+    },
+    "z0evals.study.v1": {
+      "class": "contract",
+      "owner": "z0evals",
+      "summary": "Frozen reproducible study record. Immutable once published."
+    },
+    "harness.execution.v0": {
+      "class": "contract",
+      "owner": "aodl",
+      "summary": "The harness-neutral execution seam. Every harness adapter implements this and nothing above it may special-case a harness.\n"
+    },
+    "omp.session.aggregate": {
+      "class": "adapter",
+      "harness": "oh-my-pi",
+      "owner": "oh-my-pi",
+      "summary": "OMP-specific session-level token rollup for Tokenomics reconciliation."
+    },
+    "omp.rlm.spill.v0": {
+      "class": "adapter",
+      "harness": "oh-my-pi",
+      "owner": "oh-my-pi",
+      "summary": "OMP-specific RLM context-spill surface. Not a shared contract."
+    },
+    "cu.stage_intent.v0": {
+      "class": "adapter",
+      "harness": "oh-my-pi",
+      "owner": "oh-my-pi",
+      "summary": "OMP-specific Handsfree / computer-use window and layout intent."
+    },
+    "dsh.llm_pi_ai.catalog": {
+      "class": "adapter",
+      "harness": "deepseek-harness",
+      "owner": "deepseek-harness",
+      "summary": "DSH llm-pi-ai provider/model catalog. The AUTHORITY for provider and model identity \u2014 z0 consumes this rather than mirroring it.\n"
+    },
+    "hermes.plugin.v0": {
+      "class": "adapter",
+      "harness": "hermes-agent",
+      "owner": "hermes-agent",
+      "summary": "Hermes plugin surface. Several Zer0 components ship through it."
+    },
+    "agenttrace.span.v0": {
+      "class": "adapter",
+      "harness": "agenttrace",
+      "owner": "agenttrace",
+      "summary": "Historical agent span for observability export. Observational only."
+    }
+  },
+  "profiles": {
+    "minimal": {
+      "summary": "One supported harness. Pick which; nothing else is implied.",
+      "capabilities": [
+        "execution"
+      ],
+      "harnesses": [
+        "hermes-agent",
+        "oh-my-pi",
+        "deepseek-harness"
+      ],
+      "default_harness": "hermes-agent",
+      "components": []
+    },
+    "core": {
+      "summary": "A harness plus the contract and measurement spine.",
+      "extends": "minimal",
+      "capabilities": [
+        "execution",
+        "contracts",
+        "measurement"
+      ],
+      "components": [
+        "z0",
+        "aodl",
+        "tokenomics"
+      ]
+    },
+    "personal": {
+      "summary": "Learned cognition \u2014 selection, escalation and activation.",
+      "extends": "core",
+      "capabilities": [
+        "cognition"
+      ],
+      "components": [
+        "z0intelligence"
+      ]
+    },
+    "desktop": {
+      "summary": "Predictive OS/context state and interaction surfaces.",
+      "extends": "core",
+      "capabilities": [
+        "context",
+        "interaction"
+      ],
+      "components": [
+        "flow",
+        "dash",
+        "ripple"
+      ]
+    },
+    "compute": {
+      "summary": "Resource discovery, quota accounting and placement.",
+      "extends": "core",
+      "capabilities": [
+        "resources"
+      ],
+      "components": [
+        "kerdoios"
+      ]
+    },
+    "context": {
+      "summary": "The addressable evidence / context plane.",
+      "extends": "core",
+      "capabilities": [
+        "context"
+      ],
+      "components": [
+        "rlm",
+        "sol-pi-hermes"
+      ]
+    },
+    "research": {
+      "summary": "Experiment, evidence, publication and public research.",
+      "extends": "core",
+      "capabilities": [
+        "evaluation",
+        "research"
+      ],
+      "components": [
+        "z0intelligence",
+        "evolution-lab",
+        "z0evals",
+        "frontier-kb"
+      ]
+    },
+    "full": {
+      "summary": "Every owned component with a live or experimental implementation.",
+      "extends": "core",
+      "capabilities": [
+        "cognition",
+        "context",
+        "interaction",
+        "resources",
+        "evaluation",
+        "research",
+        "governance"
+      ],
+      "components": [
+        "z0intelligence",
+        "flow",
+        "dash",
+        "ripple",
+        "kerdoios",
+        "rlm",
+        "evolution-lab",
+        "z0evals",
+        "frontier-kb",
+        "z0archy",
+        "hermes-keel",
+        "hermes-jev-skills",
+        "kvnloo-skills",
+        "sol-pi-hermes",
+        "verified-oss-loop"
+      ]
+    }
+  },
+  "relationships": [
+    {
+      "from": "z0",
+      "type": "governs",
+      "to": "z0archy"
+    },
+    {
+      "from": "z0archy",
+      "type": "reference_to",
+      "to": "z0"
+    },
+    {
+      "from": "aodl",
+      "type": "emits_contract",
+      "to": "dash"
+    },
+    {
+      "from": "aodl",
+      "type": "emits_contract",
+      "to": "ripple"
+    },
+    {
+      "from": "z0intelligence",
+      "type": "consumes_contract",
+      "to": "aodl"
+    },
+    {
+      "from": "z0intelligence",
+      "type": "consumes_contract",
+      "to": "tokenomics"
+    },
+    {
+      "from": "z0intelligence",
+      "type": "measured_by",
+      "to": "tokenomics"
+    },
+    {
+      "from": "z0intelligence",
+      "type": "evaluated_by",
+      "to": "evolution-lab"
+    },
+    {
+      "from": "z0intelligence",
+      "type": "reference_to",
+      "to": "rlm"
+    },
+    {
+      "from": "tokenomics",
+      "type": "measured_by",
+      "to": "kerdoios"
+    },
+    {
+      "from": "kerdoios",
+      "type": "consumes_contract",
+      "to": "tokenomics"
+    },
+    {
+      "from": "evolution-lab",
+      "type": "qualifies",
+      "to": "z0evals"
+    },
+    {
+      "from": "evolution-lab",
+      "type": "trains_for",
+      "to": "z0intelligence"
+    },
+    {
+      "from": "z0evals",
+      "type": "publishes_evidence_to",
+      "to": "z0intelligence"
+    },
+    {
+      "from": "z0evals",
+      "type": "reference_to",
+      "to": "evolution-lab"
+    },
+    {
+      "from": "frontier-kb",
+      "type": "provides_research_evidence",
+      "to": "aodl"
+    },
+    {
+      "from": "frontier-kb",
+      "type": "provides_research_evidence",
+      "to": "rlm"
+    },
+    {
+      "from": "frontier-kb",
+      "type": "provides_research_evidence",
+      "to": "z0intelligence"
+    },
+    {
+      "from": "dash",
+      "type": "consumes_contract",
+      "to": "aodl"
+    },
+    {
+      "from": "dash",
+      "type": "consumes_contract",
+      "to": "ripple"
+    },
+    {
+      "from": "ripple",
+      "type": "consumes_contract",
+      "to": "aodl"
+    },
+    {
+      "from": "flow",
+      "type": "emits_contract",
+      "to": "z0intelligence"
+    },
+    {
+      "from": "hermes-keel",
+      "type": "executes_via",
+      "to": "hermes-agent"
+    },
+    {
+      "from": "hermes-mesh-keel",
+      "type": "executes_via",
+      "to": "hermes-agent"
+    },
+    {
+      "from": "hermes-jev-skills",
+      "type": "consumes_contract",
+      "to": "z0intelligence"
+    },
+    {
+      "from": "hermes-jev-skills",
+      "type": "executes_via",
+      "to": "hermes-agent"
+    },
+    {
+      "from": "kvnloo-skills",
+      "type": "executes_via",
+      "to": "hermes-agent"
+    },
+    {
+      "from": "rlm",
+      "type": "depends_on",
+      "to": "oh-my-pi"
+    },
+    {
+      "from": "rlm",
+      "type": "emits_contract",
+      "to": "z0intelligence"
+    },
+    {
+      "from": "sol-pi-omp",
+      "type": "implements",
+      "to": "sol-pi"
+    },
+    {
+      "from": "sol-pi-omp",
+      "type": "depends_on",
+      "to": "oh-my-pi"
+    },
+    {
+      "from": "sol-pi-hermes",
+      "type": "implements",
+      "to": "sol-pi"
+    },
+    {
+      "from": "sol-pi-hermes",
+      "type": "executes_via",
+      "to": "hermes-agent"
+    },
+    {
+      "from": "verified-oss-loop",
+      "type": "reference_to",
+      "to": "frontier-kb"
+    },
+    {
+      "from": "z0",
+      "type": "executes_via",
+      "to": "oh-my-pi"
+    },
+    {
+      "from": "oh-my-pi",
+      "type": "consumes_contract",
+      "to": "aodl.intent.v1"
+    },
+    {
+      "from": "oh-my-pi",
+      "type": "consumes_contract",
+      "to": "tokenomics.event.v0"
+    },
+    {
+      "from": "oh-my-pi",
+      "type": "emits_contract",
+      "to": "omp.session.aggregate"
+    },
+    {
+      "from": "oh-my-pi",
+      "type": "emits_contract",
+      "to": "cu.stage_intent.v0"
+    },
+    {
+      "from": "z0",
+      "type": "executes_via",
+      "to": "deepseek-harness"
+    },
+    {
+      "from": "deepseek-harness",
+      "type": "consumes_contract",
+      "to": "aodl.intent.v1"
+    },
+    {
+      "from": "deepseek-harness",
+      "type": "consumes_contract",
+      "to": "tokenomics.event.v0"
+    },
+    {
+      "from": "z0",
+      "type": "executes_via",
+      "to": "hermes-agent"
+    },
+    {
+      "from": "hermes-agent",
+      "type": "consumes_contract",
+      "to": "aodl.intent.v1"
+    },
+    {
+      "from": "hermes-agent",
+      "type": "consumes_contract",
+      "to": "tokenomics.event.v0"
+    },
+    {
+      "from": "z0",
+      "type": "reference_to",
+      "to": "sol-pi"
+    },
+    {
+      "from": "z0",
+      "type": "reference_to",
+      "to": "o8"
+    },
+    {
+      "from": "z0",
+      "type": "reference_to",
+      "to": "firstmate"
+    },
+    {
+      "from": "z0",
+      "type": "reference_to",
+      "to": "agenttrace"
+    },
+    {
+      "from": "agenttrace",
+      "type": "consumes_contract",
+      "to": "tokenomics.event.v0"
+    },
+    {
+      "from": "z0",
+      "type": "reference_to",
+      "to": "NanoJev"
+    },
+    {
+      "from": "z0",
+      "type": "reference_to",
+      "to": "laya"
+    },
+    {
+      "from": "z0",
+      "type": "reference_to",
+      "to": "laya-coreml"
+    },
+    {
+      "from": "z0",
+      "type": "reference_to",
+      "to": "laya-mlx"
+    },
+    {
+      "from": "z0",
+      "type": "reference_to",
+      "to": "jev-ultrafast"
+    },
+    {
+      "from": "z0",
+      "type": "reference_to",
+      "to": "memento"
+    },
+    {
+      "from": "z0intelligence",
+      "type": "discovers_from",
+      "to": "huggingface"
+    },
+    {
+      "from": "kerdoios",
+      "type": "discovers_from",
+      "to": "vllm"
+    },
+    {
+      "from": "kerdoios",
+      "type": "discovers_from",
+      "to": "ollama"
+    },
+    {
+      "from": "z0intelligence",
+      "type": "discovers_from",
+      "to": "ollama"
+    },
+    {
+      "from": "kerdoios",
+      "type": "discovers_from",
+      "to": "litellm"
+    },
+    {
+      "from": "kerdoios",
+      "type": "discovers_from",
+      "to": "openrouter"
+    },
+    {
+      "from": "tokenomics",
+      "type": "discovers_from",
+      "to": "opentelemetry"
+    }
+  ]
+}

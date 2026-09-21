@@ -1,52 +1,90 @@
-# Install profiles — resolved component sets, not a package manager.
+# Install profiles — CAPABILITY sets plus a harness choice, not a package manager.
+#
+# A profile answers two separate questions:
+#   1. what capabilities do I want?          -> capabilities + components
+#   2. which harness do I execute through?   -> harnesses + default_harness
+#
+# Harnesses are upstream systems (upstreams.yaml), so they are never listed in
+# `components`. `minimal` therefore means "one supported harness", NOT "install
+# OMP" — the previous registry made an unmerged OMP fork its minimal Zer0.
+#
+# `full` deliberately does not pull in reference-only or donor repos.
 
 profiles:
   minimal:
-    summary: OMP only — the coding agent runtime.
-    components:
-      - oh-my-pi
+    summary: One supported harness. Pick which; nothing else is implied.
+    capabilities: [execution]
+    harnesses: [hermes-agent, oh-my-pi, deepseek-harness]
+    default_harness: hermes-agent
+    components: []
 
   core:
-    summary: Normal Zer0 user — agent + measurement.
+    summary: A harness plus the contract and measurement spine.
+    extends: minimal
+    capabilities: [execution, contracts, measurement]
     components:
-      - oh-my-pi
+      - z0
+      - aodl
       - tokenomics
 
   personal:
-    summary: Personalization and learned policy.
+    summary: Learned cognition — selection, escalation and activation.
     extends: core
+    capabilities: [cognition]
     components:
       - z0intelligence
 
   desktop:
-    summary: Predictive desktop + Handsfree voice (OMP subsystems).
+    summary: Predictive OS/context state and interaction surfaces.
     extends: core
+    capabilities: [context, interaction]
     components:
       - flow
+      - dash
+      - ripple
 
   compute:
-    summary: Model/provider routing and cost optimization.
+    summary: Resource discovery, quota accounting and placement.
     extends: core
+    capabilities: [resources]
     components:
       - kerdoios
 
+  context:
+    summary: The addressable evidence / context plane.
+    extends: core
+    capabilities: [context]
+    components:
+      - rlm
+      - sol-pi-hermes
+
   research:
-    summary: Autonomous optimization and research knowledge.
+    summary: Experiment, evidence, publication and public research.
+    extends: core
+    capabilities: [evaluation, research]
     components:
       - z0intelligence
-      - tokenomics
       - evolution-lab
+      - z0evals
       - frontier-kb
 
   full:
-    summary: All stable/canary components (excludes idea/reference-only).
+    summary: Every owned component with a live or experimental implementation.
+    extends: core
+    capabilities: [cognition, context, interaction, resources, evaluation, research, governance]
     components:
-      - oh-my-pi
-      - tokenomics
       - z0intelligence
       - flow
+      - dash
+      - ripple
       - kerdoios
+      - rlm
       - evolution-lab
+      - z0evals
       - frontier-kb
-      - aodl
-      - agenttrace
+      - z0archy
+      - hermes-keel
+      - hermes-jev-skills
+      - kvnloo-skills
+      - sol-pi-hermes
+      - verified-oss-loop

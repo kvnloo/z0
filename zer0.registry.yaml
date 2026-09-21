@@ -1,91 +1,384 @@
-# Agent-consumable Zer0 registry summary (hand-synced; generate from components.yaml in future)
-version: 1
+# GENERATED — do not edit. Derived from registry/*.yaml by `./scripts/docs-generate`.
+version: 2
 ecosystem: zer0
 canonical_repo: kvnloo/z0
-
-rules:
-  - Implementation docs live with implementations
-  - Architecture and onboarding live in z0
-  - Token claims require Tokenomics evidence
-  - AODL is contracts only, not runtime
-  - z0 is map/installer only, never business logic
-
-profiles:
-  minimal: [oh-my-pi]
-  core: [oh-my-pi, tokenomics]
-  personal: [oh-my-pi, tokenomics, z0intelligence]
-  desktop: [oh-my-pi, tokenomics, flow]
-  compute: [oh-my-pi, tokenomics, kerdoios]
-  research: [z0intelligence, tokenomics, evolution-lab, frontier-kb]
-  full:
-    - oh-my-pi
-    - tokenomics
-    - z0intelligence
-    - flow
-    - kerdoios
-    - evolution-lab
-    - frontier-kb
-    - aodl
-    - agenttrace
-
+generated_from:
+- registry/*.yaml
 components:
-  oh-my-pi:
-    repo: kvnloo/oh-my-pi
-    kind: runtime
-    status: canary
-    execution: canary
-  tokenomics:
-    repo: kvnloo/tokenomics
-    kind: measurement
-    status: experimental
-    execution: live
-  flow:
-    repo: kvnloo/.files
-    kind: desktop
-    status: experimental
-    execution: shadow
-  z0intelligence:
-    repo: kvnloo/z0intelligence
-    kind: intelligence
-    status: experimental
-    execution: log_only
-  kerdoios:
-    repo: kvnloo/kerdoios
-    kind: compute
-    status: experimental
-    execution: live
-  evolution-lab:
-    repo: kvnloo/evolution-lab
-    kind: research
-    status: experimental
-    execution: shadow
-  frontier-kb:
-    repo: kvnloo/frontier-kb
-    kind: research
-    status: experimental
-    execution: shadow
   aodl:
     repo: kvnloo/aodl
-    kind: contract
-    status: experimental
-    execution: shadow
+    plane: contracts
+    architecture_status: merged
+    implementation_status: live
+    owner: Contracts
+    owns:
+    - typed intent IR
+    - compiled plan
+    - observed state
+    - harness catalog
+    - mesh registry
+    - fail-closed validation
+    not_here:
+    - model selection
+    - routing policy
+    - provider catalogs
+    - runtime execution
+  dash:
+    repo: kvnloo/dash
+    plane: interaction
+    architecture_status: merged
+    implementation_status: live
+    owner: Interaction
+    owns:
+    - multi-harness phone control surface
+    not_here:
+    - execution
+    - intent ownership
+  evolution-lab:
+    repo: kvnloo/evolution-lab
+    plane: evaluation
+    architecture_status: branch_only
+    implementation_status: experimental
+    owner: Research
+    owns:
+    - experiment execution
+    - frozen grouped comparisons
+    - training and search
+    - qualification evidence
+    not_here:
+    - activation/deployment state
+    - publication of frozen studies
+  flow:
+    repo: kvnloo/.files
+    plane: context
+    architecture_status: merged
+    implementation_status: experimental
+    owner: Context
+    owns:
+    - predicted OS/context state
+    not_here:
+    - OMP coupling
+    - training logic
+  frontier-kb:
+    repo: kvnloo/frontier-kb
+    plane: research
+    architecture_status: merged
+    implementation_status: live
+    owner: Research
+    owns:
+    - public research evidence
+    not_here:
+    - architecture truth
+    - runtime policy
+    - private traces
+  hermes-jev-skills:
+    repo: kvnloo/hermes-jev-skills
+    plane: cognition
+    architecture_status: branch_only
+    implementation_status: experimental
+    owner: Cognition
+    owns:
+    - Hermes Jev skills
+    not_here:
+    - decision ownership
+  hermes-keel:
+    repo: kvnloo/hermes-keel
+    plane: execution
+    architecture_status: merged
+    implementation_status: experimental
+    owner: Execution
+    owns:
+    - Hermes execution kernel
+    not_here:
+    - harness catalog
+  hermes-mesh-keel:
+    repo: kvnloo/hermes-mesh-keel
+    plane: execution
+    architecture_status: merged
+    implementation_status: pre_activation
+    owner: Execution
+    owns:
+    - signed transport
+    - authorization
+    not_here:
+    - production activation
+  kerdoios:
+    repo: kvnloo/kerdoios
+    plane: resources
+    architecture_status: merged
+    implementation_status: live
+    owner: Resources
+    owns:
+    - resource inventory
+    - hard constraint filtering
+    - quota and capacity ledger
+    - Pareto / portfolio allocation
+    - reservations
+    - placement
+    not_here:
+    - provider execution
+    - generic model gateway
+    - token measurement
+    - routing policy
+  kvnloo-skills:
+    repo: kvnloo/kvnloo-skills
+    plane: cognition
+    architecture_status: merged
+    implementation_status: live
+    owner: Cognition
+    owns:
+    - personal Hermes skills
+    not_here:
+    - architecture
+  ripple:
+    repo: kvnloo/ripple
+    plane: interaction
+    architecture_status: merged
+    implementation_status: experimental
+    owner: Interaction
+    owns:
+    - ephemeral intent surface
+    not_here:
+    - AODL ownership
+    - execution
+  rlm:
+    repo: kvnloo/oh-my-pi
+    plane: context
+    architecture_status: branch_only
+    implementation_status: experimental
+    owner: Context
+    owns:
+    - addressable evidence plane
+    - evidence handles
+    - context virtualization
+    - selected retrieval
+    not_here:
+    - provider transport
+    - canonical transcript
+  sol-pi-hermes:
+    repo: kvnloo/sol-pi-hermes
+    plane: context
+    architecture_status: merged
+    implementation_status: experimental
+    owner: Context
+    owns:
+    - Action Fusion
+    - ObservationPack
+    not_here:
+    - canonical context plane
+  sol-pi-omp:
+    repo: kvnloo/sol-pi-omp
+    plane: context
+    architecture_status: open_pr
+    implementation_status: experimental
+    owner: Context
+    owns:
+    - Action Fusion
+    - ObservationPack
+    not_here:
+    - canonical context plane
+  tokenomics:
+    repo: kvnloo/tokenomics
+    plane: measurement
+    architecture_status: merged
+    implementation_status: live
+    owner: Measurement
+    owns:
+    - token/cost/latency semantics
+    - verified outcome
+    - context economics
+    - experiment identity
+    - receipt schema
+    not_here:
+    - OTel transport
+    - provider catalogs
+    - routing
+    - execution
+  verified-oss-loop:
+    repo: kvnloo/verified-oss-loop
+    plane: governance
+    architecture_status: merged
+    implementation_status: live
+    owner: Governance
+    owns:
+    - contribution and evidence governance
+    not_here:
+    - runtime
+  z0:
+    repo: kvnloo/z0
+    plane: architecture
+    architecture_status: merged
+    implementation_status: live
+    owner: Architecture
+    owns:
+    - registry truth
+    - profiles
+    - generated architecture
+    - install matrix
+    - onboarding
+    not_here:
+    - runtime execution
+    - provider catalogs
+    - telemetry semantics
+  z0archy:
+    repo: kvnloo/z0archy
+    plane: architecture
+    architecture_status: merged
+    implementation_status: experimental
+    owner: Architecture
+    owns:
+    - architecture visualization
+    not_here:
+    - registry truth
+  z0evals:
+    repo: kvnloo/z0evals
+    plane: evaluation
+    architecture_status: merged
+    implementation_status: live
+    owner: Research
+    owns:
+    - frozen studies
+    - publication
+    - immutable evidence
+    not_here:
+    - activated routing policy
+    - training
+  z0intelligence:
+    repo: kvnloo/z0intelligence
+    plane: cognition
+    architecture_status: merged
+    implementation_status: experimental
+    owner: Cognition
+    owns:
+    - semantic model selection
+    - escalation policy
+    - context resolution
+    - DecisionBackend contracts
+    - local SLM portfolio
+    - cognition receipts
+    - activation (shadow / canary / active)
+    not_here:
+    - provider daily-quota accounting
+    - RPM/RPD/TPM/TPD
+    - GPU and resource placement
+    - token measurement
+upstreams:
+  NanoJev:
+    repo: kvnloo/NanoJev
+    kind: model
+    is_fork: true
+    relationship: reference_to
   agenttrace:
     repo: kvnloo/agenttrace
     kind: observability
-    status: experimental
-    execution: log_only
+    is_fork: true
+    relationship: reference_to
+  deepseek-harness:
+    repo: kvnloo/deepseek-harness
+    kind: harness
+    is_fork: true
+    relationship: executes_via
+  firstmate:
+    repo: kvnloo/firstmate
+    kind: distro
+    is_fork: true
+    relationship: reference_to
+  hermes-agent:
+    repo: NousResearch/hermes-agent
+    kind: harness
+    is_fork: false
+    relationship: executes_via
+  jev-ultrafast:
+    repo: kvnloo/jev-ultrafast
+    kind: model
+    is_fork: true
+    relationship: reference_to
+  laya:
+    repo: kvnloo/laya
+    kind: model
+    is_fork: true
+    relationship: reference_to
+  laya-coreml:
+    repo: kvnloo/laya-coreml
+    kind: model
+    is_fork: true
+    relationship: reference_to
+  laya-mlx:
+    repo: kvnloo/laya-mlx
+    kind: model
+    is_fork: true
+    relationship: reference_to
   memento:
     repo: kvnloo/memento
-    kind: memory
-    status: idea
-    execution: shadow
-
-interfaces:
-  - tokenomics.event.v0
-  - tokenomics.report.v1
-  - z0int.decision_receipt.v1
-  - flow_prediction.v1
-  - aodl.intent.v1
-  - kerdoios.route.v1
-  - omp.session.aggregate
-  - cu.stage_intent.v0
+    kind: legacy
+    is_fork: true
+    relationship: reference_to
+  o8:
+    repo: kvnloo/o8
+    kind: control_room
+    is_fork: true
+    relationship: reference_to
+  oh-my-pi:
+    repo: kvnloo/oh-my-pi
+    kind: harness
+    is_fork: true
+    relationship: executes_via
+  sol-pi:
+    repo: kvnloo/SoL-Pi
+    kind: research
+    is_fork: true
+    relationship: reference_to
+sources:
+  huggingface:
+    kind: model_hub
+    authority:
+      surface: huggingface.co API
+      repo: huggingface/transformers
+    discovers:
+    - model identity and config
+    - model files and revisions
+    - licence and gating metadata
+    cache_policy: derived
+  litellm:
+    kind: provider_metadata
+    authority:
+      repo: BerriAI/litellm
+    discovers:
+    - provider and model metadata
+    - model cost tables
+    cache_policy: derived
+  ollama:
+    kind: model_server
+    authority:
+      surface: local Ollama HTTP API
+    discovers:
+    - installed models
+    - model details
+    cache_policy: runtime
+  openrouter:
+    kind: provider_inventory
+    authority:
+      surface: openrouter.ai models API
+    discovers:
+    - live provider inventory
+    - live pricing
+    - free-tier availability
+    cache_policy: live_only
+  opentelemetry:
+    kind: telemetry_transport
+    authority:
+      surface: OTel specification and SDKs
+      repo: open-telemetry/opentelemetry-specification
+    discovers:
+    - telemetry transport
+    - span/trace wire format
+    cache_policy: none
+  vllm:
+    kind: model_server
+    authority:
+      surface: vLLM model registry / runtime API
+      repo: vllm-project/vllm
+    discovers:
+    - currently served models
+    - supported architectures
+    cache_policy: derived

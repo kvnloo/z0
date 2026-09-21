@@ -133,12 +133,12 @@ def _add_one(component_id: str) -> int:
         _run(["git", "clone", "--filter=blob:none", clone_url, str(dest)])
         if install.get("branch"):
             _run(["git", "checkout", install["branch"]], cwd=dest)
-        if install.get("ref"):
-            _run(["git", "checkout", "--detach", install["ref"]], cwd=dest)
+        if install.get("tested_ref"):
+            _run(["git", "checkout", "--detach", install["tested_ref"]], cwd=dest)
     ws["components"][component_id] = {
         "path": str(dest),
         "branch": install.get("branch"),
-        "ref": install.get("ref"),
+        "tested_ref": install.get("tested_ref"),
     }
     registry.save_workspace(ws)
     print(f"added {component_id} at {dest}")
@@ -153,7 +153,7 @@ def cmd_doctor() -> int:
     for cid, meta in sorted(comps.items()):
         dest = registry.repo_dir(cid, ws)
         install = meta.get("install", {})
-        pinned = (install.get("ref") or "")[:12]
+        pinned = (install.get("tested_ref") or "")[:12]
         if dest.is_dir() and (dest / ".git").exists():
             head = _git_head(dest) or "?"
             branch = _git_branch(dest) or "?"
@@ -190,7 +190,7 @@ def cmd_status() -> int:
         installed = "yes" if dest.is_dir() and (dest / ".git").exists() else "no"
         branch = (_git_branch(dest) or "-")[:28] if installed == "yes" else "-"
         head = (_git_head(dest) or "-")[:12] if installed == "yes" else "-"
-        state = f"{meta.get('status', '')}/{meta.get('execution', '')}"
+        state = f"{meta.get('architecture_status', '')}/{meta.get('implementation_status', '')}"
         print(f"{cid:<16} {installed:<10} {branch:<28} {head:<12} {state}")
     return 0
 
@@ -201,17 +201,30 @@ def cmd_graph(fmt: str = "text") -> int:
         return 0
     if fmt == "json":
         nodes = [
-            {"id": cid, "name": m.get("name", cid), "kind": m.get("kind")}
+            {"id": cid, "name": m.get("name", cid), "plane": m.get("plane"),
+             "class": "owned_component"}
             for cid, m in registry.components().items()
+        ] + [
+            {"id": uid, "name": m.get("name", uid), "kind": m.get("kind"),
+             "class": "upstream_system"}
+            for uid, m in registry.upstreams().items()
+        ] + [
+            {"id": sid, "name": m.get("name", sid), "kind": m.get("kind"),
+             "class": "catalog_source"}
+            for sid, m in registry.sources().items()
         ]
         edges = [
-            {"from": s, "to": d, "kind": k}
-            for s, d, k in generate._edges()
+            {"from": s, "type": t, "to": d}
+            for s, t, d in registry.relationship_edges()
         ]
         print(json.dumps({"nodes": nodes, "edges": edges}, indent=2))
         return 0
     comps = registry.components()
-    children: dict[str, list[str]] = {cid: list(meta.get("depends_on", [])) for cid, meta in comps.items()}
+    children: dict[str, list[str]] = {
+        cid: [r["to"] for r in meta.get("relationships", [])
+              if r.get("type") in ("depends_on", "consumes_contract", "implements")]
+        for cid, meta in comps.items()
+    }
     roots = [cid for cid, deps in children.items() if not deps]
     for root in sorted(roots):
         _print_tree(root, comps, set(), 0)
@@ -226,10 +239,13 @@ def _print_tree(cid: str, comps: dict[str, Any], seen: set[str], depth: int) -> 
     label = comps.get(cid, {}).get("name", cid)
     print(f"{prefix}{label}" if depth else label)
     for other_id, meta in comps.items():
-        if cid in meta.get("depends_on", []):
+        deps = [r["to"] for r in meta.get("relationships", [])
+                if r.get("type") in ("depends_on", "consumes_contract", "implements")]
+        if cid in deps:
             _print_tree(other_id, comps, seen, depth + 1)
-    for peer in comps.get(cid, {}).get("integrates_with", []):
-        if peer not in seen and peer in comps:
+    for rel in comps.get(cid, {}).get("relationships", []):
+        peer = rel.get("to")
+        if rel.get("type") == "reference_to" and peer not in seen and peer in comps:
             print(f"{'  ' * (depth + 1)}↔ {comps[peer].get('name', peer)}")
 
 
@@ -238,6 +254,77 @@ def cmd_docs_generate() -> int:
     for path in written:
         print(f"wrote {path.relative_to(generate.ROOT)}")
     return 0
+
+
+# Upstream heads are LIVE facts. They are never committed: a cached snapshot
+# must never look fresher than its source. `doctor` reports them and, with
+# --write, caches them under a gitignored path for convenience only.
+UPSTREAM_CACHE = generate.ROOT / ".z0-cache" / "upstream-heads.json"
+
+
+def cmd_registry_doctor(write_cache: bool = False, as_json: bool = False) -> int:
+    """Report registry health and discover live upstream heads.
+
+    Read-only with respect to the repository. Never mutates a remote and never
+    writes into a tracked path.
+    """
+    problems = registry.validate()
+    observed: dict[str, Any] = {}
+    for uid, meta in sorted(registry.upstreams().items()):
+        repo = meta.get("repo")
+        entry: dict[str, Any] = {"declared_relationship": meta.get("relationship")}
+        if not repo:
+            entry["error"] = "no repo declared"
+            observed[uid] = entry
+            continue
+        try:
+            r = _run(["gh", "api", f"repos/{repo}", "--jq",
+                      "{default_branch, pushed_at, fork, parent: .parent.full_name}"],
+                     check=False)
+            if r.returncode != 0:
+                entry["error"] = (r.stderr or "").strip()[:160]
+            else:
+                entry["github"] = json.loads(r.stdout)
+        except FileNotFoundError:
+            entry["error"] = "gh CLI not available"
+        except Exception as exc:  # noqa: BLE001
+            entry["error"] = f"{type(exc).__name__}: {exc}"
+        if meta.get("tested_ref"):
+            entry["tested_ref"] = meta["tested_ref"]
+        observed[uid] = entry
+
+    if as_json:
+        print(json.dumps({"problems": problems, "upstreams": observed}, indent=2))
+    else:
+        print("Registry")
+        print("-" * 60)
+        for p in problems:
+            print(f"! {p}")
+        if not problems:
+            print("ok: registry is structurally valid")
+        print("\nUpstream systems (live — never committed as truth)")
+        print("-" * 60)
+        for uid, entry in observed.items():
+            gh = entry.get("github") or {}
+            state = entry.get("error") or (
+                f"{gh.get('default_branch')} @ {str(gh.get('pushed_at'))[:10]}"
+                + ("  [fork]" if gh.get("fork") else "")
+            )
+            tested = entry.get("tested_ref") or "-"
+            print(f"  {uid:<20} tested_ref={tested:<10} upstream={state}")
+        print("\nDelegated sources (facts live at the authority)")
+        print("-" * 60)
+        for sid, meta in sorted(registry.sources().items()):
+            auth = (meta.get("authority") or {})
+            print(f"  {sid:<20} {auth.get('surface') or auth.get('repo') or '-':<38} "
+                  f"cache={meta.get('cache_policy')}")
+
+    if write_cache:
+        UPSTREAM_CACHE.parent.mkdir(parents=True, exist_ok=True)
+        UPSTREAM_CACHE.write_text(json.dumps(observed, indent=2) + "\n", encoding="utf-8")
+        print(f"\ncached (gitignored, never authoritative): "
+              f"{UPSTREAM_CACHE.relative_to(generate.ROOT)}")
+    return 1 if problems else 0
 
 
 def cmd_cognition_portfolio(as_json: bool = False) -> int:

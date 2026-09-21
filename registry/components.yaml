@@ -1,316 +1,516 @@
-# Zer0 component registry — canonical cross-system facts.
-# Implementation docs live in each repo; this file is the map.
+# Zer0 registry — OWNED components.
+#
+# Only surfaces with a Zer0-owned semantic responsibility belong here. An
+# external system, a forked repo, or a delegated catalog authority does NOT:
+# those live in upstreams.yaml and sources.yaml.
+#
+# Field contract
+# --------------
+# architecture_status : where the capability's design currently lives, as
+#                       reconciled against observation. One of merged | open_pr
+#                       | branch_only | local_only | planned | legacy | superseded.
+# implementation_status : whether it actually runs today. One of live | canary
+#                       | experimental | pre_activation | idea.
+# tested_ref          : the ref this repo last VALIDATED for install. A stale
+#                       tested_ref does not make the design stale, and a recent
+#                       SHA does not make the design canonical. Upstream heads
+#                       are NEVER stored here — `z0 registry doctor` discovers
+#                       them live and writes only to a gitignored path.
+# relationships       : typed edges; the vocabulary is closed and lives in
+#                       lib/z0/registry.py (VALID_RELATIONS).
+#
+# Reconciled from `audit/reality-ledger.json` on the
+# `audit/current-state-reality-ledger` branch. The promotion split used by
+# `qualifies` / `publishes_evidence_to` / `activates` is recorded in
+# `audit/RECONCILIATION.md` §2.
+
+schema: z0.registry.component.v1
 
 components:
-  oh-my-pi:
-    name: OMP (Oh My Pi)
-    repo: kvnloo/oh-my-pi
-    kind: runtime
-    status: canary
-    execution: canary
-    owner: Runtime
+  z0:
+    name: z0
+    repo: kvnloo/z0
+    plane: architecture
+    architecture_status: merged
+    implementation_status: live
+    owner: Architecture
     summary: >
-      Coding agent runtime: CLI, RPC, RLM context spill, Jev decisions,
-      Handsfree HUD, Live voice, and computer-use stage manager.
-    required: true
-    profiles: [minimal, core, personal, desktop, compute, full]
-    depends_on: []
-    integrates_with: [tokenomics, z0intelligence, aodl, kerdoios, agenttrace]
-    provides:
-      - omp.session.aggregate
-      - cu.stage_intent.v0
-    consumes:
-      - tokenomics.event.v0
-      - z0int.decision_receipt.v1
-      - aodl.intent.v1
-      - kerdoios.route.v1
+      The network almanac: reconciled registry truth, install profiles,
+      generated architecture and the onboarding entry point. Stores Zer0
+      relationships and policy; fetches upstream facts from the authority that
+      already owns them.
+    owns: [registry truth, profiles, generated architecture, install matrix, onboarding]
+    not_here: [runtime execution, provider catalogs, telemetry semantics]
+    relationships:
+      - {type: governs, to: z0archy}
+    profiles: [minimal, core, personal, desktop, compute, research, full]
     install:
-      clone: https://github.com/kvnloo/oh-my-pi.git
-      branch: rfc/interactive-performance-stack
-      ref: d707478d4c5c72784c058a0163b616988f559230
-      command: bun install && bun run build
-    verify:
-      command: bun test packages/coding-agent/test/rlm-tokenomics-bridge.test.ts
-    docs:
-      readme: README.md
-      architecture: docs/rfc-interactive-performance-stack.md
-    boundaries:
-      owns: [coding agent runtime, voice/stage/CU, RLM spill, Jev hotpath]
-      not_here: [token measurement, routing policy store, research KB]
-
-  tokenomics:
-    name: Tokenomics
-    repo: kvnloo/tokenomics
-    kind: measurement
-    status: experimental
-    execution: live
-    owner: Measurement
-    summary: >
-      Vendor-neutral measurement kernel for token, cost, latency,
-      and verified-task economics with reconciliation reports.
-    required: false
-    profiles: [core, personal, desktop, compute, research, full]
-    depends_on: []
-    integrates_with: [oh-my-pi, z0intelligence, kerdoios, agenttrace, flow]
-    provides:
-      - tokenomics.event.v0
-      - tokenomics.report.v1
-    consumes:
-      - z0int.decision_receipt.v1
-      - flow_prediction.v1
-    install:
-      clone: https://github.com/kvnloo/tokenomics.git
-      branch: master
-      ref: e67d76fe2f1d52a5911abc8974489a10e89bb431
-      command: pip install -e packages/python && npm install -w packages/typescript
-    verify:
-      command: tokenomics report --range today
-    docs:
-      architecture: packages/python/src/tokenomics/report.py
-      integration: docs/MIGRATION.md
-    boundaries:
-      owns: [usage attribution, savings reports, reconciliation]
-      not_here: [routing policy, provider execution, agent runtime]
-
-  flow:
-    name: Flow
-    repo: kvnloo/.files
-    kind: desktop
-    status: experimental
-    execution: shadow
-    owner: Desktop
-    summary: >
-      Predictive desktop UX: context episodes, prediction horizons,
-      prepare cache, and routine suggestion miner (workspace copilot).
-    required: false
-    profiles: [desktop, full]
-    depends_on: [oh-my-pi]
-    integrates_with: [tokenomics, z0intelligence]
-    provides:
-      - flow_prediction.v1
-      - os.next_context.v0
-    consumes:
-      - tokenomics.event.v0
-      - z0int.decision_receipt.v1
-    install:
-      clone: https://github.com/kvnloo/.files.git
-      branch: feat/workspace-copilot-flow
-      ref: 5259013185d97422022fc225fa70245595b046ea
-      command: echo 'Flow scripts live in scripts/workspace_flow.py — see component README'
-    verify:
-      command: python3 scripts/workspace_flow.py --help
-    docs:
-      readme: scripts/workspace_flow.py
-    boundaries:
-      owns: [OS prediction, prepare, routine mining]
-      not_here: [agent runtime, token accounting, training loops]
-
-  z0intelligence:
-    name: z0intelligence
-    repo: kvnloo/z0intelligence
-    kind: intelligence
-    status: experimental
-    execution: log_only
-    owner: Personal Intelligence
-    summary: >
-      Personal learned policy: specialists, routines, autoresearch,
-      and decision receipts for routing and promotion.
-    required: false
-    profiles: [personal, research, full]
-    depends_on: [tokenomics]
-    integrates_with: [oh-my-pi, kerdoios, evolution-lab, tokenomics]
-    provides:
-      - z0int.decision_receipt.v1
-    consumes:
-      - tokenomics.report.v1
-      - flow_prediction.v1
-    install:
-      clone: https://github.com/kvnloo/z0intelligence.git
-      branch: master
-      ref: 5e7cf4a2d6faf6e537dbfbb52d90bf50410cea63
-      command: pip install -e .
-    verify:
-      command: python3 -m z0int --help
-    boundaries:
-      owns: [personal policy, routine promotion, specialists]
-      not_here: [coding agent runtime, OS prediction, measurement kernel]
-
-  kerdoios:
-    name: Kerdoios
-    repo: kvnloo/kerdoios
-    kind: compute
-    status: experimental
-    execution: live
-    owner: Compute
-    summary: >
-      Compute and provider allocation — routes work to frontier vs local
-      models with cost/latency awareness.
-    required: false
-    profiles: [compute, full]
-    depends_on: [tokenomics]
-    integrates_with: [oh-my-pi, z0intelligence, aodl, tokenomics]
-    provides:
-      - kerdoios.route.v1
-    consumes:
-      - tokenomics.event.v0
-      - z0int.decision_receipt.v1
-    install:
-      clone: https://github.com/kvnloo/kerdoios.git
+      clone: https://github.com/kvnloo/z0.git
       branch: main
-      ref: e3100ae4b779253c3ff3e9a95cc79f0321edb784
-      command: pip install -e .
-    boundaries:
-      owns: [provider routing, allocation policy]
-      not_here: [provider execution, token measurement, agent runtime]
+      tested_ref: 3804bc7
+      command: python3 -m pip install -e .
+    verify:
+      command: ./scripts/registry-check && ./scripts/docs-check
+    docs: {readme: README.md, architecture: ARCHITECTURE.md}
 
-  evolution-lab:
-    name: Evolution Lab
-    repo: kvnloo/evolution-lab
-    kind: research
-    status: experimental
-    execution: shadow
-    owner: Research
-    summary: >
-      Automatic AI research loop: hypothesis search, experiment runners,
-      and verified candidate promotion.
-    required: false
+  z0archy:
+    name: z0archy
+    repo: kvnloo/z0archy
+    plane: architecture
+    architecture_status: merged
+    implementation_status: experimental
+    owner: Architecture
+    summary: Visualisation surface for the generated typed relationship graph.
+    owns: [architecture visualization]
+    not_here: [registry truth]
+    relationships:
+      - {type: reference_to, to: z0}
     profiles: [research, full]
-    depends_on: [z0intelligence, tokenomics]
-    integrates_with: [frontier-kb, z0intelligence]
-    provides: []
-    consumes:
-      - tokenomics.report.v1
-      - z0int.decision_receipt.v1
     install:
-      clone: https://github.com/kvnloo/evolution-lab.git
+      clone: https://github.com/kvnloo/z0archy.git
       branch: main
-      ref: 8cf7acff719470b74f20c90fd6e5f7cdb11c134a
-      command: pip install -e .
-    boundaries:
-      owns: [experiment search, autoresearch orchestration]
-      not_here: [production runtime, personal traces]
-
-  frontier-kb:
-    name: frontier-kb
-    repo: kvnloo/frontier-kb
-    kind: research
-    status: experimental
-    execution: shadow
-    owner: Research
-    summary: >
-      Research knowledge base: papers, external systems, hypotheses,
-      and kill criteria — not private user traces.
-    required: false
-    profiles: [research, full]
-    depends_on: []
-    integrates_with: [evolution-lab]
-    provides: []
-    consumes: []
-    install:
-      clone: https://github.com/kvnloo/frontier-kb.git
-      branch: main
-      ref: aac71e8f73cbfe78118d2dd399ecceece2e42e71
-      command: echo 'Knowledge base — see README for ingest workflow'
-    boundaries:
-      owns: [research evidence, external references]
-      not_here: [private user traces, runtime code]
+    docs: {readme: README.md}
 
   aodl:
     name: AODL
     repo: kvnloo/aodl
-    kind: contract
-    status: experimental
-    execution: shadow
+    plane: contracts
+    architecture_status: merged
+    implementation_status: live
     owner: Contracts
     summary: >
-      Typed intent and plan schema — contracts only, not runtime execution.
-    required: false
-    profiles: [full]
-    depends_on: []
-    integrates_with: [oh-my-pi, kerdoios]
-    provides:
-      - aodl.intent.v1
-    consumes: []
+      Typed intent IR, compiled plan and observed state with fail-closed
+      validation. Also owns the harness catalog and the Mesh Registry, which z0
+      CONSUMES rather than duplicating.
+    owns:
+      - typed intent IR
+      - compiled plan
+      - observed state
+      - harness catalog
+      - mesh registry
+      - fail-closed validation
+    not_here: [model selection, routing policy, provider catalogs, runtime execution]
+    relationships:
+      - {type: emits_contract, to: dash}
+      - {type: emits_contract, to: ripple}
+    profiles: [core, personal, desktop, research, full]
     install:
       clone: https://github.com/kvnloo/aodl.git
       branch: main
-      ref: 8e41ef024262339d28a968d71113fc52819d4bd4
-      command: pip install -e .
-    boundaries:
-      owns: [typed intent/plan contracts]
-      not_here: [runtime implementation, provider execution]
+      tested_ref: 549f2a1
+      command: python3 -m pip install -e .
+    verify:
+      command: python3 -m pytest -q
+    docs: {readme: README.md}
 
-  agenttrace:
-    name: AgentTrace
-    repo: kvnloo/agenttrace
-    kind: observability
-    status: experimental
-    execution: log_only
-    owner: Observability
+  z0intelligence:
+    name: z0intelligence
+    repo: kvnloo/z0intelligence
+    plane: cognition
+    architecture_status: merged
+    implementation_status: experimental
+    owner: Cognition
     summary: >
-      Historical agent TUI and span export for debugging and audit.
-    required: false
-    profiles: [full]
-    depends_on: []
-    integrates_with: [oh-my-pi, tokenomics]
-    provides:
-      - agenttrace.span.v0
-    consumes:
-      - tokenomics.event.v0
+      The cognition plane: semantic model selection and escalation, context
+      resolution, bounded DecisionBackend contracts, the local SLM portfolio,
+      cognition receipts, and ACTIVATION of qualified policies into
+      shadow/canary/active. JEV/NanoJev/OpenJev are implementations behind these
+      contracts, not peers of them.
+    owns:
+      - semantic model selection
+      - escalation policy
+      - context resolution
+      - DecisionBackend contracts
+      - local SLM portfolio
+      - cognition receipts
+      - activation (shadow / canary / active)
+    not_here:
+      - provider daily-quota accounting
+      - RPM/RPD/TPM/TPD
+      - GPU and resource placement
+      - token measurement
+    relationships:
+      - {type: consumes_contract, to: aodl}
+      - {type: consumes_contract, to: tokenomics}
+      - {type: measured_by, to: tokenomics}
+      - {type: evaluated_by, to: evolution-lab}
+      - {type: reference_to, to: rlm}
+    profiles: [personal, research, full]
     install:
-      clone: https://github.com/kvnloo/agenttrace.git
-      branch: main
-      ref: a34dea2b6ff7e2133b9e548b93d30bfe6ccf6ff5
-      command: pip install -e .
-    boundaries:
-      owns: [agent span history, TUI]
-      not_here: [live runtime, measurement kernel]
-
-  memento:
-    name: Memento
-    repo: kvnloo/memento
-    kind: memory
-    status: idea
-    execution: shadow
-    owner: Memory
-    summary: >
-      Visual private history and episodic recall (design stage).
-    required: false
-    profiles: []
-    depends_on: [z0intelligence]
-    integrates_with: [flow]
-    provides: []
-    consumes: []
-    install:
-      clone: https://github.com/kvnloo/memento.git
-      branch: main
-      ref: 513a80c2ba155115dfcea0bc808b0c41a1fd4380
-      command: echo 'Not yet installable — status idea'
-    boundaries:
-      owns: [visual private history]
-      not_here: [research KB, agent runtime]
-
-  openjev:
-    name: OpenJev
-    repo: kvnloo/openjev
-    kind: decision
-    status: experimental
-    execution: shadow
-    owner: Decision
-    summary: >
-      Local typed decision heads (logit-based choice) for hotpath routing.
-      Often consumed via OMP/Jev integration.
-    required: false
-    profiles: []
-    depends_on: []
-    integrates_with: [oh-my-pi, z0intelligence]
-    provides: []
-    consumes: []
-    install:
-      clone: https://github.com/kvnloo/openjev.git
+      clone: https://github.com/kvnloo/z0intelligence.git
       branch: master
-      ref: 5e7cf4a2d6faf6e537dbfbb52d90bf50410cea63
-      command: pip install -e .
-    boundaries:
-      owns: [local SLM decision heads]
-      not_here: [agent runtime, measurement]
+      tested_ref: 4f88010
+      command: python3 -m pip install -e .
+    verify:
+      command: python3 -m pytest tests/test_cognition_candidates.py -q
+    docs: {readme: README.md, portfolio: docs/local-cognition-portfolio.md}
+
+  tokenomics:
+    name: Tokenomics
+    repo: kvnloo/tokenomics
+    plane: measurement
+    architecture_status: merged
+    implementation_status: live
+    owner: Measurement
+    summary: >
+      Vendor-neutral measurement contracts: multi-harness traces, verified
+      outcomes, context economics, experiment identity, quota reconciliation and
+      OTel transport. Owns Zer0-specific semantics; OpenTelemetry remains only
+      the transport.
+    owns:
+      - token/cost/latency semantics
+      - verified outcome
+      - context economics
+      - experiment identity
+      - receipt schema
+    not_here: [OTel transport, provider catalogs, routing, execution]
+    relationships:
+      - {type: measured_by, to: kerdoios}
+    profiles: [core, personal, desktop, compute, research, full]
+    install:
+      clone: https://github.com/kvnloo/tokenomics.git
+      branch: master
+      tested_ref: 9af30ca
+      command: python3 -m pip install -e packages/python
+    verify:
+      command: python3 -m pytest packages/python/tests -q
+    docs: {readme: README.md}
+
+  kerdoios:
+    name: Kerdoios
+    repo: kvnloo/kerdoios
+    plane: resources
+    architecture_status: merged
+    implementation_status: live
+    owner: Resources
+    summary: >
+      Resource placement: inventory, hard constraints, dimensional
+      quota/capacity (RPM/RPD/TPM/TPD), cost/capability/privacy dimensions,
+      Pareto selection, reservations and expiry-aware allocation. It is NOT an
+      LLM gateway and does NOT execute providers. Currently shipped as a Hermes
+      plugin; the logical capability is harness-neutral.
+    owns:
+      - resource inventory
+      - hard constraint filtering
+      - quota and capacity ledger
+      - Pareto / portfolio allocation
+      - reservations
+      - placement
+    not_here: [provider execution, generic model gateway, token measurement, routing policy]
+    relationships:
+      - {type: consumes_contract, to: tokenomics}
+    profiles: [compute, full]
+    install:
+      clone: https://github.com/kvnloo/kerdoios.git
+      branch: main
+      tested_ref: b5755ea
+      command: python3 -m pip install -e .
+    verify:
+      command: python3 -m unittest discover -s tests
+    docs: {readme: README.md, placement: docs/local-cognition-placement.md}
+
+  evolution-lab:
+    name: Evolution Lab
+    repo: kvnloo/evolution-lab
+    plane: evaluation
+    architecture_status: branch_only
+    implementation_status: experimental
+    owner: Research
+    summary: >
+      Experiment execution: frozen grouped comparisons, training/search, and the
+      QUALIFICATION decision — whether a candidate clears the frozen gates,
+      producing promotion evidence. It neither publishes studies nor activates
+      anything.
+    owns:
+      - experiment execution
+      - frozen grouped comparisons
+      - training and search
+      - qualification evidence
+    not_here: [activation/deployment state, publication of frozen studies]
+    relationships:
+      - {type: qualifies, to: z0evals}
+      - {type: trains_for, to: z0intelligence}
+    profiles: [research, full]
+    install:
+      clone: https://github.com/kvnloo/evolution-lab.git
+      branch: main
+      command: python3 -m pip install -e .
+    verify:
+      command: python3 -m unittest discover -s tests
+    docs: {readme: README.md}
+
+  z0evals:
+    name: z0evals
+    repo: kvnloo/z0evals
+    plane: evaluation
+    architecture_status: merged
+    implementation_status: live
+    owner: Research
+    summary: >
+      Frozen reproducible studies and publication: immutable, citable,
+      re-runnable evidence including slm-router-v0. It neither trains nor
+      activates.
+    owns: [frozen studies, publication, immutable evidence]
+    not_here: [activated routing policy, training]
+    relationships:
+      - {type: publishes_evidence_to, to: z0intelligence}
+      - {type: reference_to, to: evolution-lab}
+    profiles: [research, full]
+    install:
+      clone: https://github.com/kvnloo/z0evals.git
+      branch: main
+      tested_ref: 5a3be15
+    docs: {readme: README.md}
+
+  frontier-kb:
+    name: Frontier KB
+    repo: kvnloo/frontier-kb
+    plane: research
+    architecture_status: merged
+    implementation_status: live
+    owner: Research
+    summary: >
+      Cross-harness public research evidence. Research authority, not
+      architecture truth.
+    owns: [public research evidence]
+    not_here: [architecture truth, runtime policy, private traces]
+    relationships:
+      - {type: provides_research_evidence, to: aodl}
+      - {type: provides_research_evidence, to: rlm}
+      - {type: provides_research_evidence, to: z0intelligence}
+    profiles: [research, full]
+    install:
+      clone: https://github.com/kvnloo/frontier-kb.git
+      branch: main
+      tested_ref: 22b4c0f
+    docs: {readme: README.md}
+
+  dash:
+    name: Dash
+    repo: kvnloo/dash
+    plane: interaction
+    architecture_status: merged
+    implementation_status: live
+    owner: Interaction
+    summary: Multi-harness phone control surface. A surface, not an executor.
+    owns: [multi-harness phone control surface]
+    not_here: [execution, intent ownership]
+    relationships:
+      - {type: consumes_contract, to: aodl}
+      - {type: consumes_contract, to: ripple}
+    profiles: [desktop, personal, full]
+    install:
+      clone: https://github.com/kvnloo/dash.git
+      branch: main
+      tested_ref: d5d191b
+    docs: {readme: README.md}
+
+  ripple:
+    name: Ripple
+    repo: kvnloo/ripple
+    plane: interaction
+    architecture_status: merged
+    implementation_status: experimental
+    owner: Interaction
+    summary: Ephemeral intent surface mounted by Dash. Consumes AODL as data; does not own it.
+    owns: [ephemeral intent surface]
+    not_here: [AODL ownership, execution]
+    relationships:
+      - {type: consumes_contract, to: aodl}
+    profiles: [desktop, personal, full]
+    install:
+      clone: https://github.com/kvnloo/ripple.git
+      branch: main
+      tested_ref: ea63d72
+    docs: {readme: README.md}
+
+  flow:
+    name: Flow
+    repo: kvnloo/.files
+    plane: context
+    architecture_status: merged
+    implementation_status: experimental
+    owner: Context
+    summary: >
+      Predicted OS/context state feeding z0intelligence and context compilation.
+      Harness-neutral; the OMP coupling is incidental and must not become
+      architectural.
+    owns: [predicted OS/context state]
+    not_here: [OMP coupling, training logic]
+    relationships:
+      - {type: emits_contract, to: z0intelligence}
+    profiles: [desktop, full]
+    install:
+      clone: https://github.com/kvnloo/.files.git
+      branch: master
+      tested_ref: bb5c0ea
+    docs: {readme: README.md}
+
+  hermes-keel:
+    name: Hermes Keel
+    repo: kvnloo/hermes-keel
+    plane: execution
+    architecture_status: merged
+    implementation_status: experimental
+    owner: Execution
+    summary: Performance-based execution kernel for Hermes Agent.
+    owns: [Hermes execution kernel]
+    not_here: [harness catalog]
+    relationships:
+      - {type: executes_via, to: hermes-agent}
+    profiles: [full]
+    install:
+      clone: https://github.com/kvnloo/hermes-keel.git
+      branch: main
+      tested_ref: 7f6d84b
+    docs: {readme: README.md}
+
+  hermes-mesh-keel:
+    name: Hermes Mesh Keel
+    repo: kvnloo/hermes-mesh-keel
+    plane: execution
+    architecture_status: merged
+    implementation_status: pre_activation
+    owner: Execution
+    summary: >
+      Signed transport and authorization infrastructure. PRE-ACTIVATION: this
+      must not be described as production-active anywhere.
+    owns: [signed transport, authorization]
+    not_here: [production activation]
+    relationships:
+      - {type: executes_via, to: hermes-agent}
+    profiles: [research, full]
+    install:
+      clone: https://github.com/kvnloo/hermes-mesh-keel.git
+      branch: main
+      tested_ref: 6b4e8d0
+    docs: {readme: README.md}
+
+  hermes-jev-skills:
+    name: Hermes Jev Skills
+    repo: kvnloo/hermes-jev-skills
+    plane: cognition
+    architecture_status: branch_only
+    implementation_status: experimental
+    owner: Cognition
+    summary: Jev-powered routing, memory, compaction and skill selection for Hermes.
+    owns: [Hermes Jev skills]
+    not_here: [decision ownership]
+    relationships:
+      - {type: consumes_contract, to: z0intelligence}
+      - {type: executes_via, to: hermes-agent}
+    profiles: [personal, full]
+    install:
+      clone: https://github.com/kvnloo/hermes-jev-skills.git
+      branch: main
+    docs: {readme: README.md}
+
+  kvnloo-skills:
+    name: kvnloo skills
+    repo: kvnloo/kvnloo-skills
+    plane: cognition
+    architecture_status: merged
+    implementation_status: live
+    owner: Cognition
+    summary: Personal Hermes skills (Hyprland UI testing and follow-ons).
+    owns: [personal Hermes skills]
+    not_here: [architecture]
+    relationships:
+      - {type: executes_via, to: hermes-agent}
+    profiles: [personal, full]
+    install:
+      clone: https://github.com/kvnloo/kvnloo-skills.git
+      branch: main
+      tested_ref: 6654f6b
+    docs: {readme: README.md}
+
+  rlm:
+    name: RLM
+    repo: kvnloo/oh-my-pi
+    plane: context
+    architecture_status: branch_only
+    implementation_status: experimental
+    owner: Context
+    summary: >
+      The addressable evidence/context plane: evidence handles, cognitive-state
+      compilation and context virtualization. It has NO repo of its own — it
+      lives as branches on the OMP fork, which currently carries 102 local
+      branches across six checkouts. One lineage must be designated canonical
+      before anything about "the RLM design" is claimed.
+    owns:
+      - addressable evidence plane
+      - evidence handles
+      - context virtualization
+      - selected retrieval
+    not_here: [provider transport, canonical transcript]
+    relationships:
+      - {type: depends_on, to: oh-my-pi}
+      - {type: emits_contract, to: z0intelligence}
+    profiles: [core, personal, research, full]
+    install:
+      clone: https://github.com/kvnloo/oh-my-pi.git
+      branch: exp/rlm-evidence-addressing
+      tested_ref: null
+    docs: {readme: README.md}
+
+  sol-pi-omp:
+    name: SoL-Pi for OMP
+    repo: kvnloo/sol-pi-omp
+    plane: context
+    architecture_status: open_pr
+    implementation_status: experimental
+    owner: Context
+    summary: >
+      OMP-loadable implementation of the SoL-Pi mechanism family — Action Fusion
+      and ObservationPack — without patching the harness.
+    owns: [Action Fusion, ObservationPack]
+    not_here: [canonical context plane]
+    relationships:
+      - {type: implements, to: sol-pi}
+      - {type: depends_on, to: oh-my-pi}
+    profiles: [research, full]
+    install:
+      clone: https://github.com/kvnloo/sol-pi-omp.git
+      branch: main
+    docs: {readme: README.md}
+
+  sol-pi-hermes:
+    name: SoL-Pi for Hermes
+    repo: kvnloo/sol-pi-hermes
+    plane: context
+    architecture_status: merged
+    implementation_status: experimental
+    owner: Context
+    summary: Standalone Hermes plugin port of the SoL-Pi mechanism family.
+    owns: [Action Fusion, ObservationPack]
+    not_here: [canonical context plane]
+    relationships:
+      - {type: implements, to: sol-pi}
+      - {type: executes_via, to: hermes-agent}
+    profiles: [research, full]
+    install:
+      clone: https://github.com/kvnloo/sol-pi-hermes.git
+      branch: main
+      tested_ref: 2d94fab
+    docs: {readme: README.md}
+
+  verified-oss-loop:
+    name: Verified OSS Loop
+    repo: kvnloo/verified-oss-loop
+    plane: governance
+    architecture_status: merged
+    implementation_status: live
+    owner: Governance
+    summary: >
+      Project-neutral protocol for roadmap-driven, evidence-backed human and
+      agent contribution. Governance/reference infrastructure, not runtime.
+    owns: [contribution and evidence governance]
+    not_here: [runtime]
+    relationships:
+      - {type: reference_to, to: frontier-kb}
+    profiles: [full]
+    install:
+      clone: https://github.com/kvnloo/verified-oss-loop.git
+      branch: main
+      tested_ref: 7ba2782
+    docs: {readme: README.md}

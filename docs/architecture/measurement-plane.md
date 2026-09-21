@@ -1,26 +1,43 @@
 ---
 id: architecture.measurement-plane
 title: Measurement plane
-scope: [tokenomics, oh-my-pi, z0intelligence]
-concepts: [verified-success, token-attribution, receipts]
+scope: [tokenomics]
+concepts: [verified-success, token-attribution, receipts, harness-neutral]
 status: canonical
 ---
 
 # Measurement plane
 
-**Owner:** Tokenomics
+**Owner:** Tokenomics. **Transport:** OpenTelemetry (delegated — Tokenomics owns
+the semantics, not the wire format).
 
-## Events
+Measurement is **harness-neutral**: Hermes, DeepSeek Harness, OMP, local models,
+z0intelligence decisions, workers, tools and verifiers all enter the same trace
+semantics. There is no harness-specific measurement path.
 
-- `tokenomics.event.v0` — incremental usage from OMP, workers, verifiers
-- `omp.session.aggregate` — session rollup for reconciliation (avoid double-count)
+## Contracts
 
-## Reports
+- `tokenomics.event.v0` — the one accounting row per execution: provider, model,
+  request/trace/work-item id, prompt/completion/cache tokens, start/end,
+  latency, success, verified outcome, retry state, cost.
+- `tokenomics.report.v1` — reconciliation, coverage and verified-task report.
+- `z0int.receipt.v1` / `z0int.cognition.receipt.v1` — routing and cognition
+  decision receipts (state, eligible candidates, quota, outcome).
 
-- `tokenomics.report.v1` — savings, reconciliation, token coverage
+Harness-specific rollups such as `omp.session.aggregate` are **adapters**, not
+shared contracts, and must not become the measurement spine.
 
 ## Rules
 
-1. Incremental rows contribute to `actual_frontier_tokens`.
-2. Aggregate rows reconcile but do not double-count.
-3. Token/cost claims in docs or agents require report evidence.
+1. `execution_completed` and `verified_success` are different facts. Null
+   `verified_success` is **not** success.
+2. Incremental rows contribute to the measured total; aggregate rows reconcile
+   without double-counting.
+3. Token/cost claims in docs or by agents require report evidence.
+4. Kerdoios reconciles its local quota projection against these receipts; it
+   keeps no second usage database.
+
+## Where the numbers come from
+
+Facts that an upstream already owns are discovered, never recopied — see
+[generated/sources.md](../../generated/sources.md).
