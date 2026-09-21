@@ -34,6 +34,15 @@ def maturity() -> dict[str, dict[str, str]]:
     return _load("maturity.yaml")
 
 
+def cognition_flow() -> dict[str, Any]:
+    """Stage map + owners for the local cognition dataflow.
+
+    Model identity, roles, licences and measurements are NOT here; they are
+    canonical in z0intelligence and read through :mod:`z0.cognition`.
+    """
+    return _load("cognition.yaml")
+
+
 def resolve_profile(name: str) -> list[str]:
     """Expand profile + extends chain into ordered component ids."""
     profs = profiles()

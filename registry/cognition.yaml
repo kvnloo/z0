@@ -1,0 +1,99 @@
+# Local cognition portfolio — architecture and dataflow ONLY.
+#
+# z0 owns the STAGE MAP and the OWNER of each stage. It does NOT own model
+# identity, roles, licences, benchmarks, measurements, serving maps or
+# promotion state. Those are canonical in z0intelligence and are REFERENCED
+# here, never copied:
+#
+#   manifest  kvnloo/z0intelligence : manifests/local_cognition.v1.json
+#   load it   z0int cognition manifest --json
+#   role view z0int cognition roles --json
+#
+# Boundary:
+#   - z0intelligence decides which capability/role is required and which model
+#     defaults to it (semantic suitability).
+#   - Kerdoios decides whether an already-selected capability can actually run
+#     on this machine right now (resource placement, never semantics).
+#   - frontier-kb holds external evidence, not runtime state.
+# Model tables are rendered live by `./z0 cognition portfolio`, never stored
+# in this repository.
+
+schema: z0.cognition_flow.v1
+
+canonical:
+  repo: kvnloo/z0intelligence
+  manifest: manifests/local_cognition.v1.json
+  commands:
+    manifest: z0int cognition manifest --json
+    roles: z0int cognition roles --json
+  not_here:
+    - model identity
+    - role assignments
+    - licences
+    - benchmarks
+    - local measurements
+    - promotion state
+    - serving map
+    - resource placement
+
+stages:
+  - id: aodl
+    name: AODL
+    owner: aodl
+    owner_label: Contracts
+    plane: Decision
+    responsibility: Typed intent and plan contract. Contracts only, never runtime execution.
+  - id: z0intelligence
+    name: z0intelligence
+    owner: z0intelligence
+    owner_label: Personal Intelligence
+    plane: Decision
+    responsibility: Which capability/role the turn needs, role defaults, decision receipts and promotion state.
+  - id: cognition-local
+    name: Local cognition (JEV / tiny specialists / orchestrator / general SLM)
+    owner: z0intelligence
+    co_owner: openjev
+    owner_label: Personal Intelligence (decision heads with OpenJev)
+    plane: Decision
+    responsibility: Serve the selected local role. Model list, licences and measurements are the z0intelligence manifest — not stored here.
+  - id: kerdoios
+    name: Kerdoios
+    owner: kerdoios
+    owner_label: Compute
+    plane: Compute
+    responsibility: Given an already-selected capability and the current machine state, can it run locally now; which runtime/quant fits; co-resident or not. Never semantic suitability.
+  - id: omp-hermes
+    name: OMP / Hermes
+    owner: oh-my-pi
+    owner_label: Runtime / Interaction
+    plane: Interaction
+    responsibility: Execute the turn and the tools. Hermes remains an external host harness.
+  - id: tokenomics
+    name: Tokenomics
+    owner: tokenomics
+    owner_label: Measurement
+    plane: Measurement
+    responsibility: Vendor-neutral usage, cost, latency and verified-task economics.
+  - id: evolution-lab
+    name: Evolution Lab
+    owner: evolution-lab
+    owner_label: Research
+    plane: Research
+    responsibility: Experiment search, candidate lineages, promotion gates. Consumes hypotheses from frontier-kb.
+  - id: frontier-kb
+    name: frontier-kb
+    owner: frontier-kb
+    owner_label: Research
+    plane: Research
+    responsibility: External evidence, source claims and falsifiable hypotheses. Not runtime state.
+
+flow:
+  - [aodl, z0intelligence, intent]
+  - [z0intelligence, cognition-local, selected_role]
+  - [cognition-local, kerdoios, placement_request]
+  - [kerdoios, omp-hermes, execution_plan]
+  - [omp-hermes, tokenomics, usage_events]
+  - [tokenomics, evolution-lab, verified_economics]
+  - [evolution-lab, frontier-kb, hypotheses]
+  - [frontier-kb, evolution-lab, evidence]
+  - [evolution-lab, z0intelligence, promotion_candidates]
