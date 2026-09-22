@@ -399,10 +399,36 @@ def validate() -> list[str]:
     # claims against, so an incomplete or under-specified taxonomy is a
     # structural problem, not a documentation gap. `PAIRED_REPLAY` in
     # particular existed nowhere before this check.
+    problems.extend(_taxonomy_problems())
+
+    return problems
+
+
+def effect_classes() -> dict[str, dict[str, Any]]:
+    """The declared effects an evidence class may or may not have."""
+    return _load("maturity.yaml").get("effects", {}) or {}
+
+
+def _taxonomy_problems() -> list[str]:
+    """Check the evidence taxonomy AND the vocabulary its rules are written in.
+
+    `may_influence`/`must_not` were free strings: the check confirmed the keys
+    existed and never looked at the values, so a typo, a class inventing a new
+    effect, or a class listing the same effect as both allowed and forbidden all
+    passed. "CONFIRM is the only class that may establish capability trust" is
+    only true if the terms mean something and are used consistently.
+    """
+    problems: list[str] = []
     ev = evidence_classes()
+    effects = effect_classes()
+    if not effects:
+        problems.append("maturity.yaml: no effects vocabulary declared")
+
     missing = [c for c in REQUIRED_EVIDENCE_CLASSES if c not in ev]
     if missing:
         problems.append(f"maturity.yaml: evidence taxonomy is missing {missing}")
+
+    used: set[str] = set()
     for cid in REQUIRED_EVIDENCE_CLASSES:
         spec = ev.get(cid)
         if not spec:
@@ -411,7 +437,24 @@ def validate() -> list[str]:
             problems.append(f"evidence class {cid}: missing 'means'")
         if "may_influence" not in spec:
             problems.append(f"evidence class {cid}: missing 'may_influence'")
-
+        allowed = set(spec.get("may_influence") or [])
+        forbidden = set(spec.get("must_not") or [])
+        used |= allowed | forbidden
+        for term in sorted(allowed | forbidden):
+            if term not in effects:
+                problems.append(
+                    f"evidence class {cid}: effect {term!r} is not declared in "
+                    f"maturity.yaml effects:"
+                )
+        for term in sorted(allowed & forbidden):
+            problems.append(
+                f"evidence class {cid}: effect {term!r} is both allowed and forbidden"
+            )
+    # A declared effect nobody may exercise is either a reservation with no owner
+    # or a typo that happens to match nothing; both should be visible.
+    unused = sorted(set(effects) - used)
+    if unused:
+        problems.append(f"maturity.yaml: effects declared but used by no class: {unused}")
     return problems
 
 

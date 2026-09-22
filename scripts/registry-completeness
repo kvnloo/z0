@@ -51,7 +51,7 @@ FILES: dict[str, tuple[str, ...]] = {
     "registry/lifecycles.yaml": ("lifecycles",),
     "registry/representations.yaml": ("representations",),
     "registry/evidence_dependencies.yaml": ("evidence_dependencies",),
-    "registry/maturity.yaml": ("status", "execution", "evidence"),
+    "registry/maturity.yaml": ("status", "execution", "effects", "evidence"),
 }
 
 # Entities deliberately re-classed between generations. Their absence from

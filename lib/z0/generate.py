@@ -153,8 +153,21 @@ def agent_registry_yaml() -> str:
             rid: {"kind": m.get("kind"), "compression": m.get("compression")}
             for rid, m in sorted(registry.representations().items())
         },
+        # The canonical map is meant to be readable on its own. Projecting only
+        # `may_influence` dropped both what a class MEANS and what it FORBIDS --
+        # the two fields the taxonomy exists for -- and the effect vocabulary the
+        # lists are written in was not projected at all, so the map named
+        # `shadow_trust_record` with nothing anywhere saying what it was.
+        "effects": {
+            eid: {"means": spec.get("means", ""), "authorizes": spec.get("authorizes", "")}
+            for eid, spec in sorted(registry.effect_classes().items())
+        },
         "evidence_classes": {
-            cid: {"may_influence": spec.get("may_influence", [])}
+            cid: {
+                "means": spec.get("means", ""),
+                "may_influence": spec.get("may_influence", []),
+                "must_not": spec.get("must_not", []),
+            }
             for cid, spec in sorted(registry.evidence_classes().items())
         },
         "evidence_dependencies": {

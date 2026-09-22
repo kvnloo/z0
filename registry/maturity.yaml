@@ -16,6 +16,94 @@ execution:
   canary: Partial live path; gated or opt-in.
   live: Default production path when installed.
 
+# EFFECTS. The vocabulary that `may_influence` and `must_not` are written in.
+#
+# Every entry says what the effect IS (`means`) and what it is allowed to touch
+# (`authorizes`). Until 2026-09-22 these terms existed only inside the evidence
+# table below: no definition, no code reference, no check. The taxonomy's
+# central rule -- "CONFIRM is the only class that may establish capability
+# trust" -- was therefore unenforceable prose, and prose is where the classes
+# disagreed: SMOKE's `must_not` said "any capability claim, trust record, routing
+# change" while every other class used terms. A typo, or a class inventing a new
+# effect, changed the policy silently.
+#
+# `scripts/registry-check` now requires that every term used in `may_influence`
+# or `must_not` appears here, that no class lists the same term in both, and
+# that no effect is declared and then never used.
+#
+# One asymmetry is deliberate and worth stating: a RESTRICTION may be asserted on
+# the weakest evidence, while a PERMISSION requires the strongest. Quarantining a
+# capability because a smoke test segfaulted is allowed at SMOKE; granting it
+# production trust is not allowed below CONFIRM.
+effects:
+  tested_observation:
+    means: >
+      Record that this capability was measured on real inputs, with no verdict
+      about whether the result is good enough to act on. It is bookkeeping, not
+      a grant: it says a measurement exists and says nothing about whether the
+      capability works.
+    authorizes: a Status.TESTED row and a trust verdict that permits nothing
+  hypothesis_formation:
+    means: Decide what to investigate next.
+    authorizes: nothing persisted
+  next_experiment_design:
+    means: Change the design, sample, or split of the next experiment.
+    authorizes: nothing persisted
+  operational_confidence:
+    means: Raise or lower a human operator's confidence in running the system.
+    authorizes: nothing persisted
+  rollout_risk_estimate:
+    means: Feed an estimate of how risky a rollout would be.
+    authorizes: rollout risk notes
+  shadow_trust_record:
+    means: >
+      A per-(model, capability) verdict valid only for shadow or observation
+      paths. It may influence whether something is watched; it may never gate a
+      production path.
+    authorizes: the shadow tier of a capability trust record
+  capability_trust_record:
+    means: >
+      A per-(model, capability) verdict that permits a PRODUCTION path. This is
+      the only verdict that may authorize production, and it is capability
+      specific: trust in one capability never implies trust in another.
+    authorizes: the production tier of a capability trust record, and production routing
+  production_gate:
+    means: Turn a production path on or off.
+    authorizes: default routing, install profile membership
+  comparison_claims:
+    means: Assert that condition A differs from condition B with the pairing preserved.
+    authorizes: a comparative claim
+  marginal_gain_claims:
+    means: Assert how much a change adds over a baseline.
+    authorizes: a marginal-gain claim
+  generality_claims:
+    means: Assert the result holds beyond the distribution that was measured.
+    authorizes: a generality claim
+  regression_evidence:
+    means: Serve as evidence that a change did not break a previously working path.
+    authorizes: regression gate evidence
+  published_claim:
+    means: Appear in a published, externally visible, or certified result.
+    authorizes: z0evals publication
+  default_routing:
+    means: Change which backend the default path selects.
+    authorizes: routing configuration
+  selection:
+    means: Choose a candidate, arm, or model between alternatives.
+    authorizes: experiment selection
+  tuning:
+    means: Fit or adjust parameters.
+    authorizes: model or policy parameters
+  install_profile_membership:
+    means: Add or remove an entity from an install profile.
+    authorizes: an install profile
+  any_capability_claim:
+    means: Any statement that a model can do something.
+    authorizes: nothing; forbids the whole class of statements
+  retroactive_trust_for_other_capabilities:
+    means: Let evidence about one capability raise trust in a different one.
+    authorizes: nothing
+
 # Canonical evidence classification for any claim about a model capability.
 #
 # This is the single definition. Repos REFERENCE it; they must not redeclare
@@ -27,7 +115,8 @@ execution:
 #
 # `may_influence` is the strongest thing a claim at this class is ALLOWED to
 # change. A claim may never borrow the consequences of a stronger class, and
-# absence of evidence is not a weak class -- it is no class.
+# absence of evidence is not a weak class -- it is no class. Both lists draw
+# their terms from `effects:` above and are checked against it.
 #
 # SPELLING. The keys below are canonical and uppercase. Artifacts on disk
 # serialize the class as the SAME NAME LOWERCASED -- `EXPLORATORY_BETA` is
@@ -53,20 +142,20 @@ evidence:
       The path runs end to end at least once on a trivial or synthetic input.
       Proves wiring and nothing else.
     may_influence: []
-    must_not: [any capability claim, trust record, routing change]
+    must_not: [any_capability_claim, capability_trust_record, shadow_trust_record, default_routing, published_claim]
 
   EXPLORATORY_BETA:
     means: >
       Real inputs, small n, no paired control. A direction to investigate, not
       a result.
-    may_influence: [hypothesis_formation, next_experiment_design]
-    must_not: [capability_trust_record, default_routing, published_claim]
+    may_influence: [tested_observation, hypothesis_formation, next_experiment_design]
+    must_not: [capability_trust_record, shadow_trust_record, default_routing, published_claim]
 
   SHADOW:
     means: >
       Runs on live traffic without affecting the outcome, recording what it
       would have done. Observational only.
-    may_influence: [operational_confidence, rollout_risk_estimate]
+    may_influence: [tested_observation, operational_confidence, rollout_risk_estimate, shadow_trust_record]
     must_not: [capability_trust_record, default_routing]
 
   PAIRED_REPLAY:
@@ -74,7 +163,7 @@ evidence:
       The same inputs scored under two conditions with the pairing preserved, so
       the difference is attributable to the condition rather than to sampling.
       Required before any comparative or marginal-gain claim.
-    may_influence: [comparison_claims, marginal_gain_claims]
+    may_influence: [tested_observation, comparison_claims, marginal_gain_claims]
     must_not: [capability_trust_record]
 
   CONFIRM:
@@ -97,4 +186,4 @@ evidence:
       naming what changed and how to revert. A promotion consumes CONFIRM and
       OOD evidence; it does not substitute for it.
     may_influence: [default_routing, install_profile_membership]
-    must_not: [retroactive trust for other capabilities]
+    must_not: [retroactive_trust_for_other_capabilities]
