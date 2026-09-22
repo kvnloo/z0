@@ -128,3 +128,101 @@ evidence_dependencies:
       fastest: tokenomics-event
       fallback: reconciliation-report
     confidence: declared
+
+  lossless-context-preserves-drilldown:
+    from: representation:raw-context
+    to: representation:lossless-context-node
+    relation: compacts_to
+    via: mechanism:hermes-lossless-context-dag
+    required_evidence:
+      - registry/mechanisms.yaml#mechanisms.hermes-lossless-context-dag
+      - kvnloo/hermes-lcm:README.md#what-it-does
+    invariants:
+      - Raw messages remain recoverable after active-context compaction.
+      - Summary nodes retain source lineage and bounded drill-down paths.
+    invalidators:
+      - Compaction deletes the only recoverable copy of source messages.
+      - A summary is presented as lossless without a path back to its source lineage.
+    retrieval:
+      fastest: lcm-recall
+      fallback: plugin-store
+    confidence: declared
+
+  compiled-plan-to-signed-mesh-intent:
+    from: representation:compiled-plan
+    to: representation:signed-mesh-intent
+    relation: transported_as
+    via: mechanism:mesh-signed-intent-transport
+    required_evidence:
+      - registry/mechanisms.yaml#mechanisms.mesh-signed-intent-transport
+      - kvnloo/hermes-mesh-keel:README.md
+    invariants:
+      - Destination Keel revalidates authority before bounded execution.
+      - Transport receipts do not silently mutate canonical Kanban lifecycle state.
+    invalidators:
+      - Transported data executes without destination authority revalidation.
+      - Receipt projection completes or reviews a task without the canonical lifecycle owner.
+    retrieval:
+      fastest: signed-receipt
+      fallback: durable-mesh-ledger
+    confidence: declared
+
+  tokenomics-to-frozen-evaluation:
+    from: representation:tokenomics-event
+    to: representation:evaluation-artifact
+    relation: frozen_as
+    via: mechanism:frozen-eval-publication
+    required_evidence:
+      - registry/mechanisms.yaml#mechanisms.frozen-eval-publication
+      - kvnloo/z0evals:README.md#rules
+    invariants:
+      - Published claims resolve to pinned study artifacts.
+      - Source-reported benchmarks and reproduced measurements remain distinct.
+      - A label-generating system does not silently become its own verifier.
+    invalidators:
+      - A public claim cannot resolve to frozen evidence.
+      - Private traces or secrets are included in the public evaluation artifact.
+    retrieval:
+      fastest: frozen-study-artifact
+      fallback: pinned-source-revision
+    confidence: declared
+
+  architecture-compression-is-audited:
+    from: representation:architecture-snapshot
+    to: representation:semantic-compression-receipt
+    relation: audited_by
+    via: mechanism:z0archy-semantic-compression
+    required_evidence:
+      - registry/mechanisms.yaml#mechanisms.z0archy-semantic-compression
+      - kvnloo/z0archy:README.md#semantic-compression-receipts
+    invariants:
+      - Hidden high-relevance concepts make a compressed view insufficient rather than silently complete.
+      - Visible concepts retain provenance back to the reconstructable source world.
+      - Structural entropy is not mislabeled as semantic information content.
+    invalidators:
+      - A compressed map claims sufficiency while omitting concepts above its relevance threshold.
+      - The compressed view cannot reconstruct visible claims back to source provenance.
+    retrieval:
+      fastest: compression-receipt
+      fallback: full-architecture-snapshot
+    confidence: declared
+
+  architecture-history-to-hierarchy-proposal:
+    from: representation:architecture-snapshot
+    to: representation:hierarchy-proposal
+    relation: analyzed_as
+    via: mechanism:z0archy-hierarchy-meta-learning
+    required_evidence:
+      - registry/mechanisms.yaml#mechanisms.z0archy-hierarchy-meta-learning
+      - kvnloo/z0archy:README.md#slow-hierarchy-meta-learning
+    invariants:
+      - Hierarchy changes remain proposals until a human changes canonical z0.
+      - Declared nodes are never automatic prune candidates.
+      - Weak evidence resolves to no-update rather than forcing taxonomy change.
+    invalidators:
+      - A meta-learning proposal directly mutates canonical architecture.
+      - A declared concept is automatically pruned from weak historical evidence.
+    retrieval:
+      fastest: hierarchy-proposal
+      fallback: architecture-history
+    confidence: declared
