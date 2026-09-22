@@ -1,6 +1,6 @@
 {
   "schema": "z0.reality-ledger.v1",
-  "generated_at": "2026-09-22T06:47:49.796666+00:00",
+  "generated_at": "2026-09-22T07:57:42.829949+00:00",
   "generated_by": "scripts/reality-sweep",
   "statuses": [
     "merged",
@@ -20,6 +20,18 @@
     "external_upstream": 24,
     "branch_only": 3,
     "open_pr": 1
+  },
+  "scope": {
+    "roots": [
+      "~/tmp",
+      "~/zer0",
+      "~/src",
+      "~/repos",
+      "/mnt/zer0models/workspace",
+      "/mnt/zer0models/repos"
+    ],
+    "source": "Z0_SWEEP_ROOTS",
+    "checkouts_found": 110
   },
   "entities": [
     {
@@ -104,11 +116,11 @@
           "sample": [
             {
               "path": "~/tmp/z0",
-              "branch": "audit/current-state-reality-ledger",
-              "head": "b52760e0db34ebce462751deabdbca2ddd265f0e",
+              "branch": "integrate/registry-generations",
+              "head": "ebbd076a3ae3ba875d67efeda8488934e220124a",
               "dirty": true,
-              "dirty_files": 6,
-              "last_commit": "2026-09-21T17:34:56-05:00",
+              "dirty_files": 3,
+              "last_commit": "2026-09-22T02:49:06-05:00",
               "worktrees": {
                 "count": 1,
                 "sample": [
@@ -117,10 +129,11 @@
                 "truncated": 0
               },
               "local_branches": {
-                "count": 3,
+                "count": 4,
                 "sample": [
                   "audit/current-state-reality-ledger",
                   "feat/local-cognition-registry",
+                  "integrate/registry-generations",
                   "main"
                 ],
                 "truncated": 0
@@ -130,7 +143,7 @@
         },
         "status": "merged",
         "evidence": [
-          "local checkout(s): ~/tmp/z0@audit/current-state-reality-ledger (dirty)",
+          "local checkout(s): ~/tmp/z0@integrate/registry-generations (dirty)",
           "capability claimed on default branch 'main' head=7500ff879f (2026-09-22)"
         ],
         "resolution": {
@@ -165,6 +178,11 @@
           {
             "kind": "local_branch",
             "ref": "feat/local-cognition-registry",
+            "path": "~/tmp/z0"
+          },
+          {
+            "kind": "local_branch",
+            "ref": "integrate/registry-generations",
             "path": "~/tmp/z0"
           }
         ]
@@ -238,7 +256,7 @@
         "local_checkouts": {
           "count": 1,
           "dirty_count": 0,
-          "clean_on_default_count": 1,
+          "clean_on_default_count": 0,
           "paths": {
             "count": 1,
             "sample": [
@@ -249,11 +267,11 @@
           "sample": [
             {
               "path": "~/tmp/z0archy",
-              "branch": "main",
-              "head": "6ab142f8c06f43109abb1e5b4e9aad4deb64d997",
+              "branch": "fix/read-both-registry-generations",
+              "head": "ef6864331c41e33ef79cf3789799f86e904a34ac",
               "dirty": false,
               "dirty_files": 0,
-              "last_commit": "2026-09-22T00:37:54-05:00",
+              "last_commit": "2026-09-22T01:53:07-05:00",
               "worktrees": {
                 "count": 1,
                 "sample": [
@@ -262,8 +280,9 @@
                 "truncated": 0
               },
               "local_branches": {
-                "count": 1,
+                "count": 2,
                 "sample": [
+                  "fix/read-both-registry-generations",
                   "main"
                 ],
                 "truncated": 0
@@ -273,7 +292,7 @@
         },
         "status": "merged",
         "evidence": [
-          "local checkout(s): ~/tmp/z0archy@main",
+          "local checkout(s): ~/tmp/z0archy@fix/read-both-registry-generations",
           "capability claimed on default branch 'main' head=6ab142f8c0 (2026-09-22)"
         ],
         "resolution": {
@@ -290,6 +309,11 @@
             "draft": false,
             "title": "feat: compile information plane and evidence dependencies",
             "dependency_automation": false
+          },
+          {
+            "kind": "local_branch",
+            "ref": "fix/read-both-registry-generations",
+            "path": "~/tmp/z0archy"
           }
         ]
       }
@@ -408,7 +432,7 @@
         },
         "local_checkouts": {
           "count": 3,
-          "dirty_count": 1,
+          "dirty_count": 0,
           "clean_on_default_count": 0,
           "paths": {
             "count": 3,
@@ -444,11 +468,11 @@
             },
             {
               "path": "~/tmp/aodl",
-              "branch": "feat/aodl-contract-importable",
-              "head": "1fa80da2b9d3c7cde70e48b26c452329d657e788",
-              "dirty": true,
-              "dirty_files": 1,
-              "last_commit": "2026-09-18T14:08:36-05:00",
+              "branch": "fix/validate-facade-reexport",
+              "head": "56a3648e4701b3f80c3186a76cb94b73b61839bc",
+              "dirty": false,
+              "dirty_files": 0,
+              "last_commit": "2026-09-22T01:48:48-05:00",
               "worktrees": {
                 "count": 2,
                 "sample": [
@@ -458,10 +482,11 @@
                 "truncated": 0
               },
               "local_branches": {
-                "count": 3,
+                "count": 4,
                 "sample": [
                   "consolidate/aodl-main-20260919",
                   "feat/aodl-contract-importable",
+                  "fix/validate-facade-reexport",
                   "main"
                 ],
                 "truncated": 0
@@ -483,10 +508,11 @@
                 "truncated": 0
               },
               "local_branches": {
-                "count": 3,
+                "count": 4,
                 "sample": [
                   "consolidate/aodl-main-20260919",
                   "feat/aodl-contract-importable",
+                  "fix/validate-facade-reexport",
                   "main"
                 ],
                 "truncated": 0
@@ -496,7 +522,7 @@
         },
         "status": "merged",
         "evidence": [
-          "local checkout(s): ~/tmp/aodl-audit@HEAD, ~/tmp/aodl@feat/aodl-contract-importable (dirty), ~/tmp/aodl-consolidation-20260919@consolidate/aodl-main-20260919",
+          "local checkout(s): ~/tmp/aodl-audit@HEAD, ~/tmp/aodl@fix/validate-facade-reexport, ~/tmp/aodl-consolidation-20260919@consolidate/aodl-main-20260919",
           "capability claimed on default branch 'main' head=549f2a1c17 (2026-09-20)"
         ],
         "resolution": {
@@ -571,12 +597,22 @@
           },
           {
             "kind": "local_branch",
+            "ref": "fix/validate-facade-reexport",
+            "path": "~/tmp/aodl"
+          },
+          {
+            "kind": "local_branch",
             "ref": "consolidate/aodl-main-20260919",
             "path": "~/tmp/aodl-consolidation-20260919"
           },
           {
             "kind": "local_branch",
             "ref": "feat/aodl-contract-importable",
+            "path": "~/tmp/aodl-consolidation-20260919"
+          },
+          {
+            "kind": "local_branch",
+            "ref": "fix/validate-facade-reexport",
             "path": "~/tmp/aodl-consolidation-20260919"
           }
         ]
@@ -722,7 +758,7 @@
         },
         "local_checkouts": {
           "count": 2,
-          "dirty_count": 1,
+          "dirty_count": 0,
           "clean_on_default_count": 0,
           "paths": {
             "count": 2,
@@ -736,10 +772,10 @@
             {
               "path": "~/tmp/openjev",
               "branch": "feat/steal-sweep",
-              "head": "8e62e223f6067b156c30e3bc90f62570a77a6674",
-              "dirty": true,
-              "dirty_files": 38,
-              "last_commit": "2026-09-21T22:58:49-05:00",
+              "head": "f30c7af3b1e1e172550b838a33579300d8d22366",
+              "dirty": false,
+              "dirty_files": 0,
+              "last_commit": "2026-09-22T02:39:47-05:00",
               "worktrees": {
                 "count": 3,
                 "sample": [
@@ -815,7 +851,7 @@
         },
         "status": "merged",
         "evidence": [
-          "local checkout(s): ~/tmp/openjev@feat/steal-sweep (dirty), ~/tmp/z0int-future-integrate@feat/resolve-context",
+          "local checkout(s): ~/tmp/openjev@feat/steal-sweep, ~/tmp/z0int-future-integrate@feat/resolve-context",
           "capability claimed on default branch 'master' head=5e7cf4a2d6 (2026-09-18)"
         ],
         "resolution": {
@@ -1871,15 +1907,13 @@
           }
         },
         "local_checkouts": {
-          "count": 6,
+          "count": 4,
           "dirty_count": 1,
-          "clean_on_default_count": 2,
+          "clean_on_default_count": 0,
           "paths": {
-            "count": 6,
+            "count": 4,
             "sample": [
               "~/tmp/oh-my-pi-live-preserve",
-              "~/tmp/oh-my-pi-rlm-2",
-              "~/tmp/oh-my-pi-rlm-3",
               "~/tmp/oh-my-pi-rlm-reduced",
               "~/tmp/oh-my-pi-rlm-v2-base",
               "~/tmp/omp-next"
@@ -2012,50 +2046,6 @@
               }
             },
             {
-              "path": "~/tmp/oh-my-pi-rlm-2",
-              "branch": "main",
-              "head": "04728e6226ef7ab9db321edc9b31cc8968bc6544",
-              "dirty": false,
-              "dirty_files": 0,
-              "last_commit": "2026-09-18T16:52:44+02:00",
-              "worktrees": {
-                "count": 1,
-                "sample": [
-                  "~/tmp/oh-my-pi-rlm-2"
-                ],
-                "truncated": 0
-              },
-              "local_branches": {
-                "count": 1,
-                "sample": [
-                  "main"
-                ],
-                "truncated": 0
-              }
-            },
-            {
-              "path": "~/tmp/oh-my-pi-rlm-3",
-              "branch": "main",
-              "head": "04728e6226ef7ab9db321edc9b31cc8968bc6544",
-              "dirty": false,
-              "dirty_files": 0,
-              "last_commit": "2026-09-18T16:52:44+02:00",
-              "worktrees": {
-                "count": 1,
-                "sample": [
-                  "~/tmp/oh-my-pi-rlm-3"
-                ],
-                "truncated": 0
-              },
-              "local_branches": {
-                "count": 1,
-                "sample": [
-                  "main"
-                ],
-                "truncated": 0
-              }
-            },
-            {
               "path": "~/tmp/oh-my-pi-live-preserve",
               "branch": "preserve/omp-live-installed-artifacts-20260919",
               "head": "ffdc7ce11196847e5d3c06a0ccca6cac982515d8",
@@ -2183,8 +2173,8 @@
         },
         "status": "branch_only",
         "evidence": [
-          "local checkout(s): ~/tmp/oh-my-pi-rlm-v2-base@feat/rlm-v2, ~/tmp/oh-my-pi-rlm-reduced@exp/rlm-v3-reduced, ~/tmp/oh-my-pi-rlm-2@main, ~/tmp/oh-my-pi-rlm-3@main",
-          "capability branch 'exp/rlm-evidence-addressing': local=True remote=True (totals: 102 local / 100 remote, checked against kvnloo/oh-my-pi)"
+          "local checkout(s): ~/tmp/oh-my-pi-rlm-v2-base@feat/rlm-v2, ~/tmp/oh-my-pi-rlm-reduced@exp/rlm-v3-reduced, ~/tmp/oh-my-pi-live-preserve@preserve/omp-live-installed-artifacts-20260919, ~/tmp/omp-next@omp-next (dirty)",
+          "capability branch 'exp/rlm-evidence-addressing': local=True remote=True (totals: 100 local / 100 remote, checked against kvnloo/oh-my-pi)"
         ],
         "resolution": {
           "ref": {
@@ -2195,7 +2185,7 @@
           "branch_present": {
             "local": true,
             "remote": true,
-            "local_branch_total": 102,
+            "local_branch_total": 100,
             "remote_branch_total": 100,
             "checked_against": "kvnloo/oh-my-pi"
           }
@@ -3137,15 +3127,13 @@
           }
         },
         "local_checkouts": {
-          "count": 6,
+          "count": 4,
           "dirty_count": 1,
-          "clean_on_default_count": 2,
+          "clean_on_default_count": 0,
           "paths": {
-            "count": 6,
+            "count": 4,
             "sample": [
               "~/tmp/oh-my-pi-live-preserve",
-              "~/tmp/oh-my-pi-rlm-2",
-              "~/tmp/oh-my-pi-rlm-3",
               "~/tmp/oh-my-pi-rlm-reduced",
               "~/tmp/oh-my-pi-rlm-v2-base",
               "~/tmp/omp-next"
@@ -3278,50 +3266,6 @@
               }
             },
             {
-              "path": "~/tmp/oh-my-pi-rlm-2",
-              "branch": "main",
-              "head": "04728e6226ef7ab9db321edc9b31cc8968bc6544",
-              "dirty": false,
-              "dirty_files": 0,
-              "last_commit": "2026-09-18T16:52:44+02:00",
-              "worktrees": {
-                "count": 1,
-                "sample": [
-                  "~/tmp/oh-my-pi-rlm-2"
-                ],
-                "truncated": 0
-              },
-              "local_branches": {
-                "count": 1,
-                "sample": [
-                  "main"
-                ],
-                "truncated": 0
-              }
-            },
-            {
-              "path": "~/tmp/oh-my-pi-rlm-3",
-              "branch": "main",
-              "head": "04728e6226ef7ab9db321edc9b31cc8968bc6544",
-              "dirty": false,
-              "dirty_files": 0,
-              "last_commit": "2026-09-18T16:52:44+02:00",
-              "worktrees": {
-                "count": 1,
-                "sample": [
-                  "~/tmp/oh-my-pi-rlm-3"
-                ],
-                "truncated": 0
-              },
-              "local_branches": {
-                "count": 1,
-                "sample": [
-                  "main"
-                ],
-                "truncated": 0
-              }
-            },
-            {
               "path": "~/tmp/oh-my-pi-live-preserve",
               "branch": "preserve/omp-live-installed-artifacts-20260919",
               "head": "ffdc7ce11196847e5d3c06a0ccca6cac982515d8",
@@ -3449,7 +3393,7 @@
         },
         "status": "external_upstream",
         "evidence": [
-          "local checkout(s): ~/tmp/oh-my-pi-rlm-v2-base@feat/rlm-v2, ~/tmp/oh-my-pi-rlm-reduced@exp/rlm-v3-reduced, ~/tmp/oh-my-pi-rlm-2@main, ~/tmp/oh-my-pi-rlm-3@main",
+          "local checkout(s): ~/tmp/oh-my-pi-rlm-v2-base@feat/rlm-v2, ~/tmp/oh-my-pi-rlm-reduced@exp/rlm-v3-reduced, ~/tmp/oh-my-pi-live-preserve@preserve/omp-live-installed-artifacts-20260919, ~/tmp/omp-next@omp-next (dirty)",
           "fork=True upstream=can1357/oh-my-pi"
         ],
         "resolution": {
@@ -3553,189 +3497,189 @@
           "archived": false,
           "private": false,
           "default_branch": "main",
-          "pushed_at": "2026-09-22T06:45:26Z",
+          "pushed_at": "2026-09-22T07:56:40Z",
           "description": "The agent that grows with you",
           "upstream": null,
-          "open_issues": 43556,
-          "head_sha": "913c045c53800a24956a74cc1fe6db0dd4421490",
-          "head_date": "2026-09-22T06:38:16Z",
+          "open_issues": 43515,
+          "head_sha": "8e221d12a84dd98772e53854121214d10d2ef1a4",
+          "head_date": "2026-09-22T07:52:40Z",
           "open_prs": {
             "count": 100,
             "sample": [
               {
-                "number": 118875,
-                "title": "fix(desktop): open sessions at latest messages",
-                "head": "fix/118866-open-session-at-latest",
+                "number": 118917,
+                "title": "Desktop Plugins tab renders plugin-declared settings (config_schema \u2192 form \u2192 shared config writer / ",
+                "head": "feat/plugin-settings-desktop",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118874,
-                "title": "fix(desktop): scope response actions to latest reply",
-                "head": "fix/118864-message-text-current-reply",
+                "number": 118916,
+                "title": "fix(tui): export dashboard user to tool context",
+                "head": "fix/118912-export-dashboard-user-id",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118870,
-                "title": "fix(gateway): scope cached routed-session liveness checks",
-                "head": "fix/118862-routed-profile-dead-session",
+                "number": 118915,
+                "title": "Plugin loader: a hung import/register() is skipped after a short deadline instead of hanging startup",
+                "head": "register-deadline",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118869,
-                "title": "feat(skills): add optional pricewin-travel-search skill",
-                "head": "feat/optional-skill-pricewin-travel-search",
+                "number": 118914,
+                "title": "Update checks can anchor to the latest tagged release instead of the branch tip (opt-in)",
+                "head": "release-anchored-updates-v2",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118868,
-                "title": "feat(mcp-catalog): add PriceWin hotel and flight search",
-                "head": "feat/optional-mcp-pricewin",
+                "number": 118913,
+                "title": "fix: plugin catalog installs the newest pin, trusts tag pins, asks before a re-pin widens a plugin (",
+                "head": "fix/catalog-audit-2",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118867,
-                "title": "fix(cron): persist mirrored deliveries as assistant turns",
-                "head": "fix/118863-cron-mirror-assistant-turn",
+                "number": 118911,
+                "title": "pre_llm_call context reaches and survives multimodal turns: wire, persistence, compaction, resume (#",
+                "head": "multimodal-hook",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118865,
-                "title": "fix(desktop): release settled gateway activation lease",
-                "head": "fix/118856-gateway-activation-lease-pruning",
+                "number": 118909,
+                "title": "Plugins can observe auxiliary LLM calls via pre/post_auxiliary_call (#79733, supersedes #32416 #6806",
+                "head": "aux-hooks",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118861,
-                "title": "fix(skills): ignore nested agent compatibility mirrors",
-                "head": "fix/exclude-agent-metadata-skills",
+                "number": 118908,
+                "title": "fix(gateway): move the thread-participation persist off the event loop",
+                "head": "upstream-port/thread-tracker-mark-off-loop",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118860,
-                "title": "fix(tui): preflight code-skew check before deferred agent build",
-                "head": "fix/tui-gateway-code-skew",
+                "number": 118907,
+                "title": "fix(kanban): auto-populate published_pr from an exact-PR completion contract",
+                "head": "fix/kanban-auto-populate-published-pr",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118858,
-                "title": "fix(hindsight): preserve profile env, export offline mode, and eliminate restart storms",
-                "head": "fix/hindsight-embedded-env-preservation",
+                "number": 118906,
+                "title": "feat(plugins): queue-safe inject_message \u2014 host-owned seam, busy tools are never interrupted",
+                "head": "upstream-pr/queue-safe-injection",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118857,
-                "title": "fix(desktop): render OpenRouter reasoning details on completion",
-                "head": "fix/118851-openrouter-reasoning-details",
+                "number": 118905,
+                "title": "fix(desktop): stop composer timer when turn completes",
+                "head": "fix/118901-composer-timer-stops",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118855,
-                "title": "fix(desktop): retain transcript rows on stale hydration",
-                "head": "fix/118850-preserve-transcript-during-stale-hydration",
-                "base": "main",
+                "number": 118904,
+                "title": "feat(platform): gate MCP tools and skills on declared applications",
+                "head": "sid/ns-922b-hermes-platform-declaration",
+                "base": "sid/ns-921-hermes-platform-resolver",
                 "draft": false
               },
               {
-                "number": 118854,
-                "title": "plugins: enable/disable/remove land on the loader's key on every surface; uninstall leaves no config",
-                "head": "fix/plugin-activation-bookkeeping",
-                "base": "main",
-                "draft": false
-              },
-              {
-                "number": 118853,
-                "title": "fix(desktop): keep a repeated prompt when the stored transcript is behind the turn",
-                "head": "fix/desktop-keep-repeated-prompt",
-                "base": "main",
-                "draft": false
-              },
-              {
-                "number": 118849,
-                "title": "chore(plugin-catalog): re-pin vaultknox to 0.8.1 with truthful outbound contract",
-                "head": "catalog/vaultknox-outbound-value-dlp",
-                "base": "main",
-                "draft": false
-              },
-              {
-                "number": 118848,
-                "title": "fix(desktop): clarify plugins folder label",
-                "head": "fix/desktop-plugin-folder-label",
-                "base": "main",
-                "draft": false
-              },
-              {
-                "number": 118847,
-                "title": "feat(plugins): add post_compaction hook (#118382)",
-                "head": "feat/post-compaction-hook",
-                "base": "main",
-                "draft": false
-              },
-              {
-                "number": 118846,
-                "title": "fix(delegate): map live transcript logs via index-aligned writers, not compressed paths",
-                "head": "fix/live-paths-index-alignment",
-                "base": "main",
-                "draft": false
-              },
-              {
-                "number": 118845,
-                "title": "Plugin hooks fire on every surface: gateway slash commands bound + off-loop, transform hooks cover i",
-                "head": "fix/hooks-surfaces",
-                "base": "main",
-                "draft": false
-              },
-              {
-                "number": 118844,
-                "title": "Plugin hook policy: hung or raising guards fail closed without wedging, block outranks approve, shel",
-                "head": "fix/hooks-policy",
-                "base": "main",
-                "draft": false
-              },
-              {
-                "number": 118840,
-                "title": "fix(skills): reuse HTTP connections during inspect",
-                "head": "fix/118833-reuse-skills-inspect-http-client",
-                "base": "main",
-                "draft": false
-              },
-              {
-                "number": 118839,
-                "title": "fix(gateway): --replace must not signal a different profile's standalone owner",
-                "head": "fix/replace-standalone-owner",
-                "base": "main",
-                "draft": false
-              },
-              {
-                "number": 118838,
-                "title": "plugins: subdir installs stay updatable, stash re-apply works on MSYS, doctor unloads before teardow",
-                "head": "fix/plugin-installer-update-doctor",
-                "base": "main",
-                "draft": false
-              },
-              {
-                "number": 118837,
-                "title": "fix(codex_runtime): collapse same-id function_call frames to one tool call",
-                "head": "fix/codex-duplicate-empty-tool-call",
-                "base": "main",
-                "draft": false
-              },
-              {
-                "number": 118836,
-                "title": "Private/issue 4176 directus skill",
-                "head": "private/issue-4176-directus-skill",
+                "number": 118903,
+                "title": "fix(memory): forward committed entry identity to providers",
+                "head": "fix/memory-write-event-identity",
                 "base": "main",
                 "draft": true
+              },
+              {
+                "number": 118899,
+                "title": "fix(gateway): exclude cron mirror user turns from turn context",
+                "head": "fix/cron-mirror-user-turn-auto-reply-118863",
+                "base": "main",
+                "draft": false
+              },
+              {
+                "number": 118896,
+                "title": "feat(lsp): configurable Node heap cap for spawned language servers (#116446)",
+                "head": "feat/lsp-max-heap-116446",
+                "base": "main",
+                "draft": false
+              },
+              {
+                "number": 118895,
+                "title": "feat(plugins): on_session_open \u2014 host-open lifecycle hook for addressable sessions",
+                "head": "upstream-pr/session-open-hook",
+                "base": "main",
+                "draft": false
+              },
+              {
+                "number": 118893,
+                "title": "feat(tui): navigate between user messages",
+                "head": "feat/tui-message-navigation",
+                "base": "main",
+                "draft": false
+              },
+              {
+                "number": 118892,
+                "title": "fix(media): deliver LaTeX source files through MEDIA",
+                "head": "fix/desktop-latex-media-delivery",
+                "base": "main",
+                "draft": false
+              },
+              {
+                "number": 118891,
+                "title": "feat(approval): mid-task YOLO choice at the command approval prompt",
+                "head": "fix/issue-98139-approval-yolo-choice",
+                "base": "main",
+                "draft": false
+              },
+              {
+                "number": 118888,
+                "title": "fix(agent): deliver readable reasoning details during streaming",
+                "head": "fix/118851-live-reasoning-details",
+                "base": "main",
+                "draft": false
+              },
+              {
+                "number": 118887,
+                "title": "fix(delegate): suspend inactivity window mid-tool + direct tests for the liveness wait",
+                "head": "fix/116001-mid-tool-window-suspend",
+                "base": "main",
+                "draft": false
+              },
+              {
+                "number": 118885,
+                "title": "fix(desktop): kanban (and every connection-scoped query) follows the gateway switch",
+                "head": "fix/kanban-connection-scope",
+                "base": "main",
+                "draft": false
+              },
+              {
+                "number": 118883,
+                "title": "fix(gateway): move the rich-sent index write off the event loop",
+                "head": "upstream-port/rich-sent-store-off-loop",
+                "base": "main",
+                "draft": false
+              },
+              {
+                "number": 118882,
+                "title": "Add gemini-live-bridge to the plugin catalog",
+                "head": "add-gemini-live-bridge",
+                "base": "main",
+                "draft": false
+              },
+              {
+                "number": 118881,
+                "title": "feat(install): honor $HERMES_INSTALL_DIR so the one-liner can choose the install directory",
+                "head": "feat/install-ps1-custom-install-dir",
+                "base": "main",
+                "draft": false
               }
             ],
             "truncated": 75
@@ -3769,7 +3713,7 @@
               "austin/fix/minimax-oauth",
               "austin/fix/types-node-lockfile",
               "austin/fix/wsl-gui",
-              "b466-update-cron-fleet"
+              "aux-hooks"
             ],
             "truncated": 75
           }
@@ -4689,7 +4633,7 @@
         },
         "local_checkouts": {
           "count": 1,
-          "dirty_count": 1,
+          "dirty_count": 0,
           "clean_on_default_count": 0,
           "paths": {
             "count": 1,
@@ -4701,11 +4645,11 @@
           "sample": [
             {
               "path": "~/tmp/kerdoios",
-              "branch": "main",
-              "head": "c7b2dbc5e054d8bc1774814fd2e642d7d099c48e",
-              "dirty": true,
-              "dirty_files": 2,
-              "last_commit": "2026-09-21T20:40:45-05:00",
+              "branch": "arch/observed-availability",
+              "head": "9f864540083a4aba984b2b04f17bcbef05caab08",
+              "dirty": false,
+              "dirty_files": 0,
+              "last_commit": "2026-09-22T01:55:29-05:00",
               "worktrees": {
                 "count": 1,
                 "sample": [
@@ -4714,8 +4658,9 @@
                 "truncated": 0
               },
               "local_branches": {
-                "count": 2,
+                "count": 3,
                 "sample": [
+                  "arch/observed-availability",
                   "feat/local-cognition-placement",
                   "main"
                 ],
@@ -4726,7 +4671,7 @@
         },
         "status": "merged",
         "evidence": [
-          "local checkout(s): ~/tmp/kerdoios@main (dirty)",
+          "local checkout(s): ~/tmp/kerdoios@arch/observed-availability",
           "capability claimed on default branch 'main' head=e3100ae4b7 (2026-09-18)"
         ],
         "resolution": {
@@ -4824,6 +4769,11 @@
             "draft": false,
             "title": "feat: fail closed unless hermes bitwarden is configured",
             "dependency_automation": false
+          },
+          {
+            "kind": "local_branch",
+            "ref": "arch/observed-availability",
+            "path": "~/tmp/kerdoios"
           },
           {
             "kind": "local_branch",
@@ -5237,7 +5187,7 @@
         "local_checkouts": {
           "count": 1,
           "dirty_count": 0,
-          "clean_on_default_count": 1,
+          "clean_on_default_count": 0,
           "paths": {
             "count": 1,
             "sample": [
@@ -5248,11 +5198,11 @@
           "sample": [
             {
               "path": "~/tmp/z0evals",
-              "branch": "main",
-              "head": "1526a197f7d69b76d7e742886bcf4b3ca8a7e82c",
+              "branch": "chore/study-supersession",
+              "head": "29bed35fae506b0f8eda091a7c8cc2e6f7bacd9d",
               "dirty": false,
               "dirty_files": 0,
-              "last_commit": "2026-09-22T00:00:19-05:00",
+              "last_commit": "2026-09-22T02:34:18-05:00",
               "worktrees": {
                 "count": 1,
                 "sample": [
@@ -5261,8 +5211,9 @@
                 "truncated": 0
               },
               "local_branches": {
-                "count": 18,
+                "count": 19,
                 "sample": [
+                  "chore/study-supersession",
                   "dev",
                   "feat/blog-story-rewrite",
                   "feat/pages-channel-triggers",
@@ -5289,7 +5240,7 @@
         },
         "status": "merged",
         "evidence": [
-          "local checkout(s): ~/tmp/z0evals@main",
+          "local checkout(s): ~/tmp/z0evals@chore/study-supersession",
           "capability claimed on default branch 'main' head=1526a197f7 (2026-09-22)"
         ],
         "resolution": {
@@ -5342,6 +5293,11 @@
             "draft": false,
             "title": "chore(deps): bump actions/setup-python from 5 to 7",
             "dependency_automation": true
+          },
+          {
+            "kind": "local_branch",
+            "ref": "chore/study-supersession",
+            "path": "~/tmp/z0evals"
           },
           {
             "kind": "local_branch",
@@ -5541,10 +5497,10 @@
             {
               "path": "~/tmp/frontier-kb",
               "branch": "feat/small-tool-calling-models",
-              "head": "65b827b78ca6940cf73cfe182a5c0313faf29086",
+              "head": "8562d50e4ff3b178a8e69a2046d717763fecee03",
               "dirty": false,
               "dirty_files": 0,
-              "last_commit": "2026-09-21T12:33:22-05:00",
+              "last_commit": "2026-09-22T02:42:04-05:00",
               "worktrees": {
                 "count": 1,
                 "sample": [
@@ -6098,7 +6054,7 @@
         "local_checkouts": {
           "count": 1,
           "dirty_count": 0,
-          "clean_on_default_count": 1,
+          "clean_on_default_count": 0,
           "paths": {
             "count": 1,
             "sample": [
@@ -6109,11 +6065,11 @@
           "sample": [
             {
               "path": "/mnt/zer0models/repos/kvnloo/verified-oss-loop",
-              "branch": "main",
-              "head": "3d5e9dd65d39eab09f5da26060f0dd63068c9094",
+              "branch": "arch/promotion-hardening",
+              "head": "5ca82424485f22f701b2939a3b0dead3a8af2247",
               "dirty": false,
               "dirty_files": 0,
-              "last_commit": "2026-08-25T13:16:14-05:00",
+              "last_commit": "2026-09-22T02:14:43-05:00",
               "worktrees": {
                 "count": 1,
                 "sample": [
@@ -6122,8 +6078,9 @@
                 "truncated": 0
               },
               "local_branches": {
-                "count": 1,
+                "count": 2,
                 "sample": [
+                  "arch/promotion-hardening",
                   "main"
                 ],
                 "truncated": 0
@@ -6133,7 +6090,7 @@
         },
         "status": "merged",
         "evidence": [
-          "local checkout(s): /mnt/zer0models/repos/kvnloo/verified-oss-loop@main",
+          "local checkout(s): /mnt/zer0models/repos/kvnloo/verified-oss-loop@arch/promotion-hardening",
           "capability claimed on default branch 'main' head=7ba2782090 (2026-09-12)"
         ],
         "resolution": {
@@ -6177,6 +6134,11 @@
             "draft": false,
             "title": "Map git channels to Pages URLs so preview is not a folder",
             "dependency_automation": false
+          },
+          {
+            "kind": "local_branch",
+            "ref": "arch/promotion-hardening",
+            "path": "/mnt/zer0models/repos/kvnloo/verified-oss-loop"
           }
         ]
       }
