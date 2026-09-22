@@ -115,9 +115,22 @@ def main() -> int:
     # 4. Duplication guard: ids known from the fixture and, when resolvable,
     #    from the real z0intelligence manifest must not appear anywhere in z0.
     real = cognition.load_manifest(allow_cli=True)
+    if real is None:
+        # This used to fall through to `known = fixture_ids` and report ok. The
+        # guard then scanned the four SYNTHETIC fixture ids -- names that cannot
+        # appear in z0 by construction, so finding none of them proves nothing --
+        # while the check's
+        # docstring claims it proves "no real model id leaked into z0's
+        # hand-written surface". A green result that cannot support its own claim
+        # is worse than a red one, so an unreachable manifest is now a failure.
+        problems.append(
+            "the duplication guard is VACUOUS: the canonical manifest did not resolve "
+            f"({cognition.CANONICAL_REPO}:{cognition.CANONICAL_MANIFEST}), so only the "
+            f"{len(fixture_ids)} synthetic fixture ids could be scanned. Supply it with "
+            "Z0INT_COGNITION_MANIFEST=<path>, Z0INTELLIGENCE_ROOT=<checkout>, "
+            "~/.z0/workspace.yaml, or Z0_SWEEP_ROOTS=<dirs> pointing at the checkout."
+        )
     known = set(fixture_ids) | set((real or {}).get("models") or {})
-    if not known:
-        problems.append("no model ids available to scan; loader is not reading any manifest")
     for path in iter_files():
         if path == portfolio and not portfolio_text:
             continue

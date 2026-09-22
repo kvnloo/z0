@@ -87,7 +87,46 @@ def manifest_candidates() -> list[Path]:
         paths.append(registry.repo_dir("z0intelligence") / CANONICAL_MANIFEST)
     except Exception:  # noqa: BLE001 - a missing workspace file is not fatal
         pass
+    # ...and if it does not, look for a checkout by the names the registry says
+    # this component has. DECLARED candidates stay first: discovery is a
+    # fallback, never an override.
+    #
+    # Without this the default `~/.z0/repos/z0intelligence` -- derived from the
+    # REPO basename -- can never find the checkout on a machine where the
+    # directory kept the old name. It is `~/tmp/openjev` here, and `openjev` is
+    # declared in registry/upstreams.yaml as `superseded_by: z0intelligence`, so
+    # the alias is registry data rather than a guess.
+    for root in _sibling_roots():
+        for name in _manifest_alias_names():
+            for candidate in (root / name, *sorted(root.glob(f"*/{name}"))):
+                paths.append(candidate / CANONICAL_MANIFEST)
     return paths
+
+
+def _manifest_alias_names() -> list[str]:
+    """Directory names `CANONICAL_REPO`'s component is known by, per the registry."""
+    component_id = CANONICAL_REPO.split("/")[-1]
+    names = {component_id}
+    try:
+        for rid, meta in registry.reference_only().items():
+            if (meta or {}).get("superseded_by") == component_id:
+                names.add(rid)
+    except Exception:  # noqa: BLE001 - registry unavailable is not fatal here
+        pass
+    return sorted(names)
+
+
+def _sibling_roots() -> list[Path]:
+    """Where sibling checkouts live, mirroring scripts/reality-sweep.
+
+    `Z0_SWEEP_ROOTS` overrides the same way it does there, so one variable
+    configures both tools on a machine whose layout differs.
+    """
+    override = [p for p in os.environ.get("Z0_SWEEP_ROOTS", "").split(os.pathsep) if p]
+    if override:
+        return [Path(p).expanduser() for p in override]
+    home = Path.home()
+    return [home / name for name in ("tmp", "zer0", "src", "repos")]
 
 
 def manifest_path() -> Path | None:
