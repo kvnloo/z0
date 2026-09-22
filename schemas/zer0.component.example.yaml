@@ -1,5 +1,6 @@
-# Example zer0.component.yaml — place at component repo root (future).
-# Central registry in kvnloo/z0 remains authoritative until CI sync exists.
+# Legacy component-shaped manifest example.
+# New repositories should prefer zer0.repo.yaml + schemas/repo.schema.json.
+# Central registry in kvnloo/z0 remains authoritative for cross-system identity.
 
 id: tokenomics
 name: Tokenomics
