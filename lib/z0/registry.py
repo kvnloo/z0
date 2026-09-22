@@ -494,6 +494,29 @@ def _taxonomy_problems() -> list[str]:
         problems.append(f"maturity.yaml: effects declared but used by no class: {unused}")
 
     problems.extend(_trust_problems(ev, effects))
+    problems.extend(_name_collision_problems())
+    return problems
+
+
+def _name_collision_problems() -> list[str]:
+    """No trust name or alias may also be an evidence class name.
+
+    The same token in two files meant two different things: `exploratory_beta`
+    was a trust status in z0intelligence's manifest and an evidence class in
+    every artifact beside it. A reader could not tell which a bare string was,
+    and a normalizer had to guess. Both directions are checked, because an
+    alias is just as ambiguous as a canonical name.
+    """
+    problems: list[str] = []
+    evidence = {c.lower() for c in evidence_classes()}
+    for name, spec in sorted(trust_statuses().items()):
+        names = [name, *((spec or {}).get("aliases") or [])]
+        for candidate in names:
+            if candidate.lower() in evidence:
+                problems.append(
+                    f"maturity.yaml: trust name {candidate!r} (for {name}) is also an "
+                    f"evidence class; one token cannot mean two things"
+                )
     return problems
 
 

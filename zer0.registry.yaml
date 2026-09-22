@@ -820,8 +820,7 @@ trust:
     permits: nothing
     requires:
     - tested_observation
-    aliases:
-    - exploratory_beta
+    aliases: []
   TRUSTED_BOUNDED:
     means: 'Permitted on a production path for this capability, within the measured distribution.
 

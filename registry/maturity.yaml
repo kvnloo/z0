@@ -136,6 +136,13 @@ effects:
 #   * `TRUSTED_BOUNDED` is not `TRUSTED_GENERAL`. Bounded permits a production
 #     path inside the measured distribution; general permits one outside it, and
 #     only out-of-distribution evidence may establish it.
+#
+# A trust name or alias may NOT collide with an evidence class name. One did:
+# `exploratory_beta` was a trust status here and an evidence class next door, so
+# the same token in two files meant two different things. It is deliberately not
+# kept as an alias -- mapping it silently would be guessing which of the two it
+# meant, and the only record that used it was migrated instead. `registry-check`
+# now fails on any overlap in either direction.
 trust:
   UNTESTED:
     means: No measurement exists for this (model, capability).
@@ -153,7 +160,6 @@ trust:
       license acting on it.
     permits: nothing
     requires: [tested_observation]
-    aliases: [exploratory_beta]
   TRUSTED_SHADOW:
     means: Permitted on shadow or observation paths only, never production.
     permits: shadow
