@@ -409,6 +409,43 @@ def effect_classes() -> dict[str, dict[str, Any]]:
     return _load("maturity.yaml").get("effects", {}) or {}
 
 
+def trust_statuses() -> dict[str, dict[str, Any]]:
+    """The canonical capability-trust verdicts, or {} when undeclared."""
+    return _load("maturity.yaml").get("trust", {}) or {}
+
+
+class UnknownTrustStatus(ValueError):
+    """A trust record named a verdict the canonical vocabulary does not define."""
+
+
+def normalize_trust_status(value: Any) -> str:
+    """Canonical name for a trust verdict, accepting the declared aliases.
+
+    Same rule as `normalize_evidence_class`: the canonical keys are uppercase and
+    on-disk values are lowercased. The aliases are the names other repos already
+    wrote -- `rejected_for_current_checkpoint` is `DEPRECATED`, and
+    `exploratory_beta` as a trust STATUS is `TESTED_EXPERIMENTAL` (the token
+    collided with the evidence class of the same name, which is why relying on
+    the spelling alone was ambiguous).
+    """
+    text = str(value or "").strip()
+    if not text:
+        raise UnknownTrustStatus(
+            "empty trust status; the canonical vocabulary is in registry/maturity.yaml (trust:)"
+        )
+    upper = text.upper()
+    known = trust_statuses()
+    if upper in known:
+        return upper
+    for name, spec in known.items():
+        if upper in {str(a).upper() for a in (spec or {}).get("aliases") or []}:
+            return name
+    raise UnknownTrustStatus(
+        f"unknown trust status {value!r}; known={', '.join(known)}, "
+        f"aliases={', '.join(sorted(a for s in known.values() for a in (s or {}).get('aliases') or []))}"
+    )
+
+
 def _taxonomy_problems() -> list[str]:
     """Check the evidence taxonomy AND the vocabulary its rules are written in.
 
@@ -455,6 +492,61 @@ def _taxonomy_problems() -> list[str]:
     unused = sorted(set(effects) - used)
     if unused:
         problems.append(f"maturity.yaml: effects declared but used by no class: {unused}")
+
+    problems.extend(_trust_problems(ev, effects))
+    return problems
+
+
+#: The strongest path a trust verdict may gate, in ascending order.
+TRUST_PERMITS: tuple[str, ...] = ("nothing", "shadow", "production", "general")
+
+
+def _trust_problems(ev: dict, effects: dict) -> list[str]:
+    """Check the trust vocabulary against the effects that may establish it.
+
+    The vocabulary is only real if each verdict is reachable and nothing may
+    exceed it. `TRUSTED_GENERAL` sat in kerdoios' enum while NO class was allowed
+    to write a general trust record, so the tier could never be granted and the
+    code could not have been right in both places.
+    """
+    problems: list[str] = []
+    trust = trust_statuses()
+    if not trust:
+        problems.append("maturity.yaml: no trust vocabulary declared")
+        return problems
+
+    # Everything any class may influence, so reachability can be decided.
+    possible: set[str] = set()
+    for spec in ev.values():
+        possible |= set((spec or {}).get("may_influence") or [])
+
+    for name, spec in sorted(trust.items()):
+        spec = spec or {}
+        if not spec.get("means"):
+            problems.append(f"trust status {name}: missing 'means'")
+        permits = spec.get("permits")
+        if permits not in TRUST_PERMITS:
+            problems.append(
+                f"trust status {name}: permits {permits!r} is not one of {TRUST_PERMITS}"
+            )
+            continue
+        requires = list(spec.get("requires") or [])
+        for effect in requires:
+            if effect not in effects:
+                problems.append(
+                    f"trust status {name}: requires effect {effect!r}, which is not declared"
+                )
+        if permits != "nothing":
+            if not requires:
+                problems.append(
+                    f"trust status {name}: permits {permits!r} but requires no effect, so "
+                    "nothing an evidence class can do would establish it"
+                )
+            elif not (set(requires) & possible):
+                problems.append(
+                    f"trust status {name}: permits {permits!r} but no evidence class may "
+                    f"influence {requires}, so the tier is unreachable"
+                )
     return problems
 
 

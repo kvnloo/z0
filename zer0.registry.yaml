@@ -722,6 +722,13 @@ effects:
   default_routing:
     means: Change which backend the default path selects.
     authorizes: routing configuration
+  general_trust_record:
+    means: 'A per-(model, capability) verdict that permits a production path BEYOND the distribution the
+      capability was measured on. A generality claim in trust form, so only out-of-distribution evidence
+      may establish it.
+
+      '
+    authorizes: the general tier of a capability trust record
   generality_claims:
     means: Assert the result holds beyond the distribution that was measured.
     authorizes: a generality claim
@@ -774,6 +781,75 @@ effects:
   tuning:
     means: Fit or adjust parameters.
     authorizes: model or policy parameters
+trust:
+  DEPRECATED:
+    means: The checkpoint this verdict was about is no longer the current one.
+    permits: nothing
+    requires: []
+    aliases:
+    - rejected_for_current_checkpoint
+  EXPERIMENTAL:
+    means: 'Exercised informally; no artifact records how. A scratchpad state, never a claim -- if there
+      is no measurement to cite, this is the ceiling.
+
+      '
+    permits: nothing
+    requires: []
+    aliases: []
+  NOT_APPLICABLE:
+    means: 'The capability is not meaningful for this model -- for example a backend that does not expose
+      it at all.
+
+      '
+    permits: nothing
+    requires: []
+    aliases: []
+  QUARANTINED:
+    means: 'Withdrawn because a measurement showed an unsafe or harmful result. A restriction, not a claim,
+      which is why it may be established on the weakest evidence.
+
+      '
+    permits: nothing
+    requires: []
+    aliases: []
+  TESTED_EXPERIMENTAL:
+    means: 'Measured on real inputs and an artifact is cited. The result does not yet license acting on
+      it.
+
+      '
+    permits: nothing
+    requires:
+    - tested_observation
+    aliases:
+    - exploratory_beta
+  TRUSTED_BOUNDED:
+    means: 'Permitted on a production path for this capability, within the measured distribution.
+
+      '
+    permits: production
+    requires:
+    - capability_trust_record
+    aliases: []
+  TRUSTED_GENERAL:
+    means: 'Permitted on a production path beyond the measured distribution. A generality claim in trust
+      form, so only OOD evidence may establish it.
+
+      '
+    permits: general
+    requires:
+    - general_trust_record
+    aliases: []
+  TRUSTED_SHADOW:
+    means: Permitted on shadow or observation paths only, never production.
+    permits: shadow
+    requires:
+    - shadow_trust_record
+    aliases: []
+  UNTESTED:
+    means: No measurement exists for this (model, capability).
+    permits: nothing
+    requires: []
+    aliases: []
 evidence_classes:
   CONFIRM:
     means: 'Frozen split, pre-registered metric, no further tuning, reproduction attempted. The only class
@@ -804,6 +880,7 @@ evidence_classes:
 
       '
     may_influence:
+    - general_trust_record
     - generality_claims
     - regression_evidence
     must_not:

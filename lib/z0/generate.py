@@ -162,6 +162,15 @@ def agent_registry_yaml() -> str:
             eid: {"means": spec.get("means", ""), "authorizes": spec.get("authorizes", "")}
             for eid, spec in sorted(registry.effect_classes().items())
         },
+        "trust": {
+            tid: {
+                "means": spec.get("means", ""),
+                "permits": spec.get("permits"),
+                "requires": spec.get("requires", []),
+                "aliases": spec.get("aliases", []),
+            }
+            for tid, spec in sorted(registry.trust_statuses().items())
+        },
         "evidence_classes": {
             cid: {
                 "means": spec.get("means", ""),

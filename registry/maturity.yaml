@@ -70,6 +70,12 @@ effects:
   production_gate:
     means: Turn a production path on or off.
     authorizes: default routing, install profile membership
+  general_trust_record:
+    means: >
+      A per-(model, capability) verdict that permits a production path BEYOND
+      the distribution the capability was measured on. A generality claim in
+      trust form, so only out-of-distribution evidence may establish it.
+    authorizes: the general tier of a capability trust record
   comparison_claims:
     means: Assert that condition A differs from condition B with the pairing preserved.
     authorizes: a comparative claim
@@ -103,6 +109,85 @@ effects:
   retroactive_trust_for_other_capabilities:
     means: Let evidence about one capability raise trust in a different one.
     authorizes: nothing
+
+# TRUST. The verdict vocabulary for a capability trust record -- what a claim
+# about a (model, capability) has EARNED, as opposed to `evidence:` above, which
+# is how strong the claim is. The `capability_trust_record` effect above names
+# "the production tier of a capability trust record"; this is that record's
+# value set, which was otherwise undeclared and spelled differently in the two
+# repos that keep one.
+#
+#   permits  the strongest path this verdict may gate. `nothing` means the
+#            verdict records state and authorizes no path.
+#   requires the effect (from `effects:` above) an evidence class must hold to
+#            establish it. Empty means it needs no evidence at all: either it
+#            asserts nothing, or it is a restriction, and a restriction may rest
+#            on the weakest evidence.
+#
+# SPELLING follows `evidence:` exactly -- canonical uppercase here, lowercased on
+# disk (`"status": "trusted_bounded"`). Aliases are the names other repos already
+# wrote; they map onto these values and are not a second set.
+#
+# Two distinctions the values exist to keep:
+#   * `EXPERIMENTAL` is not `TESTED_EXPERIMENTAL`. The first means somebody ran
+#     it informally and no artifact says how; the second means there is a
+#     measurement and it does not yet license action. Collapsing them would
+#     either invent evidence or discard it.
+#   * `TRUSTED_BOUNDED` is not `TRUSTED_GENERAL`. Bounded permits a production
+#     path inside the measured distribution; general permits one outside it, and
+#     only out-of-distribution evidence may establish it.
+trust:
+  UNTESTED:
+    means: No measurement exists for this (model, capability).
+    permits: nothing
+    requires: []
+  EXPERIMENTAL:
+    means: >
+      Exercised informally; no artifact records how. A scratchpad state, never a
+      claim -- if there is no measurement to cite, this is the ceiling.
+    permits: nothing
+    requires: []
+  TESTED_EXPERIMENTAL:
+    means: >
+      Measured on real inputs and an artifact is cited. The result does not yet
+      license acting on it.
+    permits: nothing
+    requires: [tested_observation]
+    aliases: [exploratory_beta]
+  TRUSTED_SHADOW:
+    means: Permitted on shadow or observation paths only, never production.
+    permits: shadow
+    requires: [shadow_trust_record]
+  TRUSTED_BOUNDED:
+    means: >
+      Permitted on a production path for this capability, within the measured
+      distribution.
+    permits: production
+    requires: [capability_trust_record]
+  TRUSTED_GENERAL:
+    means: >
+      Permitted on a production path beyond the measured distribution. A
+      generality claim in trust form, so only OOD evidence may establish it.
+    permits: general
+    requires: [general_trust_record]
+  QUARANTINED:
+    means: >
+      Withdrawn because a measurement showed an unsafe or harmful result. A
+      restriction, not a claim, which is why it may be established on the
+      weakest evidence.
+    permits: nothing
+    requires: []
+  DEPRECATED:
+    means: The checkpoint this verdict was about is no longer the current one.
+    permits: nothing
+    requires: []
+    aliases: [rejected_for_current_checkpoint]
+  NOT_APPLICABLE:
+    means: >
+      The capability is not meaningful for this model -- for example a backend
+      that does not expose it at all.
+    permits: nothing
+    requires: []
 
 # Canonical evidence classification for any claim about a model capability.
 #
@@ -177,7 +262,7 @@ evidence:
     means: >
       Out-of-distribution or protected slice, held out from all selection and
       tuning. The only class that may support a generality claim.
-    may_influence: [generality_claims, regression_evidence]
+    may_influence: [general_trust_record, generality_claims, regression_evidence]
     must_not: [selection, tuning]
 
   PROMOTION:
