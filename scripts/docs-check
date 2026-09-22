@@ -7,3 +7,17 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 "$ROOT/scripts/cognition-check"
 cd "$ROOT"
 git diff --exit-code generated/ docs/components/ docs/reference/ownership.md zer0.registry.yaml
+
+# `git diff` only sees TRACKED files, so a newly generated view that nobody
+# committed passed this gate silently. That is not hypothetical: during the
+# registry convergence three new generated files (harnesses.md, mechanisms.md,
+# lifecycles.md) were produced and this gate reported green because it could not
+# see them. Generated output must be tracked, or it is not being checked.
+UNTRACKED=$(git ls-files --others --exclude-standard -- \
+  generated/ docs/components/ docs/reference/ownership.md zer0.registry.yaml)
+if [ -n "$UNTRACKED" ]; then
+  echo "generated output exists but is NOT tracked, so it was never verified:" >&2
+  echo "$UNTRACKED" >&2
+  echo "commit it (or delete it) and re-run." >&2
+  exit 1
+fi
