@@ -12,15 +12,54 @@
 
 interfaces:
   # ---- generic ecosystem contracts ---------------------------------------
-  aodl.intent.v1:
+  # AODL's REAL wire contract. `aodl_contract/validator.py` sets
+  # `WIRE_SPEC = "hotl-0.2"` and spec/hotl-0.2.md says "Wire IDs use hotl-0.2".
+  # It was not registered, while two names that appear nowhere in AODL were.
+  #
+  # The id deviates from this registry's `<owner>.<thing>.v<major>` convention:
+  # the namespace is `hotl` (declared and owned by aodl in
+  # schema_namespaces.yaml) and the version is `0.2`, not `.v2`. The artifact's
+  # own id wins -- a registry that renames a wire contract misdescribes it.
+  #
+  # `source` is the file that DECLARES the contract, which is what makes the
+  # claim checkable. `$id` in that file is
+  # https://specs.hermes-agent.nousresearch.com/hotl/0.2/schema.json -- a
+  # hermes-agent URL, so the schema's identity and this registry disagree about
+  # who publishes it, and that is recorded rather than smoothed over.
+  hotl-0.2:
     class: contract
     owner: aodl
-    summary: Typed intent / plan contract. Governs execution; is not runtime execution.
+    source: schema/hotl-0.2.schema.json
+    summary: >
+      Typed orchestration document: intent graph, compiled plan, observed graph,
+      policies, constraints and provenance, kept distinct. Validated by
+      aodl_contract/validator.py (hand-written, Python) and described by
+      schema/hotl-0.2.schema.json (JSON Schema) -- two validators for one spec.
+    not_here: [runtime execution, scheduling, provider selection]
+
+  hotl-0.1:
+    class: superseded_alias
+    owner: aodl
+    source: schema/hotl-0.1.schema.json
+    summary: Prior wire version, retained for continuity. Superseded by `hotl-0.2`.
+
+  aodl.intent.v1:
+    class: superseded_alias
+    owner: aodl
+    summary: >
+      This registry's own name for the intent contract. It was never an artifact:
+      AODL emits `hotl-0.2`, and no file in AODL contains the string
+      `aodl.intent.v1`. Retained so older references resolve; the contract it
+      named is `hotl-0.2`.
 
   aodl.observed_state.v1:
-    class: contract
+    class: superseded_alias
     owner: aodl
-    summary: Observed execution state distinct from the compiled plan.
+    summary: >
+      This registry's own name for observed execution state. HOTL carries it as
+      the `observedGraph` property of the same document rather than as a separate
+      contract, and no file in AODL contains this string. The contract it named
+      is `hotl-0.2`.
 
   tokenomics.event.v0:
     class: contract
@@ -33,11 +72,13 @@ interfaces:
     summary: Aggregated reconciliation, coverage and verified-task report.
 
   z0int.decision_receipt.v1:
+    source: src/z0int/receipt.py
     class: contract
     owner: z0intelligence
     summary: Replayable routing/policy decision receipt (state, candidates, quota, outcome).
 
   z0int.cognition.receipt.v1:
+    source: src/z0int/cognition/receipts.py
     class: contract
     owner: z0intelligence
     summary: Cognition decision receipt including the eligible candidate set and surface verdict.
@@ -63,6 +104,7 @@ interfaces:
     summary: Addressable handle into the evidence plane, rehydratable on demand.
 
   z0eval.study.v1:
+    source: schemas/study-manifest.schema.json
     class: contract
     owner: z0evals
     summary: >
@@ -145,6 +187,7 @@ interfaces:
       intent.
 
   z0int.decision_result.v1:
+    source: src/z0int/backends/base.py
     class: contract
     owner: z0intelligence
     summary: >
@@ -182,6 +225,7 @@ interfaces:
     summary: Model/provider routing decision with cost estimate.
 
   os.next_context.v0:
+    source: src/z0int/os_context.py
     class: contract
     owner: flow
     summary: >

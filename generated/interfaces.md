@@ -8,10 +8,9 @@ presented as a shared contract.
 
 | Contract | Owner | Summary |
 |----------|-------|---------|
-| `aodl.intent.v1` | `aodl` | Typed intent / plan contract. Governs execution; is not runtime execution. |
-| `aodl.observed_state.v1` | `aodl` | Observed execution state distinct from the compiled plan. |
 | `flow.prediction.v1` | `flow` | OS-context prediction with horizon metadata and gates. |
 | `harness.execution.v0` | `aodl` | The harness-neutral execution seam. Every harness adapter implements this and nothing above it may special-case a harness. |
+| `hotl-0.2` | `aodl` | Typed orchestration document: intent graph, compiled plan, observed graph, policies, constraints and provenance, kept distinct. Validated by aodl_contract/validator.py (hand-written, Python) and described by schema/hotl-0.2.schema.json (JSON Schema) -- two validators for one spec. |
 | `kerdoios.placement.v1` | `kerdoios` | Placement decision over a resource portfolio. Allocation, not execution. |
 | `kerdoios.quota_state.v1` | `kerdoios` | Dimensional quota state (rpm/rpd/tpm/tpd) with per-dimension provenance. |
 | `kerdoios.resource_offer.v1` | `kerdoios` | One normalized shape for every execution offer regardless of substrate: host CPU/GPU, Kubernetes, or a remote provider (Groq, Cerebras, OpenRouter, Nous, Vercel, xAI). Kerdoios owns the type and selects among offers. Producers emit it; consumers must NOT special-case a provider outside the adapter/placement boundary. Status is uneven and the registry should say so. Produced today: the host runtime and the remote provider adapters. NOT yet produced: Kubernetes. The only k8s lab (hermes-k8s-lab) is unpublished -- it has no git remote and no GitHub repository -- so the k8s producer is a declared gap, not an implemented one. Fields with no producer anywhere: route, economic_class, throughput, residency, startup_cost, location, node, backend, warm, resident, startup_ms, health_endpoint, queue_depth, namespace, pod, service. `resident` must be a live-runtime observation and never config intent. |

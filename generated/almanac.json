@@ -977,7 +977,7 @@
         "harness catalog"
       ],
       "consumes_contracts": [
-        "aodl.intent.v1",
+        "hotl-0.2",
         "tokenomics.event.v0"
       ],
       "emits_contracts": [
@@ -1006,7 +1006,7 @@
         "measurement semantics"
       ],
       "consumes_contracts": [
-        "aodl.intent.v1",
+        "hotl-0.2",
         "tokenomics.event.v0"
       ],
       "note": "Absent from the previous registry entirely, despite being a primary execution surface. Its llm-pi-ai catalog is the authority for provider and model identity \u2014 z0 must consume it, not mirror it.\n"
@@ -1028,7 +1028,7 @@
         "harness catalog"
       ],
       "consumes_contracts": [
-        "aodl.intent.v1",
+        "hotl-0.2",
         "tokenomics.event.v0"
       ]
     },
@@ -1627,15 +1627,32 @@
     }
   },
   "interfaces": {
-    "aodl.intent.v1": {
+    "hotl-0.2": {
       "class": "contract",
       "owner": "aodl",
-      "summary": "Typed intent / plan contract. Governs execution; is not runtime execution."
+      "source": "schema/hotl-0.2.schema.json",
+      "summary": "Typed orchestration document: intent graph, compiled plan, observed graph, policies, constraints and provenance, kept distinct. Validated by aodl_contract/validator.py (hand-written, Python) and described by schema/hotl-0.2.schema.json (JSON Schema) -- two validators for one spec.\n",
+      "not_here": [
+        "runtime execution",
+        "scheduling",
+        "provider selection"
+      ]
+    },
+    "hotl-0.1": {
+      "class": "superseded_alias",
+      "owner": "aodl",
+      "source": "schema/hotl-0.1.schema.json",
+      "summary": "Prior wire version, retained for continuity. Superseded by `hotl-0.2`."
+    },
+    "aodl.intent.v1": {
+      "class": "superseded_alias",
+      "owner": "aodl",
+      "summary": "This registry's own name for the intent contract. It was never an artifact: AODL emits `hotl-0.2`, and no file in AODL contains the string `aodl.intent.v1`. Retained so older references resolve; the contract it named is `hotl-0.2`.\n"
     },
     "aodl.observed_state.v1": {
-      "class": "contract",
+      "class": "superseded_alias",
       "owner": "aodl",
-      "summary": "Observed execution state distinct from the compiled plan."
+      "summary": "This registry's own name for observed execution state. HOTL carries it as the `observedGraph` property of the same document rather than as a separate contract, and no file in AODL contains this string. The contract it named is `hotl-0.2`.\n"
     },
     "tokenomics.event.v0": {
       "class": "contract",
@@ -1648,11 +1665,13 @@
       "summary": "Aggregated reconciliation, coverage and verified-task report."
     },
     "z0int.decision_receipt.v1": {
+      "source": "src/z0int/receipt.py",
       "class": "contract",
       "owner": "z0intelligence",
       "summary": "Replayable routing/policy decision receipt (state, candidates, quota, outcome)."
     },
     "z0int.cognition.receipt.v1": {
+      "source": "src/z0int/cognition/receipts.py",
       "class": "contract",
       "owner": "z0intelligence",
       "summary": "Cognition decision receipt including the eligible candidate set and surface verdict."
@@ -1678,6 +1697,7 @@
       "summary": "Addressable handle into the evidence plane, rehydratable on demand."
     },
     "z0eval.study.v1": {
+      "source": "schemas/study-manifest.schema.json",
       "class": "contract",
       "owner": "z0evals",
       "summary": "Frozen reproducible study record. Immutable once published.\nThe id is `z0eval` (abbreviated), not `z0evals`. This entry previously read `z0evals.study.v1`, which named a contract that does not exist: z0evals declares `const: z0eval.study.v1` in schemas/study-manifest.schema.json and every real manifest carries `schema_version: z0eval.study.v1`. The registry is supposed to describe what exists, so it now does. Abbreviation is already the convention elsewhere -- z0intelligence emits `z0int.*` -- so this is alignment rather than a new style.\n"
@@ -1729,6 +1749,7 @@
       "summary": "One normalized shape for every execution offer regardless of substrate: host CPU/GPU, Kubernetes, or a remote provider (Groq, Cerebras, OpenRouter, Nous, Vercel, xAI). Kerdoios owns the type and selects among offers. Producers emit it; consumers must NOT special-case a provider outside the adapter/placement boundary.\nStatus is uneven and the registry should say so. Produced today: the host runtime and the remote provider adapters. NOT yet produced: Kubernetes. The only k8s lab (hermes-k8s-lab) is unpublished -- it has no git remote and no GitHub repository -- so the k8s producer is a declared gap, not an implemented one. Fields with no producer anywhere: route, economic_class, throughput, residency, startup_cost, location, node, backend, warm, resident, startup_ms, health_endpoint, queue_depth, namespace, pod, service. `resident` must be a live-runtime observation and never config intent.\n"
     },
     "z0int.decision_result.v1": {
+      "source": "src/z0int/backends/base.py",
       "class": "contract",
       "owner": "z0intelligence",
       "summary": "Frozen DecisionRequest/DecisionResult pair for a DecisionBackend. This is the host-vs-k8s parity contract: the same request must produce the same result whether served by an in-process host backend or by a service, with only transport and placement differing. What may differ: transport latency, queue time, process identity. What may NOT differ: the chosen action, probabilities, model identity and revision. No service implementation exists yet, so parity is declared and unproven; any comparison must use the existing comparability gate rather than a bespoke comparator.\n"
@@ -1744,6 +1765,7 @@
       "summary": "Model/provider routing decision with cost estimate."
     },
     "os.next_context.v0": {
+      "source": "src/z0int/os_context.py",
       "class": "contract",
       "owner": "flow",
       "summary": "Shadow prediction of next desktop context episode. Restored with the owner origin/main declared; the audit record notes z0intelligence also carries os-context machinery, so ownership here is worth confirming rather than assuming.\n"
@@ -2050,7 +2072,7 @@
     {
       "from": "oh-my-pi",
       "type": "consumes_contract",
-      "to": "aodl.intent.v1"
+      "to": "hotl-0.2"
     },
     {
       "from": "oh-my-pi",
@@ -2075,7 +2097,7 @@
     {
       "from": "deepseek-harness",
       "type": "consumes_contract",
-      "to": "aodl.intent.v1"
+      "to": "hotl-0.2"
     },
     {
       "from": "deepseek-harness",
@@ -2090,7 +2112,7 @@
     {
       "from": "hermes-agent",
       "type": "consumes_contract",
-      "to": "aodl.intent.v1"
+      "to": "hotl-0.2"
     },
     {
       "from": "hermes-agent",

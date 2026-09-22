@@ -59,9 +59,9 @@ representations:
     scale: compact
     summary: Typed desired orchestration before runtime-safe compilation.
     sensitivity: inherited
-    interface: aodl.intent.v1
+    interface: hotl-0.2
     evidence:
-      - registry/interfaces.yaml#interfaces.aodl.intent.v1
+      - registry/interfaces.yaml#interfaces.hotl-0.2
 
   compiled-plan:
     name: Compiled orchestration plan

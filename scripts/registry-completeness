@@ -101,6 +101,41 @@ def _norm_refs(value) -> set[str]:
     return out
 
 
+#: Contracts this registry RENAMED while pointing its own references at the
+#: artifact's real id. Declared, like RECLASSED, because a deliberate rename is
+#: not a loss and the tool cannot tell the difference.
+RENAMED_CONTRACTS: dict[str, str] = {
+    "aodl.intent.v1": "hotl-0.2",
+    "aodl.observed_state.v1": "hotl-0.2",
+}
+
+
+def _norm_ref(value) -> str:
+    """A reference with its file prefix dropped and declared movements applied.
+
+    Two declared transformations, both verified by hand:
+
+      * a RENAMED contract -- `interfaces.aodl.intent.v1` and
+        `interfaces.hotl-0.2` name the same contract;
+      * a RECLASSED entity -- `components.oh-my-pi` became
+        `upstreams.oh-my-pi`, so the section changed with the class.
+
+    The previous version kept only the LAST dot-segment (`oh-my-pi`, `v1`).
+    That absorbed both movements silently, which is why it never fired -- and it
+    meant one `.v1` contract could be swapped for another and compare equal, a
+    class of loss the tool could not detect at all.
+    """
+    text = str(value).split("#")[-1]
+    for old, new in RENAMED_CONTRACTS.items():
+        if text.endswith(old):
+            return text[: -len(old)] + new
+    head, sep, tail = text.rpartition(".")
+    if sep and tail in RECLASSED:
+        # the entity moved between registry files; the id is unchanged
+        return f"{head.rsplit('.', 1)[0]}.{tail}" if "." in head else f"upstreams.{tail}"
+    return text
+
+
 def _as_set(value) -> set[str]:
     """Hashable view of a YAML list; items may be mappings (e.g. relationships)."""
     out: set[str] = set()
@@ -218,8 +253,18 @@ def _compare_section(path: str, key: str, old: dict) -> dict:
                 lost += [f"{field}:{x}" for x in sorted(_norm_refs(value) - _norm_refs(n.get(field)))]
                 continue
             if field == "evidence" or field == "required_evidence":
-                have = {str(x).split("#")[-1].split(".")[-1] for x in _as_set(n.get(field))}
-                want = {str(x).split("#")[-1].split(".")[-1] for x in _as_set(value)}
+                # Compare the WHOLE reference after the `#`, not its last
+                # dot-segment.
+                #
+                # Splitting on "." and keeping the tail reduced every
+                # `<owner>.<thing>.v<major>` reference to `v1`, so one contract
+                # could be swapped for another and compare equal -- the tool
+                # could not have detected that class of loss at all. It also
+                # produced a FALSE loss the moment a real id stopped being
+                # dot-versioned: `interfaces.hotl-0.2` reduces to `2`, not
+                # `v1`, so an unchanged reference read as dropped.
+                have = {_norm_ref(x) for x in _as_set(n.get(field))}
+                want = {_norm_ref(x) for x in _as_set(value)}
                 lost += [f"{field}:{x}" for x in sorted(want - have)]
                 continue
             # flat relationship lists were re-expressed as typed

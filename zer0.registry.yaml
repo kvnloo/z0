@@ -757,7 +757,7 @@ relationships:
   to: oh-my-pi
 - from: oh-my-pi
   type: consumes_contract
-  to: aodl.intent.v1
+  to: hotl-0.2
 - from: oh-my-pi
   type: consumes_contract
   to: tokenomics.event.v0
@@ -772,7 +772,7 @@ relationships:
   to: deepseek-harness
 - from: deepseek-harness
   type: consumes_contract
-  to: aodl.intent.v1
+  to: hotl-0.2
 - from: deepseek-harness
   type: consumes_contract
   to: tokenomics.event.v0
@@ -781,7 +781,7 @@ relationships:
   to: hermes-agent
 - from: hermes-agent
   type: consumes_contract
-  to: aodl.intent.v1
+  to: hotl-0.2
 - from: hermes-agent
   type: consumes_contract
   to: tokenomics.event.v0
@@ -896,11 +896,11 @@ interfaces:
     owner: agenttrace
     harness: agenttrace
   aodl.intent.v1:
-    class: contract
+    class: superseded_alias
     owner: aodl
     harness: null
   aodl.observed_state.v1:
-    class: contract
+    class: superseded_alias
     owner: aodl
     harness: null
   cu.stage_intent.v0:
@@ -927,6 +927,14 @@ interfaces:
     class: adapter
     owner: hermes-agent
     harness: hermes-agent
+  hotl-0.1:
+    class: superseded_alias
+    owner: aodl
+    harness: null
+  hotl-0.2:
+    class: contract
+    owner: aodl
+    harness: null
   kerdoios.placement.v1:
     class: contract
     owner: kerdoios

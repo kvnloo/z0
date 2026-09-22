@@ -26,7 +26,7 @@ upstreams:
       never a mandatory architectural root.
     owns: [coding agent runtime]
     not_here: [Zer0 routing policy, Zer0 measurement semantics, harness catalog]
-    consumes_contracts: [aodl.intent.v1, tokenomics.event.v0]
+    consumes_contracts: [hotl-0.2, tokenomics.event.v0]
     emits_contracts: [omp.session.aggregate, cu.stage_intent.v0]
     note: >
       The earlier registry pinned this fork to d707478 on
@@ -47,7 +47,7 @@ upstreams:
       rather than making a Zer0-specific fork its architectural centre.
     owns: [DSH execution, provider adapters, llm-pi-ai provider/model catalog authority]
     not_here: [Zer0 routing, quota allocation, measurement semantics]
-    consumes_contracts: [aodl.intent.v1, tokenomics.event.v0]
+    consumes_contracts: [hotl-0.2, tokenomics.event.v0]
     note: >
       Absent from the previous registry entirely, despite being a primary
       execution surface. Its llm-pi-ai catalog is the authority for provider and
@@ -67,7 +67,7 @@ upstreams:
       detail of those components, not of the harness abstraction.
     owns: [Hermes agent runtime]
     not_here: [Zer0 routing policy, harness catalog]
-    consumes_contracts: [aodl.intent.v1, tokenomics.event.v0]
+    consumes_contracts: [hotl-0.2, tokenomics.event.v0]
 
   sol-pi:
     name: SoL-Pi

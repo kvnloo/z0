@@ -55,7 +55,20 @@ OUTPUT_DIRS = {"node_modules", ".venv", ".git", "__pycache__", "results",
 # Deliberately NOT a bare "any string that looks like an id" match: that flags
 # test assertions and docstrings which legitimately NAME a forbidden id in order
 # to assert its absence.
-_ID = r'([a-z][a-z0-9_-]*\.[a-z0-9._-]+\.v[0-9]+[a-z0-9._-]*)'
+# ...but the GRAMMAR excluded a real id. `hotl-0.2` is AODL's wire contract,
+# declared as `WIRE_SPEC = "hotl-0.2"` and named in its own spec as "the wire
+# id". The pattern above requires `<ns>.<thing>.v<major>`, so `hotl-0.2` could
+# not match ANY declaration form -- adding a `WIRE_SPEC` pattern changed nothing,
+# because the id itself was unrepresentable. The registry would have gone on
+# reporting a contract nobody emits while its declaration sat in the tree.
+#
+# Two accepted shapes now:
+#   <ns>.<thing>.v<major>   z0int.thing.v1, z0eval.study.v1
+#   <ns>-<major>.<minor>    hotl-0.2
+# Both are anchored on a lowercase namespaced prefix, which is what keeps
+# test assertions and docstrings out (they legitimately NAME forbidden ids).
+_ID = (r'([a-z][a-z0-9_-]*\.[a-z0-9._-]+\.v[0-9]+[a-z0-9._-]*'
+       r'|[a-z][a-z0-9_-]*-[0-9]+\.[0-9]+[a-z0-9._-]*)')
 # Every form a schema id is actually declared in. This set has now been
 # incomplete twice, both times hiding real declarations:
 #
@@ -77,6 +90,12 @@ SCHEMA_LITERAL_PATTERNS = (
     re.compile(r'["\']schemaVersion["\']\s*:\s*["\']' + _ID + r'["\']'),
     re.compile(r'["\']const["\']\s*:\s*["\']' + _ID + r'["\']'),
     re.compile(r'\b[A-Za-z_]*SCHEMA[A-Za-z_]*\s*=\s*["\']' + _ID + r'["\']'),
+    # AODL declares its wire contract as `WIRE_SPEC = "hotl-0.2"`. The name
+    # contains SPEC, not SCHEMA, so the pattern above misses it -- and the
+    # general `*_SPEC =` form was rejected as too loose: it matches
+    # `special_tokens_map.json` and `specialist` in vendored tokenizer configs.
+    # `WIRE_SPEC` occurs exactly once in the ecosystem, and it is this one.
+    re.compile(r'\bWIRE_SPEC\s*=\s*["\']' + _ID + r'["\']'),
     re.compile(r'\bschema\s*=\s*["\']' + _ID + r'["\']'),
 )
 
@@ -114,6 +133,26 @@ def discover_roots(explicit: list[str]) -> dict[str, Path]:
             if rid and rid not in found and (child / ".git").exists():
                 found[rid] = child
     return found
+
+
+def namespace_of(sid: str, owners: dict, shared) -> str:
+    """The declared namespace an id belongs to.
+
+    Not `sid.split(".")[0]`. That assumes `<ns>.<thing>.<version>`, and AODL's
+    real wire id is `hotl-0.2` -- the version is hyphenated, so splitting on the
+    first dot yields `hotl-0`, a namespace that does not exist, and a correct id
+    is reported as belonging to an undeclared namespace.
+
+    Longest declared prefix wins, accepting either separator. Falls back to the
+    first dot-segment so an undeclared namespace is still NAMED rather than
+    silently dropped.
+    """
+    best = ""
+    for ns in list(owners) + list(shared):
+        if sid == ns or sid.startswith(ns + ".") or sid.startswith(ns + "-"):
+            if len(ns) > len(best):
+                best = ns
+    return best or sid.split(".", 1)[0]
 
 
 def load_interfaces() -> dict:
@@ -175,7 +214,7 @@ def analyse(roots: dict[str, Path], reg: dict) -> dict:
         ids_by_repo[repo] = sorted(ids)
         totals[repo] = len(ids)
         for sid in sorted(ids):
-            ns = sid.split(".", 1)[0]
+            ns = namespace_of(sid, owners, shared)
             owner_repo = owners.get(ns)
             if owner_repo is None:
                 # An unknown namespace was previously SKIPPED, which made every
@@ -209,6 +248,27 @@ def analyse(roots: dict[str, Path], reg: dict) -> dict:
         for sid in ids:
             emitted_by[sid].add(repo)
 
+    # A `source` on a contract is a claim about where it is declared. Unverified
+    # claims are what this whole report is about, so the claim is checked
+    # wherever the owning repo is checked out. Where it is not, the claim is
+    # unverifiable here rather than wrong.
+    source_missing: list[dict] = []
+    without_source: list[str] = []
+    for iid, meta in sorted(load_interfaces().items()):
+        if (meta or {}).get("class") == "superseded_alias":
+            continue
+        src = (meta or {}).get("source")
+        if not src:
+            without_source.append(iid)
+            continue
+        ns = iid.split(".", 1)[0]
+        repo = owners.get(ns)
+        root = roots.get(repo) if repo else None
+        if root is None:
+            continue
+        if not (root / str(src)).is_file():
+            source_missing.append({"id": iid, "source": src, "repo": repo})
+
     not_emitted: list[dict] = []
     bad_namespace: list[dict] = []
     for iid, meta in sorted(load_interfaces().items()):
@@ -217,7 +277,7 @@ def analyse(roots: dict[str, Path], reg: dict) -> dict:
         # the namespace table would report the spelling rather than a fault.
         if (meta or {}).get("class") == "superseded_alias":
             continue
-        ns = iid.split(".", 1)[0]
+        ns = namespace_of(iid, owners, shared)
         if ns not in owners and ns not in shared:
             # Decidable without looking at any artifact, and previously
             # unexamined: the check only walked EMITTED ids, so a contract under
@@ -242,12 +302,14 @@ def analyse(roots: dict[str, Path], reg: dict) -> dict:
         "unknown_namespaces": {k: sorted(v) for k, v in sorted(unknown.items())},
         "interfaces_registered": len(load_interfaces()),
         "interfaces_not_emitted": not_emitted,
+        "interfaces_without_source": without_source,
+        "interface_source_missing": source_missing,
         "interface_undeclared_namespace": bad_namespace,
         # A contract emitted by a repo that does not own its namespace is a
         # decidable ownership fault, so it fails. A contract nobody emits is not
         # decidable here -- it may be a normative name for an interface with no
         # serialized artifact yet -- so it is reported for a decision instead.
-        "ok": not undeclared and not bad_namespace,
+        "ok": not undeclared and not bad_namespace and not source_missing,
     }
 
 
@@ -299,6 +361,14 @@ def main() -> int:
         print("Add each to `owners:` (or `shared:`) in registry/schema_namespaces.yaml.")
         print("This is reported, not failed: an unowned namespace may be legitimate.")
 
+    if report["interface_source_missing"]:
+        print(f"\nCONTRACT SOURCE MISSING ({len(report['interface_source_missing'])}): the "
+              f"registry names a file that is not there:")
+        for r in report["interface_source_missing"]:
+            print(f"  {r['id']:<46} {r['repo']}/{r['source']}")
+        print("Fix the path or the claim.")
+        return 1
+
     if report["interface_undeclared_namespace"]:
         print(f"\nREGISTERED CONTRACTS IN AN UNDECLARED NAMESPACE "
               f"({len(report['interface_undeclared_namespace'])}):")
@@ -310,9 +380,15 @@ def main() -> int:
         print("unowned namespace is a claim about nothing.")
         return 1
 
+    if report["interfaces_without_source"]:
+        print(f"\n{len(report['interfaces_without_source'])} of "
+              f"{report['interfaces_registered']} contracts declare no `source`, so there is "
+              f"no file to check their claim against")
+
     if report["interfaces_not_emitted"]:
         print(f"\nCONTRACTS NO CHECKOUT EMITS ({len(report['interfaces_not_emitted'])} of "
-              f"{report['interfaces_registered']}):")
+              f"{report['interfaces_registered']}) -- in any form SCHEMA_LITERAL_PATTERNS "
+              f"recognises:")
         for r in report["interfaces_not_emitted"]:
             print(f"  {r['id']:<46} declared owner {r['declared_owner']}")
         print("Each is either a normative name for an interface with no serialized")

@@ -67,7 +67,7 @@ evidence_dependencies:
     via: mechanism:aodl-intent-plan-observed
     required_evidence:
       - registry/mechanisms.yaml#mechanisms.aodl-intent-plan-observed
-      - registry/interfaces.yaml#interfaces.aodl.intent.v1
+      - registry/interfaces.yaml#interfaces.hotl-0.2
     invariants:
       - Desired intent and runtime-safe plan remain distinguishable.
     invalidators:

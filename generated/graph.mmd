@@ -54,8 +54,8 @@ graph TD
   zer0_cockpit[/"zer0-cockpit (company-OS generation)<br/><i>reference</i>"/]
   zer0_voice[/"zer0-voice (company-OS generation)<br/><i>reference</i>"/]
   pm_integration_mono[/"voice-canvas-pm-monorepo (integration workspace)<br/><i>reference</i>"/]
-  aodl__intent__v1{"aodl.intent.v1"}
   cu__stage_intent__v0{"cu.stage_intent.v0"}
+  hotl_0__2{"hotl-0.2"}
   omp__session__aggregate{"omp.session.aggregate"}
   tokenomics__event__v0{"tokenomics.event.v0"}
   z0 -- governs --> z0archy
@@ -94,15 +94,15 @@ graph TD
   verified_oss_loop -- reference_to --> frontier_kb
   hermes_agent_cluster -- legacy_of --> kerdoios
   z0 -- executes_via --> oh_my_pi
-  oh_my_pi -- consumes_contract --> aodl__intent__v1
+  oh_my_pi -- consumes_contract --> hotl_0__2
   oh_my_pi -- consumes_contract --> tokenomics__event__v0
   oh_my_pi -- emits_contract --> omp__session__aggregate
   oh_my_pi -- emits_contract --> cu__stage_intent__v0
   z0 -- executes_via --> deepseek_harness
-  deepseek_harness -- consumes_contract --> aodl__intent__v1
+  deepseek_harness -- consumes_contract --> hotl_0__2
   deepseek_harness -- consumes_contract --> tokenomics__event__v0
   z0 -- executes_via --> hermes_agent
-  hermes_agent -- consumes_contract --> aodl__intent__v1
+  hermes_agent -- consumes_contract --> hotl_0__2
   hermes_agent -- consumes_contract --> tokenomics__event__v0
   z0 -- reference_to --> sol_pi
   z0 -- reference_to --> o8
@@ -148,4 +148,4 @@ graph TD
   class z0,z0archy,aodl,z0intelligence,tokenomics,kerdoios,evolution_lab,z0evals,frontier_kb,dash,ripple,flow,hermes_keel,hermes_mesh_keel,hermes_jev_skills,kvnloo_skills,rlm,sol_pi_omp,sol_pi_hermes,verified_oss_loop,hermes_agent_cluster owned;
   class oh_my_pi,deepseek_harness,hermes_agent,sol_pi,o8,firstmate,agenttrace,NanoJev,laya,laya_coreml,laya_mlx,jev_ultrafast,memento upstream;
   class huggingface,vllm,ollama,litellm,openrouter,opentelemetry,groq,cerebras,nous,vercel,xai source;
-  class aodl__intent__v1,cu__stage_intent__v0,omp__session__aggregate,tokenomics__event__v0 contract;
+  class cu__stage_intent__v0,hotl_0__2,omp__session__aggregate,tokenomics__event__v0 contract;
