@@ -74,6 +74,58 @@ def interfaces_md() -> str:
     return "\n".join(lines)
 
 
+def harnesses_md() -> str:
+    lines = [
+        "# Harness registry",
+        "",
+        "| ID | Name | Kind | Adoption | Repo | AODL id | Catalog gap |",
+        "|----|------|------|----------|------|---------|-------------|",
+    ]
+    for hid, meta in sorted(registry.harnesses().items()):
+        lines.append(
+            f"| `{hid}` | {meta.get('name', hid)} | {meta.get('kind', '')} "
+            f"| {meta.get('adoption', '')} | `{meta.get('repo', '')}` "
+            f"| `{meta.get('aodl_id') or ''}` | {'yes' if meta.get('catalog_gap') else ''} |"
+        )
+    lines += ["", "_Generated from `registry/harnesses.yaml`._", ""]
+    return "\n".join(lines)
+
+
+def mechanisms_md() -> str:
+    lines = ["# Mechanism registry", ""]
+    for mid, meta in sorted(registry.mechanisms().items()):
+        lines.append(f"## `{mid}` — {meta.get('name', mid)}")
+        lines.append(f"- **Kind:** {meta.get('kind', '')}")
+        lines.append(f"- **Stage:** {meta.get('stage', '')}")
+        if meta.get("family"):
+            lines.append(f"- **Family:** `{meta['family']}`")
+        purpose = " ".join(str(meta.get("purpose", "")).split())
+        lines.append(f"- **Purpose:** {purpose}")
+        implementations = (meta.get("implemented_by") or []) + (meta.get("implementations") or [])
+        if implementations:
+            refs = []
+            for row in implementations:
+                refs.append(row.get("component") or row.get("harness") or row.get("repo") or "?")
+            lines.append("- **Implemented by:** " + ", ".join(f"`{x}`" for x in refs))
+        lines.append("")
+    lines += ["_Generated from `registry/mechanisms.yaml`._", ""]
+    return "\n".join(lines)
+
+
+def lifecycles_md() -> str:
+    lines = ["# Lifecycle registry", ""]
+    for lid, meta in sorted(registry.lifecycles().items()):
+        stages = " → ".join(f"`{s}`" for s in meta.get("stages", []))
+        lines.append(f"## `{lid}` — {meta.get('name', lid)}")
+        lines.append(f"- **Kind:** {meta.get('kind', '')}")
+        lines.append(f"- **Stages:** {stages}")
+        rule = " ".join(str(meta.get("rule", "")).split())
+        lines.append(f"- **Rule:** {rule}")
+        lines.append("")
+    lines += ["_Generated from `registry/lifecycles.yaml`._", ""]
+    return "\n".join(lines)
+
+
 def install_matrix() -> str:
     profs = registry.profiles()
     comp_ids = sorted(registry.components().keys())
@@ -157,6 +209,9 @@ def write_all() -> list[Path]:
         GENERATED / "graph.mmd": graph_mermaid(),
         GENERATED / "components.md": component_table(),
         GENERATED / "interfaces.md": interfaces_md(),
+        GENERATED / "harnesses.md": harnesses_md(),
+        GENERATED / "mechanisms.md": mechanisms_md(),
+        GENERATED / "lifecycles.md": lifecycles_md(),
         GENERATED / "install-matrix.md": install_matrix(),
         DOCS_GEN / "ownership.md": ownership_table(),
         GENERATED / "docs-index.jsonl": docs_index_jsonl(),

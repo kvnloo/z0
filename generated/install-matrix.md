@@ -10,7 +10,6 @@
 | `kerdoios` |  |  |  |  | yes |  | yes |
 | `memento` |  |  |  |  |  |  |  |
 | `oh-my-pi` | yes | yes | yes | yes | yes |  | yes |
-| `openjev` |  |  |  |  |  |  |  |
 | `tokenomics` |  | yes | yes | yes | yes | yes | yes |
 | `z0intelligence` |  |  | yes |  |  | yes | yes |
 

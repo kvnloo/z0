@@ -2,11 +2,17 @@
 
 ## Responsibility
 
-`kvnloo/z0` is the **canonical front door**: component registry, install profiles, generated architecture artifacts, and cross-system onboarding. It answers "what exists?", "what depends on what?", and "what should I install?" — never "run this agent turn."
+`kvnloo/z0` is the **canonical front door**: semantic architecture registries, install profiles, generated architecture artifacts, and cross-system onboarding. It answers "what exists?", "what depends on what?", and "what should I install?" — never "run this agent turn."
 
 ## Inputs
 
 - Hand-maintained YAML in `registry/`
+  - `components.yaml`: installable Zer0 components
+  - `harnesses.yaml`: execution surfaces and adoption facts
+  - `mechanisms.yaml`: reusable cross-harness mechanisms
+  - `interfaces.yaml`: cross-system contracts
+  - `lifecycles.yaml`: promotion/history state machines
+  - `profiles.yaml`: installable component bundles
 - Optional per-repo `zer0.component.yaml` (future; central registry is source of truth today)
 - Local workspace state at `~/.z0/workspace.yaml`
 
@@ -27,6 +33,9 @@
 | Data | Owner |
 |------|-------|
 | Component boundaries | `z0` registry |
+| Harness adoption / Zer0 role | `z0` harness registry; AODL remains harness-id authority |
+| Cross-harness mechanism identity | `z0` mechanism registry |
+| Promotion/history semantics | `z0` lifecycle registry |
 | Implementation | Each component repo |
 | Research evidence | `frontier-kb` |
 | Private traces | `memento` / `z0intelligence` (not frontier-kb) |

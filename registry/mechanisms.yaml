@@ -1,0 +1,121 @@
+# Cross-cutting mechanisms are not installable components.
+# They can be implemented by more than one harness/repo and should remain stable
+# semantic identities even when implementations move.
+
+mechanisms:
+  rlm-context-spill:
+    name: RLM context spill
+    kind: context
+    stage: production
+    purpose: Keep large context addressable outside the frontier model's active window.
+    implemented_by:
+      - component: oh-my-pi
+        repo: kvnloo/oh-my-pi
+    evidence:
+      - registry/components.yaml#components.oh-my-pi
+
+  jev-typed-decision:
+    name: Jev / typed bounded decision
+    kind: decision
+    stage: experimental
+    purpose: >
+      Replace autoregressive choice generation with bounded typed scoring/readout
+      when the decision space is explicit.
+    implemented_by:
+      - component: z0intelligence
+        repo: kvnloo/z0intelligence
+      - component: oh-my-pi
+        repo: kvnloo/oh-my-pi
+    evidence:
+      - kvnloo/z0intelligence:README.md#current-foundation-openjev-runtime
+      - registry/components.yaml#components.oh-my-pi
+
+  sol-pi-action-fusion:
+    name: SoL-Pi Action Fusion
+    kind: efficiency
+    stage: experimental
+    purpose: Fuse an edit/write and its predictable validation into one tool action.
+    family: sol-pi
+    implementations:
+      - repo: kvnloo/SoL-Pi
+        harness: pi
+      - repo: kvnloo/sol-pi-hermes
+        harness: hermes
+    evidence:
+      - kvnloo/SoL-Pi:README.md#what-sol-pi-adds
+      - kvnloo/sol-pi-hermes:README.md#mapping
+
+  sol-pi-observation-pack:
+    name: SoL-Pi ObservationPack
+    kind: context
+    stage: experimental
+    purpose: Replace repeated large observations with stable handles and exact recall.
+    family: sol-pi
+    implementations:
+      - repo: kvnloo/SoL-Pi
+        harness: pi
+      - repo: kvnloo/sol-pi-hermes
+        harness: hermes
+    evidence:
+      - kvnloo/SoL-Pi:README.md#what-sol-pi-adds
+      - kvnloo/sol-pi-hermes:README.md#mapping
+
+  sol-pi-evidence-reducer:
+    name: SoL-Pi Evidence-Preserving Reducer
+    kind: compression
+    stage: experimental
+    purpose: >
+      Compress long diagnostic observations into receipts while retaining
+      quote-verifiable evidence and falling open on verification failure.
+    family: sol-pi
+    implementations:
+      - repo: kvnloo/SoL-Pi
+        harness: pi
+      - repo: kvnloo/sol-pi-hermes
+        harness: hermes
+    evidence:
+      - kvnloo/SoL-Pi:README.md#what-sol-pi-adds
+      - kvnloo/sol-pi-hermes:README.md#mapping
+
+  sol-pi-online-context-compact:
+    name: SoL-Pi Online Context Compact
+    kind: compression
+    stage: experimental
+    purpose: >
+      Trigger bounded context compaction at completed plan boundaries using
+      economics/window pressure rather than replaying completed work indefinitely.
+    family: sol-pi
+    implementations:
+      - repo: kvnloo/SoL-Pi
+        harness: pi
+      - repo: kvnloo/sol-pi-hermes
+        harness: hermes
+    evidence:
+      - kvnloo/SoL-Pi:README.md#what-sol-pi-adds
+      - kvnloo/sol-pi-hermes:README.md#mapping
+
+  aodl-intent-plan-observed:
+    name: AODL intent → compiled plan → observed topology
+    kind: contract
+    stage: experimental
+    purpose: >
+      Keep desired orchestration, runtime-safe compiled plan and observed
+      topology distinct so intended and actual execution can be compared.
+    implemented_by:
+      - component: aodl
+        repo: kvnloo/aodl
+    evidence:
+      - kvnloo/aodl:README.md#why
+
+  agenttrace-cross-harness-observation:
+    name: Cross-harness trace normalization
+    kind: observability
+    stage: experimental
+    purpose: >
+      Normalize session/cost/token/time evidence from heterogeneous harness logs
+      without pretending missing event-level evidence exists.
+    implemented_by:
+      - component: agenttrace
+        repo: kvnloo/agenttrace
+    evidence:
+      - kvnloo/agenttrace:README.md
