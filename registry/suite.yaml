@@ -95,6 +95,7 @@ repositories:
     role: mechanism_port
     authority: implementation
     status: experimental
+    depends_on_repositories: [sol-pi, hermes-agent]
     extends_harnesses: [hermes]
     implements_mechanisms:
       - sol-pi-action-fusion
@@ -104,6 +105,106 @@ repositories:
     summary: Hermes plugin port of SoL-Pi mechanisms using Hermes-native context and tool seams.
     evidence:
       - kvnloo/sol-pi-hermes:README.md
+
+  hermes-keel:
+    name: Hermes Keel
+    repo: kvnloo/hermes-keel
+    role: governance_spec
+    authority: constitutional
+    status: bootstrap
+    depends_on_repositories: [hermes-agent]
+    summary: Governance layer defining capability boundaries, evidence requirements, staged promotion, and rollback around Hermes execution.
+    evidence:
+      - kvnloo/hermes-keel:README.md
+
+  hermes-mesh-keel:
+    name: Hermes Mesh Keel
+    repo: kvnloo/hermes-mesh-keel
+    role: signed_mesh_transport
+    authority: pre_activation
+    status: experimental
+    depends_on_repositories: [hermes-agent, hermes-keel]
+    summary: Signed durable transport for bounded Hermes Kanban intents with destination Keel revalidation and receipt evidence.
+    evidence:
+      - kvnloo/hermes-mesh-keel:README.md
+
+  hermes-privilege-broker:
+    name: Hermes Privilege Broker
+    repo: kvnloo/hermes-privilege-broker
+    role: privilege_boundary
+    authority: security_reference
+    status: development_candidate
+    depends_on_repositories: [hermes-agent]
+    summary: Split-authority typed privilege broker reference implementation kept separate from Hermes core.
+    evidence:
+      - kvnloo/hermes-privilege-broker:README.md
+      - kvnloo/hermes-privilege-broker:docs/ARCHITECTURE.md
+      - kvnloo/hermes-privilege-broker:docs/THREAT_MODEL.md
+
+  hermes-model-passports:
+    name: Hermes Model Passports
+    repo: kvnloo/hermes-model-passports
+    role: model_identity_language
+    authority: metadata
+    status: design_seed
+    depends_on_repositories: [hermes-agent]
+    summary: Portable model identity, capability, lifecycle, maker, and route metadata language with compact visual sigils.
+    evidence:
+      - kvnloo/hermes-model-passports:README.md
+
+  company-os:
+    name: Company OS
+    repo: kvnloo/company-os
+    role: operational_projection
+    authority: read_only_projection
+    status: experimental
+    depends_on_repositories: [hermes-agent]
+    summary: Thin Hermes HUD that projects live host state without becoming a second control plane or execution authority.
+    evidence:
+      - kvnloo/company-os:README.md
+
+  hermes-talk:
+    name: Hermes Talk
+    repo: kvnloo/hermes-talk
+    role: voice_orchestrator
+    authority: implementation
+    status: experimental
+    depends_on_repositories: [hermes-agent]
+    summary: Realtime duplex voice control layer that delegates work to Hermes agents while the conversation continues.
+    evidence:
+      - kvnloo/hermes-talk:README.md
+
+  hermes3d:
+    name: Hermes3D
+    repo: kvnloo/Hermes3D
+    role: spatial_frontend
+    authority: projection
+    status: experimental
+    depends_on_repositories: [hermes-agent]
+    summary: 3D and 2D spatial workspace that visualizes agents while runtime truth stays in the connected backend.
+    evidence:
+      - kvnloo/Hermes3D:README.md
+      - kvnloo/Hermes3D:ARCHITECTURE.md
+
+  codex-router:
+    name: Codex Router
+    repo: kvnloo/codex-router
+    role: provider_router
+    authority: implementation
+    status: experimental
+    summary: Local provider/model routing surface serving Codex and additional harnesses while keeping provider credentials local.
+    evidence:
+      - kvnloo/codex-router:README.md
+
+  dwarfstar:
+    name: DwarfStar
+    repo: kvnloo/ds4
+    role: local_inference_engine
+    authority: implementation
+    status: beta
+    summary: Narrow native inference engine for capable open-weight models on consumer hardware across Metal, CUDA, and ROCm.
+    evidence:
+      - kvnloo/ds4:README.md
 
   hermes-agent:
     name: Hermes Agent
@@ -134,6 +235,7 @@ repositories:
     role: context_extension
     authority: implementation
     status: experimental
+    depends_on_repositories: [hermes-agent]
     extends_harnesses: [hermes]
     summary: Lossless context-management plugin with a recoverable SQLite-backed summary DAG and bounded recall.
     evidence:
@@ -145,6 +247,7 @@ repositories:
     role: decision_extension
     authority: implementation
     status: experimental
+    depends_on_repositories: [hermes-agent]
     extends_harnesses: [hermes, codex]
     implements_mechanisms: [jev-typed-decision]
     summary: Typed Jev decision skills for routing, retrieval, turn selection, triage, and computer-use decisions.
@@ -157,6 +260,7 @@ repositories:
     role: evolution_engine
     authority: implementation
     status: experimental
+    depends_on_repositories: [hermes-agent]
     supports_components: [evolution-lab]
     summary: DSPy and GEPA based evolutionary optimization of Hermes skills, prompts, tool descriptions, and code candidates.
     evidence:
