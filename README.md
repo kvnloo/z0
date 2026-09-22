@@ -26,6 +26,23 @@ pip install -r requirements.txt   # PyYAML for the CLI
 | Agent observability | [AgentTrace](docs/components/agenttrace.md) |
 | Everything stable | `./z0 init --profile full` |
 
+## Architecture dimensions
+
+Zer0 no longer treats every architectural concept as an installable repo.
+
+| Registry | Owns |
+|---|---|
+| `components.yaml` | Installable Zer0 products/services |
+| `harnesses.yaml` | Execution surfaces such as OMP, Hermes, DeepSeek, Codex and Pi |
+| `mechanisms.yaml` | Cross-cutting mechanisms that may have multiple implementations |
+| `interfaces.yaml` | Named cross-component contracts |
+| `lifecycles.yaml` | Promotion, experiment and epistemic/history states |
+| `profiles.yaml` | Installable component bundles |
+
+This separation is intentional: SoL-Pi's ObservationPack is a mechanism, not a product;
+DeepSeek is a harness, not a dependency of every Zer0 install; and candidate → preview →
+nightly → dev → main is architecture history, not a component.
+
 ## Profiles
 
 | Profile | Components | For |
