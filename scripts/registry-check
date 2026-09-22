@@ -12,6 +12,7 @@ mechanisms = registry.mechanisms()
 lifecycles = registry.lifecycles()
 representations = registry.representations()
 evidence_dependencies = registry.evidence_dependencies()
+suite = registry.suite()
 
 for name in profs:
     resolved = registry.resolve_profile(name)
@@ -73,10 +74,27 @@ for eid, meta in evidence_dependencies.items():
     assert meta.get("invariants"), f"evidence dependency {eid} has no invariants"
     assert meta.get("invalidators"), f"evidence dependency {eid} has no invalidators"
 
+for sid, meta in suite.items():
+    repo = meta.get("repo")
+    assert repo and "/" in repo, f"suite repository {sid} has invalid repo {repo!r}"
+    assert meta.get("role"), f"suite repository {sid} has no role"
+    assert meta.get("authority"), f"suite repository {sid} has no authority"
+    assert meta.get("status"), f"suite repository {sid} has no status"
+    assert meta.get("evidence"), f"suite repository {sid} has no evidence"
+    for cid in meta.get("supports_components", []) or []:
+        assert cid in comps, f"suite repository {sid} references unknown component {cid}"
+    for hid in meta.get("extends_harnesses", []) or []:
+        assert hid in harnesses, f"suite repository {sid} references unknown harness {hid}"
+    for mid in meta.get("implements_mechanisms", []) or []:
+        assert mid in mechanisms, f"suite repository {sid} references unknown mechanism {mid}"
+    lifecycle = meta.get("lifecycle")
+    if lifecycle:
+        assert lifecycle in lifecycles, f"suite repository {sid} references unknown lifecycle {lifecycle}"
+
 print(
     f"ok: {len(comps)} components, {len(profs)} profiles, "
     f"{len(harnesses)} harnesses, {len(mechanisms)} mechanisms, "
     f"{len(lifecycles)} lifecycles, {len(representations)} representations, "
-    f"{len(evidence_dependencies)} evidence dependencies"
+    f"{len(evidence_dependencies)} evidence dependencies, {len(suite)} suite repositories"
 )
 PY
