@@ -56,9 +56,26 @@ OUTPUT_DIRS = {"node_modules", ".venv", ".git", "__pycache__", "results",
 # test assertions and docstrings which legitimately NAME a forbidden id in order
 # to assert its absence.
 _ID = r'([a-z][a-z0-9_-]*\.[a-z0-9._-]+\.v[0-9]+[a-z0-9._-]*)'
+# Every form a schema id is actually declared in. This set has now been
+# incomplete twice, both times hiding real declarations:
+#
+#   * `schema` as a dict key only, missing `SCHEMA = "..."` constants (90 ids)
+#   * `schema` only, missing `schema_version` and JSON-Schema `const`
+#
+# `"const": "z0eval.study.v1"` in z0evals' study manifest is the declaration of a
+# REGISTERED contract, and a check that could not see it reported the contract as
+# emitted by nobody. A false positive of exactly that shape is why the interface
+# cross-check below is trustworthy only if this table is.
+#
+# `$id` is deliberately absent: its values are mostly `#/definitions/...`
+# pointers and `https://...` URLs, neither of which is an `<owner>.<thing>.v<n>`
+# id. Adding it would import 30 non-ids to catch 0.
 SCHEMA_LITERAL_PATTERNS = (
     re.compile(r'["\']schema["\']\s*:\s*["\']' + _ID + r'["\']'),
     re.compile(r'\bschema\s*:\s*["\']' + _ID + r'["\']'),
+    re.compile(r'["\']schema_version["\']\s*:\s*["\']' + _ID + r'["\']'),
+    re.compile(r'["\']schemaVersion["\']\s*:\s*["\']' + _ID + r'["\']'),
+    re.compile(r'["\']const["\']\s*:\s*["\']' + _ID + r'["\']'),
     re.compile(r'\b[A-Za-z_]*SCHEMA[A-Za-z_]*\s*=\s*["\']' + _ID + r'["\']'),
     re.compile(r'\bschema\s*=\s*["\']' + _ID + r'["\']'),
 )
@@ -97,6 +114,15 @@ def discover_roots(explicit: list[str]) -> dict[str, Path]:
             if rid and rid not in found and (child / ".git").exists():
                 found[rid] = child
     return found
+
+
+def load_interfaces() -> dict:
+    """The registered contracts, so the ids found in code can be compared to them."""
+    path = ROOT / "registry" / "interfaces.yaml"
+    try:
+        return (yaml.safe_load(path.read_text(encoding="utf-8")) or {}).get("interfaces", {}) or {}
+    except (OSError, yaml.YAMLError):
+        return {}
 
 
 def emitted_ids(root: Path) -> set[str]:
@@ -140,11 +166,13 @@ def analyse(roots: dict[str, Path], reg: dict) -> dict:
     totals = collections.Counter()
     unknown: dict[str, set[str]] = collections.defaultdict(set)
 
+    ids_by_repo: dict[str, list[str]] = {}
     for repo, root in sorted(roots.items()):
         try:
             ids = emitted_ids(root)
         except OSError:
             continue
+        ids_by_repo[repo] = sorted(ids)
         totals[repo] = len(ids)
         for sid in sorted(ids):
             ns = sid.split(".", 1)[0]
@@ -168,15 +196,58 @@ def analyse(roots: dict[str, Path], reg: dict) -> dict:
             else:
                 undeclared.append(record)
 
+    # ---- registered contracts vs the ids actually emitted -------------------
+    #
+    # `registry/interfaces.yaml` names 23 contracts. Nothing compared them to what
+    # the checkouts emit, so the two could be -- and were -- almost disjoint:
+    # 2 of 146 emitted ids matched a registered contract, and 17 of the 23
+    # contracts are emitted by nothing anywhere, including by their own declared
+    # owner. A "canonical contract map" that describes contracts nobody writes is
+    # a list of names.
+    emitted_by: dict[str, set[str]] = collections.defaultdict(set)
+    for repo, ids in ids_by_repo.items():
+        for sid in ids:
+            emitted_by[sid].add(repo)
+
+    not_emitted: list[dict] = []
+    bad_namespace: list[dict] = []
+    for iid, meta in sorted(load_interfaces().items()):
+        # A superseded alias is a historical SPELLING, not a namespace. Its id
+        # deliberately does not follow `<owner>.<thing>`, so checking it against
+        # the namespace table would report the spelling rather than a fault.
+        if (meta or {}).get("class") == "superseded_alias":
+            continue
+        ns = iid.split(".", 1)[0]
+        if ns not in owners and ns not in shared:
+            # Decidable without looking at any artifact, and previously
+            # unexamined: the check only walked EMITTED ids, so a contract under
+            # an undeclared namespace was invisible whenever nothing emitted it --
+            # and 8 of the 23 registered interfaces are emitted by nobody.
+            bad_namespace.append({"id": iid, "namespace": ns,
+                                  "declared_owner": (meta or {}).get("owner")})
+        if not emitted_by.get(iid):
+            not_emitted.append({"id": iid, "namespace": ns,
+                                "declared_owner": (meta or {}).get("owner")})
+
     return {
         "schema": "z0.schema_namespace_check.v1",
         "roots": {k: str(v) for k, v in roots.items()},
         "ids_scanned": dict(totals),
+        # The schema map: every id each checkout emits. Machine-readable, and the
+        # evidence for everything else in this report.
+        "ids_by_repo": ids_by_repo,
         "undeclared": undeclared,
         "known_inversions": inversions,
         "declared_adapter_output": adapters,
         "unknown_namespaces": {k: sorted(v) for k, v in sorted(unknown.items())},
-        "ok": not undeclared,
+        "interfaces_registered": len(load_interfaces()),
+        "interfaces_not_emitted": not_emitted,
+        "interface_undeclared_namespace": bad_namespace,
+        # A contract emitted by a repo that does not own its namespace is a
+        # decidable ownership fault, so it fails. A contract nobody emits is not
+        # decidable here -- it may be a normative name for an interface with no
+        # serialized artifact yet -- so it is reported for a decision instead.
+        "ok": not undeclared and not bad_namespace,
     }
 
 
@@ -227,6 +298,26 @@ def main() -> int:
             print(f"  {ns:<24} emitted by {repos}")
         print("Add each to `owners:` (or `shared:`) in registry/schema_namespaces.yaml.")
         print("This is reported, not failed: an unowned namespace may be legitimate.")
+
+    if report["interface_undeclared_namespace"]:
+        print(f"\nREGISTERED CONTRACTS IN AN UNDECLARED NAMESPACE "
+              f"({len(report['interface_undeclared_namespace'])}):")
+        for r in report["interface_undeclared_namespace"]:
+            print(f"  {r['id']:<46} namespace {r['namespace']!r}, "
+                  f"declared owner {r['declared_owner']}")
+        print("Declare the namespace in registry/schema_namespaces.yaml (owners or")
+        print("shared), or fix the contract id. A registered contract under an")
+        print("unowned namespace is a claim about nothing.")
+        return 1
+
+    if report["interfaces_not_emitted"]:
+        print(f"\nCONTRACTS NO CHECKOUT EMITS ({len(report['interfaces_not_emitted'])} of "
+              f"{report['interfaces_registered']}):")
+        for r in report["interfaces_not_emitted"]:
+            print(f"  {r['id']:<46} declared owner {r['declared_owner']}")
+        print("Each is either a normative name for an interface with no serialized")
+        print("artifact, or a claim nobody can check. Decide which, per contract.")
+        print("This is reported, not failed: the registry cannot know which it is.")
 
     print("\nok: every cross-owner emission is declared")
     return 0

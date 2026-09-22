@@ -55,9 +55,33 @@ owners:
   flow: flow
   hermes: hermes-agent
   verified-oss-loop: verified-oss-loop
+  # Found by checking REGISTERED CONTRACTS against this table rather than only
+  # the ids that happen to be emitted. The namespace check walked emitted ids, so
+  # a contract under an undeclared namespace went unexamined whenever nothing
+  # emitted it -- and 8 of the 23 registered interfaces are emitted by nobody.
+  #
+  #   cu.*    oh-my-pi's computer-use window/layout intent. oh-my-pi is the repo
+  #           for both `oh-my-pi` and `rlm` in registry/components.yaml.
+  #   omp.*   the same upstream, under its own abbreviation.
+  #   rlm.*   registered against the rlm component, whose repo is kvnloo/oh-my-pi.
+  #   dsh.*   deepseek-harness.
+  #   agenttrace.*  the agenttrace upstream.
+  agenttrace: agenttrace
+  cu: oh-my-pi
+  dsh: deepseek-harness
+  omp: oh-my-pi
+  rlm: oh-my-pi
 
 # Namespaces deliberately shared between repos. Each needs a reason.
 shared:
+  harness:
+    note: >
+      `harness.execution.v0` is THE harness-neutral execution seam -- "Every
+      harness adapter implements this and nothing above it may special-case a
+      harness" (docs/architecture/context-plane.md). Its declared owner is aodl,
+      so the id does not carry the owner's namespace; that is correct for a
+      contract every harness implements, and declaring it here is what says so.
+      Renaming it to `aodl.*` would misdescribe it and invalidate the doc.
   os:
     note: >
       z0intelligence carries the os-context machinery and emits os.* schemas,
