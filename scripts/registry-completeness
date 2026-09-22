@@ -7,6 +7,10 @@ while per-component boundary text and two interface contracts were silently
 dropped. Comparing *entries* alone is not enough either, so this compares
 entries AND the content of the entries that survive.
 
+Every top-level section of every listed file is compared, and a registry file
+that exists in the ref but is absent from FILES is reported as uncovered rather
+than silently skipped.
+
 The check is deliberately NOT wired into `docs-check`: it needs a git ref that
 CI may not have, and a missing ref must not fail a build. Run it by hand before
 and after any registry restructure.
@@ -23,22 +27,31 @@ import argparse
 import json
 import subprocess
 import sys
+from collections import Counter
 from pathlib import Path
 
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 
-# file -> the top-level key holding its entries
-FILES: dict[str, str] = {
-    "registry/components.yaml": "components",
-    "registry/profiles.yaml": "profiles",
-    "registry/interfaces.yaml": "interfaces",
-    "registry/harnesses.yaml": "harnesses",
-    "registry/mechanisms.yaml": "mechanisms",
-    "registry/lifecycles.yaml": "lifecycles",
-    "registry/representations.yaml": "representations",
-    "registry/evidence_dependencies.yaml": "evidence_dependencies",
+# file -> EVERY top-level section holding entries.
+#
+# One key per file was wrong for the vocabulary files. `maturity.yaml` is a
+# multi-section file (`status`, `execution`, and the `evidence` taxonomy added
+# later); with a single key only the first section was ever compared and the rest
+# were silently ignored -- the same shape of gap as a checker that skips
+# namespaces it does not know. `maturity.yaml` was also missing from this table
+# entirely, so the whole file went unchecked.
+FILES: dict[str, tuple[str, ...]] = {
+    "registry/components.yaml": ("components",),
+    "registry/profiles.yaml": ("profiles",),
+    "registry/interfaces.yaml": ("interfaces",),
+    "registry/harnesses.yaml": ("harnesses", "catalog"),
+    "registry/mechanisms.yaml": ("mechanisms",),
+    "registry/lifecycles.yaml": ("lifecycles",),
+    "registry/representations.yaml": ("representations",),
+    "registry/evidence_dependencies.yaml": ("evidence_dependencies",),
+    "registry/maturity.yaml": ("status", "execution", "evidence"),
 }
 
 # Entities deliberately re-classed between generations. Their absence from
@@ -119,92 +132,129 @@ def _local(path: str) -> dict:
         return {}
 
 
+def _registry_files(ref: str) -> set[str]:
+    """Registry files present in the ref, so an unlisted one can be reported."""
+    proc = subprocess.run(
+        ["git", "-C", str(ROOT), "ls-tree", "--name-only", f"{ref}:registry"],
+        capture_output=True, text=True,
+    )
+    if proc.returncode != 0:
+        return set()
+    return {f"registry/{line.strip()}" for line in proc.stdout.splitlines()
+            if line.strip().endswith((".yaml", ".yml"))}
+
+
+def _unlisted_sections(old: dict, declared: tuple[str, ...]) -> list[str]:
+    """Top-level entry maps in a ref file that FILES does not name.
+
+    Declaring one key per file was the original bug: `maturity.yaml` has three
+    sections and only `status` was compared. Checking the file-level table alone
+    would not have caught that, so the ref's own top-level keys are checked
+    against the declaration. Scalar or empty keys are metadata, not entries.
+    """
+    return sorted(k for k, v in old.items()
+                  if k not in declared and isinstance(v, dict) and v)
+
+
 def compare(ref: str) -> dict:
     files: list[dict] = []
-    for path, key in FILES.items():
+    undeclared: list[str] = []
+    for path, keys in FILES.items():
         old = _show(ref, path)
         if old is None:
-            files.append({"file": path, "key": key, "status": "absent-in-ref"})
-            continue
-        old_entries = old.get(key) or {}
-        new_entries = _local(path).get(key) or {}
-        if path.endswith("profiles.yaml"):
-            # Compare RESOLVED membership. Entities that are now upstreams are
-            # correctly non-installable, so their removal from a profile is a
-            # documented consequence of re-classing, not a loss.
-            upstream_ids = set((_local("registry/upstreams.yaml").get("upstreams") or {}))
-            gaps: dict[str, list[str]] = {}
-            for name in sorted(set(old_entries) & set(new_entries)):
-                want = set(_resolve_profile(old_entries, name)) - upstream_ids
-                have = set(_resolve_profile(new_entries, name))
-                if want - have:
-                    gaps[name] = sorted(want - have)
-            files.append({
-                "file": path, "key": key, "status": "compared",
-                "origin_entries": len(old_entries), "local_entries": len(new_entries),
-                "missing_entries": [], "content_gaps": gaps,
-            })
-            continue
-        missing = sorted(set(old_entries) - set(new_entries))
-        # An entity deliberately re-classed to another registry is relocated,
-        # not missing. It is verified present below.
-        missing = [m for m in missing if m not in RECLASSED]
-        # content-level comparison for entries that DO survive
-        content_gaps: dict[str, list[str]] = {}
-        for eid in sorted(set(old_entries) & set(new_entries)):
-            o, n = old_entries[eid], new_entries[eid]
-            if not isinstance(o, dict) or not isinstance(n, dict):
-                continue
-            lost: list[str] = []
-            for field, value in o.items():
-                # KNOWN EQUIVALENT TRANSFORMATIONS (verified by hand):
-                #  * `component: X` -> `entity: X` + `class: ...` (class-aware refs)
-                #  * `registry/components.yaml#components.X` ->
-                #    `registry/upstreams.yaml#upstreams.X` for re-classed entities
-                # These are re-expressions, not losses.
-                if field in ("component", "entity", "class"):
-                    continue
-                if field in ("implemented_by", "implementations", "carried_by", "applies_to"):
-                    lost += [f"{field}:{x}" for x in sorted(_norm_refs(value) - _norm_refs(n.get(field)))]
-                    continue
-                if field == "evidence" or field == "required_evidence":
-                    have = {str(x).split("#")[-1].split(".")[-1] for x in _as_set(n.get(field))}
-                    want = {str(x).split("#")[-1].split(".")[-1] for x in _as_set(value)}
-                    lost += [f"{field}:{x}" for x in sorted(want - have)]
-                    continue
-                # flat relationship lists were re-expressed as typed
-                # `relationships: [{type, to}]`; the mapping is a per-edge
-                # judgement, so these are reported for REVIEW, not as loss.
-                if field in ("depends_on", "integrates_with", "provides", "consumes"):
-                    have = _as_set(n.get("relationships"))
-                    want = _as_set(value)
-                    # only flag when there is no relationships block at all
-                    if not n.get("relationships"):
-                        lost += [f"{field}:{x} (REVIEW)" for x in sorted(want - have)]
-                    continue
-                if field == "boundaries":
-                    # older generation nested owns/not_here; compare as sets
-                    for sub in ("owns", "not_here"):
-                        want = _as_set((value or {}).get(sub))
-                        have = _as_set(n.get(sub))
-                        lost += sorted(want - have)
-                elif isinstance(value, list):
-                    have = _as_set(n.get(field))
-                    lost += [f"{field}:{x}" for x in _as_set(value) if x not in have]
-            if lost:
-                content_gaps[eid] = lost
-        files.append(
-            {
-                "file": path,
-                "key": key,
-                "status": "compared",
-                "origin_entries": len(old_entries),
-                "local_entries": len(new_entries),
-                "missing_entries": missing,
-                "content_gaps": content_gaps,
-            }
-        )
+            files.append({"file": path, "key": ",".join(keys), "status": "absent-in-ref"})
+        else:
+            # Every declared section is compared, not just the first.
+            for key in keys:
+                files.append(_compare_section(path, key, old))
+            for key in _unlisted_sections(old, keys):
+                files.append({"file": path, "key": key, "status": "unlisted-section"})
+        # The table can also fall behind the file it describes -- a section added
+        # here and never declared. Pin that direction too, or the next section to
+        # appear is skipped silently exactly as `execution` and `evidence` were.
+        undeclared += [f"{path}#{key}" for key in _unlisted_sections(_local(path), keys)]
+    return _finish(ref, files, undeclared)
 
+
+def _compare_section(path: str, key: str, old: dict) -> dict:
+    old_entries = old.get(key) or {}
+    new_entries = _local(path).get(key) or {}
+    if path.endswith("profiles.yaml"):
+        # Compare RESOLVED membership. Entities that are now upstreams are
+        # correctly non-installable, so their removal from a profile is a
+        # documented consequence of re-classing, not a loss.
+        upstream_ids = set((_local("registry/upstreams.yaml").get("upstreams") or {}))
+        gaps: dict[str, list[str]] = {}
+        for name in sorted(set(old_entries) & set(new_entries)):
+            want = set(_resolve_profile(old_entries, name)) - upstream_ids
+            have = set(_resolve_profile(new_entries, name))
+            if want - have:
+                gaps[name] = sorted(want - have)
+        return {
+            "file": path, "key": key, "status": "compared",
+            "origin_entries": len(old_entries), "local_entries": len(new_entries),
+            "missing_entries": [], "content_gaps": gaps,
+        }
+    missing = sorted(set(old_entries) - set(new_entries))
+    # An entity deliberately re-classed to another registry is relocated,
+    # not missing. It is verified present below.
+    missing = [m for m in missing if m not in RECLASSED]
+    # content-level comparison for entries that DO survive
+    content_gaps: dict[str, list[str]] = {}
+    for eid in sorted(set(old_entries) & set(new_entries)):
+        o, n = old_entries[eid], new_entries[eid]
+        if not isinstance(o, dict) or not isinstance(n, dict):
+            continue
+        lost: list[str] = []
+        for field, value in o.items():
+            # KNOWN EQUIVALENT TRANSFORMATIONS (verified by hand):
+            #  * `component: X` -> `entity: X` + `class: ...` (class-aware refs)
+            #  * `registry/components.yaml#components.X` ->
+            #    `registry/upstreams.yaml#upstreams.X` for re-classed entities
+            # These are re-expressions, not losses.
+            if field in ("component", "entity", "class"):
+                continue
+            if field in ("implemented_by", "implementations", "carried_by", "applies_to"):
+                lost += [f"{field}:{x}" for x in sorted(_norm_refs(value) - _norm_refs(n.get(field)))]
+                continue
+            if field == "evidence" or field == "required_evidence":
+                have = {str(x).split("#")[-1].split(".")[-1] for x in _as_set(n.get(field))}
+                want = {str(x).split("#")[-1].split(".")[-1] for x in _as_set(value)}
+                lost += [f"{field}:{x}" for x in sorted(want - have)]
+                continue
+            # flat relationship lists were re-expressed as typed
+            # `relationships: [{type, to}]`; the mapping is a per-edge
+            # judgement, so these are reported for REVIEW, not as loss.
+            if field in ("depends_on", "integrates_with", "provides", "consumes"):
+                have = _as_set(n.get("relationships"))
+                want = _as_set(value)
+                # only flag when there is no relationships block at all
+                if not n.get("relationships"):
+                    lost += [f"{field}:{x} (REVIEW)" for x in sorted(want - have)]
+                continue
+            if field == "boundaries":
+                # older generation nested owns/not_here; compare as sets
+                for sub in ("owns", "not_here"):
+                    want = _as_set((value or {}).get(sub))
+                    have = _as_set(n.get(sub))
+                    lost += sorted(want - have)
+            elif isinstance(value, list):
+                have = _as_set(n.get(field))
+                lost += [f"{field}:{x}" for x in _as_set(value) if x not in have]
+        if lost:
+            content_gaps[eid] = lost
+    return {
+        "file": path,
+        "key": key,
+        "status": "compared",
+        "origin_entries": len(old_entries),
+        "local_entries": len(new_entries),
+        "missing_entries": missing,
+        "content_gaps": content_gaps,
+    }
+
+
+def _finish(ref: str, files: list[dict], undeclared: list[str]) -> dict:
     # a re-classed entity is only a loss if it is nowhere at all
     relocated: dict[str, bool] = {}
     for eid, dest in RECLASSED.items():
@@ -224,6 +274,16 @@ def compare(ref: str) -> dict:
         for lost in (f.get("content_gaps") or {}).values()
     )
     reclassed_ok = all(relocated.values())
+
+    # A registry file present in the ref but absent from FILES is never opened,
+    # so a loss inside it is invisible and `ok` would be a narrower claim than it
+    # reads. Same for a section the table does not name. Both are defects in this
+    # checker, not in the registry.
+    uncovered = sorted(_registry_files(ref) - set(FILES))
+    unlisted = sorted(f"{f['file']}#{f['key']}" for f in files
+                      if f["status"] == "unlisted-section")
+    undeclared = sorted(undeclared)
+    covered = not uncovered and not unlisted and not undeclared
     return {
         "schema": "z0.registry_completeness.v1",
         "ref": ref,
@@ -233,12 +293,18 @@ def compare(ref: str) -> dict:
         "entry_losses": entry_losses,
         "content_losses": content_losses,
         "review_items": review,
-        "genuine_losses": entry_losses + content_losses + (0 if reclassed_ok else 1),
-        # Pass on entries and content. REVIEW items are surfaced but do not fail,
-        # because deciding whether a re-expressed edge means the same thing is a
-        # judgement the tool cannot make.
-        "ok": entry_losses == 0 and content_losses == 0 and reclassed_ok,
-        "ok_strict": entry_losses == 0 and content_losses == 0 and review == 0 and reclassed_ok,
+        "uncovered_in_ref": uncovered,
+        "unlisted_sections": unlisted,
+        "undeclared_sections": undeclared,
+        "genuine_losses": (entry_losses + content_losses
+                           + (0 if reclassed_ok else 1)
+                           + len(uncovered) + len(unlisted) + len(undeclared)),
+        # Pass on entries, content, and coverage. REVIEW items are surfaced but
+        # do not fail, because deciding whether a re-expressed edge means the
+        # same thing is a judgement the tool cannot make.
+        "ok": entry_losses == 0 and content_losses == 0 and reclassed_ok and covered,
+        "ok_strict": (entry_losses == 0 and content_losses == 0 and review == 0
+                      and reclassed_ok and covered),
     }
 
 
@@ -260,9 +326,13 @@ def main() -> int:
 
     print(f"registry completeness vs {args.ref}\n")
     print(f"{'file':<38}{'ref':>6}{'here':>7}  missing / content gaps")
+    multi = {p for p, n in Counter(f["file"] for f in report["files"]).items() if n > 1}
     for f in report["files"]:
+        # Name the section when a file holds several, or two rows of the same
+        # file are indistinguishable in the report.
+        label = f"{f['file']}#{f['key']}" if f["file"] in multi else f["file"]
         if f["status"] != "compared":
-            print(f"{f['file']:<38}{'-':>6}{'-':>7}  {f['status']}")
+            print(f"{label:<38}{'-':>6}{'-':>7}  {f['status']}")
             continue
         notes: list[str] = []
         if f["missing_entries"]:
@@ -270,21 +340,40 @@ def main() -> int:
         for eid, lost in (f.get("content_gaps") or {}).items():
             notes.append(f"{eid}: {lost}")
         print(
-            f"{f['file']:<38}{f['origin_entries']:>6}{f['local_entries']:>7}  "
+            f"{label:<38}{f['origin_entries']:>6}{f['local_entries']:>7}  "
             + ("; ".join(notes) if notes else "none")
         )
+
+    if report["uncovered_in_ref"] or report["unlisted_sections"]:
+        print("  NOT COMPARED (in " + args.ref + " but not in FILES):")
+        for path in report["uncovered_in_ref"]:
+            print(f"    {path}  (whole file)")
+        for name in report["unlisted_sections"]:
+            print(f"    {name}  (section)")
+    if report["undeclared_sections"]:
+        print("  NOT COMPARED (present here but not in FILES):")
+        for name in report["undeclared_sections"]:
+            print(f"    {name}  (section)")
 
     print()
     for eid, ok in report["relocated"].items():
         print(f"  re-classed {eid:<14} -> present as upstream: {'yes' if ok else 'NO'}")
     print()
     print(f"  entry losses: {report['entry_losses']}   content losses: {report['content_losses']}"
-          f"   review items: {report['review_items']}")
+          f"   review items: {report['review_items']}"
+          f"   uncovered files: {len(report['uncovered_in_ref'])}"
+          f"   unlisted sections: {len(report['unlisted_sections'])}"
+          f"   undeclared sections: {len(report['undeclared_sections'])}")
     ok = report["ok_strict"] if args.strict else report["ok"]
     if ok:
-        print("ok: no entries or content lost relative to " + args.ref)
+        print("ok: every section of every listed file compared, nothing lost vs " + args.ref)
         return 0
-    print(f"LOSS: {report['genuine_losses']} entries or statements went missing")
+    if (report["uncovered_in_ref"] or report["unlisted_sections"]
+            or report["undeclared_sections"]):
+        print("UNCOVERED: part of the registry was never compared, so a loss there"
+              " would be invisible")
+    print(f"LOSS: {report['genuine_losses']} entries, statements, or sections went"
+          " unchecked or missing")
     return 1
 
 
