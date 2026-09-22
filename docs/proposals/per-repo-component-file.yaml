@@ -1,0 +1,52 @@
+# PROPOSAL — not current architecture.
+#
+# This describes a per-repo `zer0.component.yaml` that each component repo would
+# commit, with the central registry in kvnloo/z0 syncing from it. It was never
+# implemented: no component repo carries such a file, and nothing reads this one.
+#
+# It lived in `schemas/` next to a JSON Schema that was ALSO dead and, worse,
+# described the pre-federation component shape (`id`, `kind`, `status`) rather
+# than the federated one the registry actually authors (`plane`,
+# `architecture_status`, `implementation_status`, `owns`, `not_here`,
+# `relationships`). A schema in `schemas/` reads as authoritative; this pair read
+# as authoritative and was wrong. That schema is deleted; this proposal is moved
+# here so it cannot be mistaken for the current format.
+#
+# Kept because the idea is still reasonable. If it is ever built, it becomes a
+# contract in registry/interfaces.yaml first.
+#
+# ---
+
+# Example zer0.component.yaml — place at component repo root (future).
+# Central registry in kvnloo/z0 remains authoritative until CI sync exists.
+
+id: tokenomics
+name: Tokenomics
+repo: kvnloo/tokenomics
+kind: measurement
+status: experimental
+execution: live
+
+summary: >
+  Vendor-neutral measurement kernel for token, cost, latency,
+  and verified-task economics.
+
+profiles: [core, research, full]
+depends_on: []
+
+provides:
+  - tokenomics.event.v0
+  - tokenomics.report.v1
+
+consumes:
+  - z0int.decision_receipt.v1
+
+install:
+  clone: https://github.com/kvnloo/tokenomics.git
+  command: pip install -e packages/python
+
+verify:
+  command: tokenomics report --range today
+
+docs:
+  architecture: packages/python/src/tokenomics/report.py

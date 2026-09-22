@@ -330,6 +330,39 @@ def validate() -> list[str]:
     for lid, meta in lifecycles().items():
         _check_refs(f"lifecycle {lid}", meta.get("applies_to"))
 
+    # A file in `schemas/` that nothing reads is worse than no file: it sits
+    # where an authoritative schema belongs and describes a shape nobody
+    # enforces. `schemas/component.schema.json` did exactly that -- it required
+    # the PRE-federation component shape (id, kind, status) long after the
+    # registry moved to (plane, architecture_status, owns, not_here,
+    # relationships), had no reader, and contradicted every entry in
+    # components.yaml. z0 now validates in Python, so `schemas/` is empty; this
+    # keeps it that way unless a schema comes with a reader.
+    schema_dir = ROOT / "schemas"
+    if schema_dir.is_dir():
+        haystack: list[str] = []
+        for rel in ("lib", "scripts", "docs", "registry", "audit", "tests"):
+            base = ROOT / rel
+            if not base.is_dir():
+                continue
+            for candidate in base.rglob("*"):
+                if not candidate.is_file() or "__pycache__" in candidate.parts:
+                    continue
+                if candidate.suffix not in (".py", ".sh", ".md", ".yml", ".yaml", ".json"):
+                    continue
+                try:
+                    haystack.append(candidate.read_text(encoding="utf-8", errors="ignore"))
+                except OSError:
+                    continue
+        blob = "\n".join(haystack)
+        for schema_file in sorted(schema_dir.rglob("*")):
+            if schema_file.is_file() and schema_file.name not in blob:
+                problems.append(
+                    f"schemas/{schema_file.name}: nothing references it. A schema "
+                    "nothing enforces is read as authoritative while describing "
+                    "no enforced shape -- delete it, or add a reader."
+                )
+
     # The evidence taxonomy is the one vocabulary the whole stack classifies
     # claims against, so an incomplete or under-specified taxonomy is a
     # structural problem, not a documentation gap. `PAIRED_REPLAY` in
