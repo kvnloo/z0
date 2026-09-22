@@ -111,6 +111,31 @@ def agent_registry_yaml() -> str:
             }
             for sid, m in sorted(registry.sources().items())
         },
+        # Every entity class, not just the three that hold `repo`.
+        #
+        # `reference_only` was absent from this map in EVERY commit it has ever
+        # had: 10 of 55 entities, 18% of the architecture, including
+        # `hermes-k8s-lab` and the whole company-OS generation. `generated/
+        # almanac.json` carried them, so the omission was invisible unless you
+        # compared the two artifacts -- and the sprint report described the
+        # almanac's counts while naming this file as the canonical map.
+        "reference_only": {
+            rid: {
+                "repo": m.get("repo"),
+                "local_path": m.get("local_path"),
+                "kind": m.get("kind"),
+                "relationship": m.get("relationship"),
+                "not_here": m.get("not_here", []),
+            }
+            for rid, m in sorted(registry.reference_only().items())
+        },
+        "profiles": registry.profiles(),
+        # The typed edges. Without these the map lists parts and says nothing
+        # about how they connect -- the same objection the comment below makes
+        # about contracts.
+        "relationships": [
+            {"from": a, "type": t, "to": b} for a, t, b in registry.relationship_edges()
+        ],
         # Cross-component contracts, and the semantic ontology. These were
         # generated on the pre-federation branch but never entered the canonical
         # map, so the map described ownership without describing what connects

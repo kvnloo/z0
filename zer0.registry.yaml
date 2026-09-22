@@ -470,6 +470,426 @@ sources:
     discovers:
     - served model ids
     cache_policy: derived
+reference_only:
+  blueprint:
+    repo: kvnloo/blueprint
+    local_path: null
+    kind: product_line
+    relationship: reference_to
+    not_here:
+    - Zer0 architecture
+    - runtime
+  hermes-k8s-lab:
+    repo: null
+    local_path: ~/zer0/oss/hermes-k8s-lab
+    kind: k8s_substrate
+    relationship: reference_to
+    not_here:
+    - resource placement
+    - provider/model inventory
+    - capability trust
+  k8s-maintainer:
+    repo: null
+    local_path: ~/zer0/oss/k8s-maintainer
+    kind: upstream_triage
+    relationship: reference_to
+    not_here:
+    - Zer0 cluster operation
+    - resource placement
+    - k8s substrate
+  openjev:
+    repo: kvnloo/openjev
+    local_path: null
+    kind: superseded_alias
+    relationship: legacy_of
+    not_here:
+    - independent decision ownership
+  pm-integration-mono:
+    repo: kvnloo/pm
+    local_path: null
+    kind: parallel_architecture
+    relationship: reference_to
+    not_here:
+    - current Zer0 architecture
+    - runtime
+  solarpunk:
+    repo: kvnloo/solarpunk
+    local_path: null
+    kind: product_line
+    relationship: reference_to
+    not_here:
+    - Zer0 runtime
+  zer0-cockpit:
+    repo: kvnloo/zer0-cockpit
+    local_path: null
+    kind: parallel_architecture
+    relationship: reference_to
+    not_here:
+    - authoritative issue state
+    - agent scheduling
+    - current dashboards
+  zer0-harness-spine:
+    repo: kvnloo/zer0-harness-spine
+    local_path: null
+    kind: parallel_architecture
+    relationship: reference_to
+    not_here:
+    - current Zer0 contracts
+    - provider selection
+    - orchestration policy
+  zer0-pm-company-os:
+    repo: kvnloo/zer0-pm
+    local_path: null
+    kind: parallel_architecture
+    relationship: reference_to
+    not_here:
+    - Kerdoios placement and quota
+    - Tokenomics measurement ledger
+  zer0-voice:
+    repo: kvnloo/zer0-voice
+    local_path: null
+    kind: parallel_architecture
+    relationship: reference_to
+    not_here:
+    - issue state
+    - cockpit rendering
+    - harness protocol implementations
+profiles:
+  minimal:
+    summary: One supported harness. Pick which; nothing else is implied.
+    capabilities:
+    - execution
+    harnesses:
+    - hermes-agent
+    - oh-my-pi
+    - deepseek-harness
+    default_harness: hermes-agent
+    components: []
+  core:
+    summary: A harness plus the contract and measurement spine.
+    extends: minimal
+    capabilities:
+    - execution
+    - contracts
+    - measurement
+    components:
+    - z0
+    - aodl
+    - tokenomics
+  personal:
+    summary: "Learned cognition \u2014 selection, escalation and activation."
+    extends: core
+    capabilities:
+    - cognition
+    components:
+    - z0intelligence
+  desktop:
+    summary: Predictive OS/context state and interaction surfaces.
+    extends: core
+    capabilities:
+    - context
+    - interaction
+    components:
+    - flow
+    - dash
+    - ripple
+  compute:
+    summary: Resource discovery, quota accounting and placement.
+    extends: core
+    capabilities:
+    - resources
+    components:
+    - kerdoios
+  context:
+    summary: The addressable evidence / context plane.
+    extends: core
+    capabilities:
+    - context
+    components:
+    - rlm
+    - sol-pi-hermes
+  research:
+    summary: Experiment, evidence, publication and public research.
+    extends: core
+    capabilities:
+    - evaluation
+    - research
+    components:
+    - z0intelligence
+    - evolution-lab
+    - z0evals
+    - frontier-kb
+  full:
+    summary: Every owned component with a live or experimental implementation.
+    extends: core
+    capabilities:
+    - cognition
+    - context
+    - interaction
+    - resources
+    - evaluation
+    - research
+    - governance
+    components:
+    - z0intelligence
+    - flow
+    - dash
+    - ripple
+    - kerdoios
+    - rlm
+    - evolution-lab
+    - z0evals
+    - frontier-kb
+    - z0archy
+    - hermes-keel
+    - hermes-jev-skills
+    - kvnloo-skills
+    - sol-pi-hermes
+    - verified-oss-loop
+relationships:
+- from: z0
+  type: governs
+  to: z0archy
+- from: z0archy
+  type: reference_to
+  to: z0
+- from: aodl
+  type: emits_contract
+  to: dash
+- from: aodl
+  type: emits_contract
+  to: ripple
+- from: z0intelligence
+  type: consumes_contract
+  to: aodl
+- from: z0intelligence
+  type: consumes_contract
+  to: tokenomics
+- from: z0intelligence
+  type: measured_by
+  to: tokenomics
+- from: z0intelligence
+  type: evaluated_by
+  to: evolution-lab
+- from: z0intelligence
+  type: reference_to
+  to: rlm
+- from: tokenomics
+  type: measured_by
+  to: kerdoios
+- from: kerdoios
+  type: consumes_contract
+  to: tokenomics
+- from: evolution-lab
+  type: qualifies
+  to: z0evals
+- from: evolution-lab
+  type: trains_for
+  to: z0intelligence
+- from: z0evals
+  type: publishes_evidence_to
+  to: z0intelligence
+- from: z0evals
+  type: reference_to
+  to: evolution-lab
+- from: frontier-kb
+  type: provides_research_evidence
+  to: aodl
+- from: frontier-kb
+  type: provides_research_evidence
+  to: rlm
+- from: frontier-kb
+  type: provides_research_evidence
+  to: z0intelligence
+- from: dash
+  type: consumes_contract
+  to: aodl
+- from: dash
+  type: consumes_contract
+  to: ripple
+- from: ripple
+  type: consumes_contract
+  to: aodl
+- from: flow
+  type: emits_contract
+  to: z0intelligence
+- from: hermes-keel
+  type: executes_via
+  to: hermes-agent
+- from: hermes-mesh-keel
+  type: executes_via
+  to: hermes-agent
+- from: hermes-jev-skills
+  type: consumes_contract
+  to: z0intelligence
+- from: hermes-jev-skills
+  type: executes_via
+  to: hermes-agent
+- from: kvnloo-skills
+  type: executes_via
+  to: hermes-agent
+- from: rlm
+  type: depends_on
+  to: oh-my-pi
+- from: rlm
+  type: emits_contract
+  to: z0intelligence
+- from: sol-pi-omp
+  type: implements
+  to: sol-pi
+- from: sol-pi-omp
+  type: depends_on
+  to: oh-my-pi
+- from: sol-pi-hermes
+  type: implements
+  to: sol-pi
+- from: sol-pi-hermes
+  type: executes_via
+  to: hermes-agent
+- from: verified-oss-loop
+  type: reference_to
+  to: frontier-kb
+- from: hermes-agent-cluster
+  type: legacy_of
+  to: kerdoios
+- from: z0
+  type: executes_via
+  to: oh-my-pi
+- from: oh-my-pi
+  type: consumes_contract
+  to: aodl.intent.v1
+- from: oh-my-pi
+  type: consumes_contract
+  to: tokenomics.event.v0
+- from: oh-my-pi
+  type: emits_contract
+  to: omp.session.aggregate
+- from: oh-my-pi
+  type: emits_contract
+  to: cu.stage_intent.v0
+- from: z0
+  type: executes_via
+  to: deepseek-harness
+- from: deepseek-harness
+  type: consumes_contract
+  to: aodl.intent.v1
+- from: deepseek-harness
+  type: consumes_contract
+  to: tokenomics.event.v0
+- from: z0
+  type: executes_via
+  to: hermes-agent
+- from: hermes-agent
+  type: consumes_contract
+  to: aodl.intent.v1
+- from: hermes-agent
+  type: consumes_contract
+  to: tokenomics.event.v0
+- from: z0
+  type: reference_to
+  to: sol-pi
+- from: z0
+  type: reference_to
+  to: o8
+- from: z0
+  type: reference_to
+  to: firstmate
+- from: z0
+  type: reference_to
+  to: agenttrace
+- from: agenttrace
+  type: consumes_contract
+  to: tokenomics.event.v0
+- from: z0
+  type: reference_to
+  to: NanoJev
+- from: z0
+  type: reference_to
+  to: laya
+- from: z0
+  type: reference_to
+  to: laya-coreml
+- from: z0
+  type: reference_to
+  to: laya-mlx
+- from: z0
+  type: reference_to
+  to: jev-ultrafast
+- from: z0
+  type: reference_to
+  to: memento
+- from: z0
+  type: reference_to
+  to: blueprint
+- from: z0
+  type: reference_to
+  to: solarpunk
+- from: z0
+  type: legacy_of
+  to: openjev
+- from: z0
+  type: reference_to
+  to: hermes-k8s-lab
+- from: z0
+  type: reference_to
+  to: k8s-maintainer
+- from: z0
+  type: reference_to
+  to: zer0-harness-spine
+- from: z0
+  type: reference_to
+  to: zer0-pm-company-os
+- from: z0
+  type: reference_to
+  to: zer0-cockpit
+- from: z0
+  type: reference_to
+  to: zer0-voice
+- from: z0
+  type: reference_to
+  to: pm-integration-mono
+- from: z0intelligence
+  type: discovers_from
+  to: huggingface
+- from: kerdoios
+  type: discovers_from
+  to: vllm
+- from: kerdoios
+  type: discovers_from
+  to: ollama
+- from: z0intelligence
+  type: discovers_from
+  to: ollama
+- from: kerdoios
+  type: discovers_from
+  to: litellm
+- from: kerdoios
+  type: discovers_from
+  to: openrouter
+- from: tokenomics
+  type: discovers_from
+  to: opentelemetry
+- from: kerdoios
+  type: discovers_from
+  to: groq
+- from: z0intelligence
+  type: discovers_from
+  to: groq
+- from: kerdoios
+  type: discovers_from
+  to: cerebras
+- from: z0intelligence
+  type: discovers_from
+  to: cerebras
+- from: kerdoios
+  type: discovers_from
+  to: nous
+- from: kerdoios
+  type: discovers_from
+  to: vercel
+- from: kerdoios
+  type: discovers_from
+  to: xai
 interfaces:
   agenttrace.span.v0:
     class: adapter

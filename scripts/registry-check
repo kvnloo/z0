@@ -8,6 +8,8 @@ python3 - <<'PY'
 import json
 from pathlib import Path
 
+import yaml
+
 from z0 import registry
 
 problems = registry.validate()
@@ -31,6 +33,28 @@ assert not any(c in ups or c in srcs or c in refs for c in comps), \
 # Z0_ROOT is exported by the wrapper: this script runs on stdin, so __file__
 # is <stdin> and deriving the repo root from it silently points elsewhere.
 import os
+
+# The canonical map must account for every entity class and every typed edge.
+#
+# `zer0.registry.yaml` omitted `reference_only` in EVERY commit it has ever had:
+# 10 of 55 entities, including `hermes-k8s-lab` and the whole company-OS
+# generation. `generated/almanac.json` carried them the whole time, so nothing
+# failed -- the two generated artifacts disagreed and no check compared them.
+# A map that silently drops 18% of the architecture is not canonical, and
+# `docs-check` cannot see it because the generator is self-consistent.
+_map = yaml.safe_load((Path(os.environ["Z0_ROOT"]) / "zer0.registry.yaml").read_text())
+_almanac = json.loads(
+    (Path(os.environ["Z0_ROOT"]) / "generated" / "almanac.json").read_text())
+for _cls in ("components", "upstreams", "sources", "reference_only"):
+    _missing = sorted(set(_almanac.get(_cls) or {}) - set(_map.get(_cls) or {}))
+    assert not _missing, f"canonical map omits {_cls}: {_missing}"
+for _sec in ("profiles", "interfaces"):
+    _missing = sorted(set(_almanac.get(_sec) or {}) - set(_map.get(_sec) or {}))
+    assert not _missing, f"canonical map omits {_sec}: {_missing}"
+assert len(_map.get("relationships") or []) == len(_almanac.get("relationships") or []), (
+    "canonical map and almanac disagree on the number of typed edges: "
+    f"{len(_map.get('relationships') or [])} vs {len(_almanac.get('relationships') or [])}"
+)
 
 ledger = Path(os.environ["Z0_ROOT"]) / "audit" / "reality-ledger.json"
 if ledger.is_file():
