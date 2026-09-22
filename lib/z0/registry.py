@@ -34,6 +34,22 @@ def maturity() -> dict[str, dict[str, str]]:
     return _load("maturity.yaml")
 
 
+def harnesses() -> dict[str, dict[str, Any]]:
+    return _load("harnesses.yaml").get("harnesses", {})
+
+
+def harness_catalog() -> dict[str, Any]:
+    return _load("harnesses.yaml").get("catalog", {})
+
+
+def mechanisms() -> dict[str, dict[str, Any]]:
+    return _load("mechanisms.yaml").get("mechanisms", {})
+
+
+def lifecycles() -> dict[str, dict[str, Any]]:
+    return _load("lifecycles.yaml").get("lifecycles", {})
+
+
 def resolve_profile(name: str) -> list[str]:
     """Expand profile + extends chain into ordered component ids."""
     profs = profiles()
