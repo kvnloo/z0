@@ -46,6 +46,18 @@ nightly → dev → main is architecture history, not a component; and repos suc
 z0archy, Ripple, z0evals, Hermes LCM, and Verified OSS Loop can belong to the suite
 without becoming installable components.
 
+### Per-repo implementation manifests
+
+A repository may add `zer0.repo.yaml` at its root using
+[`schemas/repo.schema.json`](schemas/repo.schema.json). The manifest describes
+the architecture **at that Git ref**: subsystems and paths, implemented canonical
+mechanisms/interfaces/representations, ownership boundaries, and evidence locations.
+
+This is implementation evidence, not a second source of cross-system truth. A repo
+manifest cannot redefine the canonical identity owned by the central registries.
+z0archy can therefore read the same contract from a GitHub branch or local worktree
+without guessing repository structure from filenames alone.
+
 ## Profiles
 
 | Profile | Components | For |
