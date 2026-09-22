@@ -1629,6 +1629,21 @@
       "class": "contract",
       "owner": "z0intelligence",
       "summary": "Frozen DecisionRequest/DecisionResult pair for a DecisionBackend. This is the host-vs-k8s parity contract: the same request must produce the same result whether served by an in-process host backend or by a service, with only transport and placement differing. What may differ: transport latency, queue time, process identity. What may NOT differ: the chosen action, probabilities, model identity and revision. No service implementation exists yet, so parity is declared and unproven; any comparison must use the existing comparability gate rather than a bespoke comparator.\n"
+    },
+    "flow_prediction.v1": {
+      "class": "superseded_alias",
+      "owner": "flow",
+      "summary": "Superseded spelling of `flow.prediction.v1`. Identical owner and summary; the id was normalised to the owner-prefixed `<owner>.<thing>.v<major>` convention. Retained so older references resolve.\n"
+    },
+    "kerdoios.route.v1": {
+      "class": "contract",
+      "owner": "kerdoios",
+      "summary": "Model/provider routing decision with cost estimate."
+    },
+    "os.next_context.v0": {
+      "class": "contract",
+      "owner": "flow",
+      "summary": "Shadow prediction of next desktop context episode. Restored with the owner origin/main declared; the audit record notes z0intelligence also carries os-context machinery, so ownership here is worth confirming rather than assuming.\n"
     }
   },
   "profiles": {

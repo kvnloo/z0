@@ -148,3 +148,35 @@ interfaces:
       implementation exists yet, so parity is declared and unproven; any
       comparison must use the existing comparability gate rather than a bespoke
       comparator.
+
+  # --- restored 2026-09-22 from the pre-federation generation ----------------
+  # These two were declared on origin/main and dropped when the two registry
+  # generations were converged, because the local branch's interfaces.yaml had
+  # been written without them. They are declared contracts with a named owner;
+  # whether an owner STAMPS them is a separate question (see the audit note on
+  # kerdoios not stamping placement.v1/quota_state.v1).
+  #
+  # origin/main's `flow_prediction.v1` was NOT restored as a separate entry: it
+  # is `flow.prediction.v1` under the older spelling, with identical owner and
+  # summary. The rename is recorded here rather than as a duplicate contract.
+  flow_prediction.v1:
+    class: superseded_alias
+    owner: flow
+    summary: >
+      Superseded spelling of `flow.prediction.v1`. Identical owner and summary;
+      the id was normalised to the owner-prefixed `<owner>.<thing>.v<major>`
+      convention. Retained so older references resolve.
+
+  kerdoios.route.v1:
+    class: contract
+    owner: kerdoios
+    summary: Model/provider routing decision with cost estimate.
+
+  os.next_context.v0:
+    class: contract
+    owner: flow
+    summary: >
+      Shadow prediction of next desktop context episode. Restored with the owner
+      origin/main declared; the audit record notes z0intelligence also carries
+      os-context machinery, so ownership here is worth confirming rather than
+      assuming.
