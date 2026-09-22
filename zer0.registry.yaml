@@ -1,5 +1,5 @@
 # Agent-consumable Zer0 registry summary (hand-synced; generate from components.yaml in future)
-version: 1
+version: 2
 ecosystem: zer0
 canonical_repo: kvnloo/z0
 
@@ -9,6 +9,7 @@ rules:
   - Token claims require Tokenomics evidence
   - AODL is contracts only, not runtime
   - z0 is map/installer only, never business logic
+  - Harnesses, mechanisms, interfaces and lifecycles are distinct architecture dimensions
 
 profiles:
   minimal: [oh-my-pi]
@@ -75,7 +76,7 @@ components:
     status: experimental
     execution: log_only
   memento:
-    repo: kvnloo/memento
+    repo: kvnloo/Memento
     kind: memory
     status: idea
     execution: shadow
@@ -89,3 +90,22 @@ interfaces:
   - kerdoios.route.v1
   - omp.session.aggregate
   - cu.stage_intent.v0
+
+architecture_dimensions:
+  harnesses:
+    source: registry/harnesses.yaml
+    ids: [omp, hermes, deepseek, codex, pi]
+  mechanisms:
+    source: registry/mechanisms.yaml
+    ids:
+      - rlm-context-spill
+      - jev-typed-decision
+      - sol-pi-action-fusion
+      - sol-pi-observation-pack
+      - sol-pi-evidence-reducer
+      - sol-pi-online-context-compact
+      - aodl-intent-plan-observed
+      - agenttrace-cross-harness-observation
+  lifecycles:
+    source: registry/lifecycles.yaml
+    ids: [verified-oss-rolling, evolution-lab-promotion, architecture-truth]
