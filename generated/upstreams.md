@@ -25,10 +25,12 @@ Owned repositories that are **not** part of the network: product lines and
 superseded aliases. Listed so the almanac accounts for every repository we
 swept, without pretending they are supported infrastructure.
 
-| ID | Name | Kind | Relationship | Repo |
-|----|------|------|--------------|------|
-| `blueprint` | Blueprint | product_line | reference_to | `kvnloo/blueprint` |
-| `openjev` | OpenJev (alias) | superseded_alias | legacy_of | `kvnloo/openjev` |
-| `solarpunk` | solarpunk | product_line | reference_to | `kvnloo/solarpunk` |
+| ID | Name | Kind | Relationship | Repo / local path |
+|----|------|------|--------------|-------------------|
+| `blueprint` | Blueprint | product_line | reference_to | kvnloo/blueprint |
+| `hermes-k8s-lab` | hermes-k8s-lab | k8s_substrate | reference_to | `~/zer0/oss/hermes-k8s-lab` (local only) |
+| `k8s-maintainer` | k8s-maintainer | upstream_triage | reference_to | `~/zer0/oss/k8s-maintainer` (local only) |
+| `openjev` | OpenJev (alias) | superseded_alias | legacy_of | kvnloo/openjev |
+| `solarpunk` | solarpunk | product_line | reference_to | kvnloo/solarpunk |
 
 _Generated from `registry/upstreams.yaml`. Do not edit by hand._

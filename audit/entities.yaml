@@ -512,3 +512,43 @@ entities:
       Competing placement authority: it schedules work, but the architecture
       assigns placement to Kerdoios. Recorded so the duplication is visible
       rather than rediscovered.
+
+  # ---- local-only trees ---------------------------------------------------
+  # These two exist ONLY on this machine: no git remote, no GitHub repo
+  # (`gh repo view kvnloo/hermes-k8s-lab` -> could not resolve). They are listed
+  # with NO `repo:` field deliberately, because they have no canonical identity
+  # to resolve -- inventing one would register a repo that does not exist.
+  #
+  # They were invisible until the sweep stopped dropping checkouts without a
+  # github.com remote: 41 of 191 checkouts on this machine were being discarded
+  # silently, and these two were among them. `expected_status: local_only` makes
+  # the sweep report a mismatch if either one ever gains a remote, which is the
+  # event that would unblock registering them properly.
+
+  - id: hermes-k8s-lab
+    kind: owned_component
+    local_path: ~/zer0/oss/hermes-k8s-lab
+    plane: execution
+    owns: [kubernetes substrate templates, CPU service workloads, GPU pools scaled to zero]
+    not_here: [resource placement, provider/model inventory, capability trust, measurement]
+    expected_status: local_only
+    capability_ref: {kind: default}
+    note: >
+      Deliverable 7 (Kubernetes as an OPTIONAL runtime substrate) depends on
+      this. It cannot be registered as a normal component while it has no
+      remote: `components.yaml` requires a `repo`, and a repo that does not exist
+      is not something to invent. Its artifacts are reachable locally and its
+      offers already flow through Kerdoios' kubernetes provider.
+
+  - id: k8s-maintainer
+    kind: owned_component
+    local_path: ~/zer0/oss/k8s-maintainer
+    plane: execution
+    owns: [upstream Kubernetes-project issue triage]
+    not_here: [Zer0 cluster operation, resource placement]
+    expected_status: local_only
+    capability_ref: {kind: default}
+    note: >
+      Name collision, not a substrate: this triages upstream Kubernetes project
+      issues and does not operate the Zer0 cluster. Recorded so the name does not
+      keep being read as cluster infrastructure.

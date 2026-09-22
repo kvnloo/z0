@@ -1,6 +1,6 @@
 {
   "schema": "z0.reality-ledger.v1",
-  "generated_at": "2026-09-22T07:57:42.829949+00:00",
+  "generated_at": "2026-09-22T08:34:44.200679+00:00",
   "generated_by": "scripts/reality-sweep",
   "statuses": [
     "merged",
@@ -19,7 +19,8 @@
     "superseded": 1,
     "external_upstream": 24,
     "branch_only": 3,
-    "open_pr": 1
+    "open_pr": 1,
+    "local_only": 2
   },
   "scope": {
     "roots": [
@@ -31,8 +32,1759 @@
       "/mnt/zer0models/repos"
     ],
     "source": "Z0_SWEEP_ROOTS",
-    "checkouts_found": 110
+    "checkouts_with_remote": 150,
+    "repos_with_remote": 110,
+    "checkouts_unversioned": 41,
+    "rejected_sample": [
+      {
+        "path": "/mnt/zer0models/workspace/zer0/experiments/ar-fixture-t5005c948",
+        "real_path": "/mnt/zer0models/workspace/zer0/experiments/ar-fixture-t5005c948",
+        "branch": "autoresearch/minimize-bench-py-sum-of-squares-runtime-20260824",
+        "head": "a89da02162ac58da090b43773a77b56b60f56865",
+        "dirty": true,
+        "dirty_files": 1,
+        "last_commit": "2026-08-24T19:17:51-05:00",
+        "worktrees": {
+          "count": 1,
+          "sample": [
+            "/mnt/zer0models/workspace/zer0/experiments/ar-fixture-t5005c948"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 2,
+          "sample": [
+            "autoresearch/minimize-bench-py-sum-of-squares-runtime-20260824",
+            "master"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "/mnt/zer0models/workspace/zer0/experiments/ariadne",
+        "real_path": "/mnt/zer0models/workspace/zer0/experiments/ariadne",
+        "branch": "main",
+        "head": "e2f77b76b589daf72d7b5d9103cd73060a29a1e8",
+        "dirty": true,
+        "dirty_files": 50,
+        "last_commit": "2026-09-08T22:31:35-05:00",
+        "worktrees": {
+          "count": 1,
+          "sample": [
+            "/mnt/zer0models/workspace/zer0/experiments/ariadne"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 1,
+          "sample": [
+            "main"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "/mnt/zer0models/workspace/zer0/experiments/artifact-ledger-hardening",
+        "real_path": "/mnt/zer0models/workspace/zer0/experiments/artifact-ledger-hardening",
+        "branch": "fix/private-review-surface-20260907",
+        "head": "1a6719ea865da3857dd3bbf59d72a14bed86d2ce",
+        "dirty": true,
+        "dirty_files": 5,
+        "last_commit": "2026-09-06T17:08:47-05:00",
+        "worktrees": {
+          "count": 2,
+          "sample": [
+            "/mnt/zer0models/workspace/zer0/experiments/artifact-ledger-hardening",
+            "/mnt/zer0models/workspace/zer0/products/artifact-ledger"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 2,
+          "sample": [
+            "fix/private-review-surface-20260907",
+            "main"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "/mnt/zer0models/workspace/zer0/experiments/autonomy-sanity-test",
+        "real_path": "/mnt/zer0models/workspace/zer0/experiments/autonomy-sanity-test",
+        "branch": "main",
+        "head": "ac17d60da4cd028b74623cc071b4161f0d3618b4",
+        "dirty": false,
+        "dirty_files": 0,
+        "last_commit": "2026-08-20T23:12:44-05:00",
+        "worktrees": {
+          "count": 1,
+          "sample": [
+            "/mnt/zer0models/workspace/zer0/experiments/autonomy-sanity-test"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 1,
+          "sample": [
+            "main"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "/mnt/zer0models/workspace/zer0/experiments/jedi_temple_guard",
+        "real_path": "/mnt/zer0models/workspace/zer0/experiments/jedi_temple_guard",
+        "branch": "feature/F03-character-blockout",
+        "head": "ce47849f66e46ebf1b5e1b25a040325bd740b921",
+        "dirty": true,
+        "dirty_files": 593,
+        "last_commit": "2026-08-17T17:14:10-05:00",
+        "worktrees": {
+          "count": 6,
+          "sample": [
+            "/mnt/zer0models/workspace/zer0/experiments/jedi_temple_guard",
+            "/mnt/zer0models/workspace/zer0/experiments/jedi_temple_guard/.worktrees/t_731f8170",
+            "/mnt/zer0models/workspace/zer0/experiments/jedi_temple_guard/.worktrees/t_896de04c",
+            "/mnt/zer0models/workspace/zer0/experiments/jedi_temple_guard/.worktrees/t_cf46bdd4",
+            "/mnt/zer0models/workspace/zer0/experiments/jedi_temple_guard/.worktrees/t_f7f919fd",
+            "/workspace/zer0/experiments/jedi_temple_guard/.worktrees/t_21127b20"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 11,
+          "sample": [
+            "dev",
+            "feature/F03-character-blockout",
+            "feature/canary-evidence-lineage-t_cf46bdd4",
+            "feature/guard-head-canary-rework",
+            "main",
+            "wt/t_21127b20",
+            "wt/t_6dd7f104",
+            "wt/t_731f8170",
+            "wt/t_896de04c",
+            "wt/t_cf46bdd4",
+            "wt/t_f7f919fd"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "/mnt/zer0models/workspace/zer0/experiments/learning-product-ads",
+        "real_path": "/mnt/zer0models/workspace/zer0/experiments/learning-product-ads",
+        "branch": "main",
+        "head": "98cd7c1368331818f5ac3cbedb58a13ba1fc4f43",
+        "dirty": true,
+        "dirty_files": 17,
+        "last_commit": "2026-09-07T10:55:53-05:00",
+        "worktrees": {
+          "count": 1,
+          "sample": [
+            "/mnt/zer0models/workspace/zer0/experiments/learning-product-ads"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 1,
+          "sample": [
+            "main"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "/mnt/zer0models/workspace/zer0/experiments/tokenmaxxing",
+        "real_path": "/mnt/zer0models/workspace/zer0/experiments/tokenmaxxing",
+        "branch": "main",
+        "head": "9938d64b26e1c096ca024c66ca434a320b167446",
+        "dirty": true,
+        "dirty_files": 27,
+        "last_commit": "2026-08-28T20:50:55-05:00",
+        "worktrees": {
+          "count": 3,
+          "sample": [
+            "/mnt/zer0models/workspace/zer0/experiments/tokenmaxxing",
+            "/workspace/zer0/experiments/tokenmaxxing/.worktrees/t_4241c86a",
+            "/workspace/zer0/experiments/tokenmaxxing/.worktrees/t_9e28e973"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 4,
+          "sample": [
+            "main",
+            "rescue/pythia-bridge-bda6aef",
+            "wt/t_4241c86a",
+            "wt/t_9e28e973"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "/mnt/zer0models/workspace/zer0/experiments/transformers",
+        "real_path": "/mnt/zer0models/workspace/zer0/experiments/transformers",
+        "branch": "main",
+        "head": "c5d7dc85f71432e2ace065f0d7f6113bc1adc33f",
+        "dirty": true,
+        "dirty_files": 8,
+        "last_commit": "2026-09-07T10:08:28-05:00",
+        "worktrees": {
+          "count": 1,
+          "sample": [
+            "/mnt/zer0models/workspace/zer0/experiments/transformers"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 1,
+          "sample": [
+            "main"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "/mnt/zer0models/workspace/zer0/knowledge/idea-lineage",
+        "real_path": "/mnt/zer0models/workspace/zer0/knowledge/idea-lineage",
+        "branch": "main",
+        "head": "867d41caf7b4c4f74b2120bd50aef2550eb98fc0",
+        "dirty": true,
+        "dirty_files": 68,
+        "last_commit": "2026-08-25T16:08:29-05:00",
+        "worktrees": {
+          "count": 1,
+          "sample": [
+            "/mnt/zer0models/workspace/zer0/knowledge/idea-lineage"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 1,
+          "sample": [
+            "main"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "/mnt/zer0models/workspace/zer0/knowledge/idea-resurfacer",
+        "real_path": "/mnt/zer0models/workspace/zer0/knowledge/idea-resurfacer",
+        "branch": "HEAD\nfatal: ambiguous argument 'HEAD': unknown revision or path not in the working tree.\nUse '--' to separate paths from revisions, like this:\n'git <command> [<revision>...] -- [<file>...]'",
+        "head": "HEAD\nfatal: ambiguous argument 'HEAD': unknown revision or path not in the working tree.\nUse '--' to separate paths from revisions, like this:\n'git <command> [<revision>...] -- [<file>...]'",
+        "dirty": true,
+        "dirty_files": 17,
+        "last_commit": "fatal: your current branch 'main' does not have any commits yet",
+        "worktrees": {
+          "count": 1,
+          "sample": [
+            "/mnt/zer0models/workspace/zer0/knowledge/idea-resurfacer"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 0,
+          "sample": [],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "/mnt/zer0models/workspace/zer0/oss/dsh-savings-dock",
+        "real_path": "/mnt/zer0models/workspace/zer0/oss/dsh-savings-dock",
+        "branch": "main",
+        "head": "585c0c85aa2da358f4459b54de46dac049188610",
+        "dirty": false,
+        "dirty_files": 0,
+        "last_commit": "2026-09-21T12:45:00-05:00",
+        "worktrees": {
+          "count": 1,
+          "sample": [
+            "/mnt/zer0models/workspace/zer0/oss/dsh-savings-dock"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 1,
+          "sample": [
+            "main"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "/mnt/zer0models/workspace/zer0/oss/hermes-agent-spatial-canvas",
+        "real_path": "/mnt/zer0models/workspace/zer0/oss/hermes-agent-spatial-canvas",
+        "branch": "main",
+        "head": "65e27dfbcf28e1bc269b2598c637e1fb77c4f902",
+        "dirty": false,
+        "dirty_files": 0,
+        "last_commit": "2026-08-23T00:46:49-05:00",
+        "worktrees": {
+          "count": 1,
+          "sample": [
+            "/mnt/zer0models/workspace/zer0/oss/hermes-agent-spatial-canvas"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 1,
+          "sample": [
+            "main"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "/mnt/zer0models/workspace/zer0/oss/hermes-mesh-keel",
+        "real_path": "/mnt/zer0models/workspace/zer0/oss/hermes-mesh-keel",
+        "branch": "release/0.1.0",
+        "head": "0e3360b67c705a9c1e3b38ae791c6ec8592b47c2",
+        "dirty": true,
+        "dirty_files": 1,
+        "last_commit": "2026-08-20T13:45:35-05:00",
+        "worktrees": {
+          "count": 4,
+          "sample": [
+            "/mnt/zer0models/workspace/zer0/oss/hermes-mesh-keel",
+            "/workspace/zer0/oss/hermes-mesh-keel/.worktrees/taildrop-inbox-bridge",
+            "/workspace/zer0/oss/hermes-mesh-keel/.worktrees/taildrop-inbox-bridge-review",
+            "/workspace/zer0/oss/hermes-mesh-keel/.worktrees/taildrop-inbox-repair-v2"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 5,
+          "sample": [
+            "integration/keel-bound-mesh",
+            "release/0.1.0",
+            "wt/t_2da322b2",
+            "wt/t_7a4644ee",
+            "wt/t_f452186d"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "/mnt/zer0models/workspace/zer0/oss/z0-comms",
+        "real_path": "/mnt/zer0models/workspace/zer0/oss/z0-comms",
+        "branch": "main",
+        "head": "0d86a8f2ea1ebc87a986a9bf54d1c5d93b65344a",
+        "dirty": false,
+        "dirty_files": 0,
+        "last_commit": "2026-09-22T02:29:01-05:00",
+        "worktrees": {
+          "count": 1,
+          "sample": [
+            "/mnt/zer0models/workspace/zer0/oss/z0-comms"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 1,
+          "sample": [
+            "main"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "/mnt/zer0models/workspace/zer0/portfolios/chief-of-staff",
+        "real_path": "/mnt/zer0models/workspace/zer0/portfolios/chief-of-staff",
+        "branch": "governance/t_cc26a97e",
+        "head": "c65d0bde4407a252e68751d1a3cbc46d6d38d27a",
+        "dirty": true,
+        "dirty_files": 88,
+        "last_commit": "2026-09-02T19:57:56-05:00",
+        "worktrees": {
+          "count": 6,
+          "sample": [
+            "/mnt/zer0models/workspace/zer0/portfolios/chief-of-staff",
+            "/mnt/zer0models/workspace/zer0/portfolios/chief-of-staff/.worktrees/t_dcc9e78d",
+            "/tmp/chief-of-staff-t_3950b2ba",
+            "/tmp/chief-of-staff-t_4fc3cb94",
+            "/tmp/review-t_51ee8952.PMoNHQ",
+            "/workspace/hermes-home/kanban/boards/zer0-company/workspaces/t_ba1e3f1e"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 6,
+          "sample": [
+            "governance/t_3950b2ba",
+            "governance/t_4fc3cb94",
+            "governance/t_cc26a97e",
+            "main",
+            "task/t_ba1e3f1e",
+            "wt/t_dcc9e78d"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "/mnt/zer0models/workspace/zer0/products/artifact-ledger",
+        "real_path": "/mnt/zer0models/workspace/zer0/products/artifact-ledger",
+        "branch": "main",
+        "head": "1a6719ea865da3857dd3bbf59d72a14bed86d2ce",
+        "dirty": false,
+        "dirty_files": 0,
+        "last_commit": "2026-09-06T17:08:47-05:00",
+        "worktrees": {
+          "count": 2,
+          "sample": [
+            "/mnt/zer0models/workspace/zer0/experiments/artifact-ledger-hardening",
+            "/mnt/zer0models/workspace/zer0/products/artifact-ledger"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 2,
+          "sample": [
+            "fix/private-review-surface-20260907",
+            "main"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "/mnt/zer0models/workspace/zer0/products/augmenting-reality",
+        "real_path": "/mnt/zer0models/workspace/zer0/products/augmenting-reality",
+        "branch": "main",
+        "head": "292a5ec0053706d5d412d5d6b77e0787578e353d",
+        "dirty": false,
+        "dirty_files": 0,
+        "last_commit": "2026-08-30T20:25:57-05:00",
+        "worktrees": {
+          "count": 1,
+          "sample": [
+            "/mnt/zer0models/workspace/zer0/products/augmenting-reality"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 1,
+          "sample": [
+            "main"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "/mnt/zer0models/workspace/zer0/products/cardtwin",
+        "real_path": "/mnt/zer0models/workspace/zer0/products/cardtwin",
+        "branch": "main",
+        "head": "a8d9fbaa4aac86a90badd83e2361824ba4cdb55a",
+        "dirty": true,
+        "dirty_files": 6,
+        "last_commit": "2026-09-08T14:17:32-05:00",
+        "worktrees": {
+          "count": 1,
+          "sample": [
+            "/mnt/zer0models/workspace/zer0/products/cardtwin"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 1,
+          "sample": [
+            "main"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "/mnt/zer0models/workspace/zer0/products/expanse",
+        "real_path": "/mnt/zer0models/workspace/zer0/products/expanse",
+        "branch": "main",
+        "head": "5374de744a1d7381b3b3b63cba28ccf251831ea1",
+        "dirty": true,
+        "dirty_files": 9,
+        "last_commit": "2026-07-29T23:37:10-05:00",
+        "worktrees": {
+          "count": 1,
+          "sample": [
+            "/mnt/zer0models/workspace/zer0/products/expanse"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 1,
+          "sample": [
+            "main"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "/mnt/zer0models/workspace/zer0/products/factorymind",
+        "real_path": "/mnt/zer0models/workspace/zer0/products/factorymind",
+        "branch": "master",
+        "head": "334e29f71de102634d8a6484ba4f51e196139c3b",
+        "dirty": false,
+        "dirty_files": 0,
+        "last_commit": "2026-08-23T03:32:26-05:00",
+        "worktrees": {
+          "count": 1,
+          "sample": [
+            "/mnt/zer0models/workspace/zer0/products/factorymind"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 1,
+          "sample": [
+            "master"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "/mnt/zer0models/workspace/zer0/products/hardware-studio",
+        "real_path": "/mnt/zer0models/workspace/zer0/products/hardware-studio",
+        "branch": "main",
+        "head": "7540a7b6584edf2f85e399e1f817ed559b9fac52",
+        "dirty": false,
+        "dirty_files": 0,
+        "last_commit": "2026-09-07T10:31:18-05:00",
+        "worktrees": {
+          "count": 1,
+          "sample": [
+            "/mnt/zer0models/workspace/zer0/products/hardware-studio"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 1,
+          "sample": [
+            "main"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "/mnt/zer0models/workspace/zer0/products/netplay",
+        "real_path": "/mnt/zer0models/workspace/zer0/products/netplay",
+        "branch": "main",
+        "head": "f9c53d846edf0a458eea01585ea041d240a62b60",
+        "dirty": false,
+        "dirty_files": 0,
+        "last_commit": "2026-07-31T16:50:06-05:00",
+        "worktrees": {
+          "count": 1,
+          "sample": [
+            "/mnt/zer0models/workspace/zer0/products/netplay"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 1,
+          "sample": [
+            "main"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "/mnt/zer0models/workspace/zer0/products/pitchtwin",
+        "real_path": "/mnt/zer0models/workspace/zer0/products/pitchtwin",
+        "branch": "main",
+        "head": "4f59aa5241a3b232e23108e903a849f1a5050939",
+        "dirty": true,
+        "dirty_files": 3,
+        "last_commit": "2026-08-18T11:18:00-05:00",
+        "worktrees": {
+          "count": 4,
+          "sample": [
+            "/mnt/zer0models/workspace/zer0/products/pitchtwin",
+            "/tmp/pitchtwin-clean-t0c281a58",
+            "/tmp/pitchtwin-poc-review-092f",
+            "/tmp/pitchtwin-preview-033e-tb363"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 1,
+          "sample": [
+            "main"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "/mnt/zer0models/workspace/zer0/products/pmfe",
+        "real_path": "/mnt/zer0models/workspace/zer0/products/pmfe",
+        "branch": "main",
+        "head": "3904739418780495a4bbb78d74faa22c06eba084",
+        "dirty": true,
+        "dirty_files": 12,
+        "last_commit": "2026-07-29T19:29:20-05:00",
+        "worktrees": {
+          "count": 1,
+          "sample": [
+            "/mnt/zer0models/workspace/zer0/products/pmfe"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 1,
+          "sample": [
+            "main"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "/mnt/zer0models/workspace/zer0/products/pokemon-assets-repair-smoke-93a3501",
+        "real_path": "/mnt/zer0models/workspace/zer0/products/pokemon-assets-repair-smoke-93a3501",
+        "branch": "HEAD",
+        "head": "93a3501c47cd08a64aeba86b4a29d6f9f497b7a5",
+        "dirty": false,
+        "dirty_files": 0,
+        "last_commit": "2026-08-24T15:28:26-05:00",
+        "worktrees": {
+          "count": 1,
+          "sample": [
+            "/mnt/zer0models/workspace/zer0/products/pokemon-assets-repair-smoke-93a3501"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 1,
+          "sample": [
+            "assets/t_3cf12e7f"
+          ],
+          "truncated": 0
+        },
+        "reason": "non-github-remote",
+        "remote": "/workspace/zer0/products/pokemon-assets-iac/."
+      },
+      {
+        "path": "/mnt/zer0models/workspace/zer0/products/pokemon-assets-smoke-b863bb9",
+        "real_path": "/mnt/zer0models/workspace/zer0/products/pokemon-assets-smoke-b863bb9",
+        "branch": "HEAD",
+        "head": "b863bb9e3a993d5871e4a152d3ef51281f8c1fde",
+        "dirty": false,
+        "dirty_files": 0,
+        "last_commit": "2026-08-24T15:03:56-05:00",
+        "worktrees": {
+          "count": 1,
+          "sample": [
+            "/mnt/zer0models/workspace/zer0/products/pokemon-assets-smoke-b863bb9"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 1,
+          "sample": [
+            "assets/t_3cf12e7f"
+          ],
+          "truncated": 0
+        },
+        "reason": "non-github-remote",
+        "remote": "/workspace/zer0/products/pokemon-assets-iac"
+      },
+      {
+        "path": "/mnt/zer0models/workspace/zer0/products/pythia",
+        "real_path": "/mnt/zer0models/workspace/zer0/products/pythia",
+        "branch": "main",
+        "head": "8d721c1e76ed754dab526691e473ffac6fbd87f7",
+        "dirty": false,
+        "dirty_files": 0,
+        "last_commit": "2026-08-18T11:54:25-05:00",
+        "worktrees": {
+          "count": 1,
+          "sample": [
+            "/mnt/zer0models/workspace/zer0/products/pythia"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 1,
+          "sample": [
+            "main"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "/mnt/zer0models/workspace/zer0/products/taste",
+        "real_path": "/mnt/zer0models/workspace/zer0/products/taste",
+        "branch": "HEAD\nfatal: ambiguous argument 'HEAD': unknown revision or path not in the working tree.\nUse '--' to separate paths from revisions, like this:\n'git <command> [<revision>...] -- [<file>...]'",
+        "head": "HEAD\nfatal: ambiguous argument 'HEAD': unknown revision or path not in the working tree.\nUse '--' to separate paths from revisions, like this:\n'git <command> [<revision>...] -- [<file>...]'",
+        "dirty": true,
+        "dirty_files": 6,
+        "last_commit": "fatal: your current branch 'main' does not have any commits yet",
+        "worktrees": {
+          "count": 1,
+          "sample": [
+            "/mnt/zer0models/workspace/zer0/products/taste"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 0,
+          "sample": [],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "/mnt/zer0models/workspace/zer0/products/vibe-workflow",
+        "real_path": "/mnt/zer0models/workspace/zer0/products/vibe-workflow",
+        "branch": "product/pipeline-studio",
+        "head": "33d77a9a7694156cc4d7f32556bf4da304b09a5a",
+        "dirty": true,
+        "dirty_files": 2,
+        "last_commit": "2026-09-02T22:36:18-05:00",
+        "worktrees": {
+          "count": 3,
+          "sample": [
+            "/mnt/zer0models/workspace/zer0/products/vibe-workflow",
+            "/workspace/zer0/products/vibe-workflow/.worktrees/canonical-content-ui",
+            "/workspace/zer0/products/vibe-workflow/.worktrees/t_f26b541b"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 6,
+          "sample": [
+            "feat/artifact-revision-contract",
+            "main",
+            "product/phoenix-ad-arena",
+            "product/pipeline-studio",
+            "product/vibe-workflow-canonical",
+            "wt/t_f26b541b"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "/mnt/zer0models/workspace/zer0/services/gpu-orchestrator",
+        "real_path": "/mnt/zer0models/workspace/zer0/services/gpu-orchestrator",
+        "branch": "HEAD\nfatal: ambiguous argument 'HEAD': unknown revision or path not in the working tree.\nUse '--' to separate paths from revisions, like this:\n'git <command> [<revision>...] -- [<file>...]'",
+        "head": "HEAD\nfatal: ambiguous argument 'HEAD': unknown revision or path not in the working tree.\nUse '--' to separate paths from revisions, like this:\n'git <command> [<revision>...] -- [<file>...]'",
+        "dirty": true,
+        "dirty_files": 7,
+        "last_commit": "fatal: your current branch 'main' does not have any commits yet",
+        "worktrees": {
+          "count": 1,
+          "sample": [
+            "/mnt/zer0models/workspace/zer0/services/gpu-orchestrator"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 0,
+          "sample": [],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "/mnt/zer0models/workspace/zer0/sites/palace-of-fine-arts",
+        "real_path": "/mnt/zer0models/workspace/zer0/sites/palace-of-fine-arts",
+        "branch": "main",
+        "head": "200f073c06c7a2a159ab1101f626dd4b526a7bc2",
+        "dirty": false,
+        "dirty_files": 0,
+        "last_commit": "2026-09-06T16:53:48-05:00",
+        "worktrees": {
+          "count": 1,
+          "sample": [
+            "/mnt/zer0models/workspace/zer0/sites/palace-of-fine-arts"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 1,
+          "sample": [
+            "main"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "~/tmp/agy-p05-fixture",
+        "real_path": "/home/kvn/tmp/agy-p05-fixture",
+        "branch": "main",
+        "head": "fb3475b1e45432b00ea0bcd6cee73196fbe1f4c2",
+        "dirty": false,
+        "dirty_files": 0,
+        "last_commit": "2026-09-19T01:27:39-05:00",
+        "worktrees": {
+          "count": 5,
+          "sample": [
+            "~/tmp/agy-p05-fixture",
+            "~/tmp/agy-p05-worktrees/impl-b5674d8de0",
+            "~/tmp/agy-p05-worktrees/impl-d31ff88eaf",
+            "~/tmp/agy-p05-worktrees/impl-d478f60219",
+            "~/tmp/agy-p05-worktrees/impl-dc0e31d02c"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 5,
+          "sample": [
+            "agy/impl-b5674d8de0",
+            "agy/impl-d31ff88eaf",
+            "agy/impl-d478f60219",
+            "agy/impl-dc0e31d02c",
+            "main"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "~/tmp/agy-p05-worktrees/impl-b5674d8de0",
+        "real_path": "/home/kvn/tmp/agy-p05-worktrees/impl-b5674d8de0",
+        "branch": "agy/impl-b5674d8de0",
+        "head": "fb3475b1e45432b00ea0bcd6cee73196fbe1f4c2",
+        "dirty": true,
+        "dirty_files": 1,
+        "last_commit": "2026-09-19T01:27:39-05:00",
+        "worktrees": {
+          "count": 5,
+          "sample": [
+            "~/tmp/agy-p05-fixture",
+            "~/tmp/agy-p05-worktrees/impl-b5674d8de0",
+            "~/tmp/agy-p05-worktrees/impl-d31ff88eaf",
+            "~/tmp/agy-p05-worktrees/impl-d478f60219",
+            "~/tmp/agy-p05-worktrees/impl-dc0e31d02c"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 5,
+          "sample": [
+            "agy/impl-b5674d8de0",
+            "agy/impl-d31ff88eaf",
+            "agy/impl-d478f60219",
+            "agy/impl-dc0e31d02c",
+            "main"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "~/tmp/agy-p05-worktrees/impl-d31ff88eaf",
+        "real_path": "/home/kvn/tmp/agy-p05-worktrees/impl-d31ff88eaf",
+        "branch": "agy/impl-d31ff88eaf",
+        "head": "fb3475b1e45432b00ea0bcd6cee73196fbe1f4c2",
+        "dirty": false,
+        "dirty_files": 0,
+        "last_commit": "2026-09-19T01:27:39-05:00",
+        "worktrees": {
+          "count": 5,
+          "sample": [
+            "~/tmp/agy-p05-fixture",
+            "~/tmp/agy-p05-worktrees/impl-b5674d8de0",
+            "~/tmp/agy-p05-worktrees/impl-d31ff88eaf",
+            "~/tmp/agy-p05-worktrees/impl-d478f60219",
+            "~/tmp/agy-p05-worktrees/impl-dc0e31d02c"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 5,
+          "sample": [
+            "agy/impl-b5674d8de0",
+            "agy/impl-d31ff88eaf",
+            "agy/impl-d478f60219",
+            "agy/impl-dc0e31d02c",
+            "main"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "~/tmp/agy-p05-worktrees/impl-d478f60219",
+        "real_path": "/home/kvn/tmp/agy-p05-worktrees/impl-d478f60219",
+        "branch": "agy/impl-d478f60219",
+        "head": "fb3475b1e45432b00ea0bcd6cee73196fbe1f4c2",
+        "dirty": false,
+        "dirty_files": 0,
+        "last_commit": "2026-09-19T01:27:39-05:00",
+        "worktrees": {
+          "count": 5,
+          "sample": [
+            "~/tmp/agy-p05-fixture",
+            "~/tmp/agy-p05-worktrees/impl-b5674d8de0",
+            "~/tmp/agy-p05-worktrees/impl-d31ff88eaf",
+            "~/tmp/agy-p05-worktrees/impl-d478f60219",
+            "~/tmp/agy-p05-worktrees/impl-dc0e31d02c"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 5,
+          "sample": [
+            "agy/impl-b5674d8de0",
+            "agy/impl-d31ff88eaf",
+            "agy/impl-d478f60219",
+            "agy/impl-dc0e31d02c",
+            "main"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "~/tmp/agy-p05-worktrees/impl-dc0e31d02c",
+        "real_path": "/home/kvn/tmp/agy-p05-worktrees/impl-dc0e31d02c",
+        "branch": "agy/impl-dc0e31d02c",
+        "head": "fb3475b1e45432b00ea0bcd6cee73196fbe1f4c2",
+        "dirty": true,
+        "dirty_files": 1,
+        "last_commit": "2026-09-19T01:27:39-05:00",
+        "worktrees": {
+          "count": 5,
+          "sample": [
+            "~/tmp/agy-p05-fixture",
+            "~/tmp/agy-p05-worktrees/impl-b5674d8de0",
+            "~/tmp/agy-p05-worktrees/impl-d31ff88eaf",
+            "~/tmp/agy-p05-worktrees/impl-d478f60219",
+            "~/tmp/agy-p05-worktrees/impl-dc0e31d02c"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 5,
+          "sample": [
+            "agy/impl-b5674d8de0",
+            "agy/impl-d31ff88eaf",
+            "agy/impl-d478f60219",
+            "agy/impl-dc0e31d02c",
+            "main"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "~/tmp/omp-ext-agy-executor",
+        "real_path": "/home/kvn/tmp/omp-ext-agy-executor",
+        "branch": "main",
+        "head": "a1686ceed36731da83346fcd5c7d3418406d8cf6",
+        "dirty": false,
+        "dirty_files": 0,
+        "last_commit": "2026-09-19T01:47:50-05:00",
+        "worktrees": {
+          "count": 1,
+          "sample": [
+            "~/tmp/omp-ext-agy-executor"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 1,
+          "sample": [
+            "main"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "~/tmp/omp-ext-cognitive-state",
+        "real_path": "/home/kvn/tmp/omp-ext-cognitive-state",
+        "branch": "main",
+        "head": "ce151e54b240c016ee3d666d86520a99028b242b",
+        "dirty": false,
+        "dirty_files": 0,
+        "last_commit": "2026-09-19T01:35:45-05:00",
+        "worktrees": {
+          "count": 1,
+          "sample": [
+            "~/tmp/omp-ext-cognitive-state"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 1,
+          "sample": [
+            "main"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "~/tmp/omp-ext-z0-live-runtime",
+        "real_path": "/home/kvn/tmp/omp-ext-z0-live-runtime",
+        "branch": "main",
+        "head": "93baf8a1751e6bc0c5f4386b22bb6cdbd1c0c3d7",
+        "dirty": false,
+        "dirty_files": 0,
+        "last_commit": "2026-09-19T02:00:26-05:00",
+        "worktrees": {
+          "count": 1,
+          "sample": [
+            "~/tmp/omp-ext-z0-live-runtime"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 1,
+          "sample": [
+            "main"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      },
+      {
+        "path": "~/zer0/oss/hermes-k8s-lab",
+        "real_path": "/home/kvn/zer0/oss/hermes-k8s-lab",
+        "branch": "p1-provider-baseline",
+        "head": "91caa7892b51f79d348dd2bff0688a6c1b57ad4d",
+        "dirty": true,
+        "dirty_files": 3,
+        "last_commit": "2026-09-20T19:55:52-05:00",
+        "worktrees": {
+          "count": 1,
+          "sample": [
+            "~/zer0/oss/hermes-k8s-lab"
+          ],
+          "truncated": 0
+        },
+        "local_branches": {
+          "count": 2,
+          "sample": [
+            "main",
+            "p1-provider-baseline"
+          ],
+          "truncated": 0
+        },
+        "reason": "no-remote",
+        "remote": ""
+      }
+    ],
+    "rejected_truncated": 1
   },
+  "unattributed_repos": [
+    {
+      "repo": "kvnloo/ai-pokedex-educational-preview",
+      "checkouts": 11,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/products/pokemon-assets-iac",
+        "/mnt/zer0models/workspace/zer0/products/pokemon-assets-review-c47",
+        "/mnt/zer0models/workspace/zer0/products/pokemon-canonical-repair"
+      ]
+    },
+    {
+      "repo": "kvnloo/noop",
+      "checkouts": 8,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/products/noop-audit",
+        "/mnt/zer0models/workspace/zer0/products/noop-issue-423",
+        "/mnt/zer0models/workspace/zer0/products/noop-linux-qt"
+      ]
+    },
+    {
+      "repo": "kvnloo/gtm-test",
+      "checkouts": 3,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/oss/gtm-test",
+        "/mnt/zer0models/workspace/zer0/oss/gtm-test-task-t_8d7f5a8a",
+        "/mnt/zer0models/workspace/zer0/products/gtm-test"
+      ]
+    },
+    {
+      "repo": "kvnloo/pm",
+      "checkouts": 3,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/products/pm",
+        "/mnt/zer0models/workspace/zer0/worktrees/pm-omp",
+        "/mnt/zer0models/workspace/zer0/worktrees/pm-voice-agent"
+      ]
+    },
+    {
+      "repo": "kvnloo/sft-svlm",
+      "checkouts": 3,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/products/sft-svlm-grok-jarvis",
+        "/mnt/zer0models/workspace/zer0/products/sft-svlm-hermes-critical-path",
+        "/mnt/zer0models/workspace/zer0/products/sft-svlm-hermes-gauntlet"
+      ]
+    },
+    {
+      "repo": "kvnloo/boplog",
+      "checkouts": 2,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/oss/boplog",
+        "/mnt/zer0models/repos/kvnloo/boplog-current"
+      ]
+    },
+    {
+      "repo": "kvnloo/hermes-liquid-glass",
+      "checkouts": 2,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/oss/hermes-liquid-glass-o8",
+        "/mnt/zer0models/workspace/zer0/oss/hermes-liquid-glass"
+      ]
+    },
+    {
+      "repo": "tinygrad/tinygrad",
+      "checkouts": 2,
+      "sample": [
+        "/mnt/zer0models/repos/tinycorp/tinygrad",
+        "/mnt/zer0models/repos/tinycorp/.worktrees/tinygrad-6909"
+      ]
+    },
+    {
+      "repo": "B1Z0N/hermes-mesh",
+      "checkouts": 1,
+      "sample": [
+        "~/src/hermes-mesh"
+      ]
+    },
+    {
+      "repo": "Birdabo404/Cribble",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/Birdabo404/Cribble"
+      ]
+    },
+    {
+      "repo": "CachyOS/CachyOS-PKGBUILDS",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/oss-contrib/cachyos-pkgbuilds"
+      ]
+    },
+    {
+      "repo": "CachyOS/linux-cachyos",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/oss-contrib/linux-cachyos"
+      ]
+    },
+    {
+      "repo": "ClemensElflein/OpenMower",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/robot-vacuum-rd/openmower"
+      ]
+    },
+    {
+      "repo": "FlashML-org/FreeToken",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/FlashML-org/FreeToken"
+      ]
+    },
+    {
+      "repo": "HughesCuit/hermes-agent-cluster",
+      "checkouts": 1,
+      "sample": [
+        "~/src/hermes-agent-cluster"
+      ]
+    },
+    {
+      "repo": "NVlabs/SoL-Pi",
+      "checkouts": 1,
+      "sample": [
+        "~/tmp/omp-solpi-seed"
+      ]
+    },
+    {
+      "repo": "Untrivial-ai/agent-orchestrator",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/oss-contrib/agent-orchestrator"
+      ]
+    },
+    {
+      "repo": "aglab2/NoiseTorchRTX",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/vendor/noisetorch-rtx"
+      ]
+    },
+    {
+      "repo": "awesome-vacuum/awesome-vacuum",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/robot-vacuum-rd/awesome-vacuum"
+      ]
+    },
+    {
+      "repo": "awslabs/cli-agent-orchestrator",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/oss-contrib/cli-agent-orchestrator"
+      ]
+    },
+    {
+      "repo": "basecamp/omarchy",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/oss-contrib/omarchy"
+      ]
+    },
+    {
+      "repo": "commaai/openpilot",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/oss-contrib/openpilot"
+      ]
+    },
+    {
+      "repo": "facebookresearch/sam2",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/sam2"
+      ]
+    },
+    {
+      "repo": "frappe/frappe_docker",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/services/erpnext"
+      ]
+    },
+    {
+      "repo": "gcc-mirror/gcc",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/oss-contrib/gcc"
+      ]
+    },
+    {
+      "repo": "kunchenguid/firstmate",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/oss/firstmate"
+      ]
+    },
+    {
+      "repo": "kvnloo/4dps",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/products/4dps"
+      ]
+    },
+    {
+      "repo": "kvnloo/Cribble",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/kvnloo/Cribble"
+      ]
+    },
+    {
+      "repo": "kvnloo/Hermes3D",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/deployments/cardtwin-8462"
+      ]
+    },
+    {
+      "repo": "kvnloo/Mutual-NDA",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/legal/Mutual-NDA"
+      ]
+    },
+    {
+      "repo": "kvnloo/ace",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/products/ace"
+      ]
+    },
+    {
+      "repo": "kvnloo/ace-digital-twin",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/products/ace-digital-twin"
+      ]
+    },
+    {
+      "repo": "kvnloo/agent-mode",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/kvnloo/post-bridge-agent-mode"
+      ]
+    },
+    {
+      "repo": "kvnloo/alpha",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/products/alpha"
+      ]
+    },
+    {
+      "repo": "kvnloo/baseline-tennis",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/oss/baseline-tennis"
+      ]
+    },
+    {
+      "repo": "kvnloo/boinc",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/BOINC/boinc"
+      ]
+    },
+    {
+      "repo": "kvnloo/cod",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/products/cod-w8-w2"
+      ]
+    },
+    {
+      "repo": "kvnloo/company-os",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/oss/company-os"
+      ]
+    },
+    {
+      "repo": "kvnloo/dionysus",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/pewdiepie-archdaemon/dionysus"
+      ]
+    },
+    {
+      "repo": "kvnloo/fx",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/kvnloo/fx"
+      ]
+    },
+    {
+      "repo": "kvnloo/hyperframes",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/kvnloo/hyperframes"
+      ]
+    },
+    {
+      "repo": "kvnloo/monument",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/experiments/monument"
+      ]
+    },
+    {
+      "repo": "kvnloo/paperclip",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/oss/paperclip"
+      ]
+    },
+    {
+      "repo": "kvnloo/pickleball-palace-builder",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/products/pickleball-palace-builder"
+      ]
+    },
+    {
+      "repo": "kvnloo/pokedex-field-os",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/publications/pokedex-field-os"
+      ]
+    },
+    {
+      "repo": "kvnloo/space",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/experiments/space"
+      ]
+    },
+    {
+      "repo": "kvnloo/tokenmaxxing",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/oss/tokenmaxxing"
+      ]
+    },
+    {
+      "repo": "kvnloo/wizard-chess",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/experiments/harry_potter"
+      ]
+    },
+    {
+      "repo": "kvnloo/zer0-cockpit",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/services/zer0-cockpit"
+      ]
+    },
+    {
+      "repo": "kvnloo/zer0-harness-spine",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/services/zer0-harness-spine"
+      ]
+    },
+    {
+      "repo": "kvnloo/zer0-pm",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/services/zer0-pm"
+      ]
+    },
+    {
+      "repo": "kvnloo/zer0-voice",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/services/zer0-voice"
+      ]
+    },
+    {
+      "repo": "langchain-ai/langchain",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/oss-contrib/langchain"
+      ]
+    },
+    {
+      "repo": "langchain-ai/langgraph",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/oss-contrib/langgraph"
+      ]
+    },
+    {
+      "repo": "llvm/llvm-project",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/oss-contrib/llvm-project"
+      ]
+    },
+    {
+      "repo": "makerspet/oomwoo",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/robot-vacuum-rd/oomwoo"
+      ]
+    },
+    {
+      "repo": "mattpocock/ai-hero-cli",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/mattpocock/ai-hero-cli"
+      ]
+    },
+    {
+      "repo": "mattpocock/skills",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/kvnloo/skills"
+      ]
+    },
+    {
+      "repo": "o3de/RobotVacuumSample",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/robot-vacuum-rd/o3de-robot-vacuum-sample"
+      ]
+    },
+    {
+      "repo": "opf/openproject-docker-compose",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/services/openproject"
+      ]
+    },
+    {
+      "repo": "partcad/partcad",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/robot-vacuum-rd/partcad"
+      ]
+    },
+    {
+      "repo": "pingdotgg/t3code",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/oss/t3code"
+      ]
+    },
+    {
+      "repo": "python/cpython",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/oss-contrib/cpython"
+      ]
+    },
+    {
+      "repo": "rust-lang/rust",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/oss-contrib/rust"
+      ]
+    },
+    {
+      "repo": "tinygrad/.github",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/tinycorp/.github"
+      ]
+    },
+    {
+      "repo": "tinygrad/7900xtx",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/tinycorp/7900xtx"
+      ]
+    },
+    {
+      "repo": "tinygrad/amdcomgr_dylib",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/tinycorp/amdcomgr_dylib"
+      ]
+    },
+    {
+      "repo": "tinygrad/asm2464pd-firmware",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/tinycorp/asm2464pd-firmware"
+      ]
+    },
+    {
+      "repo": "tinygrad/custom_mec_public",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/tinycorp/custom_mec_public"
+      ]
+    },
+    {
+      "repo": "tinygrad/extra",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/tinycorp/extra"
+      ]
+    },
+    {
+      "repo": "tinygrad/gpuctypes",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/tinycorp/gpuctypes"
+      ]
+    },
+    {
+      "repo": "tinygrad/gpuocelot",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/tinycorp/gpuocelot"
+      ]
+    },
+    {
+      "repo": "tinygrad/open-gpu-kernel-modules",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/tinycorp/open-gpu-kernel-modules"
+      ]
+    },
+    {
+      "repo": "tinygrad/remu",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/tinycorp/remu"
+      ]
+    },
+    {
+      "repo": "tinygrad/teenygrad",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/tinycorp/teenygrad"
+      ]
+    },
+    {
+      "repo": "tinygrad/tinybox",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/tinycorp/tinybox"
+      ]
+    },
+    {
+      "repo": "tinygrad/tinygpu_releases",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/tinycorp/tinygpu_releases"
+      ]
+    },
+    {
+      "repo": "tinygrad/tinymesa",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/tinycorp/tinymesa"
+      ]
+    },
+    {
+      "repo": "tinygrad/tinymod",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/tinycorp/tinymod"
+      ]
+    },
+    {
+      "repo": "tinygrad/tinyos",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/tinycorp/tinyos"
+      ]
+    },
+    {
+      "repo": "tinygrad/tinyos-takeover",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/tinycorp/tinyos-takeover"
+      ]
+    },
+    {
+      "repo": "tinygrad/tinyspec",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/tinycorp/tinyspec"
+      ]
+    },
+    {
+      "repo": "tinygrad/tinystats",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/tinycorp/tinystats"
+      ]
+    },
+    {
+      "repo": "tinygrad/tinyturing",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/tinycorp/tinyturing"
+      ]
+    },
+    {
+      "repo": "tinygrad/tinyxxx",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/tinycorp/tinyxxx"
+      ]
+    },
+    {
+      "repo": "tinygrad/turing-smart-screen-python",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/tinycorp/turing-smart-screen-python"
+      ]
+    },
+    {
+      "repo": "torvalds/linux",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/oss-contrib/linux"
+      ]
+    },
+    {
+      "repo": "vcmf/dim0",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/oss/dim0"
+      ]
+    },
+    {
+      "repo": "vercel-labs/fx",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/oss/fx-audit"
+      ]
+    },
+    {
+      "repo": "vinnylarouge/jevlike",
+      "checkouts": 1,
+      "sample": [
+        "~/tmp/jevlike"
+      ]
+    },
+    {
+      "repo": "warpdotdev/common-skills",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/workspace/zer0/oss/warp-common-skills"
+      ]
+    },
+    {
+      "repo": "zen-browser/desktop",
+      "checkouts": 1,
+      "sample": [
+        "/mnt/zer0models/repos/zen-browser/desktop"
+      ]
+    }
+  ],
   "entities": [
     {
       "id": "z0",
@@ -117,10 +1869,10 @@
             {
               "path": "~/tmp/z0",
               "branch": "integrate/registry-generations",
-              "head": "ebbd076a3ae3ba875d67efeda8488934e220124a",
+              "head": "a3b4acae2d3a0db3db807c5895011dd23178137e",
               "dirty": true,
-              "dirty_files": 3,
-              "last_commit": "2026-09-22T02:49:06-05:00",
+              "dirty_files": 9,
+              "last_commit": "2026-09-22T03:22:26-05:00",
               "worktrees": {
                 "count": 1,
                 "sample": [
@@ -210,15 +1962,22 @@
           "archived": false,
           "private": false,
           "default_branch": "main",
-          "pushed_at": "2026-09-22T05:38:56Z",
+          "pushed_at": "2026-09-22T08:33:07Z",
           "description": "",
           "upstream": null,
-          "open_issues": 1,
+          "open_issues": 2,
           "head_sha": "6ab142f8c06f43109abb1e5b4e9aad4deb64d997",
           "head_date": "2026-09-22T05:37:54Z",
           "open_prs": {
-            "count": 1,
+            "count": 2,
             "sample": [
+              {
+                "number": 13,
+                "title": "feat: compile deep selected-ref architecture evidence",
+                "head": "feat/deep-ref-introspection",
+                "base": "main",
+                "draft": false
+              },
               {
                 "number": 5,
                 "title": "feat: compile information plane and evidence dependencies",
@@ -229,12 +1988,13 @@
             ],
             "truncated": 0
           },
-          "open_pr_count": 1,
+          "open_pr_count": 2,
           "open_pr_bot_count": 0,
           "remote_branches": {
-            "count": 15,
+            "count": 16,
             "sample": [
               "feat/activegraph-history",
+              "feat/deep-ref-introspection",
               "feat/dynamic-mocs",
               "feat/epistemic-world-model",
               "feat/evidence-dependency",
@@ -301,6 +2061,15 @@
           }
         },
         "stranded_work": [
+          {
+            "kind": "pr",
+            "ref": "#13",
+            "head": "feat/deep-ref-introspection",
+            "base": "main",
+            "draft": false,
+            "title": "feat: compile deep selected-ref architecture evidence",
+            "dependency_automation": false
+          },
           {
             "kind": "pr",
             "ref": "#5",
@@ -772,10 +2541,10 @@
             {
               "path": "~/tmp/openjev",
               "branch": "feat/steal-sweep",
-              "head": "f30c7af3b1e1e172550b838a33579300d8d22366",
+              "head": "c76f621d9328bb09d5b9a5518de1b1eb2e48afa4",
               "dirty": false,
               "dirty_files": 0,
-              "last_commit": "2026-09-22T02:39:47-05:00",
+              "last_commit": "2026-09-22T03:24:39-05:00",
               "worktrees": {
                 "count": 3,
                 "sample": [
@@ -1360,13 +3129,13 @@
           "paths": {
             "count": 1,
             "sample": [
-              "~/tmp/NanoJev"
+              "/mnt/zer0models/workspace/zer0/experiments/NanoJev"
             ],
             "truncated": 0
           },
           "sample": [
             {
-              "path": "~/tmp/NanoJev",
+              "path": "/mnt/zer0models/workspace/zer0/experiments/NanoJev",
               "branch": "main",
               "head": "71a513bb0163b5634467842b523ee0c0ed6fb1c7",
               "dirty": false,
@@ -1375,7 +3144,7 @@
               "worktrees": {
                 "count": 1,
                 "sample": [
-                  "~/tmp/NanoJev"
+                  "/mnt/zer0models/workspace/zer0/experiments/NanoJev"
                 ],
                 "truncated": 0
               },
@@ -1391,7 +3160,7 @@
         },
         "status": "external_upstream",
         "evidence": [
-          "local checkout(s): ~/tmp/NanoJev@main",
+          "local checkout(s): /mnt/zer0models/workspace/zer0/experiments/NanoJev@main",
           "fork=True upstream=TianyuCodings/NanoJev"
         ],
         "resolution": {
@@ -3497,15 +5266,92 @@
           "archived": false,
           "private": false,
           "default_branch": "main",
-          "pushed_at": "2026-09-22T07:56:40Z",
+          "pushed_at": "2026-09-22T08:34:16Z",
           "description": "The agent that grows with you",
           "upstream": null,
-          "open_issues": 43515,
-          "head_sha": "8e221d12a84dd98772e53854121214d10d2ef1a4",
-          "head_date": "2026-09-22T07:52:40Z",
+          "open_issues": 43481,
+          "head_sha": "30de0e01e62d3d2bef9d493bdab92b3c4132c1de",
+          "head_date": "2026-09-22T08:34:14Z",
           "open_prs": {
             "count": 100,
             "sample": [
+              {
+                "number": 118941,
+                "title": "fix(desktop): preserve local registry model profile scope",
+                "head": "codex/fix-local-registry-model-scope",
+                "base": "main",
+                "draft": false
+              },
+              {
+                "number": 118938,
+                "title": "fix(desktop): hide structured reasoning from transcript",
+                "head": "fix/118934-desktop-output-normalization",
+                "base": "main",
+                "draft": false
+              },
+              {
+                "number": 118937,
+                "title": "fix(agent): localize the background-review summary notification",
+                "head": "feat/i18n-background-review",
+                "base": "main",
+                "draft": false
+              },
+              {
+                "number": 118936,
+                "title": "feat(lsp): isolate spawned servers in a dedicated cgroup with a memory cap (#116446)",
+                "head": "feat/lsp-cgroup-isolation-116446",
+                "base": "main",
+                "draft": false
+              },
+              {
+                "number": 118935,
+                "title": "feat(accounting): record provider-billed usage.cost as actual_cost_usd; persist generation ids",
+                "head": "feat/billed-cost-accounting",
+                "base": "main",
+                "draft": false
+              },
+              {
+                "number": 118933,
+                "title": "fix(update): preserve local commits ahead of origin on the tracked branch",
+                "head": "fix/update-preserve-local-commits",
+                "base": "main",
+                "draft": false
+              },
+              {
+                "number": 118932,
+                "title": "feat(openai): preserve prompt cache across reasoning effort changes",
+                "head": "codex/openai-effort-update-followup",
+                "base": "opencode-port/effort-updates-preserve-cache",
+                "draft": false
+              },
+              {
+                "number": 118931,
+                "title": "feat(tools): surface signal death and output truncation on the terminal result",
+                "head": "fix/issue-93700-terminal-result-outcome-flags",
+                "base": "main",
+                "draft": false
+              },
+              {
+                "number": 118929,
+                "title": "test(plugins/teams_pipeline): improve store coverage to 100% (closes #36509)",
+                "head": "test-cov-36509",
+                "base": "main",
+                "draft": false
+              },
+              {
+                "number": 118928,
+                "title": "fix(constants): no false \"[HERMES_HOME fallback]\" warning from the boot scratch path with a sticky p",
+                "head": "salvage/118190-boot-scratch-profile-warning",
+                "base": "main",
+                "draft": false
+              },
+              {
+                "number": 118926,
+                "title": "docs(claude-code): add Claude Desktop Linux beta apt install",
+                "head": "docs/claude-desktop-linux-install",
+                "base": "main",
+                "draft": false
+              },
               {
                 "number": 118917,
                 "title": "Desktop Plugins tab renders plugin-declared settings (config_schema \u2192 form \u2192 shared config writer / ",
@@ -3521,37 +5367,9 @@
                 "draft": false
               },
               {
-                "number": 118915,
-                "title": "Plugin loader: a hung import/register() is skipped after a short deadline instead of hanging startup",
-                "head": "register-deadline",
-                "base": "main",
-                "draft": false
-              },
-              {
                 "number": 118914,
                 "title": "Update checks can anchor to the latest tagged release instead of the branch tip (opt-in)",
                 "head": "release-anchored-updates-v2",
-                "base": "main",
-                "draft": false
-              },
-              {
-                "number": 118913,
-                "title": "fix: plugin catalog installs the newest pin, trusts tag pins, asks before a re-pin widens a plugin (",
-                "head": "fix/catalog-audit-2",
-                "base": "main",
-                "draft": false
-              },
-              {
-                "number": 118911,
-                "title": "pre_llm_call context reaches and survives multimodal turns: wire, persistence, compaction, resume (#",
-                "head": "multimodal-hook",
-                "base": "main",
-                "draft": false
-              },
-              {
-                "number": 118909,
-                "title": "Plugins can observe auxiliary LLM calls via pre/post_auxiliary_call (#79733, supersedes #32416 #6806",
-                "head": "aux-hooks",
                 "base": "main",
                 "draft": false
               },
@@ -3631,55 +5449,6 @@
                 "head": "fix/desktop-latex-media-delivery",
                 "base": "main",
                 "draft": false
-              },
-              {
-                "number": 118891,
-                "title": "feat(approval): mid-task YOLO choice at the command approval prompt",
-                "head": "fix/issue-98139-approval-yolo-choice",
-                "base": "main",
-                "draft": false
-              },
-              {
-                "number": 118888,
-                "title": "fix(agent): deliver readable reasoning details during streaming",
-                "head": "fix/118851-live-reasoning-details",
-                "base": "main",
-                "draft": false
-              },
-              {
-                "number": 118887,
-                "title": "fix(delegate): suspend inactivity window mid-tool + direct tests for the liveness wait",
-                "head": "fix/116001-mid-tool-window-suspend",
-                "base": "main",
-                "draft": false
-              },
-              {
-                "number": 118885,
-                "title": "fix(desktop): kanban (and every connection-scoped query) follows the gateway switch",
-                "head": "fix/kanban-connection-scope",
-                "base": "main",
-                "draft": false
-              },
-              {
-                "number": 118883,
-                "title": "fix(gateway): move the rich-sent index write off the event loop",
-                "head": "upstream-port/rich-sent-store-off-loop",
-                "base": "main",
-                "draft": false
-              },
-              {
-                "number": 118882,
-                "title": "Add gemini-live-bridge to the plugin catalog",
-                "head": "add-gemini-live-bridge",
-                "base": "main",
-                "draft": false
-              },
-              {
-                "number": 118881,
-                "title": "feat(install): honor $HERMES_INSTALL_DIR so the one-liner can choose the install directory",
-                "head": "feat/install-ps1-custom-install-dir",
-                "base": "main",
-                "draft": false
               }
             ],
             "truncated": 75
@@ -3713,7 +5482,7 @@
               "austin/fix/minimax-oauth",
               "austin/fix/types-node-lockfile",
               "austin/fix/wsl-gui",
-              "aux-hooks"
+              "b466-update-cron-fleet"
             ],
             "truncated": 75
           }
@@ -4646,10 +6415,10 @@
             {
               "path": "~/tmp/kerdoios",
               "branch": "arch/observed-availability",
-              "head": "9f864540083a4aba984b2b04f17bcbef05caab08",
+              "head": "9a74ed073c9a4721ae55e9cd7b058dabfe444ce4",
               "dirty": false,
               "dirty_files": 0,
-              "last_commit": "2026-09-22T01:55:29-05:00",
+              "last_commit": "2026-09-22T03:24:43-05:00",
               "worktrees": {
                 "count": 1,
                 "sample": [
@@ -4913,10 +6682,10 @@
             {
               "path": "~/tmp/evolution-lab",
               "branch": "experiment/q-route-v0",
-              "head": "5cdb8e1d255dfb42d0b58343073664a846496f24",
+              "head": "4cf52bb1010d7570922c5e16710669524ccec26d",
               "dirty": true,
               "dirty_files": 6,
-              "last_commit": "2026-09-21T22:51:25-05:00",
+              "last_commit": "2026-09-22T03:07:19-05:00",
               "worktrees": {
                 "count": 2,
                 "sample": [
@@ -6066,10 +7835,10 @@
             {
               "path": "/mnt/zer0models/repos/kvnloo/verified-oss-loop",
               "branch": "arch/promotion-hardening",
-              "head": "5ca82424485f22f701b2939a3b0dead3a8af2247",
+              "head": "8e6368a95b539ff65fac7b853f91ce60f8e09ed4",
               "dirty": false,
               "dirty_files": 0,
-              "last_commit": "2026-09-22T02:14:43-05:00",
+              "last_commit": "2026-09-22T03:12:58-05:00",
               "worktrees": {
                 "count": 1,
                 "sample": [
@@ -8424,6 +10193,174 @@
             "kind": "local_branch",
             "ref": "wt/t_6261253b",
             "path": "/mnt/zer0models/repos/kvnloo/hermes-agent-cluster"
+          }
+        ]
+      }
+    },
+    {
+      "id": "hermes-k8s-lab",
+      "kind": "owned_component",
+      "local_path": "~/zer0/oss/hermes-k8s-lab",
+      "plane": "execution",
+      "owns": [
+        "kubernetes substrate templates",
+        "CPU service workloads",
+        "GPU pools scaled to zero"
+      ],
+      "not_here": [
+        "resource placement",
+        "provider/model inventory",
+        "capability trust",
+        "measurement"
+      ],
+      "expected_status": "local_only",
+      "capability_ref": {
+        "kind": "default"
+      },
+      "note": "Deliverable 7 (Kubernetes as an OPTIONAL runtime substrate) depends on this. It cannot be registered as a normal component while it has no remote: `components.yaml` requires a `repo`, and a repo that does not exist is not something to invent. Its artifacts are reachable locally and its offers already flow through Kerdoios' kubernetes provider.\n",
+      "observed": {
+        "github": {
+          "exists": false,
+          "error": "no repo declared"
+        },
+        "local_checkouts": {
+          "count": 1,
+          "dirty_count": 1,
+          "clean_on_default_count": 0,
+          "paths": {
+            "count": 1,
+            "sample": [
+              "~/zer0/oss/hermes-k8s-lab"
+            ],
+            "truncated": 0
+          },
+          "sample": [
+            {
+              "path": "~/zer0/oss/hermes-k8s-lab",
+              "branch": "p1-provider-baseline",
+              "head": "91caa7892b51f79d348dd2bff0688a6c1b57ad4d",
+              "dirty": true,
+              "dirty_files": 3,
+              "last_commit": "2026-09-20T19:55:52-05:00",
+              "worktrees": {
+                "count": 1,
+                "sample": [
+                  "~/zer0/oss/hermes-k8s-lab"
+                ],
+                "truncated": 0
+              },
+              "local_branches": {
+                "count": 2,
+                "sample": [
+                  "main",
+                  "p1-provider-baseline"
+                ],
+                "truncated": 0
+              },
+              "reason": "no-remote",
+              "remote": ""
+            }
+          ]
+        },
+        "status": "local_only",
+        "evidence": [
+          "local checkout(s): ~/zer0/oss/hermes-k8s-lab@p1-provider-baseline (dirty)",
+          "no remote declared: this tree exists only on this machine, so it has no canonical identity to register against"
+        ],
+        "resolution": {
+          "ref": {
+            "kind": "default"
+          }
+        },
+        "stranded_work": [
+          {
+            "kind": "local_branch",
+            "ref": "main",
+            "path": "~/zer0/oss/hermes-k8s-lab"
+          },
+          {
+            "kind": "local_branch",
+            "ref": "p1-provider-baseline",
+            "path": "~/zer0/oss/hermes-k8s-lab"
+          }
+        ]
+      }
+    },
+    {
+      "id": "k8s-maintainer",
+      "kind": "owned_component",
+      "local_path": "~/zer0/oss/k8s-maintainer",
+      "plane": "execution",
+      "owns": [
+        "upstream Kubernetes-project issue triage"
+      ],
+      "not_here": [
+        "Zer0 cluster operation",
+        "resource placement"
+      ],
+      "expected_status": "local_only",
+      "capability_ref": {
+        "kind": "default"
+      },
+      "note": "Name collision, not a substrate: this triages upstream Kubernetes project issues and does not operate the Zer0 cluster. Recorded so the name does not keep being read as cluster infrastructure.\n",
+      "observed": {
+        "github": {
+          "exists": false,
+          "error": "no repo declared"
+        },
+        "local_checkouts": {
+          "count": 1,
+          "dirty_count": 0,
+          "clean_on_default_count": 0,
+          "paths": {
+            "count": 1,
+            "sample": [
+              "~/zer0/oss/k8s-maintainer"
+            ],
+            "truncated": 0
+          },
+          "sample": [
+            {
+              "path": "~/zer0/oss/k8s-maintainer",
+              "branch": "main",
+              "head": "ea5f696256d97b1c9d0472b5063ff224f9445804",
+              "dirty": false,
+              "dirty_files": 0,
+              "last_commit": "2026-09-20T14:03:21-05:00",
+              "worktrees": {
+                "count": 1,
+                "sample": [
+                  "~/zer0/oss/k8s-maintainer"
+                ],
+                "truncated": 0
+              },
+              "local_branches": {
+                "count": 1,
+                "sample": [
+                  "main"
+                ],
+                "truncated": 0
+              },
+              "reason": "no-remote",
+              "remote": ""
+            }
+          ]
+        },
+        "status": "local_only",
+        "evidence": [
+          "local checkout(s): ~/zer0/oss/k8s-maintainer@main",
+          "no remote declared: this tree exists only on this machine, so it has no canonical identity to register against"
+        ],
+        "resolution": {
+          "ref": {
+            "kind": "default"
+          }
+        },
+        "stranded_work": [
+          {
+            "kind": "local_branch",
+            "ref": "main",
+            "path": "~/zer0/oss/k8s-maintainer"
           }
         ]
       }

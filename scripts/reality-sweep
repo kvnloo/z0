@@ -122,7 +122,26 @@ def scope_mismatch(ledger: dict, current: list[str]) -> tuple[list[str], list[st
 
 
 def discover_local_checkouts():
-    seen = {}
+    """Every .git under the roots, split into matched and rejected.
+
+    Rejected checkouts are RETURNED with a reason, not dropped. This used to
+    `continue` on any checkout without a github.com remote, which silently
+    removed 41 of 191 checkouts on this machine -- including `hermes-k8s-lab` and
+    `k8s-maintainer`, the two repos a named deliverable depends on. A local-only
+    repo and a repo that does not exist looked identical in the ledger: both
+    simply absent.
+
+    The record is built once and then classified, so a rejected checkout carries
+    the same fields as a matched one and can be matched to an entity by path.
+
+    Note on the remote probe: `sh()` merges stderr into stdout, and
+    `git remote get-url origin` writes `error: No such remote 'origin'` to
+    stderr when there is no remote. Testing the merged string for emptiness
+    therefore classified a repo with NO remote as having a non-GitHub one. The
+    return code is what says whether the probe succeeded.
+    """
+    seen: dict[str, list[dict]] = {}
+    rejected: list[dict] = []
     for root in LOCAL_ROOTS:
         if not os.path.isdir(root):
             continue
@@ -135,13 +154,6 @@ def discover_local_checkouts():
             if not g:
                 continue
             d = os.path.dirname(g)
-            _, remote = sh(["git", "-C", d, "remote", "get-url", "origin"], timeout=20)
-            remote = remote.strip()
-            if "github.com" not in remote:
-                continue
-            slug = remote.rstrip("/").removesuffix(".git").split("github.com")[-1].lstrip(":/")
-            if slug.count("/") != 1:
-                continue
             _, branch = sh(["git", "-C", d, "rev-parse", "--abbrev-ref", "HEAD"], timeout=20)
             _, sha = sh(["git", "-C", d, "rev-parse", "HEAD"], timeout=20)
             _, dirty = sh(["git", "-C", d, "status", "--porcelain"], timeout=30)
@@ -149,7 +161,7 @@ def discover_local_checkouts():
             _, wts = sh(["git", "-C", d, "worktree", "list", "--porcelain"], timeout=30)
             _, branches = sh(["git", "-C", d, "for-each-ref",
                               "--format=%(refname:short)", "refs/heads"], timeout=30)
-            seen.setdefault(slug, []).append({
+            record = {
                 "path": portable(d),
                 "real_path": d,
                 "branch": branch.strip(),
@@ -161,8 +173,26 @@ def discover_local_checkouts():
                                             for w in wts.splitlines()
                                             if w.startswith("worktree "))),
                 "local_branches": bounded(sorted(b for b in branches.splitlines() if b.strip())),
-            })
-    return seen
+            }
+
+            rc_r, remote = sh(["git", "-C", d, "remote", "get-url", "origin"], timeout=20)
+            remote = remote.strip()
+            slug: str | None = None
+            reason: str | None = None
+            if rc_r != 0 or not remote:
+                reason = "no-remote"
+                remote = ""
+            elif "github.com" not in remote:
+                reason = "non-github-remote"
+            else:
+                slug = remote.rstrip("/").removesuffix(".git").split("github.com")[-1].lstrip(":/")
+                if slug.count("/") != 1:
+                    reason, slug = "malformed-slug", None
+            if reason:
+                rejected.append({**record, "reason": reason, "remote": remote[:120]})
+            else:
+                seen.setdefault(slug, []).append(record)
+    return seen, sorted(rejected, key=lambda r: r["path"])
 
 
 def observe_github(slug):
@@ -236,6 +266,17 @@ def observed_status(entity, gh, local):
     detail = {"ref": ref}
 
     if kind != "external" and not gh.get("exists"):
+        # An entity that declares NO repo, yet has checkouts on this machine, is
+        # a local-only repo: real, unversioned remotely, and invisible to every
+        # check that resolves a remote. `local_only` sat in STATUSES and was
+        # produced by nothing -- the same shape as an unreachable trust tier.
+        if not entity.get("repo") and local:
+            ev.append("local checkout(s): " + ", ".join(
+                f"{c['path']}@{c['branch']}" + (" (dirty)" if c["dirty"] else "")
+                for c in local[:4]))
+            ev.append("no remote declared: this tree exists only on this machine, so it "
+                      "has no canonical identity to register against")
+            return "local_only", ev, detail
         return "missing", [f"declared capability_ref but repo lookup failed: {gh.get('error')}"], detail
 
     if local:
@@ -345,7 +386,11 @@ def main():
 
     print(f"discovering local checkouts under {len(LOCAL_ROOTS)} roots"
           f" ({'Z0_SWEEP_ROOTS' if _root_override else 'default'}) ...", file=sys.stderr)
-    checkouts = discover_local_checkouts()
+    checkouts, rejected = discover_local_checkouts()
+    print(f"  {sum(len(v) for v in checkouts.values())} checkouts under "
+          f"{len(checkouts)} repos with a github remote; "
+          f"{len(rejected)} unversioned (no remote, so no identity to resolve)",
+          file=sys.stderr)
 
     def one(e):
         if e.get("kind") == "catalog_source":
@@ -358,7 +403,12 @@ def main():
                 "resolution": {"kind": "catalog_source"}, "stranded_work": []}}
         slug = e.get("repo")
         gh = observe_github(slug) if slug else {"exists": False, "error": "no repo declared"}
-        local = checkouts.get(slug or "", [])
+        local = list(checkouts.get(slug or "", []))
+        if not local and e.get("local_path"):
+            # A repo with no remote has no slug to match on, so it is declared by
+            # path instead. Matching by path is explicit; inferring it from a
+            # directory name would guess.
+            local = [c for c in rejected if c["path"] == e["local_path"]]
         status, evidence, detail = observed_status(e, gh, local)
         kind = (e.get("capability_ref") or {}).get("kind")
         # The ledger records the FACT about local state and a bounded sample;
@@ -384,6 +434,8 @@ def main():
     for r in results:
         counts[r["observed"]["status"]] = counts.get(r["observed"]["status"], 0) + 1
 
+    declared_slugs = {e["repo"] for e in entities if e.get("repo")}
+
     ledger = {
         "schema": "z0.reality-ledger.v1",
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -392,11 +444,32 @@ def main():
         "counts": counts,
         # What this run actually looked at. Without it a ledger cannot say how
         # wide its own claim is, and a narrow re-run reads as a clean comparison.
+        #
+        # The counts are named for what they ARE. `checkouts_found` used to be
+        # `len(checkouts)`, which is the number of distinct SLUGS grouped, not the
+        # number of checkouts -- it read 110 while 150 checkouts sat under those
+        # roots. A count that is wrong by 40 under a name that reads as exact is
+        # worse than no count.
         "scope": {
             "roots": [portable(r) for r in LOCAL_ROOTS],
             "source": "Z0_SWEEP_ROOTS" if _root_override else "default",
-            "checkouts_found": len(checkouts),
+            "checkouts_with_remote": sum(len(v) for v in checkouts.values()),
+            "repos_with_remote": len(checkouts),
+            "checkouts_unversioned": len(rejected),
+            "rejected_sample": rejected[:40],
+            "rejected_truncated": max(0, len(rejected) - 40),
         },
+        # Slugs found on this machine that no entity in entities.yaml claims.
+        # 110 repos were grouped and 36 checkouts attributed: the other 74 were
+        # never mentioned anywhere, so the registry could not be audited against
+        # the machine.
+        "unattributed_repos": sorted(
+            ({"repo": slug, "checkouts": len(v),
+              "sample": [c["path"] for c in v[:3]]}
+             for slug, v in checkouts.items()
+             if slug not in declared_slugs),
+            key=lambda r: (-r["checkouts"], r["repo"]),
+        ),
         "entities": results,
     }
     unscanned: list[str] = []
@@ -418,6 +491,11 @@ def main():
     else:
         LEDGER.write_text(json.dumps(ledger, indent=2, sort_keys=False) + "\n", encoding="utf-8")
         print(f"wrote {LEDGER.relative_to(ROOT)}: {len(results)} entities {counts}", file=sys.stderr)
+        unattributed = ledger["unattributed_repos"]
+        if unattributed:
+            print(f"  {len(unattributed)} repos on this machine are claimed by no entity; "
+                  "largest: " + ", ".join(f"{r['repo']}({r['checkouts']})"
+                                           for r in unattributed[:3]), file=sys.stderr)
 
     # `unknown` is an honest "not yet asserted", not a drift to report.
     drift = [r for r in results

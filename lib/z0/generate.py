@@ -306,13 +306,17 @@ def upstream_table() -> str:
         "superseded aliases. Listed so the almanac accounts for every repository we",
         "swept, without pretending they are supported infrastructure.",
         "",
-        "| ID | Name | Kind | Relationship | Repo |",
-        "|----|------|------|--------------|------|",
+        "| ID | Name | Kind | Relationship | Repo / local path |",
+        "|----|------|------|--------------|-------------------|",
     ]
     for rid, meta in sorted(registry.reference_only().items()):
+        # A local-only repo has no remote, so it carries its path instead. An
+        # empty Repo cell would read as "we forgot", which is what this entry
+        # exists to prevent.
+        where = meta.get("repo") or f"`{meta.get('local_path', '')}` (local only)"
         lines.append(
             f"| `{rid}` | {meta.get('name', rid)} | {meta.get('kind', '')} "
-            f"| {meta.get('relationship', '')} | `{meta.get('repo', '')}` |"
+            f"| {meta.get('relationship', '')} | {where} |"
         )
     lines += ["", "_Generated from `registry/upstreams.yaml`. Do not edit by hand._", ""]
     return "\n".join(lines)

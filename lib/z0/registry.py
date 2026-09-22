@@ -308,9 +308,22 @@ def validate() -> list[str]:
             problems.append(f"source {sid}: missing does_not_own")
 
     for rid, meta in reference_only().items():
-        for field in ("name", "repo", "class", "kind", "relationship"):
+        for field in ("name", "class", "kind", "relationship"):
             if not meta.get(field):
                 problems.append(f"reference_only {rid}: missing {field}")
+        # Exactly one identity: a repo (resolvable remotely) or a local_path
+        # (this machine only). Neither means the entry names nothing, which is
+        # how a swept repo goes unaccounted. Both would be ambiguous -- and a
+        # `repo` invented for a tree that has no remote registers a repository
+        # that does not exist.
+        has_repo, has_path = bool(meta.get("repo")), bool(meta.get("local_path"))
+        if not has_repo and not has_path:
+            problems.append(f"reference_only {rid}: needs either 'repo' or 'local_path'")
+        if has_repo and has_path:
+            problems.append(
+                f"reference_only {rid}: declares both 'repo' and 'local_path'; "
+                "which one is the identity?"
+            )
         if meta.get("class") != "reference_only":
             problems.append(f"reference_only {rid}: class must be reference_only")
         if meta.get("relationship") not in VALID_RELATIONS:

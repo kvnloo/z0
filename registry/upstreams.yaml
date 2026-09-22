@@ -258,3 +258,36 @@ reference_only:
     note: >
       Ownership converged into z0intelligence's DecisionBackend / cognition
       surface. Retained only as alias provenance so older references resolve.
+
+  hermes-k8s-lab:
+    name: hermes-k8s-lab
+    class: reference_only
+    kind: k8s_substrate
+    relationship: reference_to
+    local_path: ~/zer0/oss/hermes-k8s-lab
+    summary: >
+      Kubernetes substrate work: cluster templates, CPU service workloads and GPU
+      pools kept scaled to zero. Deliverable 7 (Kubernetes as an OPTIONAL runtime
+      substrate) depends on it, and its offers already reach Kerdoios through the
+      kubernetes provider.
+    not_here: [resource placement, provider/model inventory, capability trust]
+    note: >
+      Declared by `local_path` and NOT by `repo` because it has no remote at all
+      (`git remote -v` is empty), so it has no canonical identity to register
+      against. `components.yaml` requires a `repo`, and inventing one would
+      register a repository that does not exist. This entry exists so the almanac
+      accounts for the tree; promoting it to a component is blocked on a remote,
+      not on a decision.
+
+  k8s-maintainer:
+    name: k8s-maintainer
+    class: reference_only
+    kind: upstream_triage
+    relationship: reference_to
+    local_path: ~/zer0/oss/k8s-maintainer
+    summary: Upstream Kubernetes-project issue triage.
+    not_here: [Zer0 cluster operation, resource placement, k8s substrate]
+    note: >
+      Name collision, not a substrate. The name reads as cluster infrastructure;
+      it triages upstream Kubernetes issues. Recorded so the collision stops being
+      rediscovered, and so it is not mistaken for hermes-k8s-lab.
