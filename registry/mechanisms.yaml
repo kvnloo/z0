@@ -119,3 +119,136 @@ mechanisms:
         repo: kvnloo/agenttrace
     evidence:
       - kvnloo/agenttrace:README.md
+
+  hermes-lossless-context-dag:
+    name: Recoverable context DAG
+    kind: context
+    stage: experimental
+    purpose: >
+      Keep active context bounded while preserving raw-message lineage, hierarchical
+      summaries, exact drill-down, and recoverable externalized payloads.
+    implementations:
+      - repo: kvnloo/hermes-lcm
+        harness: hermes
+    evidence:
+      - kvnloo/hermes-lcm:README.md#what-it-does
+
+  keel-governed-execution:
+    name: Keel governed execution
+    kind: governance
+    stage: bootstrap
+    purpose: >
+      Bound agent execution with explicit capability rules, evidence requirements,
+      staged promotion, adversarial verification, rollback, and non-self-authorizing evolution.
+    implementations:
+      - repo: kvnloo/hermes-keel
+    evidence:
+      - kvnloo/hermes-keel:README.md#constitutional-rule
+      - kvnloo/hermes-keel:README.md#levels
+
+  mesh-signed-intent-transport:
+    name: Signed Mesh intent transport
+    kind: transport
+    stage: experimental
+    purpose: >
+      Transport bounded signed execution intents between nodes while revalidating
+      authority at the destination and returning signed receipt/evidence without
+      replacing the canonical task lifecycle.
+    implementations:
+      - repo: kvnloo/hermes-mesh-keel
+        harness: hermes
+    evidence:
+      - kvnloo/hermes-mesh-keel:README.md
+
+  split-authority-privilege-broker:
+    name: Split-authority privilege broker
+    kind: security
+    stage: development_candidate
+    purpose: >
+      Separate request, operator approval, immutable grant, and bounded privileged
+      execution so an agent cannot manufacture its own elevation authority.
+    implementations:
+      - repo: kvnloo/hermes-privilege-broker
+    evidence:
+      - kvnloo/hermes-privilege-broker:README.md#contract
+      - kvnloo/hermes-privilege-broker:docs/THREAT_MODEL.md
+
+  model-passport-identity:
+    name: Model passport identity
+    kind: metadata
+    stage: design_seed
+    purpose: >
+      Keep maker, canonical model identity, verified capabilities, lifecycle, and
+      serving route distinct while exposing one portable descriptor to every UI.
+    implementations:
+      - repo: kvnloo/hermes-model-passports
+    evidence:
+      - kvnloo/hermes-model-passports:README.md#design-thesis
+      - kvnloo/hermes-model-passports:README.md#data-resolution
+
+  frozen-eval-publication:
+    name: Frozen evaluation publication
+    kind: evidence
+    stage: active
+    purpose: >
+      Turn pinned experiment inputs and independently inspectable outcomes into
+      frozen datasets, analyses, figures, and public claims without becoming the
+      experiment engine or verifier.
+    implementations:
+      - repo: kvnloo/z0evals
+    evidence:
+      - kvnloo/z0evals:README.md#ownership
+      - kvnloo/z0evals:README.md#rules
+
+  realtime-voice-orchestration:
+    name: Realtime voice orchestration
+    kind: interaction
+    stage: experimental
+    purpose: >
+      Keep a duplex voice session active while delegating durable background agent
+      work, querying memory/tools, and speaking results when they arrive.
+    implementations:
+      - repo: kvnloo/hermes-talk
+        harness: hermes
+    evidence:
+      - kvnloo/hermes-talk:README.md#what-this-actually-is
+
+  z0archy-semantic-compression:
+    name: Loss-aware semantic architecture compression
+    kind: compression
+    stage: active
+    purpose: >
+      Compile a large architecture world into question- or zoom-conditioned maps
+      while emitting receipts for retained structure, hidden evidence, cut edges,
+      provenance reconstructability, and high-relevance omissions.
+    implementations:
+      - repo: kvnloo/z0archy
+    evidence:
+      - kvnloo/z0archy:README.md#semantic-zoom
+      - kvnloo/z0archy:README.md#semantic-compression-receipts
+
+  z0archy-history-fork-diff:
+    name: Replayable architecture fork and diff
+    kind: history
+    stage: active
+    purpose: >
+      Preserve content-addressed architecture history as event-sourced runs that can
+      be replayed, forked at prior states, reconciled to alternate ref selections,
+      and structurally diffed without contaminating canonical truth.
+    implementations:
+      - repo: kvnloo/z0archy
+    evidence:
+      - kvnloo/z0archy:README.md#activegraph-architecture-history
+      - kvnloo/z0archy:README.md#counterfactual-architecture-worlds
+
+  z0archy-hierarchy-meta-learning:
+    name: Slow architecture hierarchy meta-learning
+    kind: learning
+    stage: experimental
+    purpose: >
+      Analyze architecture history for conservative keep, merge, split, prune, or
+      no-update proposals while keeping canonical ontology changes human-approved.
+    implementations:
+      - repo: kvnloo/z0archy
+    evidence:
+      - kvnloo/z0archy:README.md#slow-hierarchy-meta-learning
