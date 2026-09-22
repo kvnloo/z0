@@ -37,11 +37,14 @@ Zer0 no longer treats every architectural concept as an installable repo.
 | `mechanisms.yaml` | Cross-cutting mechanisms that may have multiple implementations |
 | `interfaces.yaml` | Named cross-component contracts |
 | `lifecycles.yaml` | Promotion, experiment and epistemic/history states |
+| `suite.yaml` | Zer0 repository surfaces and their semantic roles without treating every repo as a component |
 | `profiles.yaml` | Installable component bundles |
 
 This separation is intentional: SoL-Pi's ObservationPack is a mechanism, not a product;
-DeepSeek is a harness, not a dependency of every Zer0 install; and candidate → preview →
-nightly → dev → main is architecture history, not a component.
+DeepSeek is a harness, not a dependency of every Zer0 install; candidate → preview →
+nightly → dev → main is architecture history, not a component; and repos such as
+z0archy, Ripple, z0evals, Hermes LCM, and Verified OSS Loop can belong to the suite
+without becoming installable components.
 
 ## Profiles
 
