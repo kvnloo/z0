@@ -133,6 +133,38 @@ def evidence_classes() -> dict[str, dict[str, Any]]:
     return _load("maturity.yaml").get("evidence", {}) or {}
 
 
+class UnknownEvidenceClass(ValueError):
+    """A claim named an evidence class the canonical taxonomy does not define."""
+
+
+def normalize_evidence_class(value: Any) -> str:
+    """Return the canonical name for an evidence class, whatever its case.
+
+    The registry keys are uppercase; artifacts serialize the same names
+    lowercased (`"evidence_class": "exploratory_beta"`). Both spell the one
+    vocabulary, so consumers normalize before matching instead of comparing
+    strings.
+
+    Matching exactly is not a style question: kerdoios compared uppercase
+    literals while every artifact in the ecosystem was lowercase, so it rejected
+    all of them as unknown. Case-insensitive acceptance does not widen the set --
+    an unrecognised name is still an error, and still loud.
+    """
+    text = str(value or "").strip()
+    if not text:
+        raise UnknownEvidenceClass(
+            "empty evidence_class; the canonical taxonomy is defined in "
+            "registry/maturity.yaml (evidence:)"
+        )
+    upper = text.upper()
+    if upper not in evidence_classes():
+        raise UnknownEvidenceClass(
+            f"unknown evidence_class {value!r}; the canonical taxonomy is "
+            f"{', '.join(evidence_classes())} (registry/maturity.yaml)"
+        )
+    return upper
+
+
 # --- semantic ontology accessors (from the pre-federation generation) -------
 # These were written on origin/main against the older `components.yaml` schema.
 # They are additive: federation answers "who owns what and what is observed",

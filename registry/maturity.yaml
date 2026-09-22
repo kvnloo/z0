@@ -29,6 +29,21 @@ execution:
 # change. A claim may never borrow the consequences of a stronger class, and
 # absence of evidence is not a weak class -- it is no class.
 #
+# SPELLING. The keys below are canonical and uppercase. Artifacts on disk
+# serialize the class as the SAME NAME LOWERCASED -- `EXPLORATORY_BETA` is
+# written `"evidence_class": "exploratory_beta"`. That is a serialization rule,
+# not a second vocabulary: there is exactly one set of classes. Every consumer
+# normalizes case before matching. This was a real integration break: 17
+# artifacts in this ecosystem carried the lowercase spelling while the only
+# consumer matched uppercase literals exactly, so it rejected every artifact it
+# was handed with "unknown evidence_class". Consumers use
+# `z0.registry.normalize_evidence_class` (or an equivalent mirror of it) rather
+# than comparing strings directly.
+#
+# `CORPUS` is deliberately NOT a class. A corpus is a dataset, not a claim about
+# a capability; it has no place on a strength ladder and must not be ranked
+# against CONFIRM. Corpus manifests label themselves with `artifact_kind`.
+#
 # All seven classes are required; `scripts/registry-check` fails if one is
 # missing or if a class omits `means` or `may_influence`.
 
