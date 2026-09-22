@@ -1,0 +1,292 @@
+#!/usr/bin/env python3
+"""Report registry entries that exist in a previous generation but not here.
+
+Written after a registry convergence claimed to be lossless and was not. The
+claim was checked against component IDs and profile names only, which passed,
+while per-component boundary text and two interface contracts were silently
+dropped. Comparing *entries* alone is not enough either, so this compares
+entries AND the content of the entries that survive.
+
+The check is deliberately NOT wired into `docs-check`: it needs a git ref that
+CI may not have, and a missing ref must not fail a build. Run it by hand before
+and after any registry restructure.
+
+Usage:
+    ./scripts/registry-completeness                 # vs origin/main
+    ./scripts/registry-completeness --ref HEAD~5
+    ./scripts/registry-completeness --json
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+import yaml
+
+ROOT = Path(__file__).resolve().parent.parent
+
+# file -> the top-level key holding its entries
+FILES: dict[str, str] = {
+    "registry/components.yaml": "components",
+    "registry/profiles.yaml": "profiles",
+    "registry/interfaces.yaml": "interfaces",
+    "registry/harnesses.yaml": "harnesses",
+    "registry/mechanisms.yaml": "mechanisms",
+    "registry/lifecycles.yaml": "lifecycles",
+    "registry/representations.yaml": "representations",
+    "registry/evidence_dependencies.yaml": "evidence_dependencies",
+}
+
+# Entities deliberately re-classed between generations. Their absence from
+# components.yaml is a documented decision, not a loss, but they must still
+# exist SOMEWHERE.
+RECLASSED: dict[str, str] = {
+    "agenttrace": "registry/upstreams.yaml",
+    "memento": "registry/upstreams.yaml",
+    "oh-my-pi": "registry/upstreams.yaml",
+}
+
+
+def _resolve_profile(raw: dict, name: str, _seen=None) -> list[str]:
+    """Expand a profile through its `extends` chain.
+
+    The federation's profiles are a chain (`full` extends `core` extends
+    `minimal`), so comparing raw component lists reports inherited components as
+    missing. Compare what a profile RESOLVES to instead.
+    """
+    spec = raw.get(name) or {}
+    out: list[str] = []
+    parent = spec.get("extends")
+    if parent:
+        out.extend(_resolve_profile(raw, parent, _seen))
+    for cid in spec.get("components") or []:
+        if cid not in out:
+            out.append(cid)
+    return out
+
+
+def _norm_refs(value) -> set[str]:
+    """(entity, repo) pairs from a reference list, ignoring the key that names it.
+
+    `{component: X, repo: R}` and `{entity: X, class: C, repo: R}` describe the
+    same fact; only the key naming it changed when references became
+    class-aware.
+    """
+    out: set[str] = set()
+    for item in value or []:
+        if isinstance(item, dict):
+            name = item.get("entity") or item.get("component") or item.get("harness")
+            if name is None and item.get("repo"):
+                name = str(item["repo"]).rsplit("/", 1)[-1]
+            out.add(f"{name}|{item.get('repo', '')}")
+        else:
+            out.add(str(item))
+    return out
+
+
+def _as_set(value) -> set[str]:
+    """Hashable view of a YAML list; items may be mappings (e.g. relationships)."""
+    out: set[str] = set()
+    for item in value or []:
+        if isinstance(item, (dict, list)):
+            out.add(json.dumps(item, sort_keys=True))
+        else:
+            out.add(str(item))
+    return out
+
+
+def _show(ref: str, path: str) -> dict | None:
+    proc = subprocess.run(
+        ["git", "-C", str(ROOT), "show", f"{ref}:{path}"],
+        capture_output=True, text=True,
+    )
+    if proc.returncode != 0:
+        return None
+    try:
+        return yaml.safe_load(proc.stdout)
+    except yaml.YAMLError:
+        return None
+
+
+def _local(path: str) -> dict:
+    try:
+        return yaml.safe_load((ROOT / path).read_text(encoding="utf-8")) or {}
+    except (OSError, yaml.YAMLError):
+        return {}
+
+
+def compare(ref: str) -> dict:
+    files: list[dict] = []
+    for path, key in FILES.items():
+        old = _show(ref, path)
+        if old is None:
+            files.append({"file": path, "key": key, "status": "absent-in-ref"})
+            continue
+        old_entries = old.get(key) or {}
+        new_entries = _local(path).get(key) or {}
+        if path.endswith("profiles.yaml"):
+            # Compare RESOLVED membership. Entities that are now upstreams are
+            # correctly non-installable, so their removal from a profile is a
+            # documented consequence of re-classing, not a loss.
+            upstream_ids = set((_local("registry/upstreams.yaml").get("upstreams") or {}))
+            gaps: dict[str, list[str]] = {}
+            for name in sorted(set(old_entries) & set(new_entries)):
+                want = set(_resolve_profile(old_entries, name)) - upstream_ids
+                have = set(_resolve_profile(new_entries, name))
+                if want - have:
+                    gaps[name] = sorted(want - have)
+            files.append({
+                "file": path, "key": key, "status": "compared",
+                "origin_entries": len(old_entries), "local_entries": len(new_entries),
+                "missing_entries": [], "content_gaps": gaps,
+            })
+            continue
+        missing = sorted(set(old_entries) - set(new_entries))
+        # An entity deliberately re-classed to another registry is relocated,
+        # not missing. It is verified present below.
+        missing = [m for m in missing if m not in RECLASSED]
+        # content-level comparison for entries that DO survive
+        content_gaps: dict[str, list[str]] = {}
+        for eid in sorted(set(old_entries) & set(new_entries)):
+            o, n = old_entries[eid], new_entries[eid]
+            if not isinstance(o, dict) or not isinstance(n, dict):
+                continue
+            lost: list[str] = []
+            for field, value in o.items():
+                # KNOWN EQUIVALENT TRANSFORMATIONS (verified by hand):
+                #  * `component: X` -> `entity: X` + `class: ...` (class-aware refs)
+                #  * `registry/components.yaml#components.X` ->
+                #    `registry/upstreams.yaml#upstreams.X` for re-classed entities
+                # These are re-expressions, not losses.
+                if field in ("component", "entity", "class"):
+                    continue
+                if field in ("implemented_by", "implementations", "carried_by", "applies_to"):
+                    lost += [f"{field}:{x}" for x in sorted(_norm_refs(value) - _norm_refs(n.get(field)))]
+                    continue
+                if field == "evidence" or field == "required_evidence":
+                    have = {str(x).split("#")[-1].split(".")[-1] for x in _as_set(n.get(field))}
+                    want = {str(x).split("#")[-1].split(".")[-1] for x in _as_set(value)}
+                    lost += [f"{field}:{x}" for x in sorted(want - have)]
+                    continue
+                # flat relationship lists were re-expressed as typed
+                # `relationships: [{type, to}]`; the mapping is a per-edge
+                # judgement, so these are reported for REVIEW, not as loss.
+                if field in ("depends_on", "integrates_with", "provides", "consumes"):
+                    have = _as_set(n.get("relationships"))
+                    want = _as_set(value)
+                    # only flag when there is no relationships block at all
+                    if not n.get("relationships"):
+                        lost += [f"{field}:{x} (REVIEW)" for x in sorted(want - have)]
+                    continue
+                if field == "boundaries":
+                    # older generation nested owns/not_here; compare as sets
+                    for sub in ("owns", "not_here"):
+                        want = _as_set((value or {}).get(sub))
+                        have = _as_set(n.get(sub))
+                        lost += sorted(want - have)
+                elif isinstance(value, list):
+                    have = _as_set(n.get(field))
+                    lost += [f"{field}:{x}" for x in _as_set(value) if x not in have]
+            if lost:
+                content_gaps[eid] = lost
+        files.append(
+            {
+                "file": path,
+                "key": key,
+                "status": "compared",
+                "origin_entries": len(old_entries),
+                "local_entries": len(new_entries),
+                "missing_entries": missing,
+                "content_gaps": content_gaps,
+            }
+        )
+
+    # a re-classed entity is only a loss if it is nowhere at all
+    relocated: dict[str, bool] = {}
+    for eid, dest in RECLASSED.items():
+        relocated[eid] = eid in (_local(dest).get("upstreams") or {})
+
+    entry_losses = sum(len(f.get("missing_entries") or []) for f in files)
+    review = sum(
+        1
+        for f in files
+        for eid, lost in (f.get("content_gaps") or {}).items()
+        for x in lost
+        if "REVIEW" in x
+    )
+    content_losses = sum(
+        len([x for x in lost if "REVIEW" not in x])
+        for f in files
+        for lost in (f.get("content_gaps") or {}).values()
+    )
+    reclassed_ok = all(relocated.values())
+    return {
+        "schema": "z0.registry_completeness.v1",
+        "ref": ref,
+        "files": files,
+        "relocated": relocated,
+        "relocation_ok": reclassed_ok,
+        "entry_losses": entry_losses,
+        "content_losses": content_losses,
+        "review_items": review,
+        "genuine_losses": entry_losses + content_losses + (0 if reclassed_ok else 1),
+        # Pass on entries and content. REVIEW items are surfaced but do not fail,
+        # because deciding whether a re-expressed edge means the same thing is a
+        # judgement the tool cannot make.
+        "ok": entry_losses == 0 and content_losses == 0 and reclassed_ok,
+        "ok_strict": entry_losses == 0 and content_losses == 0 and review == 0 and reclassed_ok,
+    }
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--ref", default="origin/main")
+    ap.add_argument("--json", action="store_true")
+    ap.add_argument("--strict", action="store_true", help="also fail on REVIEW items")
+    args = ap.parse_args()
+
+    report = compare(args.ref)
+    if args.json:
+        print(json.dumps(report, indent=2, sort_keys=True))
+        return 0 if (report["ok_strict"] if args.strict else report["ok"]) else 1
+
+    if report["files"] and report["files"][0]["status"] == "absent-in-ref":
+        print(f"ref {args.ref!r} has no registry; nothing to compare")
+        return 0
+
+    print(f"registry completeness vs {args.ref}\n")
+    print(f"{'file':<38}{'ref':>6}{'here':>7}  missing / content gaps")
+    for f in report["files"]:
+        if f["status"] != "compared":
+            print(f"{f['file']:<38}{'-':>6}{'-':>7}  {f['status']}")
+            continue
+        notes: list[str] = []
+        if f["missing_entries"]:
+            notes.append(f"missing={f['missing_entries']}")
+        for eid, lost in (f.get("content_gaps") or {}).items():
+            notes.append(f"{eid}: {lost}")
+        print(
+            f"{f['file']:<38}{f['origin_entries']:>6}{f['local_entries']:>7}  "
+            + ("; ".join(notes) if notes else "none")
+        )
+
+    print()
+    for eid, ok in report["relocated"].items():
+        print(f"  re-classed {eid:<14} -> present as upstream: {'yes' if ok else 'NO'}")
+    print()
+    print(f"  entry losses: {report['entry_losses']}   content losses: {report['content_losses']}"
+          f"   review items: {report['review_items']}")
+    ok = report["ok_strict"] if args.strict else report["ok"]
+    if ok:
+        print("ok: no entries or content lost relative to " + args.ref)
+        return 0
+    print(f"LOSS: {report['genuine_losses']} entries or statements went missing")
+    return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
