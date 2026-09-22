@@ -1,0 +1,164 @@
+# Zer0 suite repository catalog.
+# Repositories are implementation/evidence/research surfaces, not automatically installable components.
+# This registry exists so architecture tooling can discover the whole suite without
+# promoting every repo into components.yaml.
+
+repositories:
+  z0:
+    name: Zer0
+    repo: kvnloo/z0
+    role: architecture_registry
+    authority: canonical
+    status: active
+    summary: Canonical semantic architecture registries, install profiles, generated docs, and onboarding.
+    evidence:
+      - README.md
+      - ARCHITECTURE.md
+
+  z0archy:
+    name: z0archy
+    repo: kvnloo/z0archy
+    role: architecture_projection
+    authority: derived
+    status: active
+    supports_components: [oh-my-pi, tokenomics, z0intelligence, kerdoios, evolution-lab, frontier-kb, aodl, agenttrace, memento, openjev]
+    lifecycle: architecture-truth
+    summary: Dynamic architecture world model, exact-ref implementation evidence, history, counterfactuals, and semantic compression.
+    evidence:
+      - kvnloo/z0archy:README.md
+      - kvnloo/z0archy:docs/ARCHITECTURE.md
+
+  z0evals:
+    name: z0evals
+    repo: kvnloo/z0evals
+    role: publication_evidence
+    authority: frozen_evidence
+    status: active
+    supports_components: [z0intelligence, evolution-lab, tokenomics, kerdoios, frontier-kb]
+    summary: Reproducible evaluations, frozen datasets, analysis, figures, and public reports for Zer0 studies.
+    evidence:
+      - kvnloo/z0evals:README.md
+
+  ripple:
+    name: Ripple
+    repo: kvnloo/ripple
+    role: intent_surface
+    authority: interaction
+    status: experimental
+    supports_components: [aodl]
+    summary: Ephemeral multimodal intent surface that consumes AODL contracts while keeping AODL itself as IR.
+    evidence:
+      - kvnloo/ripple:README.md
+
+  sol-pi:
+    name: SoL-Pi
+    repo: kvnloo/SoL-Pi
+    role: mechanism_bundle
+    authority: implementation
+    status: experimental
+    extends_harnesses: [pi]
+    implements_mechanisms:
+      - sol-pi-action-fusion
+      - sol-pi-observation-pack
+      - sol-pi-evidence-reducer
+      - sol-pi-online-context-compact
+    summary: Pi extension packaging reusable agent-efficiency mechanisms discovered through auto-research.
+    evidence:
+      - kvnloo/SoL-Pi:README.md
+
+  sol-pi-hermes:
+    name: sol-pi-hermes
+    repo: kvnloo/sol-pi-hermes
+    role: mechanism_port
+    authority: implementation
+    status: experimental
+    extends_harnesses: [hermes]
+    implements_mechanisms:
+      - sol-pi-action-fusion
+      - sol-pi-observation-pack
+      - sol-pi-evidence-reducer
+      - sol-pi-online-context-compact
+    summary: Hermes plugin port of SoL-Pi mechanisms using Hermes-native context and tool seams.
+    evidence:
+      - kvnloo/sol-pi-hermes:README.md
+
+  hermes-agent:
+    name: Hermes Agent
+    repo: kvnloo/hermes-agent
+    role: execution_runtime
+    authority: implementation
+    status: active
+    extends_harnesses: [hermes]
+    summary: Cross-platform self-improving agent runtime with gateway, memory, skills, subagents, automation, and trajectory tooling.
+    evidence:
+      - kvnloo/hermes-agent:README.md
+
+  deepseek-harness:
+    name: DeepSeek Harness
+    repo: kvnloo/deepseek-harness
+    role: execution_runtime
+    authority: implementation
+    status: developer_preview
+    extends_harnesses: [deepseek]
+    summary: Plugin-tree agent harness used as a Zer0 execution and inspection surface.
+    evidence:
+      - kvnloo/deepseek-harness:README.md
+      - kvnloo/deepseek-harness:docs/architecture.md
+
+  hermes-lcm:
+    name: Hermes LCM
+    repo: kvnloo/hermes-lcm
+    role: context_extension
+    authority: implementation
+    status: experimental
+    extends_harnesses: [hermes]
+    summary: Lossless context-management plugin with a recoverable SQLite-backed summary DAG and bounded recall.
+    evidence:
+      - kvnloo/hermes-lcm:README.md
+
+  hermes-jev-skills:
+    name: Hermes Jev Skills
+    repo: kvnloo/hermes-jev-skills
+    role: decision_extension
+    authority: implementation
+    status: experimental
+    extends_harnesses: [hermes, codex]
+    implements_mechanisms: [jev-typed-decision]
+    summary: Typed Jev decision skills for routing, retrieval, turn selection, triage, and computer-use decisions.
+    evidence:
+      - kvnloo/hermes-jev-skills:README.md
+
+  hermes-agent-self-evolution:
+    name: Hermes Agent Self-Evolution
+    repo: kvnloo/hermes-agent-self-evolution
+    role: evolution_engine
+    authority: implementation
+    status: experimental
+    supports_components: [evolution-lab]
+    summary: DSPy and GEPA based evolutionary optimization of Hermes skills, prompts, tool descriptions, and code candidates.
+    evidence:
+      - kvnloo/hermes-agent-self-evolution:README.md
+
+  verified-oss-loop:
+    name: Verified OSS Loop
+    repo: kvnloo/verified-oss-loop
+    role: contribution_protocol
+    authority: protocol
+    status: active
+    lifecycle: verified-oss-rolling
+    summary: Evidence-gated distributed OSS contribution protocol with claim leases, isolated work, verification, and human merge authority.
+    evidence:
+      - kvnloo/verified-oss-loop:README.md
+      - kvnloo/verified-oss-loop:SPEC.md
+
+  flyforge:
+    name: FlyForge
+    repo: kvnloo/flyforge
+    role: research_program
+    authority: research
+    status: reference
+    supports_components: [evolution-lab, frontier-kb, aodl]
+    lifecycle: evolution-lab-promotion
+    summary: Original research-program surface whose experiment engine now lives in Evolution Lab.
+    evidence:
+      - kvnloo/flyforge:README.md

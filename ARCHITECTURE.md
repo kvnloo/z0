@@ -14,6 +14,7 @@
   - `lifecycles.yaml`: promotion/history state machines
   - `representations.yaml`: information forms flowing through context, planning, decision and measurement paths
   - `evidence_dependencies.yaml`: epistemic edges with evidence recipes, invariants, invalidators and abstention rules
+  - `suite.yaml`: repository surfaces, roles, authority and links into components/harnesses/mechanisms/lifecycles
   - `profiles.yaml`: installable component bundles
 - Optional per-repo `zer0.component.yaml` (future; central registry is source of truth today)
 - Local workspace state at `~/.z0/workspace.yaml`
@@ -40,6 +41,7 @@
 | Promotion/history semantics | `z0` lifecycle registry |
 | Information representation identity | `z0` representation registry |
 | Cross-system evidence recipes / architectural claim invariants | `z0` evidence-dependency registry |
+| Suite repository membership and semantic role | `z0` suite registry |
 | Implementation | Each component repo |
 | Research evidence | `frontier-kb` |
 | Private traces | `memento` / `z0intelligence` (not frontier-kb) |

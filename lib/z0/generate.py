@@ -126,6 +126,27 @@ def lifecycles_md() -> str:
     return "\n".join(lines)
 
 
+def suite_md() -> str:
+    lines = [
+        "# Zer0 suite repository catalog",
+        "",
+        "| ID | Name | Role | Authority | Status | Repository |",
+        "|----|------|------|-----------|--------|------------|",
+    ]
+    for sid, meta in sorted(registry.suite().items()):
+        lines.append(
+            f"| `{sid}` | {meta.get('name', sid)} | {meta.get('role', '')} "
+            f"| {meta.get('authority', '')} | {meta.get('status', '')} "
+            f"| `{meta.get('repo', '')}` |"
+        )
+    lines += [
+        "",
+        "_Generated from `registry/suite.yaml`. Repository membership does not imply installable-component status._",
+        "",
+    ]
+    return "\n".join(lines)
+
+
 def install_matrix() -> str:
     profs = registry.profiles()
     comp_ids = sorted(registry.components().keys())
@@ -212,6 +233,7 @@ def write_all() -> list[Path]:
         GENERATED / "harnesses.md": harnesses_md(),
         GENERATED / "mechanisms.md": mechanisms_md(),
         GENERATED / "lifecycles.md": lifecycles_md(),
+        GENERATED / "suite.md": suite_md(),
         GENERATED / "install-matrix.md": install_matrix(),
         DOCS_GEN / "ownership.md": ownership_table(),
         GENERATED / "docs-index.jsonl": docs_index_jsonl(),
