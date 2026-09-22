@@ -12,6 +12,8 @@
   - `mechanisms.yaml`: reusable cross-harness mechanisms
   - `interfaces.yaml`: cross-system contracts
   - `lifecycles.yaml`: promotion/history state machines
+  - `representations.yaml`: information forms flowing through context, planning, decision and measurement paths
+  - `evidence_dependencies.yaml`: epistemic edges with evidence recipes, invariants, invalidators and abstention rules
   - `profiles.yaml`: installable component bundles
 - Optional per-repo `zer0.component.yaml` (future; central registry is source of truth today)
 - Local workspace state at `~/.z0/workspace.yaml`
@@ -36,6 +38,8 @@
 | Harness adoption / Zer0 role | `z0` harness registry; AODL remains harness-id authority |
 | Cross-harness mechanism identity | `z0` mechanism registry |
 | Promotion/history semantics | `z0` lifecycle registry |
+| Information representation identity | `z0` representation registry |
+| Cross-system evidence recipes / architectural claim invariants | `z0` evidence-dependency registry |
 | Implementation | Each component repo |
 | Research evidence | `frontier-kb` |
 | Private traces | `memento` / `z0intelligence` (not frontier-kb) |
