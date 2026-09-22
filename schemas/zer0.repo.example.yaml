@@ -1,0 +1,53 @@
+# Example zer0.repo.yaml
+#
+# This file describes implementation architecture at this exact Git ref.
+# It does NOT redefine canonical component/interface/mechanism identities in kvnloo/z0.
+# z0archy treats these facts as "implemented" evidence.
+
+version: 1
+repo: kvnloo/example
+id: example
+kind: suite
+summary: Example repository architecture manifest.
+
+architecture:
+  subsystems:
+    - id: compiler
+      name: Semantic compiler
+      kind: compiler
+      summary: Compiles exact-ref source evidence into a stable semantic projection.
+      paths:
+        - src/compiler/
+        - schemas/
+    - id: browser
+      name: Browser projection
+      kind: presentation
+      paths:
+        - web/
+      depends_on: [compiler]
+
+  implements_mechanisms:
+    - z0archy-semantic-compression
+
+  provides_interfaces: []
+  consumes_interfaces: []
+
+  produces_representations:
+    - semantic-compression-receipt
+  consumes_representations:
+    - architecture-snapshot
+
+  boundaries:
+    owns:
+      - exact-ref implementation projection
+    not_here:
+      - canonical cross-system architecture identity
+
+  evidence:
+    docs:
+      - README.md
+      - ARCHITECTURE.md
+    tests:
+      - tests/
+    schemas:
+      - schemas/
