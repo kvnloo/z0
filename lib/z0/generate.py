@@ -99,7 +99,8 @@ def mechanisms_md() -> str:
         lines.append(f"- **Stage:** {meta.get('stage', '')}")
         if meta.get("family"):
             lines.append(f"- **Family:** `{meta['family']}`")
-        lines.append(f"- **Purpose:** {meta.get('purpose', '')}")
+        purpose = " ".join(str(meta.get("purpose", "")).split())
+        lines.append(f"- **Purpose:** {purpose}")
         implementations = (meta.get("implemented_by") or []) + (meta.get("implementations") or [])
         if implementations:
             refs = []
@@ -118,7 +119,8 @@ def lifecycles_md() -> str:
         lines.append(f"## `{lid}` — {meta.get('name', lid)}")
         lines.append(f"- **Kind:** {meta.get('kind', '')}")
         lines.append(f"- **Stages:** {stages}")
-        lines.append(f"- **Rule:** {meta.get('rule', '')}")
+        rule = " ".join(str(meta.get("rule", "")).split())
+        lines.append(f"- **Rule:** {rule}")
         lines.append("")
     lines += ["_Generated from `registry/lifecycles.yaml`._", ""]
     return "\n".join(lines)
