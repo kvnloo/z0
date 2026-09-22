@@ -259,7 +259,7 @@ components:
       - tokenomics.event.v0
     install:
       clone: https://github.com/kvnloo/agenttrace.git
-      branch: main
+      branch: master
       ref: a34dea2b6ff7e2133b9e548b93d30bfe6ccf6ff5
       command: pip install -e .
     boundaries:
@@ -268,7 +268,7 @@ components:
 
   memento:
     name: Memento
-    repo: kvnloo/memento
+    repo: kvnloo/Memento
     kind: memory
     status: idea
     execution: shadow
@@ -282,35 +282,10 @@ components:
     provides: []
     consumes: []
     install:
-      clone: https://github.com/kvnloo/memento.git
+      clone: https://github.com/kvnloo/Memento.git
       branch: main
       ref: 513a80c2ba155115dfcea0bc808b0c41a1fd4380
       command: echo 'Not yet installable — status idea'
     boundaries:
       owns: [visual private history]
       not_here: [research KB, agent runtime]
-
-  openjev:
-    name: OpenJev
-    repo: kvnloo/openjev
-    kind: decision
-    status: experimental
-    execution: shadow
-    owner: Decision
-    summary: >
-      Local typed decision heads (logit-based choice) for hotpath routing.
-      Often consumed via OMP/Jev integration.
-    required: false
-    profiles: []
-    depends_on: []
-    integrates_with: [oh-my-pi, z0intelligence]
-    provides: []
-    consumes: []
-    install:
-      clone: https://github.com/kvnloo/openjev.git
-      branch: master
-      ref: 5e7cf4a2d6faf6e537dbfbb52d90bf50410cea63
-      command: pip install -e .
-    boundaries:
-      owns: [local SLM decision heads]
-      not_here: [agent runtime, measurement]
