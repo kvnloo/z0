@@ -62,10 +62,19 @@ interfaces:
     owner: rlm
     summary: Addressable handle into the evidence plane, rehydratable on demand.
 
-  z0evals.study.v1:
+  z0eval.study.v1:
     class: contract
     owner: z0evals
-    summary: Frozen reproducible study record. Immutable once published.
+    summary: >
+      Frozen reproducible study record. Immutable once published.
+
+      The id is `z0eval` (abbreviated), not `z0evals`. This entry previously read
+      `z0evals.study.v1`, which named a contract that does not exist: z0evals
+      declares `const: z0eval.study.v1` in schemas/study-manifest.schema.json and
+      every real manifest carries `schema_version: z0eval.study.v1`. The registry
+      is supposed to describe what exists, so it now does. Abbreviation is already
+      the convention elsewhere -- z0intelligence emits `z0int.*` -- so this is
+      alignment rather than a new style.
 
   harness.execution.v0:
     class: contract

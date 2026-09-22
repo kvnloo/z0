@@ -33,6 +33,13 @@ schema: z0.schema_namespaces.v1
 owners:
   z0: z0
   z0int: z0intelligence
+  # `z0eval` is the ABBREVIATION z0evals actually emits
+  # (`const: z0eval.study.v1` in schemas/study-manifest.schema.json). Without
+  # this line the checker treats z0eval as an unknown namespace and SKIPS it
+  # entirely, so any cross-owner emission under it was invisible. z0's interface
+  # registry carried `z0evals.study.v1`, a contract that does not exist; that is
+  # corrected alongside this.
+  z0eval: z0evals
   z0evals: z0evals
   kerdoios: kerdoios
   tokenomics: tokenomics
@@ -41,6 +48,13 @@ owners:
   evolution-lab: evolution-lab
   z0archy: z0archy
   frontier-kb: frontier-kb
+  # Found by making the checker REPORT unowned namespaces instead of skipping
+  # them. All three are real components or upstreams in registry/components.yaml
+  # and registry/upstreams.yaml; they were simply missing here, so every emission
+  # under them went unchecked.
+  flow: flow
+  hermes: hermes-agent
+  verified-oss-loop: verified-oss-loop
 
 # Namespaces deliberately shared between repos. Each needs a reason.
 shared:
@@ -104,6 +118,40 @@ cross_owner:
       build an input row in the owner's format. z0intelligence defines it
       (src/z0int/receipt.py:19) and it is registered in interfaces.yaml as owned
       by z0intelligence.
+
+  # --- adapter INPUT: the owner emits it, this repo reads it -----------------
+  # Three cases surfaced only after the checker was made to REPORT unowned
+  # namespaces instead of skipping them (flow/hermes/verified-oss-loop were
+  # missing from `owners`, so everything under them went unchecked).
+  - id: verified-oss-loop.inventory.v1
+    emitted_by: [aodl, evolution-lab, kerdoios, z0evals, z0intelligence]
+    namespace_owner: verified-oss-loop
+    kind: adapter_output
+    evidence: >
+      The KIT defines this id -- verified-oss-loop/scripts/kit-inventory.py. Every
+      repo listed here has the kit onboarded and therefore runs kit code that
+      writes the kit's own record in-tree. The namespace owner IS the emitter.
+  - id: verified-oss-loop.pages-url-map.v1
+    emitted_by: z0evals
+    namespace_owner: verified-oss-loop
+    kind: adapter_output
+    evidence: the same onboarded-kit situation as inventory.v1
+  - id: flow.prepare.v1
+    emitted_by: tokenomics
+    namespace_owner: flow
+    kind: adapter_output
+    evidence: >
+      tokenomics READS this, it does not define it: report.py:581 "Prefer
+      dedicated flow.prepare.v1 lifecycle rows", and test_prepare_economics.py
+      builds input rows in that shape. An adapter input.
+  - id: hermes.provider_usage.v0
+    emitted_by: tokenomics
+    namespace_owner: hermes-agent
+    kind: adapter_output
+    evidence: >
+      Also an INPUT. integrations/hermes.py is documented as "Emit Tokenomics
+      events from Hermes accounting seams ... after normalize_usage"; the literal
+      is the Hermes record tokenomics ingests via from_hermes_provider_usage().
 
   # --- inversions: owner neither defines nor consumes them -------------------
   # Listed so the check can hold them as KNOWN debt and fail if a NEW one

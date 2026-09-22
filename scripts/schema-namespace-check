@@ -118,11 +118,16 @@ def emitted_ids(root: Path) -> set[str]:
 def analyse(roots: dict[str, Path], reg: dict) -> dict:
     owners = reg.get("owners") or {}
     shared = set(reg.get("shared") or {})
-    declared = {
-        (e.get("id", "").split("@", 1)[0], e.get("emitted_by"))
-        for e in (reg.get("cross_owner") or [])
-        if isinstance(e, dict)
-    }
+    declared = set()
+    for entry in (reg.get("cross_owner") or []):
+        if not isinstance(entry, dict):
+            continue
+        base = str(entry.get("id", "")).split("@", 1)[0]
+        emitters = entry.get("emitted_by")
+        if isinstance(emitters, str):
+            emitters = [emitters]
+        for emitter in emitters or []:
+            declared.add((base, emitter))
     declared_inversions = {
         e["id"].split("@", 1)[0]
         for e in (reg.get("cross_owner") or [])
@@ -133,6 +138,7 @@ def analyse(roots: dict[str, Path], reg: dict) -> dict:
     inversions: list[dict] = []
     adapters: list[dict] = []
     totals = collections.Counter()
+    unknown: dict[str, set[str]] = collections.defaultdict(set)
 
     for repo, root in sorted(roots.items()):
         try:
@@ -143,7 +149,15 @@ def analyse(roots: dict[str, Path], reg: dict) -> dict:
         for sid in sorted(ids):
             ns = sid.split(".", 1)[0]
             owner_repo = owners.get(ns)
-            if ns in shared or owner_repo is None:
+            if owner_repo is None:
+                # An unknown namespace was previously SKIPPED, which made every
+                # emission under it invisible -- the same shape of blind spot as
+                # matching only one declaration form. Report it instead of
+                # ignoring it: naming it is how it gets an owner.
+                if ns not in shared:
+                    unknown[ns].add(repo)
+                continue
+            if ns in shared:
                 continue
             if owner_repo == repo:
                 continue
@@ -161,6 +175,7 @@ def analyse(roots: dict[str, Path], reg: dict) -> dict:
         "undeclared": undeclared,
         "known_inversions": inversions,
         "declared_adapter_output": adapters,
+        "unknown_namespaces": {k: sorted(v) for k, v in sorted(unknown.items())},
         "ok": not undeclared,
     }
 
@@ -204,6 +219,14 @@ def main() -> int:
         print("then declare it in registry/schema_namespaces.yaml with evidence.")
         print("Do NOT classify from the name pattern alone.")
         return 1
+
+    if report["unknown_namespaces"]:
+        print(f"\nnamespaces with no declared owner ({len(report['unknown_namespaces'])}) -- "
+              f"emissions under these are NOT checked:")
+        for ns, repos in report["unknown_namespaces"].items():
+            print(f"  {ns:<24} emitted by {repos}")
+        print("Add each to `owners:` (or `shared:`) in registry/schema_namespaces.yaml.")
+        print("This is reported, not failed: an unowned namespace may be legitimate.")
 
     print("\nok: every cross-owner emission is declared")
     return 0

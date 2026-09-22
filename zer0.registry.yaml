@@ -547,7 +547,7 @@ interfaces:
     class: contract
     owner: tokenomics
     harness: null
-  z0evals.study.v1:
+  z0eval.study.v1:
     class: contract
     owner: z0evals
     harness: null
