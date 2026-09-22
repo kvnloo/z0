@@ -49,6 +49,11 @@ graph TD
   openjev[/"OpenJev (alias)<br/><i>reference</i>"/]
   hermes_k8s_lab[/"hermes-k8s-lab<br/><i>reference</i>"/]
   k8s_maintainer[/"k8s-maintainer<br/><i>reference</i>"/]
+  zer0_harness_spine[/"zer0-harness-spine (company-OS generation)<br/><i>reference</i>"/]
+  zer0_pm_company_os[/"zer0-pm (company-OS generation)<br/><i>reference</i>"/]
+  zer0_cockpit[/"zer0-cockpit (company-OS generation)<br/><i>reference</i>"/]
+  zer0_voice[/"zer0-voice (company-OS generation)<br/><i>reference</i>"/]
+  pm_integration_mono[/"voice-canvas-pm-monorepo (integration workspace)<br/><i>reference</i>"/]
   aodl__intent__v1{"aodl.intent.v1"}
   cu__stage_intent__v0{"cu.stage_intent.v0"}
   omp__session__aggregate{"omp.session.aggregate"}
@@ -115,6 +120,11 @@ graph TD
   z0 -- legacy_of --> openjev
   z0 -- reference_to --> hermes_k8s_lab
   z0 -- reference_to --> k8s_maintainer
+  z0 -- reference_to --> zer0_harness_spine
+  z0 -- reference_to --> zer0_pm_company_os
+  z0 -- reference_to --> zer0_cockpit
+  z0 -- reference_to --> zer0_voice
+  z0 -- reference_to --> pm_integration_mono
   z0intelligence -- discovers_from --> huggingface
   kerdoios -- discovers_from --> vllm
   kerdoios -- discovers_from --> ollama
@@ -134,7 +144,7 @@ graph TD
   classDef source fill:#fff3e0,stroke:#ef6c00;
   classDef contract fill:#f3e5f5,stroke:#6a1b9a;
   classDef reference fill:#eceff1,stroke:#546e7a,stroke-dasharray: 4 2;
-  class blueprint,solarpunk,openjev,hermes_k8s_lab,k8s_maintainer reference;
+  class blueprint,solarpunk,openjev,hermes_k8s_lab,k8s_maintainer,zer0_harness_spine,zer0_pm_company_os,zer0_cockpit,zer0_voice,pm_integration_mono reference;
   class z0,z0archy,aodl,z0intelligence,tokenomics,kerdoios,evolution_lab,z0evals,frontier_kb,dash,ripple,flow,hermes_keel,hermes_mesh_keel,hermes_jev_skills,kvnloo_skills,rlm,sol_pi_omp,sol_pi_hermes,verified_oss_loop,hermes_agent_cluster owned;
   class oh_my_pi,deepseek_harness,hermes_agent,sol_pi,o8,firstmate,agenttrace,NanoJev,laya,laya_coreml,laya_mlx,jev_ultrafast,memento upstream;
   class huggingface,vllm,ollama,litellm,openrouter,opentelemetry,groq,cerebras,nous,vercel,xai source;

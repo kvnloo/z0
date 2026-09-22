@@ -71,7 +71,12 @@
       "hermes-k8s-lab",
       "k8s-maintainer",
       "openjev",
-      "solarpunk"
+      "pm-integration-mono",
+      "solarpunk",
+      "zer0-cockpit",
+      "zer0-harness-spine",
+      "zer0-pm-company-os",
+      "zer0-voice"
     ]
   },
   "components": {
@@ -1551,6 +1556,74 @@
         "k8s substrate"
       ],
       "note": "Name collision, not a substrate. The name reads as cluster infrastructure; it triages upstream Kubernetes issues. Recorded so the collision stops being rediscovered, and so it is not mistaken for hermes-k8s-lab.\n"
+    },
+    "zer0-harness-spine": {
+      "name": "zer0-harness-spine (company-OS generation)",
+      "repo": "kvnloo/zer0-harness-spine",
+      "class": "reference_only",
+      "kind": "parallel_architecture",
+      "relationship": "reference_to",
+      "summary": "Ultra-thin contracts and harness/provider adapters for the \"company OS\" generation: `contracts/{event,service-handshake,committed-voice-turn}`, `adapters/{codex,llm,voice_pm,voice_canvas,google_meet,tldraw}`. Its three schemas use `https://zer0.local/contracts/...` ids, not the `<owner>.<thing>.v<major>` convention, and none is registered as an interface here because nothing outside this generation consumes them.\n",
+      "not_here": [
+        "current Zer0 contracts",
+        "provider selection",
+        "orchestration policy"
+      ],
+      "note": "The contract/provider overlap is the reason this entry exists. `providers` and `events` are declared module owners here, while this registry assigns provider identity to DSH's `llm-pi-ai` catalog, selection to z0intelligence, and measurement events to Tokenomics.\n"
+    },
+    "zer0-pm-company-os": {
+      "name": "zer0-pm (company-OS generation)",
+      "repo": "kvnloo/zer0-pm",
+      "class": "reference_only",
+      "kind": "parallel_architecture",
+      "relationship": "reference_to",
+      "summary": "\"Deterministic issue graph, ledger, fleet scheduler and benchmarks\" for the company-OS generation. The composition root is `kvnloo/pm`, which holds `architecture/nanoservices.json`.\n",
+      "not_here": [
+        "Kerdoios placement and quota",
+        "Tokenomics measurement ledger"
+      ],
+      "note": "Declared here rather than as `pm` to avoid colliding with the integration monorepo of the same short name. GitHub resolves `kvnloo/zer0-pm` to a repository whose display name is `_pm`.\n"
+    },
+    "zer0-cockpit": {
+      "name": "zer0-cockpit (company-OS generation)",
+      "repo": "kvnloo/zer0-cockpit",
+      "class": "reference_only",
+      "kind": "parallel_architecture",
+      "relationship": "reference_to",
+      "summary": "\"tmux/TUI projections and interaction only; never owns business state.\"\n",
+      "not_here": [
+        "authoritative issue state",
+        "agent scheduling",
+        "current dashboards"
+      ],
+      "note": "The declared shape -- a projection that owns no state -- is the same discipline `dash` and `z0archy` follow against this registry.\n"
+    },
+    "zer0-voice": {
+      "name": "zer0-voice (company-OS generation)",
+      "repo": "kvnloo/zer0-voice",
+      "class": "reference_only",
+      "kind": "parallel_architecture",
+      "relationship": "reference_to",
+      "summary": "\"Continuous ASR, turn ownership, harness conversation and TTS\", with `control_plane.py`, `budget.py`, `canary.py` and a candidate-service.\n",
+      "not_here": [
+        "issue state",
+        "cockpit rendering",
+        "harness protocol implementations"
+      ],
+      "note": "The only capability in either architecture with NO registered counterpart: this registry has no speech or audio surface at all. Also the largest local working tree of the generation (23 dirty files), and its `known_migration_edge` -- `voice/duplex.py` and `voice/workspace_router.py` still assemble `sys.path` instead of importing an installable spine package -- is the migration the split never finished.\n"
+    },
+    "pm-integration-mono": {
+      "name": "voice-canvas-pm-monorepo (integration workspace)",
+      "repo": "kvnloo/pm",
+      "class": "reference_only",
+      "kind": "parallel_architecture",
+      "relationship": "reference_to",
+      "summary": "The composition root the four services were extracted from. Holds `architecture/` (the second machine-readable architecture inventory), `ops/extract.py` (the extraction tool) and `publish/` (one PUBLISHING.md per extracted repo). PRIVATE on GitHub.\n",
+      "not_here": [
+        "current Zer0 architecture",
+        "runtime"
+      ],
+      "note": "Listed so the second architecture inventory is findable from this registry. `PUBLISHING.md` orders extraction to \"delete extracted paths from the integration repository only after every review branch reproduces the end-to-end canary\" -- that step never ran, which is why the monorepo and all four extractions still exist side by side.\n"
     }
   },
   "interfaces": {
@@ -2103,6 +2176,31 @@
       "from": "z0",
       "type": "reference_to",
       "to": "k8s-maintainer"
+    },
+    {
+      "from": "z0",
+      "type": "reference_to",
+      "to": "zer0-harness-spine"
+    },
+    {
+      "from": "z0",
+      "type": "reference_to",
+      "to": "zer0-pm-company-os"
+    },
+    {
+      "from": "z0",
+      "type": "reference_to",
+      "to": "zer0-cockpit"
+    },
+    {
+      "from": "z0",
+      "type": "reference_to",
+      "to": "zer0-voice"
+    },
+    {
+      "from": "z0",
+      "type": "reference_to",
+      "to": "pm-integration-mono"
     },
     {
       "from": "z0intelligence",

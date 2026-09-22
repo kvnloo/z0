@@ -68,7 +68,7 @@ entities:
       `openjev` as an independent component with repo kvnloo/openjev.
 
   - id: openjev
-    kind: legacy_or_donor
+    kind: reference_only
     repo: kvnloo/openjev
     plane: cognition
     owns: []
@@ -370,7 +370,7 @@ entities:
       The stale description is itself a finding.
 
   - id: solarpunk
-    kind: legacy_or_donor
+    kind: reference_only
     repo: kvnloo/solarpunk
     plane: legacy
     relationship: legacy_of
@@ -526,7 +526,7 @@ entities:
   # event that would unblock registering them properly.
 
   - id: hermes-k8s-lab
-    kind: owned_component
+    kind: reference_only
     local_path: ~/zer0/oss/hermes-k8s-lab
     plane: execution
     owns: [kubernetes substrate templates, CPU service workloads, GPU pools scaled to zero]
@@ -541,7 +541,7 @@ entities:
       offers already flow through Kerdoios' kubernetes provider.
 
   - id: k8s-maintainer
-    kind: owned_component
+    kind: reference_only
     local_path: ~/zer0/oss/k8s-maintainer
     plane: execution
     owns: [upstream Kubernetes-project issue triage]
@@ -552,3 +552,69 @@ entities:
       Name collision, not a substrate: this triages upstream Kubernetes project
       issues and does not operate the Zer0 cluster. Recorded so the name does not
       keep being read as cluster infrastructure.
+
+  # ---- the "company OS" generation ----------------------------------------
+  # A SECOND architecture that the registry did not know about, found by the
+  # local-checkout census. `products/pm/architecture/nanoservices.json` declares
+  # its own machine-readable inventory (schema 1, protocol `zer0.local` v1, five
+  # services) and shares ZERO ids with this registry. Nothing in the current
+  # stack consumes it; the split stalled on 2026-07-26.
+  #
+  # Declared here as well as in `registry/upstreams.yaml` because the registry
+  # and the swept universe must name the same entities -- `registry-check` fails
+  # in both directions if they drift.
+
+  - id: zer0-harness-spine
+    kind: reference_only
+    repo: kvnloo/zer0-harness-spine
+    plane: contracts
+    owns: [company-OS event schema, service handshake, provider and Codex adapters]
+    not_here: [current Zer0 contracts, provider selection, orchestration policy]
+    expected_status: merged
+    capability_ref: {kind: default}
+    note: >
+      Contract and provider overlap with the current stack is set out in
+      registry/upstreams.yaml; recorded so it stops being rediscovered.
+
+  - id: zer0-pm-company-os
+    kind: reference_only
+    repo: kvnloo/zer0-pm
+    plane: execution
+    owns: [company-OS issue graph, event ledger, fleet scheduler, benchmarks]
+    not_here: [Kerdoios placement and quota, Tokenomics measurement ledger]
+    expected_status: merged
+    capability_ref: {kind: default}
+
+  - id: zer0-cockpit
+    kind: reference_only
+    repo: kvnloo/zer0-cockpit
+    plane: interface
+    owns: [company-OS tmux/TUI projections and typed commands]
+    not_here: [authoritative issue state, agent scheduling, current dashboards]
+    expected_status: merged
+    capability_ref: {kind: default}
+
+  - id: zer0-voice
+    kind: reference_only
+    repo: kvnloo/zer0-voice
+    plane: interface
+    owns: [continuous ASR, turn ownership, harness conversation, TTS]
+    not_here: [issue state, cockpit rendering, harness protocol implementations]
+    expected_status: merged
+    capability_ref: {kind: default}
+    note: >
+      The only capability in either architecture with no registered counterpart:
+      this registry has no speech or audio surface.
+
+  - id: pm-integration-mono
+    kind: reference_only
+    repo: kvnloo/pm
+    plane: architecture
+    owns: [company-OS composition root, second architecture inventory, extraction tooling]
+    not_here: [current Zer0 architecture, runtime]
+    expected_status: merged
+    capability_ref: {kind: default}
+    note: >
+      Private on GitHub (display name voice-canvas-pm-monorepo). Holds
+      architecture/nanoservices.json -- the second machine-readable architecture
+      inventory.
