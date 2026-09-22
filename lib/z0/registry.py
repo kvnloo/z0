@@ -58,6 +58,10 @@ def evidence_dependencies() -> dict[str, dict[str, Any]]:
     return _load("evidence_dependencies.yaml").get("evidence_dependencies", {})
 
 
+def suite() -> dict[str, dict[str, Any]]:
+    return _load("suite.yaml").get("repositories", {})
+
+
 def resolve_profile(name: str) -> list[str]:
     """Expand profile + extends chain into ordered component ids."""
     profs = profiles()
