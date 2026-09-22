@@ -113,3 +113,83 @@ representations:
     interface: tokenomics.event.v0
     evidence:
       - registry/interfaces.yaml#interfaces.tokenomics.event.v0
+
+  lossless-context-node:
+    name: Lossless context DAG node
+    kind: memory
+    scale: bounded
+    summary: Recoverable raw-message or hierarchical summary node with explicit source lineage and drill-down.
+    sensitivity: inherited
+    produced_by: [hermes-lossless-context-dag]
+    evidence:
+      - registry/mechanisms.yaml#mechanisms.hermes-lossless-context-dag
+
+  signed-mesh-intent:
+    name: Signed Mesh intent
+    kind: intent
+    scale: compact
+    summary: Versioned bounded execution intent carrying task revision, capability/policy hashes, privacy class, replay controls, and signature.
+    sensitivity: inherited
+    produced_by: [mesh-signed-intent-transport]
+    evidence:
+      - registry/mechanisms.yaml#mechanisms.mesh-signed-intent-transport
+
+  privilege-grant:
+    name: Privilege grant
+    kind: authorization
+    scale: tiny
+    summary: One-use monotonic-TTL authorization bound to an immutable approved privileged-operation digest.
+    sensitivity: private
+    produced_by: [split-authority-privilege-broker]
+    evidence:
+      - registry/mechanisms.yaml#mechanisms.split-authority-privilege-broker
+
+  model-passport:
+    name: Model passport
+    kind: metadata
+    scale: small
+    summary: Portable descriptor separating maker, canonical model identity, verified capabilities/lifecycle, and serving route.
+    sensitivity: public
+    produced_by: [model-passport-identity]
+    evidence:
+      - registry/mechanisms.yaml#mechanisms.model-passport-identity
+
+  evaluation-artifact:
+    name: Frozen evaluation artifact
+    kind: evidence
+    scale: bounded
+    summary: Pinned reproducible study data, analysis, figure, or report whose public claim resolves to frozen evidence.
+    sensitivity: public
+    produced_by: [frozen-eval-publication]
+    evidence:
+      - registry/mechanisms.yaml#mechanisms.frozen-eval-publication
+
+  architecture-snapshot:
+    name: Architecture snapshot
+    kind: world_state
+    scale: large
+    summary: Content-addressed semantic architecture state that can be replayed, compared, or forked without mutating canonical truth.
+    sensitivity: public
+    produced_by: [z0archy-history-fork-diff]
+    evidence:
+      - registry/mechanisms.yaml#mechanisms.z0archy-history-fork-diff
+
+  semantic-compression-receipt:
+    name: Semantic compression receipt
+    kind: evidence_bundle
+    scale: compact
+    summary: Audit of a compressed architecture view recording retained/hidden structure, cut relations, provenance, and high-relevance omissions.
+    sensitivity: inherited
+    produced_by: [z0archy-semantic-compression]
+    evidence:
+      - registry/mechanisms.yaml#mechanisms.z0archy-semantic-compression
+
+  hierarchy-proposal:
+    name: Architecture hierarchy proposal
+    kind: proposal
+    scale: compact
+    summary: Evidence-backed keep, merge, split, prune, or no-update suggestion derived from architecture history without changing canonical ontology.
+    sensitivity: public
+    produced_by: [z0archy-hierarchy-meta-learning]
+    evidence:
+      - registry/mechanisms.yaml#mechanisms.z0archy-hierarchy-meta-learning
