@@ -1,0 +1,130 @@
+# EvidenceDependency edges explain why a semantic relationship is believed.
+# Endpoint syntax is "<kind>:<id>" where kind is component, harness, mechanism,
+# interface, lifecycle, representation, or repo.
+#
+# These edges are deliberately epistemic. They do not replace ordinary dependency
+# or data-flow edges; they attach the retrieval recipe, invariants and invalidators
+# needed to verify a claim about the architecture.
+
+evidence_dependencies:
+  omp-rlm-context-spill:
+    from: component:oh-my-pi
+    to: mechanism:rlm-context-spill
+    relation: implements
+    required_evidence:
+      - kvnloo/oh-my-pi:README.md
+      - registry/components.yaml#components.oh-my-pi
+    invariants:
+      - Large context remains externally addressable rather than being irreversibly discarded.
+      - The coding-agent runtime remains authoritative for execution.
+    invalidators:
+      - RLM/context-spill implementation is removed from OMP.
+      - The mechanism moves to another authoritative runtime without the registry being updated.
+    retrieval:
+      fastest: repo-doc
+      fallback: source-search
+    confidence: declared
+    abstain_if:
+      - selected implementation ref cannot provide either architecture documentation or source evidence.
+
+  observation-pack-compresses-context:
+    from: representation:raw-context
+    to: representation:observation-pack
+    relation: compresses_to
+    via: mechanism:sol-pi-observation-pack
+    required_evidence:
+      - registry/mechanisms.yaml#mechanisms.sol-pi-observation-pack
+    invariants:
+      - Original observation remains exactly recallable through the stable handle.
+    invalidators:
+      - Compaction destroys exact recall.
+    retrieval:
+      fastest: registry
+      fallback: implementation-doc
+    confidence: declared
+
+  evidence-reducer-preserves-verifiability:
+    from: representation:raw-context
+    to: representation:evidence-receipt
+    relation: compresses_to
+    via: mechanism:sol-pi-evidence-reducer
+    required_evidence:
+      - registry/mechanisms.yaml#mechanisms.sol-pi-evidence-reducer
+    invariants:
+      - Compressed evidence remains quote-verifiable.
+      - Verification failure falls open rather than silently inventing evidence.
+    invalidators:
+      - Verification failure is accepted as valid compressed evidence.
+    retrieval:
+      fastest: implementation-doc
+      fallback: source-search
+    confidence: declared
+
+  aodl-intent-to-plan:
+    from: representation:aodl-intent
+    to: representation:compiled-plan
+    relation: compiles_to
+    via: mechanism:aodl-intent-plan-observed
+    required_evidence:
+      - registry/mechanisms.yaml#mechanisms.aodl-intent-plan-observed
+      - registry/interfaces.yaml#interfaces.aodl.intent.v1
+    invariants:
+      - Desired intent and runtime-safe plan remain distinguishable.
+    invalidators:
+      - Runtime executes an uncompiled intent while claiming compiled-plan semantics.
+    retrieval:
+      fastest: registry
+      fallback: implementation-doc
+    confidence: declared
+
+  plan-to-observed-topology:
+    from: representation:compiled-plan
+    to: representation:observed-topology
+    relation: observed_as
+    via: mechanism:aodl-intent-plan-observed
+    required_evidence:
+      - registry/mechanisms.yaml#mechanisms.aodl-intent-plan-observed
+      - registry/mechanisms.yaml#mechanisms.agenttrace-cross-harness-observation
+    invariants:
+      - Observed execution remains distinguishable from intended execution.
+      - Missing trace evidence is represented as missing, not synthesized.
+    invalidators:
+      - Observed topology is inferred without trace/runtime evidence and presented as fact.
+    retrieval:
+      fastest: trace
+      fallback: harness-log
+    confidence: declared
+
+  decision-state-to-receipt:
+    from: representation:compiled-decision-state
+    to: representation:decision-receipt
+    relation: decides_to
+    via: mechanism:jev-typed-decision
+    required_evidence:
+      - registry/mechanisms.yaml#mechanisms.jev-typed-decision
+      - registry/interfaces.yaml#interfaces.z0int.decision_receipt.v1
+    invariants:
+      - Decision space is explicit and bounded before typed scoring/readout.
+      - Receipt identifies enough context to audit the decision.
+    invalidators:
+      - Free-form generation substitutes for the bounded decision while retaining the same semantic label.
+    retrieval:
+      fastest: decision-receipt
+      fallback: implementation-doc
+    confidence: declared
+
+  execution-to-tokenomics:
+    from: representation:observed-topology
+    to: representation:tokenomics-event
+    relation: measured_as
+    required_evidence:
+      - registry/interfaces.yaml#interfaces.tokenomics.event.v0
+      - registry/mechanisms.yaml#mechanisms.agenttrace-cross-harness-observation
+    invariants:
+      - Cost/token/latency claims come from measurement evidence rather than architecture inference.
+    invalidators:
+      - Economic metrics are reconstructed solely from model/provider assumptions.
+    retrieval:
+      fastest: tokenomics-event
+      fallback: reconciliation-report
+    confidence: declared
