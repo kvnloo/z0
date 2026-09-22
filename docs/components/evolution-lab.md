@@ -21,11 +21,15 @@ Experiment execution: frozen grouped comparisons, training/search, and the QUALI
 - frozen grouped comparisons
 - training and search
 - qualification evidence
+- experiment search
+- autoresearch orchestration
 
 ## Explicitly does not own
 
 - activation/deployment state
 - publication of frozen studies
+- production runtime
+- personal traces
 
 ## Relationships
 

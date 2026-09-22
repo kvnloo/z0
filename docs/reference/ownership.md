@@ -5,27 +5,27 @@ Generated from each component's `owns` / `not_here` in
 
 | Component | Owns | Explicitly does not own |
 |-----------|------|--------------------------|
-| `aodl` | typed intent IR, compiled plan, observed state, harness catalog, mesh registry, fail-closed validation | model selection, routing policy, provider catalogs, runtime execution |
+| `aodl` | typed intent IR, compiled plan, observed state, harness catalog, mesh registry, fail-closed validation, typed intent/plan contracts | model selection, routing policy, provider catalogs, runtime execution, runtime implementation, provider execution |
 | `dash` | multi-harness phone control surface | execution, intent ownership |
-| `evolution-lab` | experiment execution, frozen grouped comparisons, training and search, qualification evidence | activation/deployment state, publication of frozen studies |
-| `flow` | predicted OS/context state | OMP coupling, training logic |
-| `frontier-kb` | public research evidence | architecture truth, runtime policy, private traces |
+| `evolution-lab` | experiment execution, frozen grouped comparisons, training and search, qualification evidence, experiment search, autoresearch orchestration | activation/deployment state, publication of frozen studies, production runtime, personal traces |
+| `flow` | predicted OS/context state, OS prediction, prepare, routine mining | OMP coupling, training logic, agent runtime, token accounting, training loops |
+| `frontier-kb` | public research evidence, research evidence, external references | architecture truth, runtime policy, private traces, private user traces, runtime code |
 | `hermes-agent-cluster` | agent worker fleet, worker leases and heartbeat, orphan rescheduling | resource placement (Kerdoios owns placement), provider and model inventory, capability trust, measurement |
 | `hermes-jev-skills` | Hermes Jev skills | decision ownership |
 | `hermes-keel` | Hermes execution kernel | harness catalog |
 | `hermes-mesh-keel` | signed transport, authorization | production activation |
-| `kerdoios` | resource inventory, hard constraint filtering, quota and capacity ledger, Pareto / portfolio allocation, reservations, placement | provider execution, generic model gateway, token measurement, routing policy |
+| `kerdoios` | resource inventory, hard constraint filtering, quota and capacity ledger, Pareto / portfolio allocation, reservations, placement, provider routing, allocation policy | provider execution, generic model gateway, token measurement, routing policy, agent runtime |
 | `kvnloo-skills` | personal Hermes skills | architecture |
 | `ripple` | ephemeral intent surface | AODL ownership, execution |
 | `rlm` | addressable evidence plane, evidence handles, context virtualization, selected retrieval | provider transport, canonical transcript |
 | `sol-pi-hermes` | Action Fusion, ObservationPack | canonical context plane |
 | `sol-pi-omp` | Action Fusion, ObservationPack | canonical context plane |
-| `tokenomics` | token/cost/latency semantics, verified outcome, context economics, experiment identity, receipt schema | OTel transport, provider catalogs, routing, execution |
+| `tokenomics` | token/cost/latency semantics, verified outcome, context economics, experiment identity, receipt schema, usage attribution, savings reports, reconciliation | OTel transport, provider catalogs, routing, execution, routing policy, provider execution, agent runtime |
 | `verified-oss-loop` | contribution and evidence governance | runtime |
 | `z0` | registry truth, profiles, generated architecture, install matrix, onboarding | runtime execution, provider catalogs, telemetry semantics |
 | `z0archy` | architecture visualization | registry truth |
 | `z0evals` | frozen studies, publication, immutable evidence | activated routing policy, training |
-| `z0intelligence` | semantic model selection, escalation policy, context resolution, DecisionBackend contracts, local SLM portfolio, cognition receipts, activation (shadow / canary / active) | provider daily-quota accounting, RPM/RPD/TPM/TPD, GPU and resource placement, token measurement |
+| `z0intelligence` | semantic model selection, escalation policy, context resolution, DecisionBackend contracts, local SLM portfolio, cognition receipts, activation (shadow / canary / active), personal policy, routine promotion, specialists | provider daily-quota accounting, RPM/RPD/TPM/TPD, GPU and resource placement, token measurement, coding agent runtime, OS prediction, measurement kernel |
 
 ## Promotion is three acts, not one
 

@@ -41,12 +41,47 @@ IMPLEMENTATION_STATUSES = {
 }
 
 
+class DuplicateKeyError(ValueError):
+    """A registry file declared the same key twice."""
+
+
+class _StrictLoader(yaml.SafeLoader):
+    """SafeLoader that refuses duplicate mapping keys.
+
+    `yaml.safe_load` silently keeps the LAST duplicate key. That turned a
+    malformed edit of components.yaml -- one that inserted a second `owns:` block
+    because it did not recognise the inline `owns: [a, b]` form -- into a file
+    that parsed cleanly while quietly discarding the new entries. A registry that
+    can silently drop facts is worse than one that fails to load.
+    """
+
+
+def _no_duplicate_keys(loader: "_StrictLoader", node: yaml.Node, deep: bool = False) -> Any:
+    mapping: dict[Any, Any] = {}
+    for key_node, value_node in node.value:
+        key = loader.construct_object(key_node, deep=deep)
+        if key in mapping:
+            raise DuplicateKeyError(
+                f"duplicate key {key!r} at line {key_node.start_mark.line + 1}"
+            )
+        mapping[key] = loader.construct_object(value_node, deep=deep)
+    return mapping
+
+
+_StrictLoader.add_constructor(
+    yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _no_duplicate_keys
+)
+
+
 def _load(name: str) -> dict[str, Any]:
     path = REGISTRY / name
     if not path.is_file():
         return {}
     with path.open(encoding="utf-8") as fh:
-        return yaml.safe_load(fh) or {}
+        try:
+            return yaml.load(fh, Loader=_StrictLoader) or {}
+        except DuplicateKeyError as exc:
+            raise DuplicateKeyError(f"{name}: {exc}") from exc
 
 
 def components() -> dict[str, dict[str, Any]]:

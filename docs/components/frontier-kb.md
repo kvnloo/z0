@@ -18,12 +18,16 @@ Cross-harness public research evidence. Research authority, not architecture tru
 ## Owns
 
 - public research evidence
+- research evidence
+- external references
 
 ## Explicitly does not own
 
 - architecture truth
 - runtime policy
 - private traces
+- private user traces
+- runtime code
 
 ## Relationships
 

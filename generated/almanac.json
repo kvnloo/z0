@@ -168,13 +168,16 @@
         "observed state",
         "harness catalog",
         "mesh registry",
-        "fail-closed validation"
+        "fail-closed validation",
+        "typed intent/plan contracts"
       ],
       "not_here": [
         "model selection",
         "routing policy",
         "provider catalogs",
-        "runtime execution"
+        "runtime execution",
+        "runtime implementation",
+        "provider execution"
       ],
       "relationships": [
         {
@@ -221,13 +224,19 @@
         "DecisionBackend contracts",
         "local SLM portfolio",
         "cognition receipts",
-        "activation (shadow / canary / active)"
+        "activation (shadow / canary / active)",
+        "personal policy",
+        "routine promotion",
+        "specialists"
       ],
       "not_here": [
         "provider daily-quota accounting",
         "RPM/RPD/TPM/TPD",
         "GPU and resource placement",
-        "token measurement"
+        "token measurement",
+        "coding agent runtime",
+        "OS prediction",
+        "measurement kernel"
       ],
       "relationships": [
         {
@@ -283,13 +292,19 @@
         "verified outcome",
         "context economics",
         "experiment identity",
-        "receipt schema"
+        "receipt schema",
+        "usage attribution",
+        "savings reports",
+        "reconciliation"
       ],
       "not_here": [
         "OTel transport",
         "provider catalogs",
         "routing",
-        "execution"
+        "execution",
+        "routing policy",
+        "provider execution",
+        "agent runtime"
       ],
       "relationships": [
         {
@@ -332,13 +347,16 @@
         "quota and capacity ledger",
         "Pareto / portfolio allocation",
         "reservations",
-        "placement"
+        "placement",
+        "provider routing",
+        "allocation policy"
       ],
       "not_here": [
         "provider execution",
         "generic model gateway",
         "token measurement",
-        "routing policy"
+        "routing policy",
+        "agent runtime"
       ],
       "relationships": [
         {
@@ -376,11 +394,15 @@
         "experiment execution",
         "frozen grouped comparisons",
         "training and search",
-        "qualification evidence"
+        "qualification evidence",
+        "experiment search",
+        "autoresearch orchestration"
       ],
       "not_here": [
         "activation/deployment state",
-        "publication of frozen studies"
+        "publication of frozen studies",
+        "production runtime",
+        "personal traces"
       ],
       "relationships": [
         {
@@ -457,12 +479,16 @@
       "owner": "Research",
       "summary": "Cross-harness public research evidence. Research authority, not architecture truth.\n",
       "owns": [
-        "public research evidence"
+        "public research evidence",
+        "research evidence",
+        "external references"
       ],
       "not_here": [
         "architecture truth",
         "runtime policy",
-        "private traces"
+        "private traces",
+        "private user traces",
+        "runtime code"
       ],
       "relationships": [
         {
@@ -574,11 +600,17 @@
       "owner": "Context",
       "summary": "Predicted OS/context state feeding z0intelligence and context compilation. Harness-neutral; the OMP coupling is incidental and must not become architectural.\n",
       "owns": [
-        "predicted OS/context state"
+        "predicted OS/context state",
+        "OS prediction",
+        "prepare",
+        "routine mining"
       ],
       "not_here": [
         "OMP coupling",
-        "training logic"
+        "training logic",
+        "agent runtime",
+        "token accounting",
+        "training loops"
       ],
       "relationships": [
         {

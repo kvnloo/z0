@@ -23,6 +23,8 @@ Resource placement: inventory, hard constraints, dimensional quota/capacity (RPM
 - Pareto / portfolio allocation
 - reservations
 - placement
+- provider routing
+- allocation policy
 
 ## Explicitly does not own
 
@@ -30,6 +32,7 @@ Resource placement: inventory, hard constraints, dimensional quota/capacity (RPM
 - generic model gateway
 - token measurement
 - routing policy
+- agent runtime
 
 ## Relationships
 

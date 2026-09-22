@@ -18,11 +18,17 @@ Predicted OS/context state feeding z0intelligence and context compilation. Harne
 ## Owns
 
 - predicted OS/context state
+- OS prediction
+- prepare
+- routine mining
 
 ## Explicitly does not own
 
 - OMP coupling
 - training logic
+- agent runtime
+- token accounting
+- training loops
 
 ## Relationships
 

@@ -24,6 +24,9 @@ The cognition plane: semantic model selection and escalation, context resolution
 - local SLM portfolio
 - cognition receipts
 - activation (shadow / canary / active)
+- personal policy
+- routine promotion
+- specialists
 
 ## Explicitly does not own
 
@@ -31,6 +34,9 @@ The cognition plane: semantic model selection and escalation, context resolution
 - RPM/RPD/TPM/TPD
 - GPU and resource placement
 - token measurement
+- coding agent runtime
+- OS prediction
+- measurement kernel
 
 ## Relationships
 

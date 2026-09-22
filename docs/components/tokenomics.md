@@ -22,6 +22,9 @@ Vendor-neutral measurement contracts: multi-harness traces, verified outcomes, c
 - context economics
 - experiment identity
 - receipt schema
+- usage attribution
+- savings reports
+- reconciliation
 
 ## Explicitly does not own
 
@@ -29,6 +32,9 @@ Vendor-neutral measurement contracts: multi-harness traces, verified outcomes, c
 - provider catalogs
 - routing
 - execution
+- routing policy
+- provider execution
+- agent runtime
 
 ## Relationships
 

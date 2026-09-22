@@ -89,7 +89,14 @@ components:
       - harness catalog
       - mesh registry
       - fail-closed validation
-    not_here: [model selection, routing policy, provider catalogs, runtime execution]
+      - typed intent/plan contracts
+    not_here:
+      - model selection
+      - routing policy
+      - provider catalogs
+      - runtime execution
+      - runtime implementation
+      - provider execution
     relationships:
       - {type: emits_contract, to: dash}
       - {type: emits_contract, to: ripple}
@@ -124,11 +131,17 @@ components:
       - local SLM portfolio
       - cognition receipts
       - activation (shadow / canary / active)
+      - personal policy
+      - routine promotion
+      - specialists
     not_here:
       - provider daily-quota accounting
       - RPM/RPD/TPM/TPD
       - GPU and resource placement
       - token measurement
+      - coding agent runtime
+      - OS prediction
+      - measurement kernel
     relationships:
       - {type: consumes_contract, to: aodl}
       - {type: consumes_contract, to: tokenomics}
@@ -163,7 +176,17 @@ components:
       - context economics
       - experiment identity
       - receipt schema
-    not_here: [OTel transport, provider catalogs, routing, execution]
+      - usage attribution
+      - savings reports
+      - reconciliation
+    not_here:
+      - OTel transport
+      - provider catalogs
+      - routing
+      - execution
+      - routing policy
+      - provider execution
+      - agent runtime
     relationships:
       - {type: measured_by, to: kerdoios}
     profiles: [core, personal, desktop, compute, research, full]
@@ -196,7 +219,14 @@ components:
       - Pareto / portfolio allocation
       - reservations
       - placement
-    not_here: [provider execution, generic model gateway, token measurement, routing policy]
+      - provider routing
+      - allocation policy
+    not_here:
+      - provider execution
+      - generic model gateway
+      - token measurement
+      - routing policy
+      - agent runtime
     relationships:
       - {type: consumes_contract, to: tokenomics}
     profiles: [compute, full]
@@ -226,7 +256,13 @@ components:
       - frozen grouped comparisons
       - training and search
       - qualification evidence
-    not_here: [activation/deployment state, publication of frozen studies]
+      - experiment search
+      - autoresearch orchestration
+    not_here:
+      - activation/deployment state
+      - publication of frozen studies
+      - production runtime
+      - personal traces
     relationships:
       - {type: qualifies, to: z0evals}
       - {type: trains_for, to: z0intelligence}
@@ -272,8 +308,16 @@ components:
     summary: >
       Cross-harness public research evidence. Research authority, not
       architecture truth.
-    owns: [public research evidence]
-    not_here: [architecture truth, runtime policy, private traces]
+    owns:
+      - public research evidence
+      - research evidence
+      - external references
+    not_here:
+      - architecture truth
+      - runtime policy
+      - private traces
+      - private user traces
+      - runtime code
     relationships:
       - {type: provides_research_evidence, to: aodl}
       - {type: provides_research_evidence, to: rlm}
@@ -335,8 +379,17 @@ components:
       Predicted OS/context state feeding z0intelligence and context compilation.
       Harness-neutral; the OMP coupling is incidental and must not become
       architectural.
-    owns: [predicted OS/context state]
-    not_here: [OMP coupling, training logic]
+    owns:
+      - predicted OS/context state
+      - OS prediction
+      - prepare
+      - routine mining
+    not_here:
+      - OMP coupling
+      - training logic
+      - agent runtime
+      - token accounting
+      - training loops
     relationships:
       - {type: emits_contract, to: z0intelligence}
     profiles: [desktop, full]

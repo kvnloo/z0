@@ -23,6 +23,7 @@ Typed intent IR, compiled plan and observed state with fail-closed validation. A
 - harness catalog
 - mesh registry
 - fail-closed validation
+- typed intent/plan contracts
 
 ## Explicitly does not own
 
@@ -30,6 +31,8 @@ Typed intent IR, compiled plan and observed state with fail-closed validation. A
 - routing policy
 - provider catalogs
 - runtime execution
+- runtime implementation
+- provider execution
 
 ## Relationships
 
