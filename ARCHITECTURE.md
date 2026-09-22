@@ -16,7 +16,7 @@
   - `evidence_dependencies.yaml`: epistemic edges with evidence recipes, invariants, invalidators and abstention rules
   - `suite.yaml`: repository surfaces, roles, authority and links into components/harnesses/mechanisms/lifecycles
   - `profiles.yaml`: installable component bundles
-- Optional per-repo `zer0.component.yaml` (future; central registry is source of truth today)
+- Optional per-repo `zer0.repo.yaml`: exact-ref implementation architecture (subsystems, paths, implemented mechanisms/interfaces/representations, boundaries, evidence). Central z0 remains authoritative for cross-system identity.
 - Local workspace state at `~/.z0/workspace.yaml`
 
 ## Outputs
@@ -42,7 +42,9 @@
 | Information representation identity | `z0` representation registry |
 | Cross-system evidence recipes / architectural claim invariants | `z0` evidence-dependency registry |
 | Suite repository membership and semantic role | `z0` suite registry |
-| Implementation | Each component repo |
+| Cross-system identity / relationship | `z0` registries |
+| Exact-ref implementation structure | Each repo's optional `zer0.repo.yaml` plus source tree |
+| Implementation | Each component/suite repo |
 | Research evidence | `frontier-kb` |
 | Private traces | `memento` / `z0intelligence` (not frontier-kb) |
 | Usage events | `tokenomics` |

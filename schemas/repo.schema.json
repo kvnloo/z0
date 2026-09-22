@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kvnloo/z0/schemas/repo.schema.json",
+  "title": "Zer0RepoArchitectureManifest",
+  "description": "Exact-ref implementation architecture declared by one repository. Canonical cross-system identity remains owned by kvnloo/z0.",
+  "type": "object",
+  "required": ["version", "repo", "kind", "architecture"],
+  "properties": {
+    "version": { "const": 1 },
+    "repo": {
+      "type": "string",
+      "pattern": "^[^/]+/[^/]+$"
+    },
+    "id": { "type": "string" },
+    "component": { "type": "string" },
+    "kind": {
+      "type": "string",
+      "enum": ["component", "suite", "extension", "substrate", "projection", "protocol", "research", "runtime"]
+    },
+    "summary": { "type": "string" },
+    "architecture": {
+      "type": "object",
+      "properties": {
+        "subsystems": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "kind", "paths"],
+            "properties": {
+              "id": { "type": "string" },
+              "name": { "type": "string" },
+              "kind": { "type": "string" },
+              "summary": { "type": "string" },
+              "paths": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string" }
+              },
+              "depends_on": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "implements_mechanisms": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "provides_interfaces": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "consumes_interfaces": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "produces_representations": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "consumes_representations": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "boundaries": {
+          "type": "object",
+          "properties": {
+            "owns": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "not_here": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          },
+          "additionalProperties": false
+        },
+        "evidence": {
+          "type": "object",
+          "properties": {
+            "docs": { "type": "array", "items": { "type": "string" } },
+            "tests": { "type": "array", "items": { "type": "string" } },
+            "schemas": { "type": "array", "items": { "type": "string" } }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}
