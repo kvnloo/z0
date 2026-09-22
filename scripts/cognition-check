@@ -115,21 +115,35 @@ def main() -> int:
     # 4. Duplication guard: ids known from the fixture and, when resolvable,
     #    from the real z0intelligence manifest must not appear anywhere in z0.
     real = cognition.load_manifest(allow_cli=True)
+    # The guard covers `known`. When the real manifest is unreachable, `known` is
+    # only the four SYNTHETIC fixture ids -- names that cannot appear in z0 by
+    # construction, so finding none of them proves nothing, while the docstring
+    # above claims this proves "no real model id leaked into z0's hand-written
+    # surface". That degradation used to be silent, with `ok: true`.
+    #
+    # It must not fail a build that CANNOT have the checkout: `docs-check` calls
+    # this script and CI runs `docs-check`, and z0's CI has no z0intelligence
+    # clone. So the two reasons are separated the way `reality-sweep` separates
+    # them -- a checkout that is HERE but unreadable is a fault; a checkout that
+    # is not here at all is a coverage limit, reported loudly and not failed.
+    guard_vacuous = real is None
     if real is None:
-        # This used to fall through to `known = fixture_ids` and report ok. The
-        # guard then scanned the four SYNTHETIC fixture ids -- names that cannot
-        # appear in z0 by construction, so finding none of them proves nothing --
-        # while the check's
-        # docstring claims it proves "no real model id leaked into z0's
-        # hand-written surface". A green result that cannot support its own claim
-        # is worse than a red one, so an unreachable manifest is now a failure.
-        problems.append(
-            "the duplication guard is VACUOUS: the canonical manifest did not resolve "
-            f"({cognition.CANONICAL_REPO}:{cognition.CANONICAL_MANIFEST}), so only the "
-            f"{len(fixture_ids)} synthetic fixture ids could be scanned. Supply it with "
-            "Z0INT_COGNITION_MANIFEST=<path>, Z0INTELLIGENCE_ROOT=<checkout>, "
-            "~/.z0/workspace.yaml, or Z0_SWEEP_ROOTS=<dirs> pointing at the checkout."
-        )
+        present = cognition.checkout_dirs()
+        if present:
+            problems.append(
+                f"the z0intelligence checkout at {present[0]} has no readable "
+                f"{cognition.CANONICAL_MANIFEST}, so the duplication guard cannot run. The "
+                "checkout is present, so this is a fault, not a coverage limit."
+            )
+        else:
+            print(
+                "WARNING: the duplication guard did NOT run. No z0intelligence checkout was "
+                f"found under {[str(r) for r in cognition._sibling_roots()]}, so only the "
+                f"{len(fixture_ids)} synthetic fixture ids were scanned and this run says "
+                "NOTHING about whether a real model id leaked into z0. Set Z0_SWEEP_ROOTS or "
+                "Z0INTELLIGENCE_ROOT to make the guard run.",
+                file=sys.stderr,
+            )
     known = set(fixture_ids) | set((real or {}).get("models") or {})
     for path in iter_files():
         if path == portfolio and not portfolio_text:
@@ -147,6 +161,7 @@ def main() -> int:
         "stages": len(stage_ids),
         "fixture_ids": fixture_ids,
         "real_manifest_resolved": real is not None,
+        "guard_vacuous": guard_vacuous,
         "known_ids_scanned": sorted(known),
         "problems": problems,
     }

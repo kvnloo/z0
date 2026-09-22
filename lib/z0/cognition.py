@@ -116,6 +116,32 @@ def _manifest_alias_names() -> list[str]:
     return sorted(names)
 
 
+def checkout_dirs() -> list[Path]:
+    """Directories that LOOK like a z0intelligence checkout: known name + `.git`.
+
+    Distinguishes the two reasons the manifest can be unreachable, which need
+    opposite answers:
+
+      * the checkout is here and the manifest is missing  -> a fault, fail
+      * the checkout is not here at all                   -> a coverage limit,
+                                                             say so loudly and
+                                                             do not fail a build
+                                                             that cannot have it
+
+    Same rule `scripts/reality-sweep` uses for a root that exists here versus one
+    this machine does not have.
+    """
+    out: list[Path] = []
+    for root in _sibling_roots():
+        if not root.is_dir():
+            continue
+        for name in _manifest_alias_names():
+            for candidate in (root / name, *sorted(root.glob(f"*/{name}"))):
+                if (candidate / ".git").exists() and candidate not in out:
+                    out.append(candidate)
+    return out
+
+
 def _sibling_roots() -> list[Path]:
     """Where sibling checkouts live, mirroring scripts/reality-sweep.
 
