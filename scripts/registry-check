@@ -4,11 +4,41 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 export PYTHONPATH="${ROOT}/lib${PYTHONPATH:+:$PYTHONPATH}"
 python3 - <<'PY'
 from z0 import registry
+
 comps = registry.components()
 profs = registry.profiles()
+harnesses = registry.harnesses()
+mechanisms = registry.mechanisms()
+lifecycles = registry.lifecycles()
+
 for name in profs:
     resolved = registry.resolve_profile(name)
     for cid in resolved:
-        assert cid in comps, f"profile {name} references unknown {cid}"
-print(f"ok: {len(comps)} components, {len(profs)} profiles")
+        assert cid in comps, f"profile {name} references unknown component {cid}"
+
+for hid, meta in harnesses.items():
+    component = meta.get("component")
+    if component:
+        assert component in comps, f"harness {hid} references unknown component {component}"
+
+for mid, meta in mechanisms.items():
+    for row in meta.get("implemented_by", []) or []:
+        component = row.get("component")
+        if component:
+            assert component in comps, f"mechanism {mid} references unknown component {component}"
+    for row in meta.get("implementations", []) or []:
+        harness = row.get("harness")
+        if harness:
+            assert harness in harnesses, f"mechanism {mid} references unknown harness {harness}"
+
+for lid, meta in lifecycles.items():
+    stages = meta.get("stages") or []
+    assert len(stages) == len(set(stages)), f"lifecycle {lid} has duplicate stages"
+    assert stages, f"lifecycle {lid} has no stages"
+
+print(
+    f"ok: {len(comps)} components, {len(profs)} profiles, "
+    f"{len(harnesses)} harnesses, {len(mechanisms)} mechanisms, "
+    f"{len(lifecycles)} lifecycles"
+)
 PY
