@@ -41,8 +41,26 @@ SOURCE_SUFFIXES = {".py", ".ts", ".tsx"}
 OUTPUT_DIRS = {"node_modules", ".venv", ".git", "__pycache__", "results",
                "site", "build", "dist", ".next", "out"}
 
-SCHEMA_LITERAL = re.compile(
-    r'["\']schema["\']\s*:\s*["\']([A-Za-z][A-Za-z0-9._-]*\.v[0-9]+[A-Za-z0-9._-]*)["\']'
+# A schema id is declared in more than one syntactic form, and matching only
+# the quoted-dict-key form hid a third of them:
+#
+#   "schema": "z0int.thing.v1"     dict key (quoted)      <- originally the only one
+#   schema: "z0int.thing.v1"       dict key (TS, unquoted)
+#   SCHEMA = "z0int.thing.v1"      module constant        <- invisible before
+#   schema="z0int.thing.v1"        keyword argument       <- invisible before
+#
+# Constants were the real gap: `export_z0int.py` and `l2_benchmark.py` both
+# declare `SCHEMA = "z0int...."`, so those ids never entered the register.
+#
+# Deliberately NOT a bare "any string that looks like an id" match: that flags
+# test assertions and docstrings which legitimately NAME a forbidden id in order
+# to assert its absence.
+_ID = r'([a-z][a-z0-9_-]*\.[a-z0-9._-]+\.v[0-9]+[a-z0-9._-]*)'
+SCHEMA_LITERAL_PATTERNS = (
+    re.compile(r'["\']schema["\']\s*:\s*["\']' + _ID + r'["\']'),
+    re.compile(r'\bschema\s*:\s*["\']' + _ID + r'["\']'),
+    re.compile(r'\b[A-Za-z_]*SCHEMA[A-Za-z_]*\s*=\s*["\']' + _ID + r'["\']'),
+    re.compile(r'\bschema\s*=\s*["\']' + _ID + r'["\']'),
 )
 
 # checkout directory basename -> repo id used in the registry
@@ -92,7 +110,8 @@ def emitted_ids(root: Path) -> set[str]:
             text = path.read_text(encoding="utf-8", errors="ignore")
         except OSError:
             continue
-        ids.update(m.group(1) for m in SCHEMA_LITERAL.finditer(text))
+        for pattern in SCHEMA_LITERAL_PATTERNS:
+            ids.update(m.group(1) for m in pattern.finditer(text))
     return ids
 
 

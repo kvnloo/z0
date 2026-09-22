@@ -138,6 +138,43 @@ cross_owner:
     namespace_owner: z0intelligence
     kind: inversion
     evidence: not present in z0intelligence src
+  # Found only after the checker was widened to see `SCHEMA = "..."` constants:
+  # evolution_lab/l2_benchmark.py and the tool-tournament modules declare their
+  # ids as module constants, not as `"schema":` dict keys, so the first version
+  # of this scan never saw them. Each was then grepped against z0intelligence --
+  # src, scripts AND tests -- and none appears there, so the owner neither
+  # defines nor consumes them.
+  - id: z0int.l2_benchmark.v1
+    emitted_by: evolution-lab
+    namespace_owner: z0intelligence
+    kind: inversion
+    evidence: not present in z0intelligence src/scripts/tests
+  - id: z0int.local_tool_tournament.v1
+    emitted_by: evolution-lab
+    namespace_owner: z0intelligence
+    kind: inversion
+    evidence: not present in z0intelligence src/scripts/tests
+  - id: z0int.local_tool_tournament.pareto.v1
+    emitted_by: evolution-lab
+    namespace_owner: z0intelligence
+    kind: inversion
+    evidence: not present in z0intelligence src/scripts/tests
+  - id: z0int.tool_tournament.fixtures.v1
+    emitted_by: evolution-lab
+    namespace_owner: z0intelligence
+    kind: inversion
+    evidence: not present in z0intelligence src/scripts/tests
+  - id: z0int.tool_tournament.row.v1
+    emitted_by: evolution-lab
+    namespace_owner: z0intelligence
+    kind: inversion
+    evidence: not present in z0intelligence src/scripts/tests
+  - id: z0int.tool_tournament_split.v1
+    emitted_by: evolution-lab
+    namespace_owner: z0intelligence
+    kind: inversion
+    evidence: not present in z0intelligence src/scripts/tests
+
   - id: tokenomics.receipt.v1
     emitted_by: kerdoios
     namespace_owner: tokenomics
