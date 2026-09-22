@@ -117,3 +117,95 @@ sources:
     note: >
       OTel remains the TRANSPORT. Tokenomics owns Zer0-specific semantics and
       must not reimplement OTel.
+
+  # --- remote inference providers -------------------------------------------
+  # Registered 2026-09-22. Before this, only `openrouter` was a declared
+  # source, so four providers the stack already routes to were invisible to the
+  # registry. Credential state is recorded as an observation, not as a
+  # capability: a provider with no usable credential is `unavailable` for
+  # availability purposes even though its catalog is reachable.
+
+  groq:
+    name: Groq
+    kind: provider_catalog
+    authority:
+      surface: Groq API /openai/v1/models
+    relationship: discovers_from
+    discovers: [served model ids, context window, model capability limits]
+    cache_policy: derived
+    cache_ttl: 24h
+    owns: [served model inventory, per-model rate limits]
+    does_not_own: [Zer0 model selection, quota accounting, placement]
+    consumed_by: [kerdoios, z0intelligence]
+    note: >
+      Reachable and authenticated when a key is present. Provider-side rate
+      limits (requests/day, tokens/day) are discovered, never assumed: they are
+      per-account facts, so they must be read from the API rather than
+      hardcoded.
+
+  cerebras:
+    name: Cerebras
+    kind: provider_catalog
+    authority:
+      surface: Cerebras Cloud API /v1/models
+    relationship: discovers_from
+    discovers: [served model ids, context window, rate-limit headers]
+    cache_policy: derived
+    cache_ttl: 24h
+    owns: [served model inventory, per-model rate limits]
+    does_not_own: [Zer0 model selection, quota accounting, placement]
+    consumed_by: [kerdoios, z0intelligence]
+    note: >
+      Same contract as Groq. Note that rate-limit dimensions are not always
+      self-consistent (a `remaining` value has been observed exceeding its own
+      `limit`), so a consumer must not treat a single dimension as authoritative.
+
+  nous:
+    name: Nous Portal
+    kind: provider_catalog
+    authority:
+      surface: Nous Portal API
+    relationship: discovers_from
+    discovers: [served model ids, account entitlement state]
+    cache_policy: derived
+    cache_ttl: 24h
+    owns: [served model inventory, account entitlement]
+    does_not_own: [Zer0 model selection, quota accounting, placement]
+    consumed_by: [kerdoios]
+    note: >
+      Catalog reachable; credentials currently require re-login, so availability
+      is `unavailable` until a usable credential exists. A reachable catalog is
+      not an available provider.
+
+  vercel:
+    name: Vercel AI Gateway
+    kind: provider_catalog
+    authority:
+      surface: Vercel AI Gateway /v1/models
+    relationship: discovers_from
+    discovers: [served model ids, gateway routing metadata]
+    cache_policy: derived
+    cache_ttl: 24h
+    owns: [served model inventory]
+    does_not_own: [Zer0 model selection, quota accounting, placement]
+    consumed_by: [kerdoios]
+    note: >
+      Account-wide 403 ("requires a valid credit card on file"). A gateway model
+      listed as "zero-cost metadata" is NOT thereby available; a catalog name
+      cannot confer availability.
+
+  xai:
+    name: xAI
+    kind: provider_catalog
+    authority:
+      surface: xAI API /v1/models
+    relationship: discovers_from
+    discovers: [served model ids]
+    cache_policy: derived
+    cache_ttl: 24h
+    owns: [served model inventory]
+    does_not_own: [Zer0 model selection, quota accounting, placement]
+    consumed_by: [kerdoios]
+    note: >
+      Credential requires re-login; availability is `unavailable`. Any use must
+      be economically justified against the free providers first.

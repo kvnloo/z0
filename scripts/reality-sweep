@@ -53,16 +53,20 @@ ENTITIES = ROOT / "audit" / "entities.yaml"
 LEDGER = ROOT / "audit" / "reality-ledger.json"
 
 # Roots scanned for local checkouts. Derived from $HOME so the script is not
-# tied to one machine; Z0_SWEEP_ROOTS (os.pathsep-separated) extends or replaces
-# them. Only repos with a github.com origin are recorded.
-LOCAL_ROOTS = [
-    p for p in (
-        os.environ.get("Z0_SWEEP_ROOTS", "").split(os.pathsep)
-        or [os.path.join(HOME, "tmp"),
-            os.path.join(HOME, "zer0"),
-            os.path.join(HOME, "src"),
-            os.path.join(HOME, "repos")]
-    ) if p
+# tied to one machine; Z0_SWEEP_ROOTS (os.pathsep-separated) replaces them.
+# Only repos with a github.com origin are recorded.
+#
+# The override is filtered to non-empty entries BEFORE the fallback is chosen.
+# `"".split(os.pathsep)` is `['']`, which is truthy, so testing the split
+# directly made the $HOME defaults unreachable whenever the variable was unset
+# -- the sweep then silently ran with zero roots and reported no local evidence
+# at all while still printing a clean "0 mismatches".
+_root_override = [p for p in os.environ.get("Z0_SWEEP_ROOTS", "").split(os.pathsep) if p]
+LOCAL_ROOTS = _root_override or [
+    os.path.join(HOME, "tmp"),
+    os.path.join(HOME, "zer0"),
+    os.path.join(HOME, "src"),
+    os.path.join(HOME, "repos"),
 ]
 
 STATUSES = [

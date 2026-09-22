@@ -11,6 +11,7 @@ whether it *runs*. `tested_ref` is the last validated install ref — a stale
 | `evolution-lab` | Evolution Lab | evaluation | branch_only / experimental | `kvnloo/evolution-lab` | `—` |
 | `flow` | Flow | context | merged / experimental | `kvnloo/.files` | `bb5c0ea` |
 | `frontier-kb` | Frontier KB | research | merged / live | `kvnloo/frontier-kb` | `22b4c0f` |
+| `hermes-agent-cluster` | Hermes Agent Cluster | execution | merged / experimental | `kvnloo/hermes-agent-cluster` | `—` |
 | `hermes-jev-skills` | Hermes Jev Skills | cognition | branch_only / experimental | `kvnloo/hermes-jev-skills` | `—` |
 | `hermes-keel` | Hermes Keel | execution | merged / experimental | `kvnloo/hermes-keel` | `7f6d84b` |
 | `hermes-mesh-keel` | Hermes Mesh Keel | execution | merged / pre_activation | `kvnloo/hermes-mesh-keel` | `6b4e8d0` |

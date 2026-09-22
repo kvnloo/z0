@@ -23,6 +23,7 @@ components.
 | `evolution-lab` |  |  |  |  |  |  | yes | yes |
 | `flow` |  |  |  | yes |  |  |  | yes |
 | `frontier-kb` |  |  |  |  |  |  | yes | yes |
+| `hermes-agent-cluster` |  |  |  |  |  |  |  |  |
 | `hermes-jev-skills` |  |  |  |  |  |  |  | yes |
 | `hermes-keel` |  |  |  |  |  |  |  | yes |
 | `hermes-mesh-keel` |  |  |  |  |  |  |  |  |

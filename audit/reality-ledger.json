@@ -1,6 +1,6 @@
 {
   "schema": "z0.reality-ledger.v1",
-  "generated_at": "2026-09-21T22:21:36.759592+00:00",
+  "generated_at": "2026-09-22T06:47:49.796666+00:00",
   "generated_by": "scripts/reality-sweep",
   "statuses": [
     "merged",
@@ -15,9 +15,9 @@
     "unknown"
   ],
   "counts": {
-    "merged": 18,
+    "merged": 19,
     "superseded": 1,
-    "external_upstream": 19,
+    "external_upstream": 24,
     "branch_only": 3,
     "open_pr": 1
   },
@@ -50,12 +50,12 @@
           "archived": false,
           "private": false,
           "default_branch": "main",
-          "pushed_at": "2026-09-21T03:40:00Z",
+          "pushed_at": "2026-09-22T05:00:20Z",
           "description": "Early public scaffold for a Zer0-related experiment (placeholder repo).",
           "upstream": null,
           "open_issues": 5,
-          "head_sha": "3804bc71a84cc93cabeba0f873a20b2cc187e3dd",
-          "head_date": "2026-09-18T23:22:47Z",
+          "head_sha": "7500ff879f4739c9b5ed349f3a9f111b9c8dac23",
+          "head_date": "2026-09-22T05:00:20Z",
           "open_prs": {
             "count": 2,
             "sample": [
@@ -79,9 +79,11 @@
           "open_pr_count": 2,
           "open_pr_bot_count": 0,
           "remote_branches": {
-            "count": 3,
+            "count": 5,
             "sample": [
               "docs/jev-evaluation-plane-20260920",
+              "feat/evidence-information-plane",
+              "feat/semantic-architecture-ontology",
               "fix/registry-truth-phase0-20260920",
               "main"
             ],
@@ -103,10 +105,10 @@
             {
               "path": "~/tmp/z0",
               "branch": "audit/current-state-reality-ledger",
-              "head": "cbb38a2a18b0899e546fa3cd010c738e26acacc4",
+              "head": "b52760e0db34ebce462751deabdbca2ddd265f0e",
               "dirty": true,
-              "dirty_files": 3,
-              "last_commit": "2026-09-21T17:18:15-05:00",
+              "dirty_files": 6,
+              "last_commit": "2026-09-21T17:34:56-05:00",
               "worktrees": {
                 "count": 1,
                 "sample": [
@@ -129,7 +131,7 @@
         "status": "merged",
         "evidence": [
           "local checkout(s): ~/tmp/z0@audit/current-state-reality-ledger (dirty)",
-          "capability claimed on default branch 'main' head=3804bc71a8 (2026-09-18)"
+          "capability claimed on default branch 'main' head=7500ff879f (2026-09-22)"
         ],
         "resolution": {
           "ref": {
@@ -190,23 +192,42 @@
           "archived": false,
           "private": false,
           "default_branch": "main",
-          "pushed_at": "2026-09-21T22:19:05Z",
+          "pushed_at": "2026-09-22T05:38:56Z",
           "description": "",
           "upstream": null,
-          "open_issues": 0,
-          "head_sha": "41c39153666ac7a2f37ff3c23ce032172849a88d",
-          "head_date": "2026-09-21T22:19:05Z",
+          "open_issues": 1,
+          "head_sha": "6ab142f8c06f43109abb1e5b4e9aad4deb64d997",
+          "head_date": "2026-09-22T05:37:54Z",
           "open_prs": {
-            "count": 0,
-            "sample": [],
+            "count": 1,
+            "sample": [
+              {
+                "number": 5,
+                "title": "feat: compile information plane and evidence dependencies",
+                "head": "feat/evidence-information-plane",
+                "base": "main",
+                "draft": false
+              }
+            ],
             "truncated": 0
           },
-          "open_pr_count": 0,
+          "open_pr_count": 1,
           "open_pr_bot_count": 0,
           "remote_branches": {
-            "count": 4,
+            "count": 15,
             "sample": [
+              "feat/activegraph-history",
+              "feat/dynamic-mocs",
+              "feat/epistemic-world-model",
+              "feat/evidence-dependency",
+              "feat/evidence-information-plane",
+              "feat/history-browser",
+              "feat/lenses-and-lint",
               "feat/live-graph-sources",
+              "feat/ref-matrix",
+              "feat/semantic-source-compiler",
+              "feat/semantic-zoom",
+              "feat/tokenomics-overlay",
               "fix/pages-after-enablement",
               "fix/pages-preflight",
               "main"
@@ -215,27 +236,62 @@
           }
         },
         "local_checkouts": {
-          "count": 0,
+          "count": 1,
           "dirty_count": 0,
-          "clean_on_default_count": 0,
+          "clean_on_default_count": 1,
           "paths": {
-            "count": 0,
-            "sample": [],
+            "count": 1,
+            "sample": [
+              "~/tmp/z0archy"
+            ],
             "truncated": 0
           },
-          "sample": []
+          "sample": [
+            {
+              "path": "~/tmp/z0archy",
+              "branch": "main",
+              "head": "6ab142f8c06f43109abb1e5b4e9aad4deb64d997",
+              "dirty": false,
+              "dirty_files": 0,
+              "last_commit": "2026-09-22T00:37:54-05:00",
+              "worktrees": {
+                "count": 1,
+                "sample": [
+                  "~/tmp/z0archy"
+                ],
+                "truncated": 0
+              },
+              "local_branches": {
+                "count": 1,
+                "sample": [
+                  "main"
+                ],
+                "truncated": 0
+              }
+            }
+          ]
         },
         "status": "merged",
         "evidence": [
-          "no local checkout on this machine",
-          "capability claimed on default branch 'main' head=41c3915366 (2026-09-21)"
+          "local checkout(s): ~/tmp/z0archy@main",
+          "capability claimed on default branch 'main' head=6ab142f8c0 (2026-09-22)"
         ],
         "resolution": {
           "ref": {
             "kind": "default"
           }
         },
-        "stranded_work": []
+        "stranded_work": [
+          {
+            "kind": "pr",
+            "ref": "#5",
+            "head": "feat/evidence-information-plane",
+            "base": "main",
+            "draft": false,
+            "title": "feat: compile information plane and evidence dependencies",
+            "dependency_automation": false
+          }
+        ]
       }
     },
     {
@@ -352,7 +408,7 @@
         },
         "local_checkouts": {
           "count": 3,
-          "dirty_count": 0,
+          "dirty_count": 1,
           "clean_on_default_count": 0,
           "paths": {
             "count": 3,
@@ -390,8 +446,8 @@
               "path": "~/tmp/aodl",
               "branch": "feat/aodl-contract-importable",
               "head": "1fa80da2b9d3c7cde70e48b26c452329d657e788",
-              "dirty": false,
-              "dirty_files": 0,
+              "dirty": true,
+              "dirty_files": 1,
               "last_commit": "2026-09-18T14:08:36-05:00",
               "worktrees": {
                 "count": 2,
@@ -440,7 +496,7 @@
         },
         "status": "merged",
         "evidence": [
-          "local checkout(s): ~/tmp/aodl-audit@HEAD, ~/tmp/aodl@feat/aodl-contract-importable, ~/tmp/aodl-consolidation-20260919@consolidate/aodl-main-20260919",
+          "local checkout(s): ~/tmp/aodl-audit@HEAD, ~/tmp/aodl@feat/aodl-contract-importable (dirty), ~/tmp/aodl-consolidation-20260919@consolidate/aodl-main-20260919",
           "capability claimed on default branch 'main' head=549f2a1c17 (2026-09-20)"
         ],
         "resolution": {
@@ -558,15 +614,22 @@
           "archived": false,
           "private": false,
           "default_branch": "master",
-          "pushed_at": "2026-09-21T03:35:17Z",
+          "pushed_at": "2026-09-22T03:58:50Z",
           "description": "Can we run something like Jev on a 3090 at home?",
           "upstream": null,
-          "open_issues": 15,
+          "open_issues": 16,
           "head_sha": "5e7cf4a2d6faf6e537dbfbb52d90bf50410cea63",
           "head_date": "2026-09-18T18:09:32Z",
           "open_prs": {
-            "count": 8,
+            "count": 9,
             "sample": [
+              {
+                "number": 21,
+                "title": "feat(cognition): steal sweep on matched candidate sets \u2014 nanojev removes 61% of hammer3b calls",
+                "head": "feat/steal-sweep",
+                "base": "master",
+                "draft": false
+              },
               {
                 "number": 19,
                 "title": "docs: make JEV the seed observer before runtime promotion",
@@ -626,10 +689,10 @@
             ],
             "truncated": 0
           },
-          "open_pr_count": 8,
+          "open_pr_count": 9,
           "open_pr_bot_count": 5,
           "remote_branches": {
-            "count": 21,
+            "count": 22,
             "sample": [
               "chore/repo-rename-urls",
               "dependabot/github_actions/actions/checkout-7",
@@ -648,6 +711,7 @@
               "feat/network-cutover-phase-a",
               "feat/os-next-context-flow",
               "feat/resolve-context",
+              "feat/steal-sweep",
               "integrate/z0int-future-stack",
               "master",
               "nightly",
@@ -671,11 +735,11 @@
           "sample": [
             {
               "path": "~/tmp/openjev",
-              "branch": "master",
-              "head": "4f880104ac3748cdefb79821ba2cfaed10ae119b",
+              "branch": "feat/steal-sweep",
+              "head": "8e62e223f6067b156c30e3bc90f62570a77a6674",
               "dirty": true,
-              "dirty_files": 4,
-              "last_commit": "2026-09-21T16:57:02-05:00",
+              "dirty_files": 38,
+              "last_commit": "2026-09-21T22:58:49-05:00",
               "worktrees": {
                 "count": 3,
                 "sample": [
@@ -686,7 +750,7 @@
                 "truncated": 0
               },
               "local_branches": {
-                "count": 15,
+                "count": 16,
                 "sample": [
                   "chore/repo-rename-urls",
                   "dev",
@@ -699,6 +763,7 @@
                   "feat/network-cutover-phase-a",
                   "feat/os-next-context-flow",
                   "feat/resolve-context",
+                  "feat/steal-sweep",
                   "integrate/z0int-future-stack",
                   "master",
                   "nightly",
@@ -724,7 +789,7 @@
                 "truncated": 0
               },
               "local_branches": {
-                "count": 15,
+                "count": 16,
                 "sample": [
                   "chore/repo-rename-urls",
                   "dev",
@@ -737,6 +802,7 @@
                   "feat/network-cutover-phase-a",
                   "feat/os-next-context-flow",
                   "feat/resolve-context",
+                  "feat/steal-sweep",
                   "integrate/z0int-future-stack",
                   "master",
                   "nightly",
@@ -749,7 +815,7 @@
         },
         "status": "merged",
         "evidence": [
-          "local checkout(s): ~/tmp/openjev@master (dirty), ~/tmp/z0int-future-integrate@feat/resolve-context",
+          "local checkout(s): ~/tmp/openjev@feat/steal-sweep (dirty), ~/tmp/z0int-future-integrate@feat/resolve-context",
           "capability claimed on default branch 'master' head=5e7cf4a2d6 (2026-09-18)"
         ],
         "resolution": {
@@ -758,6 +824,15 @@
           }
         },
         "stranded_work": [
+          {
+            "kind": "pr",
+            "ref": "#21",
+            "head": "feat/steal-sweep",
+            "base": "master",
+            "draft": false,
+            "title": "feat(cognition): steal sweep on matched candidate sets \u2014 nanojev removes 61% of hammer3b calls",
+            "dependency_automation": false
+          },
           {
             "kind": "pr",
             "ref": "#19",
@@ -987,15 +1062,22 @@
           "archived": false,
           "private": false,
           "default_branch": "master",
-          "pushed_at": "2026-09-21T03:35:17Z",
+          "pushed_at": "2026-09-22T03:58:50Z",
           "description": "Can we run something like Jev on a 3090 at home?",
           "upstream": null,
-          "open_issues": 15,
+          "open_issues": 16,
           "head_sha": "5e7cf4a2d6faf6e537dbfbb52d90bf50410cea63",
           "head_date": "2026-09-18T18:09:32Z",
           "open_prs": {
-            "count": 8,
+            "count": 9,
             "sample": [
+              {
+                "number": 21,
+                "title": "feat(cognition): steal sweep on matched candidate sets \u2014 nanojev removes 61% of hammer3b calls",
+                "head": "feat/steal-sweep",
+                "base": "master",
+                "draft": false
+              },
               {
                 "number": 19,
                 "title": "docs: make JEV the seed observer before runtime promotion",
@@ -1055,10 +1137,10 @@
             ],
             "truncated": 0
           },
-          "open_pr_count": 8,
+          "open_pr_count": 9,
           "open_pr_bot_count": 5,
           "remote_branches": {
-            "count": 21,
+            "count": 22,
             "sample": [
               "chore/repo-rename-urls",
               "dependabot/github_actions/actions/checkout-7",
@@ -1077,6 +1159,7 @@
               "feat/network-cutover-phase-a",
               "feat/os-next-context-flow",
               "feat/resolve-context",
+              "feat/steal-sweep",
               "integrate/z0int-future-stack",
               "master",
               "nightly",
@@ -1111,6 +1194,15 @@
           "superseded_by_default_branch": "master"
         },
         "stranded_work": [
+          {
+            "kind": "pr",
+            "ref": "#21",
+            "head": "feat/steal-sweep",
+            "base": "master",
+            "draft": false,
+            "title": "feat(cognition): steal sweep on matched candidate sets \u2014 nanojev removes 61% of hammer3b calls",
+            "dependency_automation": false
+          },
           {
             "kind": "pr",
             "ref": "#19",
@@ -1557,15 +1649,29 @@
           "archived": false,
           "private": false,
           "default_branch": "main",
-          "pushed_at": "2026-09-21T16:45:33Z",
+          "pushed_at": "2026-09-22T00:37:52Z",
           "description": "\u2325  AI Coding agent for the terminal \u2014 hash-anchored edits, optimized tool harness, LSP, Python, browser, subagents, and more",
           "upstream": "can1357/oh-my-pi",
-          "open_issues": 80,
+          "open_issues": 82,
           "head_sha": "260eaa35fe3480ef1090641547fefde2ad879113",
           "head_date": "2026-09-21T16:28:31Z",
           "open_prs": {
-            "count": 74,
+            "count": 76,
             "sample": [
+              {
+                "number": 85,
+                "title": "chore: remove dead createOpenAICodexAuthorizationUrl helper",
+                "head": "detail/dead-code/chore-remove-dead-createopenaicodexauthorizationur-86ba2c",
+                "base": "main",
+                "draft": false
+              },
+              {
+                "number": 84,
+                "title": "chore: remove duplicate Response.Moderation interface declarations",
+                "head": "detail/dead-code/chore-remove-duplicate-response-moderation-interfa-8a3c2c",
+                "base": "main",
+                "draft": false
+              },
               {
                 "number": 82,
                 "title": "docs(jev): separate dogfood assistance from outcome truth",
@@ -1726,25 +1832,11 @@
                 "head": "detail/fix-docs/docs-note-experimentalcontextmanagement-override-i-7c4b3f",
                 "base": "main",
                 "draft": false
-              },
-              {
-                "number": 51,
-                "title": "chore: remove dead test-only KeyDirection and execute_chord_with helpers",
-                "head": "detail/dead-code/chore-remove-dead-test-only-keydirection-and-execu-819e4d",
-                "base": "main",
-                "draft": false
-              },
-              {
-                "number": 50,
-                "title": "chore: remove stale generate_minimizer_builtin_filters from pi-natives build script",
-                "head": "detail/dead-code/chore-remove-stale-generate-minimizer-builtin-filt-0b0de8",
-                "base": "main",
-                "draft": false
               }
             ],
-            "truncated": 49
+            "truncated": 51
           },
-          "open_pr_count": 74,
+          "open_pr_count": 76,
           "open_pr_bot_count": 0,
           "remote_branches": {
             "count": 100,
@@ -2111,6 +2203,24 @@
         "stranded_work": [
           {
             "kind": "pr",
+            "ref": "#85",
+            "head": "detail/dead-code/chore-remove-dead-createopenaicodexauthorizationur-86ba2c",
+            "base": "main",
+            "draft": false,
+            "title": "chore: remove dead createOpenAICodexAuthorizationUrl helper",
+            "dependency_automation": false
+          },
+          {
+            "kind": "pr",
+            "ref": "#84",
+            "head": "detail/dead-code/chore-remove-duplicate-response-moderation-interfa-8a3c2c",
+            "base": "main",
+            "draft": false,
+            "title": "chore: remove duplicate Response.Moderation interface declarations",
+            "dependency_automation": false
+          },
+          {
+            "kind": "pr",
             "ref": "#82",
             "head": "docs/jev-dogfood-boundary-81",
             "base": "rfc/interactive-performance-stack",
@@ -2314,24 +2424,6 @@
             "base": "main",
             "draft": false,
             "title": "docs: note experimentalContextManagement override in handoff pipeline",
-            "dependency_automation": false
-          },
-          {
-            "kind": "pr",
-            "ref": "#51",
-            "head": "detail/dead-code/chore-remove-dead-test-only-keydirection-and-execu-819e4d",
-            "base": "main",
-            "draft": false,
-            "title": "chore: remove dead test-only KeyDirection and execute_chord_with helpers",
-            "dependency_automation": false
-          },
-          {
-            "kind": "pr",
-            "ref": "#50",
-            "head": "detail/dead-code/chore-remove-stale-generate-minimizer-builtin-filt-0b0de8",
-            "base": "main",
-            "draft": false,
-            "title": "chore: remove stale generate_minimizer_builtin_filters from pi-natives build script",
             "dependency_automation": false
           },
           {
@@ -2823,15 +2915,29 @@
           "archived": false,
           "private": false,
           "default_branch": "main",
-          "pushed_at": "2026-09-21T16:45:33Z",
+          "pushed_at": "2026-09-22T00:37:52Z",
           "description": "\u2325  AI Coding agent for the terminal \u2014 hash-anchored edits, optimized tool harness, LSP, Python, browser, subagents, and more",
           "upstream": "can1357/oh-my-pi",
-          "open_issues": 80,
+          "open_issues": 82,
           "head_sha": "260eaa35fe3480ef1090641547fefde2ad879113",
           "head_date": "2026-09-21T16:28:31Z",
           "open_prs": {
-            "count": 74,
+            "count": 76,
             "sample": [
+              {
+                "number": 85,
+                "title": "chore: remove dead createOpenAICodexAuthorizationUrl helper",
+                "head": "detail/dead-code/chore-remove-dead-createopenaicodexauthorizationur-86ba2c",
+                "base": "main",
+                "draft": false
+              },
+              {
+                "number": 84,
+                "title": "chore: remove duplicate Response.Moderation interface declarations",
+                "head": "detail/dead-code/chore-remove-duplicate-response-moderation-interfa-8a3c2c",
+                "base": "main",
+                "draft": false
+              },
               {
                 "number": 82,
                 "title": "docs(jev): separate dogfood assistance from outcome truth",
@@ -2992,25 +3098,11 @@
                 "head": "detail/fix-docs/docs-note-experimentalcontextmanagement-override-i-7c4b3f",
                 "base": "main",
                 "draft": false
-              },
-              {
-                "number": 51,
-                "title": "chore: remove dead test-only KeyDirection and execute_chord_with helpers",
-                "head": "detail/dead-code/chore-remove-dead-test-only-keydirection-and-execu-819e4d",
-                "base": "main",
-                "draft": false
-              },
-              {
-                "number": 50,
-                "title": "chore: remove stale generate_minimizer_builtin_filters from pi-natives build script",
-                "head": "detail/dead-code/chore-remove-stale-generate-minimizer-builtin-filt-0b0de8",
-                "base": "main",
-                "draft": false
               }
             ],
-            "truncated": 49
+            "truncated": 51
           },
-          "open_pr_count": 74,
+          "open_pr_count": 76,
           "open_pr_bot_count": 0,
           "remote_branches": {
             "count": 100,
@@ -3461,189 +3553,189 @@
           "archived": false,
           "private": false,
           "default_branch": "main",
-          "pushed_at": "2026-09-21T22:21:14Z",
+          "pushed_at": "2026-09-22T06:45:26Z",
           "description": "The agent that grows with you",
           "upstream": null,
-          "open_issues": 43452,
-          "head_sha": "6b2fa6a8ebd9be7cba1d47dfd5b17ec73232fc42",
-          "head_date": "2026-09-21T22:21:29Z",
+          "open_issues": 43556,
+          "head_sha": "913c045c53800a24956a74cc1fe6db0dd4421490",
+          "head_date": "2026-09-22T06:38:16Z",
           "open_prs": {
             "count": 100,
             "sample": [
               {
-                "number": 118576,
-                "title": "fix(bot-mode): retry a busy Bot Chat lease before surfacing target_busy",
-                "head": "fix/bot-mode-dm-busy-lease-retry",
+                "number": 118875,
+                "title": "fix(desktop): open sessions at latest messages",
+                "head": "fix/118866-open-session-at-latest",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118575,
-                "title": "fix(scratch): scratch dir prunes after 24h idle, judged by the whole subtree (was 72h top-level age)",
-                "head": "fix/scratch-idle-prune-24h",
+                "number": 118874,
+                "title": "fix(desktop): scope response actions to latest reply",
+                "head": "fix/118864-message-text-current-reply",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118573,
-                "title": "mcp: strip invisible unicode TAG chars from server-controlled metadata",
-                "head": "fix/mcp-metadata-unicode-tags",
+                "number": 118870,
+                "title": "fix(gateway): scope cached routed-session liveness checks",
+                "head": "fix/118862-routed-profile-dead-session",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118571,
-                "title": "fix(desktop): show a session's colour, and keep it while the session works",
-                "head": "fix/session-colour-while-working",
+                "number": 118869,
+                "title": "feat(skills): add optional pricewin-travel-search skill",
+                "head": "feat/optional-skill-pricewin-travel-search",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118567,
-                "title": "feat(moa): declare preset slots non-interactively via --slots/--slots-file",
-                "head": "fix/issue-102265-moa-configure-slots",
+                "number": 118868,
+                "title": "feat(mcp-catalog): add PriceWin hotel and flight search",
+                "head": "feat/optional-mcp-pricewin",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118565,
-                "title": "feat(whatsapp): add explicit presence endpoint",
-                "head": "feat/whatsapp-presence-endpoint",
+                "number": 118867,
+                "title": "fix(cron): persist mirrored deliveries as assistant turns",
+                "head": "fix/118863-cron-mirror-assistant-turn",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118564,
-                "title": "fix: preserve whole records in lean summary sampling",
-                "head": "fix/118362-summary-record-coverage",
+                "number": 118865,
+                "title": "fix(desktop): release settled gateway activation lease",
+                "head": "fix/118856-gateway-activation-lease-pruning",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118562,
-                "title": "catalog: add sabi attribution middleware (community, models)",
-                "head": "catalog/sabi",
+                "number": 118861,
+                "title": "fix(skills): ignore nested agent compatibility mirrors",
+                "head": "fix/exclude-agent-metadata-skills",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118561,
-                "title": "fix(skills): expose watcher watermark capacity in shipped CLIs",
-                "head": "fix/watchers-configurable-retention-76542",
+                "number": 118860,
+                "title": "fix(tui): preflight code-skew check before deferred agent build",
+                "head": "fix/tui-gateway-code-skew",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118560,
-                "title": "fix(voice): fall back to blocking reads when read_available never advances",
-                "head": "liuhao/cron-bugfix-118552",
+                "number": 118858,
+                "title": "fix(hindsight): preserve profile env, export offline mode, and eliminate restart storms",
+                "head": "fix/hindsight-embedded-env-preservation",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118559,
-                "title": "kanban: card-level due_at, woken by the dispatcher tick",
-                "head": "feat/kanban-card-due-at",
+                "number": 118857,
+                "title": "fix(desktop): render OpenRouter reasoning details on completion",
+                "head": "fix/118851-openrouter-reasoning-details",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118558,
-                "title": "feat(desktop): expose plugin transcript message contributions",
-                "head": "shannonsands/desktop-slash-result-renderers",
+                "number": 118855,
+                "title": "fix(desktop): retain transcript rows on stale hydration",
+                "head": "fix/118850-preserve-transcript-during-stale-hydration",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118557,
-                "title": "fix(auth): preserve independent Anthropic profile grants",
-                "head": "fix/anthropic-profile-grant-lineage",
+                "number": 118854,
+                "title": "plugins: enable/disable/remove land on the loader's key on every surface; uninstall leaves no config",
+                "head": "fix/plugin-activation-bookkeeping",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118555,
-                "title": "fix(gateway): queue a run-starting request over the cap instead of refusing it",
-                "head": "fix/api-server-run-queue-over-cap",
+                "number": 118853,
+                "title": "fix(desktop): keep a repeated prompt when the stored transcript is behind the turn",
+                "head": "fix/desktop-keep-repeated-prompt",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118554,
-                "title": "feat(telemetry): shared-metrics opt-in across Desktop onboarding, Settings, CLI, and automated insta",
-                "head": "feat/desktop-onboarding-telemetry-optin",
+                "number": 118849,
+                "title": "chore(plugin-catalog): re-pin vaultknox to 0.8.1 with truthful outbound contract",
+                "head": "catalog/vaultknox-outbound-value-dlp",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118553,
-                "title": "docs: require project and category on Linear issues",
-                "head": "run/20260921-linear-issue-routing",
+                "number": 118848,
+                "title": "fix(desktop): clarify plugins folder label",
+                "head": "fix/desktop-plugin-folder-label",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118551,
-                "title": "fix(kanban): review dispatch spawns kanban.review_profile, not the card author",
-                "head": "fix/kanban-review-dispatch-profile",
+                "number": 118847,
+                "title": "feat(plugins): add post_compaction hook (#118382)",
+                "head": "feat/post-compaction-hook",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118550,
-                "title": "fix(skills): resolve skill_manage targets through the symlink-following index walk",
-                "head": "fix/skill-manage-symlink-index-walk",
+                "number": 118846,
+                "title": "fix(delegate): map live transcript logs via index-aligned writers, not compressed paths",
+                "head": "fix/live-paths-index-alignment",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118549,
-                "title": "fix(cron): honor manual prompt when gate is quiet",
-                "head": "fix-118535-cron-extra-prompt-gate",
+                "number": 118845,
+                "title": "Plugin hooks fire on every surface: gateway slash commands bound + off-loop, transform hooks cover i",
+                "head": "fix/hooks-surfaces",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118548,
-                "title": "fix(cron): recognize the summarized offline sentence so provider-unreachable retries fire",
-                "head": "liuhao/cron-bugfix-118536",
+                "number": 118844,
+                "title": "Plugin hook policy: hung or raising guards fail closed without wedging, block outranks approve, shel",
+                "head": "fix/hooks-policy",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118547,
-                "title": "fix(state): strip _delegate_from from gateway main sessions (#109073, salvage #109081)",
-                "head": "fix/gateway-strip-delegate-from-109073",
+                "number": 118840,
+                "title": "fix(skills): reuse HTTP connections during inspect",
+                "head": "fix/118833-reuse-skills-inspect-http-client",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118546,
-                "title": "fix(kanban): store a comment body as text, whatever the caller passes",
-                "head": "fix/kanban-comment-body-text-contract",
+                "number": 118839,
+                "title": "fix(gateway): --replace must not signal a different profile's standalone owner",
+                "head": "fix/replace-standalone-owner",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118544,
-                "title": "fix(desktop): stop colour corruption on KDE with HDR enabled",
-                "head": "fix/wayland-color-management",
+                "number": 118838,
+                "title": "plugins: subdir installs stay updatable, stash re-apply works on MSYS, doctor unloads before teardow",
+                "head": "fix/plugin-installer-update-doctor",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118543,
-                "title": "fix(dashboard): preserve 64-bit channel IDs through JSON round-trip",
-                "head": "main",
+                "number": 118837,
+                "title": "fix(codex_runtime): collapse same-id function_call frames to one tool call",
+                "head": "fix/codex-duplicate-empty-tool-call",
                 "base": "main",
                 "draft": false
               },
               {
-                "number": 118542,
-                "title": "fix(gateway): keep credentialed proxy URLs out of logs and surfaced errors",
-                "head": "fix/proxy-url-credential-logs",
+                "number": 118836,
+                "title": "Private/issue 4176 directus skill",
+                "head": "private/issue-4176-directus-skill",
                 "base": "main",
-                "draft": false
+                "draft": true
               }
             ],
             "truncated": 75
@@ -3674,31 +3766,30 @@
               "atropos-integrations-pr",
               "austin/feat/google-oauth-provider",
               "austin/fix/dashboard-perf",
-              "austin/fix/goal-max-iterations-handoff",
               "austin/fix/minimax-oauth",
               "austin/fix/types-node-lockfile",
-              "austin/fix/windows-lockguard-partial-fcntl"
+              "austin/fix/wsl-gui",
+              "b466-update-cron-fleet"
             ],
             "truncated": 75
           }
         },
         "local_checkouts": {
-          "count": 161,
-          "dirty_count": 53,
-          "clean_on_default_count": 4,
+          "count": 7,
+          "dirty_count": 4,
+          "clean_on_default_count": 0,
           "paths": {
-            "count": 161,
+            "count": 7,
             "sample": [
               "/mnt/zer0models/workspace/review-t_c4b3cec4-main-r221",
               "/mnt/zer0models/workspace/review-t_c4b3cec4-pr-r221",
               "/mnt/zer0models/workspace/zer0/oss/hermes-agent",
               "/mnt/zer0models/workspace/zer0/oss/wt-jev-into-hermes",
-              "/mnt/zer0models/workspaces/hermes-agent-worktrees/durable-gateway-inbox",
-              "/mnt/zer0models/workspaces/hermes-agent-worktrees/durable-gateway-inbox-v2",
-              "/mnt/zer0models/workspaces/hermes-agent-worktrees/durable-notification-inbox",
-              "/mnt/zer0models/workspaces/hermes-agent-worktrees/durable-plugin-inject-once"
+              "~/tmp/hermes-jev-cu-wire",
+              "~/tmp/jev-113008-tests-slice",
+              "~/tmp/jev-113020-privacy-patch"
             ],
-            "truncated": 153
+            "truncated": 0
           },
           "sample": [
             {
@@ -4190,29 +4281,6 @@
                 ],
                 "truncated": 295
               }
-            },
-            {
-              "path": "/mnt/zer0models/workspaces/hermes-hud-hyprland/repo",
-              "branch": "fix/hyprland-hud-clipping",
-              "head": "6ce7ab8bfb3fce3ba116f52a11a438d6c7e4c03d",
-              "dirty": true,
-              "dirty_files": 4,
-              "last_commit": "2026-08-24T21:51:44-07:00",
-              "worktrees": {
-                "count": 1,
-                "sample": [
-                  "/mnt/zer0models/workspaces/hermes-hud-hyprland/repo"
-                ],
-                "truncated": 0
-              },
-              "local_branches": {
-                "count": 2,
-                "sample": [
-                  "fix/hyprland-hud-clipping",
-                  "main"
-                ],
-                "truncated": 0
-              }
             }
           ]
         },
@@ -4621,8 +4689,8 @@
         },
         "local_checkouts": {
           "count": 1,
-          "dirty_count": 0,
-          "clean_on_default_count": 1,
+          "dirty_count": 1,
+          "clean_on_default_count": 0,
           "paths": {
             "count": 1,
             "sample": [
@@ -4634,10 +4702,10 @@
             {
               "path": "~/tmp/kerdoios",
               "branch": "main",
-              "head": "b5755ea4ff8aed2e7358947c0dc4d3452955f8e6",
-              "dirty": false,
-              "dirty_files": 0,
-              "last_commit": "2026-09-21T16:54:45-05:00",
+              "head": "c7b2dbc5e054d8bc1774814fd2e642d7d099c48e",
+              "dirty": true,
+              "dirty_files": 2,
+              "last_commit": "2026-09-21T20:40:45-05:00",
               "worktrees": {
                 "count": 1,
                 "sample": [
@@ -4658,7 +4726,7 @@
         },
         "status": "merged",
         "evidence": [
-          "local checkout(s): ~/tmp/kerdoios@main",
+          "local checkout(s): ~/tmp/kerdoios@main (dirty)",
           "capability claimed on default branch 'main' head=e3100ae4b7 (2026-09-18)"
         ],
         "resolution": {
@@ -4793,7 +4861,7 @@
           "archived": false,
           "private": false,
           "default_branch": "main",
-          "pushed_at": "2026-09-21T03:32:23Z",
+          "pushed_at": "2026-09-22T03:51:26Z",
           "description": "Experiment engine: genomes, Hermes recovery gym, Pareto/MAP-Elites. Original repo \u2014 not a FlyGym, OpenEvolve, or fly-wirehead fork.",
           "upstream": null,
           "open_issues": 17,
@@ -4857,7 +4925,7 @@
           "open_pr_count": 7,
           "open_pr_bot_count": 5,
           "remote_branches": {
-            "count": 15,
+            "count": 16,
             "sample": [
               "cursor/extract-from-frontier-kb-9425",
               "cursor/tmnf-c-lab-9425",
@@ -4869,6 +4937,7 @@
               "dependabot/github_actions/ossf/scorecard-action-2.4.4",
               "dev",
               "docs/jev-dogfood-first-branch-truth-20260920",
+              "experiment/q-route-v0",
               "feat/openjev-track-b",
               "feat/z0int-cutover-export",
               "main",
@@ -4880,7 +4949,7 @@
         },
         "local_checkouts": {
           "count": 2,
-          "dirty_count": 0,
+          "dirty_count": 1,
           "clean_on_default_count": 0,
           "paths": {
             "count": 2,
@@ -4894,10 +4963,10 @@
             {
               "path": "~/tmp/evolution-lab",
               "branch": "experiment/q-route-v0",
-              "head": "88249e5085dc57a5cfc7677f0595b91a7249f6db",
-              "dirty": false,
-              "dirty_files": 0,
-              "last_commit": "2026-09-21T16:51:37-05:00",
+              "head": "5cdb8e1d255dfb42d0b58343073664a846496f24",
+              "dirty": true,
+              "dirty_files": 6,
+              "last_commit": "2026-09-21T22:51:25-05:00",
               "worktrees": {
                 "count": 2,
                 "sample": [
@@ -4945,8 +5014,8 @@
         },
         "status": "branch_only",
         "evidence": [
-          "local checkout(s): ~/tmp/evolution-lab@experiment/q-route-v0, ~/tmp/evolution-lab-agy@HEAD",
-          "capability branch 'experiment/q-route-v0': local=True remote=False (totals: 6 local / 15 remote, checked against kvnloo/evolution-lab)"
+          "local checkout(s): ~/tmp/evolution-lab@experiment/q-route-v0 (dirty), ~/tmp/evolution-lab-agy@HEAD",
+          "capability branch 'experiment/q-route-v0': local=True remote=True (totals: 6 local / 16 remote, checked against kvnloo/evolution-lab)"
         ],
         "resolution": {
           "ref": {
@@ -4955,9 +5024,9 @@
           },
           "branch_present": {
             "local": true,
-            "remote": false,
+            "remote": true,
             "local_branch_total": 6,
-            "remote_branch_total": 15,
+            "remote_branch_total": 16,
             "checked_against": "kvnloo/evolution-lab"
           }
         },
@@ -5084,12 +5153,12 @@
           "archived": false,
           "private": false,
           "default_branch": "main",
-          "pushed_at": "2026-09-21T22:02:51Z",
+          "pushed_at": "2026-09-22T05:00:24Z",
           "description": "",
           "upstream": null,
           "open_issues": 9,
-          "head_sha": "5a3be1590fb3763238e8d391ef224ea060b0ec7d",
-          "head_date": "2026-09-21T22:02:51Z",
+          "head_sha": "1526a197f7d69b76d7e742886bcf4b3ca8a7e82c",
+          "head_date": "2026-09-22T05:00:19Z",
           "open_prs": {
             "count": 5,
             "sample": [
@@ -5134,7 +5203,7 @@
           "open_pr_count": 5,
           "open_pr_bot_count": 5,
           "remote_branches": {
-            "count": 16,
+            "count": 32,
             "sample": [
               "chore/verified-oss-loop-onboarding",
               "dependabot/github_actions/actions/checkout-7",
@@ -5143,34 +5212,85 @@
               "dependabot/github_actions/actions/stale-11",
               "dependabot/github_actions/actions/upload-pages-artifact-5",
               "dev",
+              "docs/phase1b-story-rewrite",
+              "docs/research-reference-map",
+              "feat/blog-story-rewrite",
+              "feat/pages-channel-triggers",
+              "feat/pages-channels-actions",
+              "feat/pages-deploy-channels",
+              "feat/pages-deploy-from-default",
+              "feat/pages-migration-bridge",
+              "feat/reference-parity-components",
               "feat/research-report-shell",
+              "feat/site-fidelity-components",
+              "feat/site-headline",
+              "feat/southbridge-parity-nextjs",
               "feat/southbridge-reference-shell",
               "feat/southbridge-reference-ui",
-              "fix/pages-live-verification",
-              "fix/pages-two-stage-deploy",
-              "main",
-              "nightly",
-              "preview",
-              "study/phase1b-real-results"
+              "feat/southbridge-visual-parity-v2",
+              "fix/channel-basepath",
+              "fix/pages-live-verification"
             ],
-            "truncated": 0
+            "truncated": 7
           }
         },
         "local_checkouts": {
-          "count": 0,
+          "count": 1,
           "dirty_count": 0,
-          "clean_on_default_count": 0,
+          "clean_on_default_count": 1,
           "paths": {
-            "count": 0,
-            "sample": [],
+            "count": 1,
+            "sample": [
+              "~/tmp/z0evals"
+            ],
             "truncated": 0
           },
-          "sample": []
+          "sample": [
+            {
+              "path": "~/tmp/z0evals",
+              "branch": "main",
+              "head": "1526a197f7d69b76d7e742886bcf4b3ca8a7e82c",
+              "dirty": false,
+              "dirty_files": 0,
+              "last_commit": "2026-09-22T00:00:19-05:00",
+              "worktrees": {
+                "count": 1,
+                "sample": [
+                  "~/tmp/z0evals"
+                ],
+                "truncated": 0
+              },
+              "local_branches": {
+                "count": 18,
+                "sample": [
+                  "dev",
+                  "feat/blog-story-rewrite",
+                  "feat/pages-channel-triggers",
+                  "feat/pages-channels-actions",
+                  "feat/pages-deploy-channels",
+                  "feat/pages-deploy-from-default",
+                  "feat/pages-migration-bridge",
+                  "feat/reference-parity-components",
+                  "feat/site-fidelity-components",
+                  "feat/site-headline",
+                  "feat/southbridge-parity-nextjs",
+                  "fix/channel-basepath",
+                  "fix/promote-git-identity",
+                  "fix/root-channel-marker",
+                  "main",
+                  "nightly",
+                  "preview",
+                  "sync/channels"
+                ],
+                "truncated": 0
+              }
+            }
+          ]
         },
         "status": "merged",
         "evidence": [
-          "no local checkout on this machine",
-          "capability claimed on default branch 'main' head=5a3be1590f (2026-09-21)"
+          "local checkout(s): ~/tmp/z0evals@main",
+          "capability claimed on default branch 'main' head=1526a197f7 (2026-09-22)"
         ],
         "resolution": {
           "ref": {
@@ -5222,6 +5342,91 @@
             "draft": false,
             "title": "chore(deps): bump actions/setup-python from 5 to 7",
             "dependency_automation": true
+          },
+          {
+            "kind": "local_branch",
+            "ref": "dev",
+            "path": "~/tmp/z0evals"
+          },
+          {
+            "kind": "local_branch",
+            "ref": "feat/blog-story-rewrite",
+            "path": "~/tmp/z0evals"
+          },
+          {
+            "kind": "local_branch",
+            "ref": "feat/pages-channel-triggers",
+            "path": "~/tmp/z0evals"
+          },
+          {
+            "kind": "local_branch",
+            "ref": "feat/pages-channels-actions",
+            "path": "~/tmp/z0evals"
+          },
+          {
+            "kind": "local_branch",
+            "ref": "feat/pages-deploy-channels",
+            "path": "~/tmp/z0evals"
+          },
+          {
+            "kind": "local_branch",
+            "ref": "feat/pages-deploy-from-default",
+            "path": "~/tmp/z0evals"
+          },
+          {
+            "kind": "local_branch",
+            "ref": "feat/pages-migration-bridge",
+            "path": "~/tmp/z0evals"
+          },
+          {
+            "kind": "local_branch",
+            "ref": "feat/reference-parity-components",
+            "path": "~/tmp/z0evals"
+          },
+          {
+            "kind": "local_branch",
+            "ref": "feat/site-fidelity-components",
+            "path": "~/tmp/z0evals"
+          },
+          {
+            "kind": "local_branch",
+            "ref": "feat/site-headline",
+            "path": "~/tmp/z0evals"
+          },
+          {
+            "kind": "local_branch",
+            "ref": "feat/southbridge-parity-nextjs",
+            "path": "~/tmp/z0evals"
+          },
+          {
+            "kind": "local_branch",
+            "ref": "fix/channel-basepath",
+            "path": "~/tmp/z0evals"
+          },
+          {
+            "kind": "local_branch",
+            "ref": "fix/promote-git-identity",
+            "path": "~/tmp/z0evals"
+          },
+          {
+            "kind": "local_branch",
+            "ref": "fix/root-channel-marker",
+            "path": "~/tmp/z0evals"
+          },
+          {
+            "kind": "local_branch",
+            "ref": "nightly",
+            "path": "~/tmp/z0evals"
+          },
+          {
+            "kind": "local_branch",
+            "ref": "preview",
+            "path": "~/tmp/z0evals"
+          },
+          {
+            "kind": "local_branch",
+            "ref": "sync/channels",
+            "path": "~/tmp/z0evals"
           }
         ]
       }
@@ -5322,15 +5527,13 @@
           }
         },
         "local_checkouts": {
-          "count": 3,
+          "count": 1,
           "dirty_count": 0,
-          "clean_on_default_count": 2,
+          "clean_on_default_count": 0,
           "paths": {
-            "count": 3,
+            "count": 1,
             "sample": [
-              "~/tmp/frontier-kb",
-              "~/tmp/frontier-kb-2",
-              "~/tmp/frontier-kb-duplicate"
+              "~/tmp/frontier-kb"
             ],
             "truncated": 0
           },
@@ -5357,56 +5560,12 @@
                 ],
                 "truncated": 0
               }
-            },
-            {
-              "path": "~/tmp/frontier-kb-duplicate",
-              "branch": "main",
-              "head": "aac71e8f73cbfe78118d2dd399ecceece2e42e71",
-              "dirty": false,
-              "dirty_files": 0,
-              "last_commit": "2026-09-17T14:20:45-05:00",
-              "worktrees": {
-                "count": 1,
-                "sample": [
-                  "~/tmp/frontier-kb-duplicate"
-                ],
-                "truncated": 0
-              },
-              "local_branches": {
-                "count": 1,
-                "sample": [
-                  "main"
-                ],
-                "truncated": 0
-              }
-            },
-            {
-              "path": "~/tmp/frontier-kb-2",
-              "branch": "main",
-              "head": "aac71e8f73cbfe78118d2dd399ecceece2e42e71",
-              "dirty": false,
-              "dirty_files": 0,
-              "last_commit": "2026-09-17T14:20:45-05:00",
-              "worktrees": {
-                "count": 1,
-                "sample": [
-                  "~/tmp/frontier-kb-2"
-                ],
-                "truncated": 0
-              },
-              "local_branches": {
-                "count": 1,
-                "sample": [
-                  "main"
-                ],
-                "truncated": 0
-              }
             }
           ]
         },
         "status": "merged",
         "evidence": [
-          "local checkout(s): ~/tmp/frontier-kb@feat/small-tool-calling-models, ~/tmp/frontier-kb-duplicate@main, ~/tmp/frontier-kb-2@main",
+          "local checkout(s): ~/tmp/frontier-kb@feat/small-tool-calling-models",
           "capability claimed on default branch 'main' head=22b4c0f108 (2026-09-19)"
         ],
         "resolution": {
@@ -7812,22 +7971,15 @@
           "archived": false,
           "private": false,
           "default_branch": "master",
-          "pushed_at": "2026-09-21T01:58:22Z",
+          "pushed_at": "2026-09-22T03:28:20Z",
           "description": "stay in flow while u code",
           "upstream": null,
-          "open_issues": 10,
+          "open_issues": 9,
           "head_sha": "0e7394e25e02e8eb213dfbbf6fe6728f8ac6d7a2",
           "head_date": "2026-07-28T23:43:12Z",
           "open_prs": {
-            "count": 2,
+            "count": 1,
             "sample": [
-              {
-                "number": 20,
-                "title": "iac: migrate .files to the fleet-first future-state layout",
-                "head": "iac/fleet-future-state",
-                "base": "iac/machine-state-foundation",
-                "draft": true
-              },
               {
                 "number": 17,
                 "title": "iac: add read-only fleet-state + symlink rollout foundation",
@@ -7838,16 +7990,18 @@
             ],
             "truncated": 0
           },
-          "open_pr_count": 2,
+          "open_pr_count": 1,
           "open_pr_bot_count": 0,
           "remote_branches": {
-            "count": 18,
+            "count": 20,
             "sample": [
+              "archive/live-dev-2026-09-21",
               "dev",
               "feat/hermes-portable-config",
               "feat/workspace-copilot-flow",
               "fix/hermes-home-bin-path",
               "iac/fleet-future-state",
+              "iac/fleet-future-state-v3",
               "iac/machine-state-foundation",
               "kvn/background",
               "kvn/polybar",
@@ -7887,15 +8041,6 @@
           }
         },
         "stranded_work": [
-          {
-            "kind": "pr",
-            "ref": "#20",
-            "head": "iac/fleet-future-state",
-            "base": "iac/machine-state-foundation",
-            "draft": true,
-            "title": "iac: migrate .files to the fleet-first future-state layout",
-            "dependency_automation": false
-          },
           {
             "kind": "pr",
             "ref": "#17",
@@ -8068,6 +8213,257 @@
           "kind": "catalog_source"
         },
         "stranded_work": []
+      }
+    },
+    {
+      "id": "groq",
+      "kind": "catalog_source",
+      "plane": "models",
+      "authority": "groq.com",
+      "relationship": "discovers_from",
+      "discovers": [
+        "served model inventory",
+        "per-model rate limits"
+      ],
+      "cache_policy": "derived",
+      "observed": {
+        "github": {
+          "exists": false,
+          "reason": "delegated catalog authority, not a repo"
+        },
+        "local_checkouts": [],
+        "status": "external_upstream",
+        "evidence": [
+          "authority=groq.com discovers=['served model inventory', 'per-model rate limits'] cache_policy=derived"
+        ],
+        "resolution": {
+          "kind": "catalog_source"
+        },
+        "stranded_work": []
+      }
+    },
+    {
+      "id": "cerebras",
+      "kind": "catalog_source",
+      "plane": "models",
+      "authority": "cerebras.ai",
+      "relationship": "discovers_from",
+      "discovers": [
+        "served model inventory",
+        "rate-limit headers"
+      ],
+      "cache_policy": "derived",
+      "observed": {
+        "github": {
+          "exists": false,
+          "reason": "delegated catalog authority, not a repo"
+        },
+        "local_checkouts": [],
+        "status": "external_upstream",
+        "evidence": [
+          "authority=cerebras.ai discovers=['served model inventory', 'rate-limit headers'] cache_policy=derived"
+        ],
+        "resolution": {
+          "kind": "catalog_source"
+        },
+        "stranded_work": []
+      }
+    },
+    {
+      "id": "nous",
+      "kind": "catalog_source",
+      "plane": "models",
+      "authority": "Nous Portal",
+      "relationship": "discovers_from",
+      "discovers": [
+        "served model inventory",
+        "account entitlement"
+      ],
+      "cache_policy": "derived",
+      "observed": {
+        "github": {
+          "exists": false,
+          "reason": "delegated catalog authority, not a repo"
+        },
+        "local_checkouts": [],
+        "status": "external_upstream",
+        "evidence": [
+          "authority=Nous Portal discovers=['served model inventory', 'account entitlement'] cache_policy=derived"
+        ],
+        "resolution": {
+          "kind": "catalog_source"
+        },
+        "stranded_work": []
+      }
+    },
+    {
+      "id": "vercel",
+      "kind": "catalog_source",
+      "plane": "models",
+      "authority": "Vercel AI Gateway",
+      "relationship": "discovers_from",
+      "discovers": [
+        "served model inventory",
+        "gateway routing metadata"
+      ],
+      "cache_policy": "derived",
+      "observed": {
+        "github": {
+          "exists": false,
+          "reason": "delegated catalog authority, not a repo"
+        },
+        "local_checkouts": [],
+        "status": "external_upstream",
+        "evidence": [
+          "authority=Vercel AI Gateway discovers=['served model inventory', 'gateway routing metadata'] cache_policy=derived"
+        ],
+        "resolution": {
+          "kind": "catalog_source"
+        },
+        "stranded_work": []
+      }
+    },
+    {
+      "id": "xai",
+      "kind": "catalog_source",
+      "plane": "models",
+      "authority": "x.ai",
+      "relationship": "discovers_from",
+      "discovers": [
+        "served model inventory"
+      ],
+      "cache_policy": "derived",
+      "observed": {
+        "github": {
+          "exists": false,
+          "reason": "delegated catalog authority, not a repo"
+        },
+        "local_checkouts": [],
+        "status": "external_upstream",
+        "evidence": [
+          "authority=x.ai discovers=['served model inventory'] cache_policy=derived"
+        ],
+        "resolution": {
+          "kind": "catalog_source"
+        },
+        "stranded_work": []
+      }
+    },
+    {
+      "id": "hermes-agent-cluster",
+      "kind": "owned_component",
+      "repo": "kvnloo/hermes-agent-cluster",
+      "plane": "execution",
+      "owns": [
+        "agent worker fleet",
+        "worker leases and heartbeat",
+        "orphan rescheduling"
+      ],
+      "not_here": [
+        "resource placement",
+        "provider/model inventory",
+        "capability trust",
+        "measurement"
+      ],
+      "expected_status": "merged",
+      "capability_ref": {
+        "kind": "default"
+      },
+      "note": "Competing placement authority: it schedules work, but the architecture assigns placement to Kerdoios. Recorded so the duplication is visible rather than rediscovered.\n",
+      "observed": {
+        "github": {
+          "exists": true,
+          "is_fork": true,
+          "archived": false,
+          "private": false,
+          "default_branch": "main",
+          "pushed_at": "2026-08-25T19:25:36Z",
+          "description": "Hermes Mesh: transport-only multi-host workers, A2A coordination, capability-aware placement, and signed receipts",
+          "upstream": "HughesCuit/hermes-agent-cluster",
+          "open_issues": 1,
+          "head_sha": "a5655ccb16ef4e9e18ae3ec75d24b6eab0187282",
+          "head_date": "2026-05-18T14:03:40Z",
+          "open_prs": {
+            "count": 0,
+            "sample": [],
+            "truncated": 0
+          },
+          "open_pr_count": 0,
+          "open_pr_bot_count": 0,
+          "remote_branches": {
+            "count": 5,
+            "sample": [
+              "feat/integration",
+              "feat/wan-cluster-tls-reconnect",
+              "main",
+              "mesh-placement-mvp/t_bb9a33f8",
+              "wt/t_6261253b"
+            ],
+            "truncated": 0
+          }
+        },
+        "local_checkouts": {
+          "count": 1,
+          "dirty_count": 1,
+          "clean_on_default_count": 0,
+          "paths": {
+            "count": 1,
+            "sample": [
+              "/mnt/zer0models/repos/kvnloo/hermes-agent-cluster"
+            ],
+            "truncated": 0
+          },
+          "sample": [
+            {
+              "path": "/mnt/zer0models/repos/kvnloo/hermes-agent-cluster",
+              "branch": "main",
+              "head": "a5655ccb16ef4e9e18ae3ec75d24b6eab0187282",
+              "dirty": true,
+              "dirty_files": 1,
+              "last_commit": "2026-05-18T22:03:40+08:00",
+              "worktrees": {
+                "count": 3,
+                "sample": [
+                  "/mnt/zer0models/repos/kvnloo/hermes-agent-cluster",
+                  "/mnt/zer0models/repos/kvnloo/hermes-agent-cluster/.worktrees/t_3651477a",
+                  "/mnt/zer0models/repos/kvnloo/hermes-agent-cluster/.worktrees/t_6261253b"
+                ],
+                "truncated": 0
+              },
+              "local_branches": {
+                "count": 3,
+                "sample": [
+                  "main",
+                  "wt/t_3651477a",
+                  "wt/t_6261253b"
+                ],
+                "truncated": 0
+              }
+            }
+          ]
+        },
+        "status": "merged",
+        "evidence": [
+          "local checkout(s): /mnt/zer0models/repos/kvnloo/hermes-agent-cluster@main (dirty)",
+          "capability claimed on default branch 'main' head=a5655ccb16 (2026-05-18)"
+        ],
+        "resolution": {
+          "ref": {
+            "kind": "default"
+          }
+        },
+        "stranded_work": [
+          {
+            "kind": "local_branch",
+            "ref": "wt/t_3651477a",
+            "path": "/mnt/zer0models/repos/kvnloo/hermes-agent-cluster"
+          },
+          {
+            "kind": "local_branch",
+            "ref": "wt/t_6261253b",
+            "path": "/mnt/zer0models/repos/kvnloo/hermes-agent-cluster"
+          }
+        ]
       }
     }
   ]

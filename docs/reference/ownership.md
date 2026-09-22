@@ -10,6 +10,7 @@ Generated from each component's `owns` / `not_here` in
 | `evolution-lab` | experiment execution, frozen grouped comparisons, training and search, qualification evidence | activation/deployment state, publication of frozen studies |
 | `flow` | predicted OS/context state | OMP coupling, training logic |
 | `frontier-kb` | public research evidence | architecture truth, runtime policy, private traces |
+| `hermes-agent-cluster` | agent worker fleet, worker leases and heartbeat, orphan rescheduling | resource placement (Kerdoios owns placement), provider and model inventory, capability trust, measurement |
 | `hermes-jev-skills` | Hermes Jev skills | decision ownership |
 | `hermes-keel` | Hermes execution kernel | harness catalog |
 | `hermes-mesh-keel` | signed transport, authorization | production activation |

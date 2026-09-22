@@ -112,3 +112,39 @@ interfaces:
     harness: agenttrace
     owner: agenttrace
     summary: Historical agent span for observability export. Observational only.
+
+  # --- added 2026-09-22 ------------------------------------------------------
+
+  kerdoios.resource_offer.v1:
+    class: contract
+    owner: kerdoios
+    summary: >
+      One normalized shape for every execution offer regardless of substrate:
+      host CPU/GPU, Kubernetes, or a remote provider (Groq, Cerebras,
+      OpenRouter, Nous, Vercel, xAI). Kerdoios owns the type and selects among
+      offers. Producers emit it; consumers must NOT special-case a provider
+      outside the adapter/placement boundary.
+
+      Status is uneven and the registry should say so. Produced today: the host
+      runtime and the remote provider adapters. NOT yet produced: Kubernetes.
+      The only k8s lab (hermes-k8s-lab) is unpublished -- it has no git remote
+      and no GitHub repository -- so the k8s producer is a declared gap, not an
+      implemented one. Fields with no producer anywhere: route, economic_class,
+      throughput, residency, startup_cost, location, node, backend, warm,
+      resident, startup_ms, health_endpoint, queue_depth, namespace, pod,
+      service. `resident` must be a live-runtime observation and never config
+      intent.
+
+  z0int.decision_result.v1:
+    class: contract
+    owner: z0intelligence
+    summary: >
+      Frozen DecisionRequest/DecisionResult pair for a DecisionBackend. This is
+      the host-vs-k8s parity contract: the same request must produce the same
+      result whether served by an in-process host backend or by a service, with
+      only transport and placement differing. What may differ: transport
+      latency, queue time, process identity. What may NOT differ: the chosen
+      action, probabilities, model identity and revision. No service
+      implementation exists yet, so parity is declared and unproven; any
+      comparison must use the existing comparability gate rather than a bespoke
+      comparator.

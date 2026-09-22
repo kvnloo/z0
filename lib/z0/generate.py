@@ -553,7 +553,6 @@ def write_all() -> list[Path]:
         GENERATED / "cognition-portfolio.md": cognition_portfolio(),
         GENERATED / "cognition-flow.mmd": cognition.flow_mermaid(),
         DOCS_GEN / "ownership.md": ownership_table(),
-        GENERATED / "docs-index.jsonl": docs_index_jsonl(),
         ROOT / "zer0.registry.yaml": agent_registry_yaml(),
     }
     outputs.update(component_pages())
@@ -561,4 +560,14 @@ def write_all() -> list[Path]:
     for path, content in outputs.items():
         path.write_text(content, encoding="utf-8")
         written.append(path)
+
+    # `docs_index_jsonl()` reads the generated docs back off disk, so it must run
+    # AFTER they are written. Building it inside the dict above evaluated it
+    # before any write, so a single run always indexed the PREVIOUS ownership
+    # table and only converged on the second run. Because `scripts/docs-check`
+    # runs `docs-generate` exactly once and then diffs, that made the gate fail
+    # spuriously after any registry change that alters `docs/reference/ownership.md`.
+    index = GENERATED / "docs-index.jsonl"
+    index.write_text(docs_index_jsonl(), encoding="utf-8")
+    written.append(index)
     return written

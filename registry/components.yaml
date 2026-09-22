@@ -514,3 +514,38 @@ components:
       branch: main
       tested_ref: 7ba2782
     docs: {readme: README.md}
+
+  # Added 2026-09-22 by the architecture census (audit found placement
+  # duplication between this component and Kerdoios).
+  hermes-agent-cluster:
+    name: Hermes Agent Cluster
+    repo: kvnloo/hermes-agent-cluster
+    plane: execution
+    architecture_status: merged
+    implementation_status: experimental
+    owner: Execution
+    summary: >
+      Application-layer cluster of Hermes agent workers with its own capability
+      scheduler, leases, heartbeat state machine (online -> degraded -> offline)
+      and orphan rescheduling. Recorded because it performs RESOURCE PLACEMENT,
+      which the architecture assigns to Kerdoios: it is a competing placement
+      authority, not a peer runtime substrate. Two schedulers over one fleet is
+      exactly the duplication this registry exists to surface. The repository is
+      live, so `architecture_status` is merged; what is superseded is its claim
+      on placement, recorded in `not_here` and the `legacy_of` edge.
+    owns:
+    - agent worker fleet
+    - worker leases and heartbeat
+    - orphan rescheduling
+    not_here:
+    - resource placement (Kerdoios owns placement)
+    - provider and model inventory
+    - capability trust
+    - measurement
+    relationships:
+    - {type: legacy_of, to: kerdoios}
+    profiles: []
+    install:
+      clone: https://github.com/kvnloo/hermes-agent-cluster.git
+      branch: main
+    docs: {readme: README.md}

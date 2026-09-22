@@ -71,6 +71,21 @@ components:
     - architecture truth
     - runtime policy
     - private traces
+  hermes-agent-cluster:
+    repo: kvnloo/hermes-agent-cluster
+    plane: execution
+    architecture_status: merged
+    implementation_status: experimental
+    owner: Execution
+    owns:
+    - agent worker fleet
+    - worker leases and heartbeat
+    - orphan rescheduling
+    not_here:
+    - resource placement (Kerdoios owns placement)
+    - provider and model inventory
+    - capability trust
+    - measurement
   hermes-jev-skills:
     repo: kvnloo/hermes-jev-skills
     plane: cognition
@@ -329,6 +344,24 @@ upstreams:
     is_fork: true
     relationship: reference_to
 sources:
+  cerebras:
+    kind: provider_catalog
+    authority:
+      surface: Cerebras Cloud API /v1/models
+    discovers:
+    - served model ids
+    - context window
+    - rate-limit headers
+    cache_policy: derived
+  groq:
+    kind: provider_catalog
+    authority:
+      surface: Groq API /openai/v1/models
+    discovers:
+    - served model ids
+    - context window
+    - model capability limits
+    cache_policy: derived
   huggingface:
     kind: model_hub
     authority:
@@ -346,6 +379,14 @@ sources:
     discovers:
     - provider and model metadata
     - model cost tables
+    cache_policy: derived
+  nous:
+    kind: provider_catalog
+    authority:
+      surface: Nous Portal API
+    discovers:
+    - served model ids
+    - account entitlement state
     cache_policy: derived
   ollama:
     kind: model_server
@@ -373,6 +414,14 @@ sources:
     - telemetry transport
     - span/trace wire format
     cache_policy: none
+  vercel:
+    kind: provider_catalog
+    authority:
+      surface: Vercel AI Gateway /v1/models
+    discovers:
+    - served model ids
+    - gateway routing metadata
+    cache_policy: derived
   vllm:
     kind: model_server
     authority:
@@ -381,4 +430,11 @@ sources:
     discovers:
     - currently served models
     - supported architectures
+    cache_policy: derived
+  xai:
+    kind: provider_catalog
+    authority:
+      surface: xAI API /v1/models
+    discovers:
+    - served model ids
     cache_policy: derived

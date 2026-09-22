@@ -14,12 +14,14 @@ presented as a shared contract.
 | `harness.execution.v0` | `aodl` | The harness-neutral execution seam. Every harness adapter implements this and nothing above it may special-case a harness. |
 | `kerdoios.placement.v1` | `kerdoios` | Placement decision over a resource portfolio. Allocation, not execution. |
 | `kerdoios.quota_state.v1` | `kerdoios` | Dimensional quota state (rpm/rpd/tpm/tpd) with per-dimension provenance. |
+| `kerdoios.resource_offer.v1` | `kerdoios` | One normalized shape for every execution offer regardless of substrate: host CPU/GPU, Kubernetes, or a remote provider (Groq, Cerebras, OpenRouter, Nous, Vercel, xAI). Kerdoios owns the type and selects among offers. Producers emit it; consumers must NOT special-case a provider outside the adapter/placement boundary. Status is uneven and the registry should say so. Produced today: the host runtime and the remote provider adapters. NOT yet produced: Kubernetes. The only k8s lab (hermes-k8s-lab) is unpublished -- it has no git remote and no GitHub repository -- so the k8s producer is a declared gap, not an implemented one. Fields with no producer anywhere: route, economic_class, throughput, residency, startup_cost, location, node, backend, warm, resident, startup_ms, health_endpoint, queue_depth, namespace, pod, service. `resident` must be a live-runtime observation and never config intent. |
 | `rlm.evidence_handle.v0` | `rlm` | Addressable handle into the evidence plane, rehydratable on demand. |
 | `tokenomics.event.v0` | `tokenomics` | Vendor-neutral usage / cost / latency / outcome event envelope. |
 | `tokenomics.report.v1` | `tokenomics` | Aggregated reconciliation, coverage and verified-task report. |
 | `z0evals.study.v1` | `z0evals` | Frozen reproducible study record. Immutable once published. |
 | `z0int.cognition.receipt.v1` | `z0intelligence` | Cognition decision receipt including the eligible candidate set and surface verdict. |
 | `z0int.decision_receipt.v1` | `z0intelligence` | Replayable routing/policy decision receipt (state, candidates, quota, outcome). |
+| `z0int.decision_result.v1` | `z0intelligence` | Frozen DecisionRequest/DecisionResult pair for a DecisionBackend. This is the host-vs-k8s parity contract: the same request must produce the same result whether served by an in-process host backend or by a service, with only transport and placement differing. What may differ: transport latency, queue time, process identity. What may NOT differ: the chosen action, probabilities, model identity and revision. No service implementation exists yet, so parity is declared and unproven; any comparison must use the existing comparability gate rather than a bespoke comparator. |
 
 ## Implementation-specific adapters
 

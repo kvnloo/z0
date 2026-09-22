@@ -453,3 +453,62 @@ entities:
     relationship: discovers_from
     discovers: [telemetry transport]
     cache_policy: none
+
+  # ---- added 2026-09-22 by the architecture census -------------------------
+  # The registry gained five provider catalogs and one component, and the sweep
+  # universe must cover every registry entity or `registry-check` reports it as
+  # never observed. Credential reality is NOT asserted here: the sweep observes
+  # repositories and reachability, not secrets.
+
+  - id: groq
+    kind: catalog_source
+    plane: models
+    authority: groq.com
+    relationship: discovers_from
+    discovers: [served model inventory, per-model rate limits]
+    cache_policy: derived
+
+  - id: cerebras
+    kind: catalog_source
+    plane: models
+    authority: cerebras.ai
+    relationship: discovers_from
+    discovers: [served model inventory, rate-limit headers]
+    cache_policy: derived
+
+  - id: nous
+    kind: catalog_source
+    plane: models
+    authority: Nous Portal
+    relationship: discovers_from
+    discovers: [served model inventory, account entitlement]
+    cache_policy: derived
+
+  - id: vercel
+    kind: catalog_source
+    plane: models
+    authority: Vercel AI Gateway
+    relationship: discovers_from
+    discovers: [served model inventory, gateway routing metadata]
+    cache_policy: derived
+
+  - id: xai
+    kind: catalog_source
+    plane: models
+    authority: x.ai
+    relationship: discovers_from
+    discovers: [served model inventory]
+    cache_policy: derived
+
+  - id: hermes-agent-cluster
+    kind: owned_component
+    repo: kvnloo/hermes-agent-cluster
+    plane: execution
+    owns: [agent worker fleet, worker leases and heartbeat, orphan rescheduling]
+    not_here: [resource placement, provider/model inventory, capability trust, measurement]
+    expected_status: merged
+    capability_ref: {kind: default}
+    note: >
+      Competing placement authority: it schedules work, but the architecture
+      assigns placement to Kerdoios. Recorded so the duplication is visible
+      rather than rediscovered.

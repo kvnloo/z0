@@ -21,6 +21,7 @@
       "evolution-lab",
       "flow",
       "frontier-kb",
+      "hermes-agent-cluster",
       "hermes-jev-skills",
       "hermes-keel",
       "hermes-mesh-keel",
@@ -53,12 +54,17 @@
       "sol-pi"
     ],
     "catalog_source": [
+      "cerebras",
+      "groq",
       "huggingface",
       "litellm",
+      "nous",
       "ollama",
       "openrouter",
       "opentelemetry",
-      "vllm"
+      "vercel",
+      "vllm",
+      "xai"
     ],
     "reference_only": [
       "blueprint",
@@ -877,6 +883,40 @@
       "docs": {
         "readme": "README.md"
       }
+    },
+    "hermes-agent-cluster": {
+      "name": "Hermes Agent Cluster",
+      "repo": "kvnloo/hermes-agent-cluster",
+      "plane": "execution",
+      "architecture_status": "merged",
+      "implementation_status": "experimental",
+      "owner": "Execution",
+      "summary": "Application-layer cluster of Hermes agent workers with its own capability scheduler, leases, heartbeat state machine (online -> degraded -> offline) and orphan rescheduling. Recorded because it performs RESOURCE PLACEMENT, which the architecture assigns to Kerdoios: it is a competing placement authority, not a peer runtime substrate. Two schedulers over one fleet is exactly the duplication this registry exists to surface. The repository is live, so `architecture_status` is merged; what is superseded is its claim on placement, recorded in `not_here` and the `legacy_of` edge.\n",
+      "owns": [
+        "agent worker fleet",
+        "worker leases and heartbeat",
+        "orphan rescheduling"
+      ],
+      "not_here": [
+        "resource placement (Kerdoios owns placement)",
+        "provider and model inventory",
+        "capability trust",
+        "measurement"
+      ],
+      "relationships": [
+        {
+          "type": "legacy_of",
+          "to": "kerdoios"
+        }
+      ],
+      "profiles": [],
+      "install": {
+        "clone": "https://github.com/kvnloo/hermes-agent-cluster.git",
+        "branch": "main"
+      },
+      "docs": {
+        "readme": "README.md"
+      }
     }
   },
   "upstreams": {
@@ -1273,6 +1313,142 @@
         "tokenomics"
       ],
       "note": "OTel remains the TRANSPORT. Tokenomics owns Zer0-specific semantics and must not reimplement OTel.\n"
+    },
+    "groq": {
+      "name": "Groq",
+      "kind": "provider_catalog",
+      "authority": {
+        "surface": "Groq API /openai/v1/models"
+      },
+      "relationship": "discovers_from",
+      "discovers": [
+        "served model ids",
+        "context window",
+        "model capability limits"
+      ],
+      "cache_policy": "derived",
+      "cache_ttl": "24h",
+      "owns": [
+        "served model inventory",
+        "per-model rate limits"
+      ],
+      "does_not_own": [
+        "Zer0 model selection",
+        "quota accounting",
+        "placement"
+      ],
+      "consumed_by": [
+        "kerdoios",
+        "z0intelligence"
+      ],
+      "note": "Reachable and authenticated when a key is present. Provider-side rate limits (requests/day, tokens/day) are discovered, never assumed: they are per-account facts, so they must be read from the API rather than hardcoded.\n"
+    },
+    "cerebras": {
+      "name": "Cerebras",
+      "kind": "provider_catalog",
+      "authority": {
+        "surface": "Cerebras Cloud API /v1/models"
+      },
+      "relationship": "discovers_from",
+      "discovers": [
+        "served model ids",
+        "context window",
+        "rate-limit headers"
+      ],
+      "cache_policy": "derived",
+      "cache_ttl": "24h",
+      "owns": [
+        "served model inventory",
+        "per-model rate limits"
+      ],
+      "does_not_own": [
+        "Zer0 model selection",
+        "quota accounting",
+        "placement"
+      ],
+      "consumed_by": [
+        "kerdoios",
+        "z0intelligence"
+      ],
+      "note": "Same contract as Groq. Note that rate-limit dimensions are not always self-consistent (a `remaining` value has been observed exceeding its own `limit`), so a consumer must not treat a single dimension as authoritative.\n"
+    },
+    "nous": {
+      "name": "Nous Portal",
+      "kind": "provider_catalog",
+      "authority": {
+        "surface": "Nous Portal API"
+      },
+      "relationship": "discovers_from",
+      "discovers": [
+        "served model ids",
+        "account entitlement state"
+      ],
+      "cache_policy": "derived",
+      "cache_ttl": "24h",
+      "owns": [
+        "served model inventory",
+        "account entitlement"
+      ],
+      "does_not_own": [
+        "Zer0 model selection",
+        "quota accounting",
+        "placement"
+      ],
+      "consumed_by": [
+        "kerdoios"
+      ],
+      "note": "Catalog reachable; credentials currently require re-login, so availability is `unavailable` until a usable credential exists. A reachable catalog is not an available provider.\n"
+    },
+    "vercel": {
+      "name": "Vercel AI Gateway",
+      "kind": "provider_catalog",
+      "authority": {
+        "surface": "Vercel AI Gateway /v1/models"
+      },
+      "relationship": "discovers_from",
+      "discovers": [
+        "served model ids",
+        "gateway routing metadata"
+      ],
+      "cache_policy": "derived",
+      "cache_ttl": "24h",
+      "owns": [
+        "served model inventory"
+      ],
+      "does_not_own": [
+        "Zer0 model selection",
+        "quota accounting",
+        "placement"
+      ],
+      "consumed_by": [
+        "kerdoios"
+      ],
+      "note": "Account-wide 403 (\"requires a valid credit card on file\"). A gateway model listed as \"zero-cost metadata\" is NOT thereby available; a catalog name cannot confer availability.\n"
+    },
+    "xai": {
+      "name": "xAI",
+      "kind": "provider_catalog",
+      "authority": {
+        "surface": "xAI API /v1/models"
+      },
+      "relationship": "discovers_from",
+      "discovers": [
+        "served model ids"
+      ],
+      "cache_policy": "derived",
+      "cache_ttl": "24h",
+      "owns": [
+        "served model inventory"
+      ],
+      "does_not_own": [
+        "Zer0 model selection",
+        "quota accounting",
+        "placement"
+      ],
+      "consumed_by": [
+        "kerdoios"
+      ],
+      "note": "Credential requires re-login; availability is `unavailable`. Any use must be economically justified against the free providers first.\n"
     }
   },
   "reference_only": {
@@ -1411,6 +1587,16 @@
       "harness": "agenttrace",
       "owner": "agenttrace",
       "summary": "Historical agent span for observability export. Observational only."
+    },
+    "kerdoios.resource_offer.v1": {
+      "class": "contract",
+      "owner": "kerdoios",
+      "summary": "One normalized shape for every execution offer regardless of substrate: host CPU/GPU, Kubernetes, or a remote provider (Groq, Cerebras, OpenRouter, Nous, Vercel, xAI). Kerdoios owns the type and selects among offers. Producers emit it; consumers must NOT special-case a provider outside the adapter/placement boundary.\nStatus is uneven and the registry should say so. Produced today: the host runtime and the remote provider adapters. NOT yet produced: Kubernetes. The only k8s lab (hermes-k8s-lab) is unpublished -- it has no git remote and no GitHub repository -- so the k8s producer is a declared gap, not an implemented one. Fields with no producer anywhere: route, economic_class, throughput, residency, startup_cost, location, node, backend, warm, resident, startup_ms, health_endpoint, queue_depth, namespace, pod, service. `resident` must be a live-runtime observation and never config intent.\n"
+    },
+    "z0int.decision_result.v1": {
+      "class": "contract",
+      "owner": "z0intelligence",
+      "summary": "Frozen DecisionRequest/DecisionResult pair for a DecisionBackend. This is the host-vs-k8s parity contract: the same request must produce the same result whether served by an in-process host backend or by a service, with only transport and placement differing. What may differ: transport latency, queue time, process identity. What may NOT differ: the chosen action, probabilities, model identity and revision. No service implementation exists yet, so parity is declared and unproven; any comparison must use the existing comparability gate rather than a bespoke comparator.\n"
     }
   },
   "profiles": {
@@ -1702,6 +1888,11 @@
       "to": "frontier-kb"
     },
     {
+      "from": "hermes-agent-cluster",
+      "type": "legacy_of",
+      "to": "kerdoios"
+    },
+    {
       "from": "z0",
       "type": "executes_via",
       "to": "oh-my-pi"
@@ -1860,6 +2051,41 @@
       "from": "tokenomics",
       "type": "discovers_from",
       "to": "opentelemetry"
+    },
+    {
+      "from": "kerdoios",
+      "type": "discovers_from",
+      "to": "groq"
+    },
+    {
+      "from": "z0intelligence",
+      "type": "discovers_from",
+      "to": "groq"
+    },
+    {
+      "from": "kerdoios",
+      "type": "discovers_from",
+      "to": "cerebras"
+    },
+    {
+      "from": "z0intelligence",
+      "type": "discovers_from",
+      "to": "cerebras"
+    },
+    {
+      "from": "kerdoios",
+      "type": "discovers_from",
+      "to": "nous"
+    },
+    {
+      "from": "kerdoios",
+      "type": "discovers_from",
+      "to": "vercel"
+    },
+    {
+      "from": "kerdoios",
+      "type": "discovers_from",
+      "to": "xai"
     }
   ]
 }
