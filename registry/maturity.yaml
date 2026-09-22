@@ -15,3 +15,71 @@ execution:
   log_only: Records decisions; does not act on them.
   canary: Partial live path; gated or opt-in.
   live: Default production path when installed.
+
+# Canonical evidence classification for any claim about a model capability.
+#
+# This is the single definition. Repos REFERENCE it; they must not redeclare
+# their own vocabulary. Before 2026-09-22 the ecosystem carried six or seven
+# disjoint lists (z0intelligence trust statuses and promotion states, kerdoios
+# Trust/Status/EvidenceClass, evolution-lab keep|discard and L0-L3, z0evals
+# draft|frozen|published|superseded, and these maturity keys), which could not
+# be joined. `PAIRED_REPLAY` existed nowhere.
+#
+# `may_influence` is the strongest thing a claim at this class is ALLOWED to
+# change. A claim may never borrow the consequences of a stronger class, and
+# absence of evidence is not a weak class -- it is no class.
+#
+# All seven classes are required; `scripts/registry-check` fails if one is
+# missing or if a class omits `means` or `may_influence`.
+
+evidence:
+  SMOKE:
+    means: >
+      The path runs end to end at least once on a trivial or synthetic input.
+      Proves wiring and nothing else.
+    may_influence: []
+    must_not: [any capability claim, trust record, routing change]
+
+  EXPLORATORY_BETA:
+    means: >
+      Real inputs, small n, no paired control. A direction to investigate, not
+      a result.
+    may_influence: [hypothesis_formation, next_experiment_design]
+    must_not: [capability_trust_record, default_routing, published_claim]
+
+  SHADOW:
+    means: >
+      Runs on live traffic without affecting the outcome, recording what it
+      would have done. Observational only.
+    may_influence: [operational_confidence, rollout_risk_estimate]
+    must_not: [capability_trust_record, default_routing]
+
+  PAIRED_REPLAY:
+    means: >
+      The same inputs scored under two conditions with the pairing preserved, so
+      the difference is attributable to the condition rather than to sampling.
+      Required before any comparative or marginal-gain claim.
+    may_influence: [comparison_claims, marginal_gain_claims]
+    must_not: [capability_trust_record]
+
+  CONFIRM:
+    means: >
+      Frozen split, pre-registered metric, no further tuning, reproduction
+      attempted. The only class that may establish capability trust.
+    may_influence: [capability_trust_record, production_gate]
+    must_not: [generality_claims]
+
+  OOD:
+    means: >
+      Out-of-distribution or protected slice, held out from all selection and
+      tuning. The only class that may support a generality claim.
+    may_influence: [generality_claims, regression_evidence]
+    must_not: [selection, tuning]
+
+  PROMOTION:
+    means: >
+      The artefact is the governed default path, with an activation record
+      naming what changed and how to revert. A promotion consumes CONFIRM and
+      OOD evidence; it does not substitute for it.
+    may_influence: [default_routing, install_profile_membership]
+    must_not: [retroactive trust for other capabilities]

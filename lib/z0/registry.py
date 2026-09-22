@@ -79,6 +79,25 @@ def maturity() -> dict[str, dict[str, str]]:
     return _load("maturity.yaml")
 
 
+# The one canonical evidence vocabulary. Repos reference this list; they must
+# not redeclare their own. An ordered tuple, because the order is the strength
+# ordering: a claim may not borrow the consequences of a later class.
+REQUIRED_EVIDENCE_CLASSES: tuple[str, ...] = (
+    "SMOKE",
+    "EXPLORATORY_BETA",
+    "SHADOW",
+    "PAIRED_REPLAY",
+    "CONFIRM",
+    "OOD",
+    "PROMOTION",
+)
+
+
+def evidence_classes() -> dict[str, dict[str, Any]]:
+    """The canonical evidence taxonomy, or {} when undeclared."""
+    return _load("maturity.yaml").get("evidence", {}) or {}
+
+
 def cognition_flow() -> dict[str, Any]:
     """Stage map + owners for the local cognition dataflow.
 
@@ -207,6 +226,23 @@ def validate() -> list[str]:
         for cid in (spec.get("harnesses") or []):
             if cid not in comps and cid not in ups:
                 problems.append(f"profile {name}: harness {cid} is unknown")
+
+    # The evidence taxonomy is the one vocabulary the whole stack classifies
+    # claims against, so an incomplete or under-specified taxonomy is a
+    # structural problem, not a documentation gap. `PAIRED_REPLAY` in
+    # particular existed nowhere before this check.
+    ev = evidence_classes()
+    missing = [c for c in REQUIRED_EVIDENCE_CLASSES if c not in ev]
+    if missing:
+        problems.append(f"maturity.yaml: evidence taxonomy is missing {missing}")
+    for cid in REQUIRED_EVIDENCE_CLASSES:
+        spec = ev.get(cid)
+        if not spec:
+            continue
+        if not spec.get("means"):
+            problems.append(f"evidence class {cid}: missing 'means'")
+        if "may_influence" not in spec:
+            problems.append(f"evidence class {cid}: missing 'may_influence'")
 
     return problems
 
