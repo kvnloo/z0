@@ -438,3 +438,282 @@ sources:
     discovers:
     - served model ids
     cache_policy: derived
+interfaces:
+  agenttrace.span.v0:
+    class: adapter
+    owner: agenttrace
+    harness: agenttrace
+  aodl.intent.v1:
+    class: contract
+    owner: aodl
+    harness: null
+  aodl.observed_state.v1:
+    class: contract
+    owner: aodl
+    harness: null
+  cu.stage_intent.v0:
+    class: adapter
+    owner: oh-my-pi
+    harness: oh-my-pi
+  dsh.llm_pi_ai.catalog:
+    class: adapter
+    owner: deepseek-harness
+    harness: deepseek-harness
+  flow.prediction.v1:
+    class: contract
+    owner: flow
+    harness: null
+  harness.execution.v0:
+    class: contract
+    owner: aodl
+    harness: null
+  hermes.plugin.v0:
+    class: adapter
+    owner: hermes-agent
+    harness: hermes-agent
+  kerdoios.placement.v1:
+    class: contract
+    owner: kerdoios
+    harness: null
+  kerdoios.quota_state.v1:
+    class: contract
+    owner: kerdoios
+    harness: null
+  kerdoios.resource_offer.v1:
+    class: contract
+    owner: kerdoios
+    harness: null
+  omp.rlm.spill.v0:
+    class: adapter
+    owner: oh-my-pi
+    harness: oh-my-pi
+  omp.session.aggregate:
+    class: adapter
+    owner: oh-my-pi
+    harness: oh-my-pi
+  rlm.evidence_handle.v0:
+    class: contract
+    owner: rlm
+    harness: null
+  tokenomics.event.v0:
+    class: contract
+    owner: tokenomics
+    harness: null
+  tokenomics.report.v1:
+    class: contract
+    owner: tokenomics
+    harness: null
+  z0evals.study.v1:
+    class: contract
+    owner: z0evals
+    harness: null
+  z0int.cognition.receipt.v1:
+    class: contract
+    owner: z0intelligence
+    harness: null
+  z0int.decision_receipt.v1:
+    class: contract
+    owner: z0intelligence
+    harness: null
+  z0int.decision_result.v1:
+    class: contract
+    owner: z0intelligence
+    harness: null
+harnesses:
+  codex:
+    repo: openai/codex
+    kind: executor
+    adoption: active
+    aodl_id: codex
+    entity: null
+    class: null
+  deepseek:
+    repo: kvnloo/deepseek-harness
+    kind: executor
+    adoption: active
+    aodl_id: null
+    entity: null
+    class: null
+  hermes:
+    repo: kvnloo/hermes-agent
+    kind: executor
+    adoption: primary
+    aodl_id: hermes
+    entity: null
+    class: null
+  omp:
+    repo: kvnloo/oh-my-pi
+    kind: executor
+    adoption: primary
+    aodl_id: omp
+    entity: oh-my-pi
+    class: upstream
+  pi:
+    repo: earendil-works/pi
+    kind: executor
+    adoption: research
+    aodl_id: pi
+    entity: null
+    class: null
+mechanisms:
+  agenttrace-cross-harness-observation:
+    kind: observability
+    stage: experimental
+    implemented_by:
+    - entity: agenttrace
+      class: upstream
+      repo: kvnloo/agenttrace
+  aodl-intent-plan-observed:
+    kind: contract
+    stage: experimental
+    implemented_by:
+    - entity: aodl
+      class: component
+      repo: kvnloo/aodl
+  jev-typed-decision:
+    kind: decision
+    stage: experimental
+    implemented_by:
+    - entity: z0intelligence
+      class: component
+      repo: kvnloo/z0intelligence
+    - entity: oh-my-pi
+      class: upstream
+      repo: kvnloo/oh-my-pi
+  rlm-context-spill:
+    kind: context
+    stage: production
+    implemented_by:
+    - entity: oh-my-pi
+      class: upstream
+      repo: kvnloo/oh-my-pi
+  sol-pi-action-fusion:
+    kind: efficiency
+    stage: experimental
+    implemented_by: []
+  sol-pi-evidence-reducer:
+    kind: compression
+    stage: experimental
+    implemented_by: []
+  sol-pi-observation-pack:
+    kind: context
+    stage: experimental
+    implemented_by: []
+  sol-pi-online-context-compact:
+    kind: compression
+    stage: experimental
+    implemented_by: []
+lifecycles:
+  architecture-truth:
+    kind: epistemic
+    stages:
+    - declared
+    - implemented
+    - observed
+    - historical
+    - derived
+  evolution-lab-promotion:
+    kind: experiment
+    stages:
+    - sanity
+    - replay
+    - shadow
+    - promoted
+  verified-oss-rolling:
+    kind: promotion
+    stages:
+    - candidate
+    - preview
+    - nightly
+    - dev
+    - main
+representations:
+  aodl-intent:
+    kind: intent
+    compression: null
+  compiled-decision-state:
+    kind: decision_state
+    compression: null
+  compiled-plan:
+    kind: plan
+    compression: null
+  decision-receipt:
+    kind: decision
+    compression: null
+  evidence-receipt:
+    kind: evidence_bundle
+    compression: null
+  observation-pack:
+    kind: evidence_bundle
+    compression: null
+  observed-topology:
+    kind: observation
+    compression: null
+  raw-context:
+    kind: source
+    compression: null
+  rlm-address:
+    kind: address
+    compression: null
+  tokenomics-event:
+    kind: measurement
+    compression: null
+  trace-span:
+    kind: observation
+    compression: null
+evidence_classes:
+  CONFIRM:
+    may_influence:
+    - capability_trust_record
+    - production_gate
+  EXPLORATORY_BETA:
+    may_influence:
+    - hypothesis_formation
+    - next_experiment_design
+  OOD:
+    may_influence:
+    - generality_claims
+    - regression_evidence
+  PAIRED_REPLAY:
+    may_influence:
+    - comparison_claims
+    - marginal_gain_claims
+  PROMOTION:
+    may_influence:
+    - default_routing
+    - install_profile_membership
+  SHADOW:
+    may_influence:
+    - operational_confidence
+    - rollout_risk_estimate
+  SMOKE:
+    may_influence: []
+evidence_dependencies:
+  aodl-intent-to-plan:
+    kind: null
+    from: representation:aodl-intent
+    to: representation:compiled-plan
+  decision-state-to-receipt:
+    kind: null
+    from: representation:compiled-decision-state
+    to: representation:decision-receipt
+  evidence-reducer-preserves-verifiability:
+    kind: null
+    from: representation:raw-context
+    to: representation:evidence-receipt
+  execution-to-tokenomics:
+    kind: null
+    from: representation:observed-topology
+    to: representation:tokenomics-event
+  observation-pack-compresses-context:
+    kind: null
+    from: representation:raw-context
+    to: representation:observation-pack
+  omp-rlm-context-spill:
+    kind: null
+    from: component:oh-my-pi
+    to: mechanism:rlm-context-spill
+  plan-to-observed-topology:
+    kind: null
+    from: representation:compiled-plan
+    to: representation:observed-topology

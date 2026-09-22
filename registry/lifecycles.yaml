@@ -1,0 +1,37 @@
+# Cross-repository evolution and promotion semantics.
+# These are architecture/history states, not Git branch requirements for every repo.
+
+lifecycles:
+  verified-oss-rolling:
+    name: Verified OSS rolling promotion
+    owner_repo: kvnloo/verified-oss-loop
+    kind: promotion
+    stages: [candidate, preview, nightly, dev, main]
+    rule: >
+      Evidence-gated work moves through increasingly authoritative surfaces;
+      workers do not merge main.
+    evidence:
+      - kvnloo/verified-oss-loop:README.md
+      - kvnloo/verified-oss-loop:SPEC.md
+
+  evolution-lab-promotion:
+    name: Evolution Lab candidate promotion
+    owner_repo: kvnloo/evolution-lab
+    kind: experiment
+    stages: [sanity, replay, shadow, promoted]
+    rule: >
+      Experiment genomes are eliminated cheaply and promoted only after measured
+      replay/verifier evidence; preview/nightly branches carry rolling candidates.
+    evidence:
+      - kvnloo/evolution-lab:README.md
+
+  architecture-truth:
+    name: Zer0 architecture truth classes
+    owner_repo: kvnloo/z0
+    kind: epistemic
+    stages: [declared, implemented, observed, historical, derived]
+    rule: >
+      Lower-authority observations may expose drift but never silently overwrite
+      declared architecture.
+    evidence:
+      - kvnloo/z0archy:docs/ARCHITECTURE.md

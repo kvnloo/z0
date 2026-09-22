@@ -98,6 +98,37 @@ def evidence_classes() -> dict[str, dict[str, Any]]:
     return _load("maturity.yaml").get("evidence", {}) or {}
 
 
+# --- semantic ontology accessors (from the pre-federation generation) -------
+# These were written on origin/main against the older `components.yaml` schema.
+# They are additive: federation answers "who owns what and what is observed",
+# the ontology answers "what harnesses/mechanisms/representations exist". Both
+# are kept, because neither subsumes the other.
+
+
+def harnesses() -> dict[str, dict[str, Any]]:
+    return _load("harnesses.yaml").get("harnesses", {})
+
+
+def harness_catalog() -> dict[str, Any]:
+    return _load("harnesses.yaml").get("catalog", {})
+
+
+def mechanisms() -> dict[str, dict[str, Any]]:
+    return _load("mechanisms.yaml").get("mechanisms", {})
+
+
+def lifecycles() -> dict[str, dict[str, Any]]:
+    return _load("lifecycles.yaml").get("lifecycles", {})
+
+
+def representations() -> dict[str, dict[str, Any]]:
+    return _load("representations.yaml").get("representations", {})
+
+
+def evidence_dependencies() -> dict[str, dict[str, Any]]:
+    return _load("evidence_dependencies.yaml").get("evidence_dependencies", {})
+
+
 def cognition_flow() -> dict[str, Any]:
     """Stage map + owners for the local cognition dataflow.
 
@@ -226,6 +257,43 @@ def validate() -> list[str]:
         for cid in (spec.get("harnesses") or []):
             if cid not in comps and cid not in ups:
                 problems.append(f"profile {name}: harness {cid} is unknown")
+
+    # Semantic-ontology references resolve against the FULL entity universe,
+    # not against owned components alone. The pre-federation check asserted
+    # `component in comps`, which the federation legitimately breaks: oh-my-pi
+    # and agenttrace moved to upstreams while mechanisms still name them. The
+    # reference is true; only its class changed. Rows now carry `class:` so the
+    # distinction is explicit rather than implied.
+    entity_ids = set(comps) | set(ups) | set(srcs) | set(reference_only())
+    interface_ids = set(interfaces())
+    harness_ids = set(harnesses())
+
+    def _check_refs(where: str, rows: Any, *, key: str = "entity") -> None:
+        for row in rows or []:
+            if not isinstance(row, dict):
+                problems.append(f"{where}: reference is not a mapping")
+                continue
+            target = row.get(key) or row.get("component") or row.get("harness")
+            if not target:
+                problems.append(f"{where}: reference names nothing")
+                continue
+            declared = row.get("class")
+            if declared and declared not in ("component", "upstream", "source", "reference_only"):
+                problems.append(f"{where}: unknown class {declared!r}")
+            if target not in entity_ids and target not in interface_ids and target not in harness_ids:
+                problems.append(
+                    f"{where}: reference {target!r} is not a known entity, harness or interface"
+                )
+
+    for mid, meta in mechanisms().items():
+        _check_refs(f"mechanism {mid}.implemented_by", meta.get("implemented_by"))
+        _check_refs(f"mechanism {mid}.implementations", meta.get("implementations"))
+    for hid, meta in harnesses().items():
+        _check_refs(f"harness {hid}", [meta] if meta.get("entity") or meta.get("component") else [])
+    for rid, meta in representations().items():
+        _check_refs(f"representation {rid}", meta.get("carried_by"))
+    for lid, meta in lifecycles().items():
+        _check_refs(f"lifecycle {lid}", meta.get("applies_to"))
 
     # The evidence taxonomy is the one vocabulary the whole stack classifies
     # claims against, so an incomplete or under-specified taxonomy is a

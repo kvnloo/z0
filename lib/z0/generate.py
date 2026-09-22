@@ -111,6 +111,60 @@ def agent_registry_yaml() -> str:
             }
             for sid, m in sorted(registry.sources().items())
         },
+        # Cross-component contracts, and the semantic ontology. These were
+        # generated on the pre-federation branch but never entered the canonical
+        # map, so the map described ownership without describing what connects
+        # the parts. A registry that omits its own contracts is not canonical.
+        "interfaces": {
+            iid: {
+                "class": m.get("class"),
+                "owner": m.get("owner"),
+                "harness": m.get("harness"),
+            }
+            for iid, m in sorted(registry.interfaces().items())
+        },
+        "harnesses": {
+            hid: {
+                "repo": m.get("repo"),
+                "kind": m.get("kind"),
+                "adoption": m.get("adoption"),
+                "aodl_id": m.get("aodl_id"),
+                "entity": m.get("entity"),
+                "class": m.get("class"),
+            }
+            for hid, m in sorted(registry.harnesses().items())
+        },
+        "mechanisms": {
+            mid: {
+                "kind": m.get("kind"),
+                "stage": m.get("stage"),
+                "implemented_by": [
+                    {k: r.get(k) for k in ("entity", "class", "harness", "repo") if r.get(k)}
+                    for r in (m.get("implemented_by") or [])
+                ],
+            }
+            for mid, m in sorted(registry.mechanisms().items())
+        },
+        "lifecycles": {
+            lid: {"kind": m.get("kind"), "stages": m.get("stages", [])}
+            for lid, m in sorted(registry.lifecycles().items())
+        },
+        "representations": {
+            rid: {"kind": m.get("kind"), "compression": m.get("compression")}
+            for rid, m in sorted(registry.representations().items())
+        },
+        "evidence_classes": {
+            cid: {"may_influence": spec.get("may_influence", [])}
+            for cid, spec in sorted(registry.evidence_classes().items())
+        },
+        "evidence_dependencies": {
+            did: {
+                "kind": m.get("kind"),
+                "from": m.get("from"),
+                "to": m.get("to"),
+            }
+            for did, m in sorted(registry.evidence_dependencies().items())
+        },
     }
     header = (
         "# GENERATED — do not edit. Derived from registry/*.yaml by "
@@ -539,6 +593,107 @@ def cognition_portfolio() -> str:
     )
 
 
+# --- semantic ontology views (from the pre-federation generation) -------
+# Federation answers who owns what and what is observed; these answer what
+# harnesses, mechanisms and lifecycles exist. Both are kept.
+
+
+def harnesses_md() -> str:
+    lines = [
+        "# Harness registry",
+        "",
+        "| ID | Name | Kind | Adoption | Repo | AODL id | Catalog gap |",
+        "|----|------|------|----------|------|---------|-------------|",
+    ]
+    for hid, meta in sorted(registry.harnesses().items()):
+        lines.append(
+            f"| `{hid}` | {meta.get('name', hid)} | {meta.get('kind', '')} "
+            f"| {meta.get('adoption', '')} | `{meta.get('repo', '')}` "
+            f"| `{meta.get('aodl_id') or ''}` | {'yes' if meta.get('catalog_gap') else ''} |"
+        )
+    lines += ["", "_Generated from `registry/harnesses.yaml`._", ""]
+    return "\n".join(lines)
+
+
+def mechanisms_md() -> str:
+    lines = ["# Mechanism registry", ""]
+    for mid, meta in sorted(registry.mechanisms().items()):
+        lines.append(f"## `{mid}` — {meta.get('name', mid)}")
+        lines.append(f"- **Kind:** {meta.get('kind', '')}")
+        lines.append(f"- **Stage:** {meta.get('stage', '')}")
+        if meta.get("family"):
+            lines.append(f"- **Family:** `{meta['family']}`")
+        purpose = " ".join(str(meta.get("purpose", "")).split())
+        lines.append(f"- **Purpose:** {purpose}")
+        implementations = (meta.get("implemented_by") or []) + (meta.get("implementations") or [])
+        if implementations:
+            refs = []
+            for row in implementations:
+                refs.append(
+                    row.get("entity") or row.get("component") or row.get("harness")
+                    or row.get("repo") or "?"
+                )
+            lines.append("- **Implemented by:** " + ", ".join(f"`{x}`" for x in refs))
+        lines.append("")
+    lines += ["_Generated from `registry/mechanisms.yaml`._", ""]
+    return "\n".join(lines)
+
+
+def lifecycles_md() -> str:
+    lines = ["# Lifecycle registry", ""]
+    for lid, meta in sorted(registry.lifecycles().items()):
+        stages = " → ".join(f"`{s}`" for s in meta.get("stages", []))
+        lines.append(f"## `{lid}` — {meta.get('name', lid)}")
+        lines.append(f"- **Kind:** {meta.get('kind', '')}")
+        lines.append(f"- **Stages:** {stages}")
+        rule = " ".join(str(meta.get("rule", "")).split())
+        lines.append(f"- **Rule:** {rule}")
+        lines.append("")
+    lines += ["_Generated from `registry/lifecycles.yaml`._", ""]
+    return "\n".join(lines)
+
+
+def representations_md() -> str:
+    lines = [
+        "# Representation registry",
+        "",
+        "Semantic forms of information flowing through Zer0. These are not storage",
+        "engines or installable components.",
+        "",
+    ]
+    for rid, meta in sorted(registry.representations().items()):
+        lines.append(f"## `{rid}` — {meta.get('name', rid)}")
+        if meta.get("kind"):
+            lines.append(f"- **Kind:** {meta['kind']}")
+        if meta.get("compression"):
+            lines.append(f"- **Compression:** {meta['compression']}")
+        purpose = " ".join(str(meta.get("purpose", "")).split())
+        if purpose:
+            lines.append(f"- **Purpose:** {purpose}")
+        lines.append("")
+    lines += ["_Generated from `registry/representations.yaml`._", ""]
+    return "\n".join(lines)
+
+
+def evidence_dependencies_md() -> str:
+    lines = [
+        "# Evidence dependencies",
+        "",
+        "Epistemic edges: why a semantic relationship is believed. These attach the",
+        "retrieval recipe and invalidators to a claim; they are not data-flow edges.",
+        "",
+        "| ID | Kind | From | To |",
+        "|----|------|------|----|",
+    ]
+    for did, meta in sorted(registry.evidence_dependencies().items()):
+        lines.append(
+            f"| `{did}` | {meta.get('kind', '')} | `{meta.get('from', '')}` "
+            f"| `{meta.get('to', '')}` |"
+        )
+    lines += ["", "_Generated from `registry/evidence_dependencies.yaml`._", ""]
+    return "\n".join(lines)
+
+
 def write_all() -> list[Path]:
     GENERATED.mkdir(parents=True, exist_ok=True)
     DOCS_GEN.mkdir(parents=True, exist_ok=True)
@@ -552,6 +707,11 @@ def write_all() -> list[Path]:
         GENERATED / "install-matrix.md": install_matrix(),
         GENERATED / "cognition-portfolio.md": cognition_portfolio(),
         GENERATED / "cognition-flow.mmd": cognition.flow_mermaid(),
+        GENERATED / "harnesses.md": harnesses_md(),
+        GENERATED / "mechanisms.md": mechanisms_md(),
+        GENERATED / "lifecycles.md": lifecycles_md(),
+        GENERATED / "representations.md": representations_md(),
+        GENERATED / "evidence_dependencies.md": evidence_dependencies_md(),
         DOCS_GEN / "ownership.md": ownership_table(),
         ROOT / "zer0.registry.yaml": agent_registry_yaml(),
     }

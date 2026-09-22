@@ -1,0 +1,80 @@
+# Harness/runtime surfaces used by Zer0.
+# AODL owns the portable harness-id catalog. This file adds Zer0-specific role,
+# implementation and adoption facts without turning harnesses into install profiles.
+
+catalog:
+  authority: kvnloo/aodl
+  path: harnesses/catalog.json
+  rule: AODL ids remain authoritative for typed orchestration; rows here describe Zer0 usage.
+
+harnesses:
+  omp:
+    name: Oh My Pi
+    repo: kvnloo/oh-my-pi
+    aodl_id: omp
+    entity: oh-my-pi
+    class: upstream
+    kind: executor
+    adoption: primary
+    summary: >
+      Zer0's canary coding-agent runtime. Owns the live coding loop and hosts
+      RLM/context-spill and Jev hotpath integrations.
+    evidence:
+      - registry/upstreams.yaml#upstreams.oh-my-pi
+      - kvnloo/aodl:harnesses/catalog.json#omp
+
+  hermes:
+    name: Hermes Agent
+    repo: kvnloo/hermes-agent
+    upstream: NousResearch/hermes-agent
+    aodl_id: hermes
+    kind: executor
+    adoption: primary
+    summary: >
+      Cross-platform agent/runtime surface with gateway, memory/skills, subagents,
+      scheduled automation and trajectory generation/compression.
+    extensions:
+      - kvnloo/sol-pi-hermes
+    evidence:
+      - kvnloo/aodl:harnesses/catalog.json#hermes
+      - kvnloo/hermes-agent:README.md
+      - kvnloo/sol-pi-hermes:README.md
+
+  deepseek:
+    name: DeepSeek Harness
+    repo: kvnloo/deepseek-harness
+    upstream: deepseek-ai/deepseek-harness
+    aodl_id: null
+    kind: executor
+    adoption: active
+    catalog_gap: true
+    summary: >
+      Plugin-tree harness used as a Zer0 execution and inspection surface.
+      Cordis plugins provide models, tools, session log and agent loop as replaceable
+      services. Not yet present in AODL's fail-closed harness catalog.
+    evidence:
+      - kvnloo/deepseek-harness:README.md
+      - kvnloo/deepseek-harness:docs/architecture.md
+
+  codex:
+    name: Codex
+    repo: openai/codex
+    aodl_id: codex
+    kind: executor
+    adoption: active
+    summary: External executor used in the multi-harness Zer0 workflow.
+    evidence:
+      - kvnloo/aodl:harnesses/catalog.json#codex
+
+  pi:
+    name: Pi
+    repo: earendil-works/pi
+    aodl_id: pi
+    kind: executor
+    adoption: research
+    summary: >
+      External harness and the upstream extension surface from which SoL-Pi's
+      reusable efficiency mechanisms were derived.
+    evidence:
+      - kvnloo/aodl:harnesses/catalog.json#pi
+      - kvnloo/SoL-Pi:README.md
