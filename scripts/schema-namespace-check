@@ -1,0 +1,194 @@
+#!/usr/bin/env python3
+"""Fail when a repo emits a schema id belonging to another repo's namespace.
+
+A namespace mismatch is not automatically a defect. It is one of:
+
+  adapter_output  repo A emits repo B's contract because B consumes it
+  shared          two repos genuinely share a subsystem name
+  inversion       repo A emits its OWN artifact under B's namespace
+
+The id string cannot distinguish these, and guessing from the pattern is how a
+previous scan produced 30 false "inversions" and nearly renamed live contracts —
+including one carried by a FROZEN artifact corpus. So classification lives in
+`registry/schema_namespaces.yaml`, declared with evidence, and this check fails
+only on emissions that are **not declared at all**.
+
+Deliberately NOT wired into `docs-check`: it needs sibling checkouts that CI may
+not have, and a missing checkout must not fail a build. Run it by hand, or from a
+scheduled job, after any change to a schema id.
+
+Usage:
+    ./scripts/schema-namespace-check                      # auto-detect siblings
+    ./scripts/schema-namespace-check --root DIR --root DIR
+    ./scripts/schema-namespace-check --json
+"""
+
+from __future__ import annotations
+
+import argparse
+import collections
+import json
+import re
+import sys
+from pathlib import Path
+
+import yaml
+
+ROOT = Path(__file__).resolve().parent.parent
+REGISTRY = ROOT / "registry" / "schema_namespaces.yaml"
+
+SOURCE_SUFFIXES = {".py", ".ts", ".tsx"}
+OUTPUT_DIRS = {"node_modules", ".venv", ".git", "__pycache__", "results",
+               "site", "build", "dist", ".next", "out"}
+
+SCHEMA_LITERAL = re.compile(
+    r'["\']schema["\']\s*:\s*["\']([A-Za-z][A-Za-z0-9._-]*\.v[0-9]+[A-Za-z0-9._-]*)["\']'
+)
+
+# checkout directory basename -> repo id used in the registry
+REPO_IDS = {
+    "z0": "z0", "openjev": "z0intelligence", "z0evals": "z0evals",
+    "kerdoios": "kerdoios", "tokenomics": "tokenomics", "aodl": "aodl",
+    "evolution-lab": "evolution-lab", "z0archy": "z0archy",
+    "frontier-kb": "frontier-kb", "verified-oss-loop": "verified-oss-loop",
+    "hermes-k8s-lab": "hermes-k8s-lab", "k8s-maintainer": "k8s-maintainer",
+}
+
+SEARCH_PARENTS = ("/home/kvn/tmp", "/mnt/zer0models/repos/kvnloo",
+                  "/mnt/zer0models/workspace", "/mnt/zer0models/workspace/zer0/oss/.work")
+
+
+def load_registry() -> dict:
+    if not REGISTRY.is_file():
+        raise SystemExit(f"missing {REGISTRY.relative_to(ROOT)}")
+    return yaml.safe_load(REGISTRY.read_text(encoding="utf-8")) or {}
+
+
+def discover_roots(explicit: list[str]) -> dict[str, Path]:
+    if explicit:
+        return {REPO_IDS.get(Path(p).name, Path(p).name): Path(p) for p in explicit}
+    found: dict[str, Path] = {}
+    for parent in SEARCH_PARENTS:
+        base = Path(parent)
+        if not base.is_dir():
+            continue
+        for child in sorted(base.iterdir()):
+            if not child.is_dir():
+                continue
+            rid = REPO_IDS.get(child.name)
+            if rid and rid not in found and (child / ".git").exists():
+                found[rid] = child
+    return found
+
+
+def emitted_ids(root: Path) -> set[str]:
+    ids: set[str] = set()
+    for path in root.rglob("*"):
+        if path.suffix not in SOURCE_SUFFIXES:
+            continue
+        if OUTPUT_DIRS & set(path.parts):
+            continue
+        try:
+            text = path.read_text(encoding="utf-8", errors="ignore")
+        except OSError:
+            continue
+        ids.update(m.group(1) for m in SCHEMA_LITERAL.finditer(text))
+    return ids
+
+
+def analyse(roots: dict[str, Path], reg: dict) -> dict:
+    owners = reg.get("owners") or {}
+    shared = set(reg.get("shared") or {})
+    declared = {
+        (e.get("id", "").split("@", 1)[0], e.get("emitted_by"))
+        for e in (reg.get("cross_owner") or [])
+        if isinstance(e, dict)
+    }
+    declared_inversions = {
+        e["id"].split("@", 1)[0]
+        for e in (reg.get("cross_owner") or [])
+        if isinstance(e, dict) and e.get("kind") == "inversion"
+    }
+
+    undeclared: list[dict] = []
+    inversions: list[dict] = []
+    adapters: list[dict] = []
+    totals = collections.Counter()
+
+    for repo, root in sorted(roots.items()):
+        try:
+            ids = emitted_ids(root)
+        except OSError:
+            continue
+        totals[repo] = len(ids)
+        for sid in sorted(ids):
+            ns = sid.split(".", 1)[0]
+            owner_repo = owners.get(ns)
+            if ns in shared or owner_repo is None:
+                continue
+            if owner_repo == repo:
+                continue
+            record = {"id": sid, "namespace": ns, "emitted_by": repo,
+                      "namespace_owner": owner_repo}
+            if (sid, repo) in declared:
+                (inversions if sid in declared_inversions else adapters).append(record)
+            else:
+                undeclared.append(record)
+
+    return {
+        "schema": "z0.schema_namespace_check.v1",
+        "roots": {k: str(v) for k, v in roots.items()},
+        "ids_scanned": dict(totals),
+        "undeclared": undeclared,
+        "known_inversions": inversions,
+        "declared_adapter_output": adapters,
+        "ok": not undeclared,
+    }
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--root", action="append", default=[])
+    ap.add_argument("--json", action="store_true")
+    args = ap.parse_args()
+
+    reg = load_registry()
+    roots = discover_roots(args.root)
+    if not roots:
+        print("no checkouts found to scan", file=sys.stderr)
+        return 0
+
+    report = analyse(roots, reg)
+    if args.json:
+        print(json.dumps(report, indent=2, sort_keys=True))
+        return 0 if report["ok"] else 1
+
+    print(f"scanned {len(roots)} checkouts: "
+          f"{sum(report['ids_scanned'].values())} schema ids\n")
+
+    if report["declared_adapter_output"]:
+        print(f"declared adapter output ({len(report['declared_adapter_output'])}) — correct:")
+        for r in report["declared_adapter_output"]:
+            print(f"  {r['id']:<46} {r['emitted_by']} -> {r['namespace_owner']}")
+
+    if report["known_inversions"]:
+        print(f"\nknown inversions ({len(report['known_inversions'])}) — recorded debt, "
+              f"each needs an owner decision:")
+        for r in report["known_inversions"]:
+            print(f"  {r['id']:<46} emitted by {r['emitted_by']}, owned by {r['namespace_owner']}")
+
+    if report["undeclared"]:
+        print(f"\nUNDECLARED cross-owner emissions ({len(report['undeclared'])}):")
+        for r in report["undeclared"]:
+            print(f"  {r['id']:<46} emitted by {r['emitted_by']}, owned by {r['namespace_owner']}")
+        print("\nDecide for each: adapter output, shared namespace, or inversion —")
+        print("then declare it in registry/schema_namespaces.yaml with evidence.")
+        print("Do NOT classify from the name pattern alone.")
+        return 1
+
+    print("\nok: every cross-owner emission is declared")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

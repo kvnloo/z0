@@ -1,0 +1,147 @@
+# Schema namespaces and their owners, plus every KNOWN emission where the
+# emitting repo is not the namespace owner.
+#
+# Why this file exists
+# --------------------
+# A namespace mismatch can be three different things, and the id string ALONE
+# cannot tell you which:
+#
+#   adapter_output  repo A emits repo B's contract because B consumes it.
+#                   Correct: the namespace names the CONTRACT OWNER.
+#   shared          two repos genuinely share a subsystem name.
+#                   Needs an owner decision.
+#   inversion       repo A emits its OWN artifact under B's namespace.
+#                   Defect: implies an owner that does not define it.
+#
+# I got this wrong once already: a scan found 30 cross-owner emissions and I
+# classified all 30 as inversions from the name pattern. Checking the evidence
+# showed the largest group was adapter output, and renaming it would have broken
+# a frozen artifact contract. So classification is DECLARED here, with evidence,
+# and `scripts/schema-namespace-check` fails on anything undeclared rather than
+# guessing.
+
+schema: z0.schema_namespaces.v1
+
+# namespace -> REPO ID. Repo ids match the local checkout basenames the checker
+# discovers, NOT GitHub slugs: comparing a namespace against "kvnloo/z0intelligence"
+# while scanning a checkout called "z0intelligence" flags every own-namespace
+# emission as cross-owner. (I made exactly that mistake writing this file.)
+#
+#   z0int  = kvnloo/z0intelligence      z0     = kvnloo/z0
+#   z0evals = kvnloo/z0evals            kerdoios = kvnloo/kerdoios
+#   tokenomics = kvnloo/tokenomics      aodl/hotl = kvnloo/aodl
+owners:
+  z0: z0
+  z0int: z0intelligence
+  z0evals: z0evals
+  kerdoios: kerdoios
+  tokenomics: tokenomics
+  aodl: aodl
+  hotl: aodl
+  evolution-lab: evolution-lab
+  z0archy: z0archy
+  frontier-kb: frontier-kb
+
+# Namespaces deliberately shared between repos. Each needs a reason.
+shared:
+  os:
+    note: >
+      z0intelligence carries the os-context machinery and emits os.* schemas,
+      while `os.next_context.v0` is registered in registry/interfaces.yaml as
+      owned by `flow`. Which repo owns the namespace is an OPEN QUESTION, recorded
+      so it is visible rather than silently permitted.
+  flyforge:
+    note: >
+      `flyforge` names a z0intelligence extension (omp-extensions/flyforge-recovery)
+      and evolution-lab emits 16 schemas under it. Shared ecosystem name; open
+      question whether it should become z0int.flyforge.*.
+  qroute:
+    note: evolution-lab's own experiment family (q-route); declared for completeness.
+
+# Emissions where emitter != namespace owner. Every entry needs evidence.
+cross_owner:
+  # --- adapter output: the owner defines and/or consumes these ---------------
+  - id: z0int.phase1b.observation.v1
+    emitted_by: z0intelligence
+    namespace_owner: z0intelligence
+    kind: own
+    evidence: defined and emitted by this repo
+
+  - id: z0int.phase1b.observation.v1@evolution-lab
+    emitted_by: evolution-lab
+    namespace_owner: z0intelligence
+    kind: adapter_output
+    evidence: >
+      z0intelligence consumes it (scripts/densify_measurements.py) and openjev's
+      frozen Phase 1B corpus carries it with router_revision=evolution-lab@….
+      evolution-lab ran the measurement loop and emitted the observations in the
+      contract owner's namespace. Renaming would break a FROZEN contract.
+
+  - id: z0int.preflight.v1@evolution-lab
+    emitted_by: evolution-lab
+    namespace_owner: z0intelligence
+    kind: adapter_output
+    evidence: defined in z0intelligence (src/z0int/preflight.py)
+
+  - id: z0int.candidate_artifact.v1@evolution-lab
+    emitted_by: evolution-lab
+    namespace_owner: z0intelligence
+    kind: adapter_output
+    evidence: >
+      evolution_lab/export_z0int.py:13 — "Export immutable
+      z0int.candidate_artifact.v1 bundles". Produces z0intelligence's format for
+      z0intelligence to consume.
+
+  - id: z0int.decision_receipt.v1@tokenomics
+    emitted_by: tokenomics
+    namespace_owner: z0intelligence
+    kind: adapter_output
+    evidence: >
+      tokenomics CONSUMES this contract rather than defining it:
+      packages/python/src/tokenomics/adapters.py:37 — "Map a
+      z0int.decision_receipt.v1-compatible row into the neutral schema". It
+      appears as an emitted literal only in the adapter's test fixtures, which
+      build an input row in the owner's format. z0intelligence defines it
+      (src/z0int/receipt.py:19) and it is registered in interfaces.yaml as owned
+      by z0intelligence.
+
+  # --- inversions: owner neither defines nor consumes them -------------------
+  # Listed so the check can hold them as KNOWN debt and fail if a NEW one
+  # appears. Each was evidenced by grepping the namespace owner's repo.
+  - id: z0evals.shadow-real-traffic.v1
+    emitted_by: evolution-lab
+    namespace_owner: z0evals
+    kind: inversion
+    evidence: not referenced anywhere in z0evals
+  - id: z0evals.recovery-backend-compare.v1
+    emitted_by: evolution-lab
+    namespace_owner: z0evals
+    kind: inversion
+    evidence: not referenced anywhere in z0evals
+  - id: z0evals.recovery-llm-compare.v1
+    emitted_by: evolution-lab
+    namespace_owner: z0evals
+    kind: inversion
+    evidence: not referenced anywhere in z0evals
+  - id: z0evals.phase2-training-comparison.v1
+    emitted_by: evolution-lab
+    namespace_owner: z0evals
+    kind: inversion
+    evidence: not referenced anywhere in z0evals
+  - id: z0int.outer_loop.v1
+    emitted_by: evolution-lab
+    namespace_owner: z0intelligence
+    kind: inversion
+    evidence: not present in z0intelligence src
+  - id: z0int.specialist_canary.v1
+    emitted_by: evolution-lab
+    namespace_owner: z0intelligence
+    kind: inversion
+    evidence: not present in z0intelligence src
+  - id: tokenomics.receipt.v1
+    emitted_by: kerdoios
+    namespace_owner: tokenomics
+    kind: inversion
+    evidence: >
+      zero hits in tokenomics, which authors tokenomics.event.v0. Wire contract,
+      so the rename needs an owner decision.
