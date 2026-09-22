@@ -90,6 +90,9 @@ for sid, meta in suite.items():
     lifecycle = meta.get("lifecycle")
     if lifecycle:
         assert lifecycle in lifecycles, f"suite repository {sid} references unknown lifecycle {lifecycle}"
+    for target in meta.get("depends_on_repositories", []) or []:
+        assert target in suite, f"suite repository {sid} references unknown suite repository {target}"
+        assert target != sid, f"suite repository {sid} cannot depend on itself"
 
 print(
     f"ok: {len(comps)} components, {len(profs)} profiles, "

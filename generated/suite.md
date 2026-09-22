@@ -2,8 +2,10 @@
 
 | ID | Name | Role | Authority | Status | Repository |
 |----|------|------|-----------|--------|------------|
+| `activegraph` | ActiveGraph | temporal_graph_substrate | external_substrate | active | `kvnloo/activegraph` |
 | `deepseek-harness` | DeepSeek Harness | execution_runtime | implementation | developer_preview | `kvnloo/deepseek-harness` |
 | `flyforge` | FlyForge | research_program | research | reference | `kvnloo/flyforge` |
+| `graphcon-deck` | graphcon-deck | presentation_substrate | external_substrate | active | `kvnloo/graphcon-deck` |
 | `hermes-agent` | Hermes Agent | execution_runtime | implementation | active | `kvnloo/hermes-agent` |
 | `hermes-agent-self-evolution` | Hermes Agent Self-Evolution | evolution_engine | implementation | experimental | `kvnloo/hermes-agent-self-evolution` |
 | `hermes-jev-skills` | Hermes Jev Skills | decision_extension | implementation | experimental | `kvnloo/hermes-jev-skills` |

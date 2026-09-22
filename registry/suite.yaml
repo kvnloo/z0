@@ -4,6 +4,28 @@
 # promoting every repo into components.yaml.
 
 repositories:
+  activegraph:
+    name: ActiveGraph
+    repo: kvnloo/activegraph
+    upstream: yoheinakajima/activegraph
+    role: temporal_graph_substrate
+    authority: external_substrate
+    status: active
+    summary: Event-sourced reactive graph runtime used by z0archy for resumable, forkable, diffable architecture history.
+    evidence:
+      - kvnloo/activegraph:README.md
+
+  graphcon-deck:
+    name: graphcon-deck
+    repo: kvnloo/graphcon-deck
+    upstream: yoheinakajima/graphcon-deck
+    role: presentation_substrate
+    authority: external_substrate
+    status: active
+    summary: Spatial knowledge-graph presentation substrate adapted by z0archy for authored scenes and interactive architecture exploration.
+    evidence:
+      - kvnloo/graphcon-deck:README.md
+
   z0:
     name: Zer0
     repo: kvnloo/z0
@@ -21,6 +43,7 @@ repositories:
     role: architecture_projection
     authority: derived
     status: active
+    depends_on_repositories: [activegraph, graphcon-deck]
     supports_components: [oh-my-pi, tokenomics, z0intelligence, kerdoios, evolution-lab, frontier-kb, aodl, agenttrace, memento, openjev]
     lifecycle: architecture-truth
     summary: Dynamic architecture world model, exact-ref implementation evidence, history, counterfactuals, and semantic compression.
