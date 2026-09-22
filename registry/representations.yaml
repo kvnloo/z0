@@ -1,0 +1,115 @@
+# Information representations flowing through Zer0.
+# These are semantic forms of information, not storage engines or installable components.
+# The purpose is to make information compression, retrieval, and decision boundaries visible.
+
+representations:
+  raw-context:
+    name: Raw context
+    kind: source
+    scale: large
+    summary: Uncompressed source text, logs, files, observations, or conversation state.
+    sensitivity: inherited
+    evidence:
+      - kvnloo/oh-my-pi:README.md
+      - kvnloo/SoL-Pi:README.md
+
+  rlm-address:
+    name: RLM address
+    kind: address
+    scale: tiny
+    summary: Stable handle that keeps large context externally addressable instead of replaying it into the frontier window.
+    sensitivity: inherited
+    produced_by: [rlm-context-spill]
+    evidence:
+      - registry/mechanisms.yaml#mechanisms.rlm-context-spill
+
+  observation-pack:
+    name: ObservationPack
+    kind: evidence_bundle
+    scale: bounded
+    summary: Stable compact handle plus exact recall path for large observations.
+    sensitivity: inherited
+    produced_by: [sol-pi-observation-pack]
+    evidence:
+      - registry/mechanisms.yaml#mechanisms.sol-pi-observation-pack
+
+  evidence-receipt:
+    name: Evidence receipt
+    kind: evidence_bundle
+    scale: compact
+    summary: Quote-verifiable compressed diagnostic evidence with a fall-open path when verification fails.
+    sensitivity: inherited
+    produced_by: [sol-pi-evidence-reducer]
+    evidence:
+      - registry/mechanisms.yaml#mechanisms.sol-pi-evidence-reducer
+
+  compiled-decision-state:
+    name: Compiled decision state
+    kind: decision_state
+    scale: compact
+    summary: Decision-relevant state after retrieval, filtering, and bounded context compilation.
+    sensitivity: inherited
+    evidence:
+      - kvnloo/z0intelligence:README.md
+      - kvnloo/oh-my-pi:README.md
+
+  aodl-intent:
+    name: AODL intent
+    kind: intent
+    scale: compact
+    summary: Typed desired orchestration before runtime-safe compilation.
+    sensitivity: inherited
+    interface: aodl.intent.v1
+    evidence:
+      - registry/interfaces.yaml#interfaces.aodl.intent.v1
+
+  compiled-plan:
+    name: Compiled orchestration plan
+    kind: plan
+    scale: compact
+    summary: Runtime-safe plan compiled from typed intent before execution.
+    sensitivity: inherited
+    produced_by: [aodl-intent-plan-observed]
+    evidence:
+      - registry/mechanisms.yaml#mechanisms.aodl-intent-plan-observed
+
+  observed-topology:
+    name: Observed execution topology
+    kind: observation
+    scale: bounded
+    summary: What actually ran, kept distinct from desired intent and compiled plan.
+    sensitivity: inherited
+    produced_by: [aodl-intent-plan-observed, agenttrace-cross-harness-observation]
+    evidence:
+      - registry/mechanisms.yaml#mechanisms.aodl-intent-plan-observed
+      - registry/mechanisms.yaml#mechanisms.agenttrace-cross-harness-observation
+
+  decision-receipt:
+    name: Decision receipt
+    kind: decision
+    scale: tiny
+    summary: Structured audit record of a routing or policy decision.
+    sensitivity: inherited
+    interface: z0int.decision_receipt.v1
+    evidence:
+      - registry/interfaces.yaml#interfaces.z0int.decision_receipt.v1
+
+  trace-span:
+    name: Agent trace span
+    kind: observation
+    scale: small
+    summary: Historical normalized execution span for cross-harness observability.
+    sensitivity: inherited
+    interface: agenttrace.span.v0
+    evidence:
+      - registry/interfaces.yaml#interfaces.agenttrace.span.v0
+
+  tokenomics-event:
+    name: Tokenomics event
+    kind: measurement
+    scale: small
+    summary: Vendor-neutral token, cost, latency, and execution measurement envelope.
+    sensitivity: inherited
+    interface: tokenomics.event.v0
+    evidence:
+      - registry/interfaces.yaml#interfaces.tokenomics.event.v0

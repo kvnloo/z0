@@ -10,6 +10,8 @@ profs = registry.profiles()
 harnesses = registry.harnesses()
 mechanisms = registry.mechanisms()
 lifecycles = registry.lifecycles()
+representations = registry.representations()
+evidence_dependencies = registry.evidence_dependencies()
 
 for name in profs:
     resolved = registry.resolve_profile(name)
@@ -36,9 +38,45 @@ for lid, meta in lifecycles.items():
     assert len(stages) == len(set(stages)), f"lifecycle {lid} has duplicate stages"
     assert stages, f"lifecycle {lid} has no stages"
 
+endpoint_sets = {
+    "component": set(comps),
+    "harness": set(harnesses),
+    "mechanism": set(mechanisms),
+    "interface": set(registry.interfaces()),
+    "lifecycle": set(lifecycles),
+    "representation": set(representations),
+}
+def check_endpoint(dep_id, endpoint):
+    kind, sep, ident = str(endpoint).partition(":")
+    assert sep and ident, f"evidence dependency {dep_id} has invalid endpoint {endpoint!r}"
+    if kind == "repo":
+        assert "/" in ident, f"evidence dependency {dep_id} has invalid repo endpoint {endpoint!r}"
+        return
+    assert kind in endpoint_sets, f"evidence dependency {dep_id} has unknown endpoint kind {kind}"
+    assert ident in endpoint_sets[kind], f"evidence dependency {dep_id} references unknown {endpoint}"
+
+for rid, meta in representations.items():
+    for mid in meta.get("produced_by", []) or []:
+        assert mid in mechanisms, f"representation {rid} references unknown mechanism {mid}"
+    iface = meta.get("interface")
+    if iface:
+        assert iface in registry.interfaces(), f"representation {rid} references unknown interface {iface}"
+
+for eid, meta in evidence_dependencies.items():
+    check_endpoint(eid, meta.get("from"))
+    check_endpoint(eid, meta.get("to"))
+    via = meta.get("via")
+    if via:
+        check_endpoint(eid, via)
+    assert meta.get("relation"), f"evidence dependency {eid} has no relation"
+    assert meta.get("required_evidence"), f"evidence dependency {eid} has no required evidence"
+    assert meta.get("invariants"), f"evidence dependency {eid} has no invariants"
+    assert meta.get("invalidators"), f"evidence dependency {eid} has no invalidators"
+
 print(
     f"ok: {len(comps)} components, {len(profs)} profiles, "
     f"{len(harnesses)} harnesses, {len(mechanisms)} mechanisms, "
-    f"{len(lifecycles)} lifecycles"
+    f"{len(lifecycles)} lifecycles, {len(representations)} representations, "
+    f"{len(evidence_dependencies)} evidence dependencies"
 )
 PY
