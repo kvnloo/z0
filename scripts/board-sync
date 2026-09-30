@@ -100,7 +100,7 @@ def ensure_schema(pid, kinds, plan):
 def agent_of(item):
     labels = {l["name"] for l in item.get("labels", [])}
     branch = item.get("headRefName", "")
-    body = item.get("body") or ""
+    body = (item.get("body") or "").replace('": "', '":"')  # tolerate pretty-printed oss-factory blocks
     login = (item.get("author") or {}).get("login", "")
     for rule in CFG["agent_rules"]:
         if (labels & set(rule.get("labels", [])) or any(branch.startswith(p) for p in rule.get("branch_prefixes", []))
