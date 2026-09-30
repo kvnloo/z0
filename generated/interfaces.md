@@ -36,6 +36,10 @@
 - **Owner:** `tokenomics`
 - **Summary:** Aggregated savings, reconciliation, and coverage report.
 
+## `z0int.context_resolve.v1`
+- **Owner:** `z0intelligence`
+- **Summary:** Provenance-preserving bounded context packet for source-backed retrieval and harness injection.
+
 ## `z0int.decision_receipt.v1`
 - **Owner:** `z0intelligence`
 - **Summary:** Structured decision receipt for routing and policy audit.
