@@ -129,7 +129,7 @@ components:
     install:
       clone: https://github.com/kvnloo/z0intelligence.git
       branch: master
-      ref: d344f122c0aab8b2f348853772205c4a876fb0d0
+      ref: 88c2b540633898bfb2b1590cc12d095bf2329d79
       command: pip install -e .
     verify:
       command: python3 -m z0int --help
@@ -186,7 +186,7 @@ components:
     install:
       clone: https://github.com/kvnloo/evolution-lab.git
       branch: trunk
-      ref: 4cf52bb1010d7570922c5e16710669524ccec26d
+      ref: 1c9b5235d341f9108d6ea4cc886592be7004ef28
       command: pip install -e .
     boundaries:
       owns: [experiment search, locked corpora and splits, candidate evolution, promotion evidence]
