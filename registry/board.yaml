@@ -45,14 +45,16 @@ fields:
     - {name: detail, color: GRAY, description: Detail app docs-fix bot}
     - {name: other, color: GRAY, description: Anyone else}
 
-# First match wins. Matched against labels (agent:<x>), head branch prefix, PR/issue body, author login.
+# First match wins. Follows the oss-factory worker-identity convention (factory/CONTROL_PLANE.md):
+# a "<worker> bot" label and a hidden <!-- oss-factory:v1 {"from": "<worker>", ...} --> block in the body.
+# Also matched: agent:<x> labels, head branch prefix, bot signatures, author login.
 agent_rules:
-  - {agent: claude, labels: [agent:claude], branch_prefixes: [claude/], body: ["Generated with [Claude Code]", "Co-Authored-By: Claude"]}
-  - {agent: grok, labels: [agent:grok, grok-bot], branch_prefixes: [grok/], body: [grok-bot]}
-  - {agent: omp, labels: [agent:omp], branch_prefixes: [omp/], body: ["omp-bot"]}
-  - {agent: hermes, labels: [agent:hermes], branch_prefixes: [hermes/, fm/], body: [hermes-bot]}
-  - {agent: codex, labels: [agent:codex], branch_prefixes: [codex/], body: []}
-  - {agent: cursor, labels: [agent:cursor], branch_prefixes: [cursor/], body: []}
+  - {agent: claude, labels: [claude bot, agent:claude], branch_prefixes: [claude/], body: ['"from":"claude-code"', "Generated with [Claude Code]", "Co-Authored-By: Claude"]}
+  - {agent: grok, labels: [grok bot, agent:grok], branch_prefixes: [grok/], body: ['"from":"grok"']}
+  - {agent: omp, labels: [omp bot, agent:omp], branch_prefixes: [omp/], body: ['"from":"omp"']}
+  - {agent: hermes, labels: [hermes bot, muse bot, agent:hermes], branch_prefixes: [hermes/, fm/], body: ['"from":"hermes"', '"from":"muse"']}
+  - {agent: codex, labels: [codex bot, chatgpt bot, agent:codex], branch_prefixes: [codex/], body: ['"from":"chatgpt"', '"from":"codex"']}
+  - {agent: cursor, labels: [cursor bot, agent:cursor], branch_prefixes: [cursor/], body: []}
   - {agent: dependabot, authors: ["app/dependabot", dependabot], branch_prefixes: [dependabot/], body: []}
   - {agent: detail, authors: ["app/detail-app"], branch_prefixes: [detail/], body: []}
 

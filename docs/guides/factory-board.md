@@ -21,7 +21,7 @@ Closing an issue or merging a PR moves it to Done (built-in workflow).
 - **Queue work:** drag a card from Backlog to Todo. Agents claim Todo.
 - **Approve publication or merge:** drag from Ready to Review to Maintainer Review.
 - **Reprioritize:** change Priority on the card; sync won't undo it.
-- **Tag bot work:** agents add an `agent:<name>` label, or use their branch prefix (`claude/`, `codex/`, `cursor/`, …).
+- **Tag bot work:** agents follow the oss-factory convention — a `<worker> bot` label (`claude bot`, `grok bot`, …) and `"from": "<worker>"` in the hidden `oss-factory:v1` block; a branch prefix (`claude/`, `codex/`, …) also works.
 
 ## One-time setup in the UI (the API can't create views)
 
