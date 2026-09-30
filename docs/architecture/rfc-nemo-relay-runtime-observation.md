@@ -20,13 +20,14 @@ requirements. It does **not** add runtime implementation code to `kvnloo/z0`.
 
 ## Summary
 
-Zer0 should use **NVIDIA NeMo Relay** as the preferred live lifecycle
-instrumentation substrate for agent execution while preserving the existing Zer0
-separation between execution, observation, measurement, decision policy, typed
-intent and evaluation.
+Zer0 should integrate **NVIDIA NeMo Relay** only at each runtime's existing,
+owned observability/extension seam. Relay is a useful live lifecycle substrate
+where a harness natively supports it; it is **not** Zer0's universal wire format
+and must not replace repo-native telemetry, logs, measurement contracts, receipts,
+or typed orchestration.
 
-Relay should sit *under* AgentTrace, Tokenomics and z0intelligence and *around*
-execution boundaries owned by harnesses.
+AgentTrace remains the cross-harness normalizer. The shared cross-repo contract is
+vendor-neutral correlation plus honest fidelity, not mandatory ATOF everywhere.
 
 ```text
                     authored intent
@@ -39,12 +40,13 @@ execution boundaries owned by harnesses.
           +---------------+---------------+
           |               |               |
        Hermes            OMP             DSH
-    native Relay      Relay adapter   Relay adapter
+    native Relay      existing OTel   session-telemetry
+      runtime            seam             seam
           |               |               |
           +---------------+---------------+
                           |
-                     ATOF events
-               live scope/event lineage
+                native truthful evidence
+                 + Relay where native
                           |
           +---------------+------------------+
           |               |                  |
@@ -101,7 +103,7 @@ References:
 
 ## Decision
 
-Adopt Relay as a **cross-harness live execution-observation mechanism**.
+Adopt Relay as an **optional cross-harness execution-observation mechanism** implemented only through repo-owned seams.
 
 Tentative Zer0 mechanism identity:
 
@@ -109,9 +111,16 @@ Tentative Zer0 mechanism identity:
 relay-runtime-observation
 ```
 
-The mechanism belongs in the architecture registry only after the first
-implementation proves the contract. Relay itself should not become a Zer0
-"component" merely because multiple harnesses use it.
+The mechanism belongs in the architecture registry only after implementation
+evidence proves the contract. Relay itself should not become a Zer0 component
+merely because multiple harnesses can interoperate with it.
+
+### Boundary rule
+
+A repository keeps ownership of its native execution/telemetry contract. Relay-
+specific glue attaches to that contract and must not redefine it. If two or more
+repos eventually need the same substantial vendor-specific adapter, move that
+shared glue to a dedicated integration package/repo — never into `kvnloo/z0`.
 
 ### Ownership
 
@@ -207,8 +216,10 @@ the underlying surface can supply it.
 
 ```text
 z0_run_id
-relay_scope_uuid
-relay_parent_uuid
+trace_id?
+span_id?
+parent_span_id?
+execution_ref?
 harness_id
 harness_session_id
 harness_turn_id?
@@ -222,16 +233,19 @@ verifier_outcome_id?
 repo_identity?
 worktree_identity?
 model_route_id?
+relay_scope_uuid?
+relay_parent_uuid?
 ```
 
 Rules:
 
 1. no field is fabricated;
 2. unknown and unavailable are distinct from empty strings;
-3. native Relay scope UUIDs remain stable through downstream projections;
-4. downstream IDs may point back to a scope, but must not redefine its parent;
-5. a single decision receipt may correlate with several execution scopes;
-6. a single execution scope may produce several measurement events.
+3. prefer existing OTel trace/span IDs where an owning repo already emits them;
+4. Relay IDs are optional adapter metadata, not required AODL/z0int/Tokenomics fields;
+5. downstream IDs may point back to a scope, but must not redefine its parent;
+6. a single decision receipt may correlate with several execution scopes;
+7. no correlation field can mint verified success.
 
 The exact versioned schema should live in the owning implementation repo once a
 pilot proves the minimum field set.
@@ -281,58 +295,43 @@ Hermes owns implementation.
 
 ### Oh My Pi (OMP)
 
-OMP should use an in-process or binding-level adapter around boundaries it
-already owns.
+OMP already owns generic OpenTelemetry GenAI instrumentation in
+`packages/agent/src/telemetry.ts` and opt-in OTLP export in
+`packages/coding-agent/src/telemetry-export*.ts`. Its agent loop already emits
+`invoke_agent`, `chat`/`judgment`, `execute_tool`, and `handoff` spans.
 
-Candidate scope/event boundaries:
+Therefore:
 
-- coding session;
-- turn;
-- main agent;
-- subagent;
-- LLM invocation;
-- tool invocation;
-- advisor/reviewer;
-- verifier;
-- retry/recovery;
-- context compaction;
-- model/provider route changes.
+- do not instrument LLM/tool execution a second time just to produce ATOF;
+- keep the existing OMP telemetry contract canonical inside OMP;
+- add only generic correlation attributes if they are broadly useful;
+- consume existing OTel spans downstream for cross-harness correlation;
+- if a concrete Relay-only capability is later required, start with an external
+  extension/adapter that consumes the existing telemetry seam.
 
-Candidate Zer0-specific marks:
-
-- RLM spill/resolve;
-- z0int/Jev decision receipt ID;
-- context compression boundary;
-- verifier start/outcome;
-- route/escalation decision.
-
-Requirements:
-
-- prefer managed Relay wrappers where OMP owns the invocation;
-- avoid proxying through a gateway solely to obtain telemetry when direct
-  instrumentation is available;
-- golden-test event ordering and parentage;
-- prove enabled/disabled behavioral equivalence.
-
-OMP owns implementation.
-
+Any Relay-specific OMP work must prove it adds information unavailable through
+the current generic telemetry path and adds no startup/runtime cost when disabled.
 ### DeepSeek Harness
 
-DeepSeek Harness should integrate at Cordis/plugin service seams rather than
-patching the central loop.
+DSH already owns a generic session-telemetry capability seam:
+
+`canonical Session log -> session-telemetry coordinator -> SessionTelemetryBackend`.
+
+It also has an OTel backend/transport implementation. Passive Relay integration
+therefore belongs behind `SessionTelemetryBackend` or another documented Cordis
+service/plugin seam.
 
 Requirements:
 
-- represent session/agent execution as Relay scopes;
-- wrap model and tool services;
-- preserve DSH's append-only log as an independent durable source;
-- map `Agent.inject()`, `followup()`, `steer()` and pre-step interventions
-  without misclassifying injected context as a fresh user turn;
-- expose the adapter as a replaceable plugin/service;
-- retain native DSH identifiers for provenance.
+- do not patch `agent-loop` for passive Relay telemetry;
+- do not create parallel model/tool lifecycle events when the canonical Session
+  stream already records the observation;
+- preserve DSH authorization/redaction semantics;
+- register through Cordis effects and make the backend optional/unloadable;
+- retain the Session log as canonical durable runtime evidence.
 
-DeepSeek Harness owns implementation.
-
+A future `session-telemetry-relay` backend/package is acceptable if those
+constraints hold.
 ### Other harnesses
 
 Codex, Claude Code and future harnesses may use maintained Relay integrations
@@ -370,71 +369,38 @@ Exact naming is implementation-owned.
 
 ## Tokenomics integration
 
-Tokenomics should consume derived measurement facts, not raw trace authority.
+Tokenomics remains the canonical semantic measurement/economics contract and
+durable offline truth. Do **not** turn it into a generic Relay projection.
 
-Candidate derivations:
+Preferred path:
 
-- LLM latency;
-- observed input/output/cache tokens;
-- provider/model route;
-- tool latency;
-- tool retry/error count;
-- subagent fanout;
-- execution wall time;
-- verifier latency;
-- decision/escalation count.
+`harness observation -> Tokenomics event directly -> attach trace/span/execution correlation`.
 
-Rules:
+Relay-derived measurements are a fallback observer path only when no direct
+measurement event exists. Such records must preserve measurement provenance and
+completeness state and must never mint authoritative billing, missing token
+counts, measured savings from absent data, or `gold` verified outcomes.
 
-- provider billing remains reconciled separately where possible;
-- missing token fields stay missing;
-- trace-derived cost is an estimate unless reconciled;
-- Relay marks may carry measurement hints but do not become the canonical
-  economics policy.
-
+Relay scope completion remains execution evidence, not verified task success.
 ## z0intelligence integration
 
-z0intelligence should attach Relay lineage to existing durable receipts.
+z0intelligence should remain Relay-agnostic. Its durable decision/context
+receipts may carry a **generic** execution-correlation object using trace/span
+IDs or an opaque execution reference. Relay-specific adapters may map that
+correlation to Relay scope IDs.
 
-Targets:
-
-- `z0int.decision_receipt.v1`;
-- `z0int.context_resolve.v1`;
-- specialist ACT/OBSERVE/ASK/ABSTAIN/ESCALATE decisions;
-- evidence-sufficiency/verifier decisions;
-- route/deopt/recovery decisions where applicable.
-
-Relay marks may expose IDs for live correlation.
-
-The versioned z0int receipt remains the durable semantic record.
-
+Relay marks may reference receipt IDs for live correlation, but Relay marks do
+not replace versioned z0int receipts and Relay types must not become z0int core
+schema dependencies.
 ## AODL integration
 
-AODL should define the comparison seam between expected and observed execution.
+AODL already owns `intentGraph`, compiled-plan semantics, and optional
+`observedGraph`. It should own only the IR shape, mapping/profile documentation,
+conformance fixtures, and static comparison semantics.
 
-```text
-AODL intent
-  -> compiled plan
-  -> harness execution
-  -> Relay observed DAG
-  -> topology comparison
-  -> evidence receipt
-```
-
-Useful comparisons include:
-
-- expected node executed / not executed;
-- unexpected execution node;
-- expected edge vs observed parent relation;
-- retry expansion;
-- fanout expansion;
-- fallback route;
-- verifier present/missing;
-- authority boundary crossed/not crossed.
-
-The comparison should tolerate runtime implementation details that AODL does
-not model.
-
+A live Relay -> AODL projector belongs with the runtime/integration adapter that
+has the live events. Do not add a Relay client, subscriber, exporter, scheduler,
+or runtime dependency to AODL.
 ## z0evals and Evolution Lab
 
 Before default-on promotion, freeze an integration study containing:
@@ -557,27 +523,25 @@ Deliver:
 
 Exit gate: no application-visible behavior difference.
 
-### P2 — OMP and DSH shadow adapters
+### P2 — OMP and DSH seam pilots
 
-Deliver:
+OMP reuses its existing OTel instrumentation and proves required correlation can
+be carried without Relay-specific loop code.
 
-- disabled-by-default adapters;
-- contract tests;
-- fault injection;
-- golden lifecycle fixtures;
-- version guards.
+DSH composes only at its session-telemetry/Cordis backend seam and proves no
+agent-loop patch is required.
 
-Exit gate: adapters produce truthful comparable semantics without requiring
-shared internal implementation.
+Exit gate: both expose truthful comparable evidence without duplicating native
+instrumentation.
 
 ### P3 — downstream consumers
 
 Deliver:
 
 - AgentTrace ATOF ingestion;
-- Tokenomics projection;
-- z0int receipt correlation;
-- AODL desired-vs-observed comparison.
+- Tokenomics correlation/reconciliation;
+- generic z0int receipt correlation;
+- AODL observedGraph mapping fixture produced outside the AODL runtime-free core.
 
 Exit gate: every projection can be traced to raw evidence.
 
@@ -671,17 +635,17 @@ Do not infer token savings or productivity gains merely from adding Relay.
 
 ## Promotion criteria
 
-Relay may become Zer0's default live observation substrate only if:
+Promote `relay-runtime-observation` only as an experimental mechanism with specific implementations if:
 
 1. Hermes native integration passes real-run tests;
-2. OMP and DSH adapters pass behavioral-equivalence tests;
+2. OMP reuses its existing OTel telemetry seam and DSH uses its existing session-telemetry/plugin seam;
 3. instrumentation overhead is measured and acceptable;
 4. privacy-safe defaults require no full-payload retention;
 5. event loss and broken lineage are detectable;
 6. AgentTrace preserves honest fidelity semantics;
-7. Tokenomics projections reconcile without becoming billing truth;
-8. z0int receipts remain durable and independently interpretable;
-9. AODL desired/observed comparisons work without conflating the two;
+7. Tokenomics remains the measurement/economics authority;
+8. z0int remains Relay-agnostic and its receipts independently interpretable;
+9. AODL remains runtime-free while its observedGraph contract can represent the projection;
 10. a frozen z0evals study records the evidence.
 
 ## Stop conditions
@@ -712,10 +676,8 @@ relay-runtime-observation:
   implementations:
     - repo: kvnloo/hermes-agent
       harness: hermes
-    - repo: kvnloo/oh-my-pi
-      harness: omp
-    - repo: kvnloo/deepseek-harness
-      harness: deepseek
+      mode: native
+    # Add OMP/DSH only after concrete adapter evidence exists.
 ```
 
 Do not register this before an implementation/evidence ref exists.
@@ -730,14 +692,15 @@ fields are actually stable.
 |---|---|
 | central RFC / mechanism map | `kvnloo/z0` |
 | Hermes pilot | `kvnloo/hermes-agent` |
-| OMP adapter | `kvnloo/oh-my-pi` |
-| DSH adapter | `kvnloo/deepseek-harness` |
-| ATOF ingestion/diagnostics | `kvnloo/agenttrace` |
-| measurement projection | `kvnloo/tokenomics` |
-| decision/context correlation | `kvnloo/z0intelligence` |
-| intended-vs-observed comparison | `kvnloo/aodl` |
+| OMP generic telemetry/correlation | `kvnloo/oh-my-pi` |
+| DSH telemetry-backend composition | `kvnloo/deepseek-harness` |
+| ATOF/cross-format ingestion + diagnostics | `kvnloo/agenttrace` |
+| measurement/outcome semantics + correlation | `kvnloo/tokenomics` |
+| decision/context receipt semantics | `kvnloo/z0intelligence` |
+| intent/plan/observedGraph contract | `kvnloo/aodl` |
 | frozen integration study | `kvnloo/z0evals` |
 | candidate experiments | `kvnloo/evolution-lab` |
+| shared Relay-specific glue, if proven necessary | dedicated adapter package/repo, not `z0` |
 
 ## Open questions for the pilot
 
@@ -759,12 +722,12 @@ The tracking issue should fan out implementation only after this RFC is accepted
 ```text
 z0 #21
   -> Hermes native pilot
-  -> OMP Relay adapter
-  -> DSH Relay/Cordis adapter
-  -> AgentTrace ATOF ingestion
-  -> Tokenomics Relay projection
-  -> z0int receipt correlation
-  -> AODL observed-topology adapter
+  -> OMP correlation through existing OTel seam
+  -> DSH experiment through session-telemetry seam
+  -> AgentTrace ATOF + cross-format normalization
+  -> Tokenomics correlation / fallback provenance
+  -> z0int generic execution-ref correlation
+  -> AODL observedGraph mapping profile + fixtures
   -> z0evals frozen integration study
 ```
 
