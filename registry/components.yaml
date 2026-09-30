@@ -236,7 +236,7 @@ components:
     install:
       clone: https://github.com/kvnloo/aodl.git
       branch: main
-      ref: a848270356225699fc828e80a0cc93d2754f7413
+      ref: 416736c80a727757202bdeedb02579c3c820f7f6
       command: pip install -e .
     boundaries:
       owns: [typed intent/plan contracts]
