@@ -77,3 +77,18 @@ harnesses:
     evidence:
       - kvnloo/aodl:harnesses/catalog.json#pi
       - kvnloo/SoL-Pi:README.md
+
+  agentweb:
+    name: AgentWeb / Emma
+    repo: kvnloo/agentweb
+    upstream: AgentWebPro/agentweb
+    aodl_id: agentweb
+    kind: executor
+    adoption: research
+    summary: >
+      Remote web/MCP agent runtime. On the downstream integration branch Emma keeps
+      user/session and action-safety authority while z0intelligence is optional,
+      default-off routing/idempotency/receipt authority beneath the runtime.
+    evidence:
+      - kvnloo/aodl:harnesses/catalog.json#agentweb
+      - kvnloo/agentweb:research/rfc/H-Z0-first-class-intelligence.md
