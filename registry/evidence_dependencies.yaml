@@ -95,6 +95,28 @@ evidence_dependencies:
       fallback: harness-log
     confidence: declared
 
+  unified-memory-preserves-provenance:
+    from: representation:raw-context
+    to: representation:context-packet
+    relation: resolves_to
+    via: mechanism:unified-memory-evidence-path
+    required_evidence:
+      - kvnloo/z0intelligence:src/z0int/context_resolve.py
+      - kvnloo/z0evals:studies/unified-memory-v0/README.md
+    invariants:
+      - Carried evidence remains attributable by source id, version, locator, and trust class.
+      - Contradictions and missing required evidence remain explicit instead of inventing a winner.
+      - Retrieval, model-visible injection, answer support, and verification remain distinct stages.
+    invalidators:
+      - A context packet carries unsupported claims while hiding an unresolved gap.
+      - A configured index is treated as proof of model-visible or answer-supported memory.
+    retrieval:
+      fastest: context-resolve-packet
+      fallback: original-source
+    confidence: declared
+    abstain_if:
+      - provenance required by the question cannot be reconstructed from the selected sources.
+
   decision-state-to-receipt:
     from: representation:compiled-decision-state
     to: representation:decision-receipt
