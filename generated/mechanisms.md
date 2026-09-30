@@ -94,6 +94,18 @@
 - **Purpose:** Separate request, operator approval, immutable grant, and bounded privileged execution so an agent cannot manufacture its own elevation authority.
 - **Implemented by:** `kvnloo/hermes-privilege-broker`
 
+## `unified-memory-evidence-path` — Unified memory evidence path
+- **Kind:** memory
+- **Stage:** experimental
+- **Purpose:** Resolve explicit information needs into provenance-bearing ContextPackets, inject only bounded evidence through harness-native seams, and preserve support/abstention evidence without replacing source stores with one database.
+- **Implemented by:** `z0intelligence`
+
+## `verified-specialist-evolution` — Verified specialist evolution
+- **Kind:** learning
+- **Stage:** experimental
+- **Purpose:** Search bounded specialist implementations against locked corpora, controls, sealed splits and external outcomes, then export only evidence-backed candidates into the z0intelligence runtime without allowing the optimizer to redefine its judge.
+- **Implemented by:** `evolution-lab`
+
 ## `z0archy-hierarchy-meta-learning` — Slow architecture hierarchy meta-learning
 - **Kind:** learning
 - **Stage:** experimental
