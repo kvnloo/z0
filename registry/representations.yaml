@@ -53,6 +53,18 @@ representations:
       - kvnloo/z0intelligence:README.md
       - kvnloo/oh-my-pi:README.md
 
+  context-packet:
+    name: Context packet
+    kind: evidence_bundle
+    scale: compact
+    summary: Bounded source-backed packet carrying information needs, EvidenceRefs, contradictions, unresolved gaps, resolution recipe, measurements, and AODL projection.
+    sensitivity: inherited
+    interface: z0int.context_resolve.v1
+    produced_by: [unified-memory-evidence-path]
+    evidence:
+      - kvnloo/z0intelligence:src/z0int/context_resolve.py
+      - kvnloo/z0evals:studies/unified-memory-v0/README.md
+
   aodl-intent:
     name: AODL intent
     kind: intent
