@@ -3,6 +3,7 @@
 | ID | Name | Role | Authority | Status | Repository |
 |----|------|------|-----------|--------|------------|
 | `activegraph` | ActiveGraph | temporal_graph_substrate | external_substrate | active | `kvnloo/activegraph` |
+| `agentweb` | AgentWeb / Emma | execution_runtime | implementation | experimental | `kvnloo/agentweb` |
 | `codex-router` | Codex Router | provider_router | implementation | experimental | `kvnloo/codex-router` |
 | `company-os` | Company OS | operational_projection | read_only_projection | experimental | `kvnloo/company-os` |
 | `deepseek-harness` | DeepSeek Harness | execution_runtime | implementation | developer_preview | `kvnloo/deepseek-harness` |
