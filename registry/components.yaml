@@ -61,7 +61,7 @@ components:
     install:
       clone: https://github.com/kvnloo/tokenomics.git
       branch: master
-      ref: 3fa33ee83d02e43a37d7890656a4151e200f2275
+      ref: 65e8f2dd9d6c5784a2a1c67f5236d69a5ae94021
       command: pip install -e packages/python && npm install -w packages/typescript
     verify:
       command: tokenomics report --range today
@@ -129,7 +129,7 @@ components:
     install:
       clone: https://github.com/kvnloo/z0intelligence.git
       branch: master
-      ref: d344f122c0aab8b2f348853772205c4a876fb0d0
+      ref: 88c2b540633898bfb2b1590cc12d095bf2329d79
       command: pip install -e .
     verify:
       command: python3 -m z0int --help
@@ -186,7 +186,7 @@ components:
     install:
       clone: https://github.com/kvnloo/evolution-lab.git
       branch: trunk
-      ref: 4cf52bb1010d7570922c5e16710669524ccec26d
+      ref: 1c9b5235d341f9108d6ea4cc886592be7004ef28
       command: pip install -e .
     boundaries:
       owns: [experiment search, locked corpora and splits, candidate evolution, promotion evidence]
@@ -236,7 +236,7 @@ components:
     install:
       clone: https://github.com/kvnloo/aodl.git
       branch: main
-      ref: a848270356225699fc828e80a0cc93d2754f7413
+      ref: 416736c80a727757202bdeedb02579c3c820f7f6
       command: pip install -e .
     boundaries:
       owns: [typed intent/plan contracts]
