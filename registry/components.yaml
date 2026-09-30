@@ -61,7 +61,7 @@ components:
     install:
       clone: https://github.com/kvnloo/tokenomics.git
       branch: master
-      ref: 3fa33ee83d02e43a37d7890656a4151e200f2275
+      ref: 65e8f2dd9d6c5784a2a1c67f5236d69a5ae94021
       command: pip install -e packages/python && npm install -w packages/typescript
     verify:
       command: tokenomics report --range today
