@@ -94,6 +94,37 @@ mechanisms:
       - kvnloo/SoL-Pi:README.md#what-sol-pi-adds
       - kvnloo/sol-pi-hermes:README.md#mapping
 
+  unified-memory-evidence-path:
+    name: Unified memory evidence path
+    kind: memory
+    stage: experimental
+    purpose: >
+      Resolve explicit information needs into provenance-bearing ContextPackets,
+      inject only bounded evidence through harness-native seams, and preserve
+      support/abstention evidence without replacing source stores with one database.
+    implemented_by:
+      - component: z0intelligence
+        repo: kvnloo/z0intelligence
+    evidence:
+      - kvnloo/z0intelligence:src/z0int/context_resolve.py
+      - kvnloo/z0evals:studies/unified-memory-v0/README.md
+
+  verified-specialist-evolution:
+    name: Verified specialist evolution
+    kind: learning
+    stage: experimental
+    purpose: >
+      Search bounded specialist implementations against locked corpora, controls,
+      sealed splits and external outcomes, then export only evidence-backed candidates
+      into the z0intelligence runtime without allowing the optimizer to redefine its judge.
+    implemented_by:
+      - component: evolution-lab
+        repo: kvnloo/evolution-lab
+    evidence:
+      - kvnloo/evolution-lab:README.md
+      - kvnloo/evolution-lab:docs/phase2-corpus.md
+      - kvnloo/z0intelligence:docs/evolution-lab.md
+
   aodl-intent-plan-observed:
     name: AODL intent → compiled plan → observed topology
     kind: contract
