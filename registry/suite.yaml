@@ -44,7 +44,7 @@ repositories:
     authority: derived
     status: active
     depends_on_repositories: [activegraph, graphcon-deck]
-    supports_components: [oh-my-pi, tokenomics, z0intelligence, kerdoios, evolution-lab, frontier-kb, aodl, agenttrace, memento ]
+    supports_components: [oh-my-pi, tokenomics, z0intelligence, kerdoios, evolution-lab, frontier-kb, aodl, agenttrace, memento]
     lifecycle: architecture-truth
     summary: Dynamic architecture world model, exact-ref implementation evidence, history, counterfactuals, and semantic compression.
     evidence:
