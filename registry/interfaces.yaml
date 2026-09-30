@@ -13,6 +13,10 @@ interfaces:
     owner: z0intelligence
     summary: Structured decision receipt for routing and policy audit.
 
+  z0int.context_resolve.v1:
+    owner: z0intelligence
+    summary: Provenance-preserving bounded context packet for source-backed retrieval and harness injection.
+
   flow_prediction.v1:
     owner: flow
     summary: OS-context prediction with horizon metadata and gates.
