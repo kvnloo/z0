@@ -1,0 +1,240 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.10"
+# dependencies = ["pyyaml>=6"]
+# ///
+"""Fill the z0 factory board (GitHub Projects v2) from every z0 repo's open issues and PRs.
+
+  scripts/board-sync --plan     # show what would change
+  scripts/board-sync            # create/repair the project and sync items
+
+Idempotent. Derived fields (Kind, Lane, Agent) are recomputed every run.
+Status and Priority are only filled when empty, so human moves are never overwritten,
+and sync never moves anything into Todo or Maintainer Review (HERMES_SHIP.md).
+Needs a gh token with the `project` scope: gh auth refresh -s project,read:project
+"""
+import argparse
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+import yaml
+
+ROOT = Path(__file__).resolve().parents[1]
+CFG = yaml.safe_load((ROOT / "registry/board.yaml").read_text())
+COMPONENTS = yaml.safe_load((ROOT / "registry/components.yaml").read_text())["components"]
+OWNER = CFG["project"]["owner"]
+BATCH = 20
+
+
+def gh(*args, stdin=None):
+    r = subprocess.run(["gh", *args], input=stdin, capture_output=True, text=True)
+    if r.returncode:
+        sys.exit(f"gh {' '.join(args[:3])}: {r.stderr.strip()}")
+    return r.stdout
+
+
+def gql(query, **variables):
+    out = json.loads(gh("api", "graphql", "--input", "-", stdin=json.dumps({"query": query, "variables": variables})))
+    if out.get("errors"):
+        sys.exit(f"graphql: {out['errors']}")
+    return out["data"]
+
+
+def repos():
+    kinds = {}
+    for comp in COMPONENTS.values():
+        repo = comp.get("repo", "")
+        if repo.startswith(OWNER + "/"):
+            kinds[repo] = comp.get("kind", "other")
+    for repo in CFG.get("extra_repos", []):
+        kinds.setdefault(repo, "map" if repo.endswith("/z0") else "process")
+    return {r: k for r, k in kinds.items() if r not in CFG.get("skip_repos", [])}
+
+
+def options(spec, kinds):
+    if spec == "from_registry":
+        return [{"name": k, "color": "GRAY", "description": f"registry kind {k}"} for k in sorted(set(kinds.values()))]
+    return spec
+
+
+def find_project():
+    q = """query($login:String!){user(login:$login){projectsV2(first:100){nodes{id number title url}}}}"""
+    for p in gql(q, login=OWNER)["user"]["projectsV2"]["nodes"]:
+        if p["title"] == CFG["project"]["title"]:
+            return p
+    return None
+
+
+FIELDS_Q = """query($id:ID!){node(id:$id){... on ProjectV2{fields(first:50){nodes{
+  ... on ProjectV2FieldCommon{id name dataType}
+  ... on ProjectV2SingleSelectField{options{id name}}}}}}}"""
+
+
+def fields(pid):
+    return {f["name"]: f for f in gql(FIELDS_Q, id=pid)["node"]["fields"]["nodes"] if f}
+
+
+def ensure_schema(pid, kinds, plan):
+    have = fields(pid)
+    want = {"Status": CFG["status"], **{n: options(s, kinds) for n, s in CFG["fields"].items()}}
+    for name, opts in want.items():
+        cur = have.get(name)
+        if cur and {o["name"] for o in cur.get("options", [])} >= {o["name"] for o in opts}:
+            continue
+        print(f"{'plan: ' if plan else ''}{'update' if cur else 'create'} field {name}: {[o['name'] for o in opts]}")
+        if plan:
+            continue
+        if cur:  # keep existing options (and their item values) that config doesn't list
+            extra = [o for o in cur["options"] if o["name"] not in {w["name"] for w in opts}]
+            opts = opts + [{"name": o["name"], "color": "GRAY", "description": ""} for o in extra]
+            gql("mutation($f:ID!,$o:[ProjectV2SingleSelectFieldOptionInput!]){updateProjectV2Field(input:{fieldId:$f,singleSelectOptions:$o}){clientMutationId}}",
+                f=cur["id"], o=opts)
+        else:
+            gql("mutation($p:ID!,$n:String!,$o:[ProjectV2SingleSelectFieldOptionInput!]){createProjectV2Field(input:{projectId:$p,dataType:SINGLE_SELECT,name:$n,singleSelectOptions:$o}){clientMutationId}}",
+                p=pid, n=name, o=opts)
+    return fields(pid)
+
+
+def agent_of(item):
+    labels = {l["name"] for l in item.get("labels", [])}
+    branch = item.get("headRefName", "")
+    body = item.get("body") or ""
+    login = (item.get("author") or {}).get("login", "")
+    for rule in CFG["agent_rules"]:
+        if (labels & set(rule.get("labels", [])) or any(branch.startswith(p) for p in rule.get("branch_prefixes", []))
+                or any(s in body for s in rule.get("body", [])) or login in rule.get("authors", [])):
+            return rule["agent"]
+    return "human" if login == OWNER else "other"
+
+
+def lane_of(item, default_branch):
+    labels = {l["name"] for l in item.get("labels", [])}
+    for lane in ("Core", "Nightly", "Frontier"):
+        if f"lane:{lane.lower()}" in labels:
+            return lane
+    if "baseRefName" in item:
+        base = item["baseRefName"]
+        return "Core" if base == default_branch else "Nightly" if base in CFG["nightly_bases"] else "Frontier"
+    title = item["title"].lower()
+    if any(title.startswith(p.lower()) for p in CFG["frontier_title_prefixes"]):
+        return "Frontier"
+    return None
+
+
+def priority_of(item):
+    for l in item.get("labels", []):
+        if l["name"].lower().startswith("priority:"):
+            return l["name"].split(":", 1)[1].upper()
+    return None
+
+
+def status_of(item):
+    if "isDraft" in item:
+        return "In Progress" if item["isDraft"] else "Ready to Review"
+    return "Backlog" if (item.get("author") or {}).get("login") == OWNER else "Triage"
+
+
+def repo_items(repo):
+    meta = json.loads(gh("repo", "view", repo, "--json", "defaultBranchRef,hasIssuesEnabled"))
+    default = meta["defaultBranchRef"]["name"]
+    common = "id,number,title,labels,author,body,url"
+    issues = json.loads(gh("issue", "list", "-R", repo, "--state", "open", "--limit", "500", "--json", common)) \
+        if meta["hasIssuesEnabled"] else []
+    prs = json.loads(gh("pr", "list", "-R", repo, "--state", "open", "--limit", "500", "--json",
+                        common + ",isDraft,baseRefName,headRefName"))
+    return default, issues + prs
+
+
+ITEMS_Q = """query($id:ID!,$after:String){node(id:$id){... on ProjectV2{items(first:100,after:$after){
+  pageInfo{hasNextPage endCursor}
+  nodes{id content{... on Issue{id} ... on PullRequest{id}}
+    fieldValues(first:20){nodes{... on ProjectV2ItemFieldSingleSelectValue{name field{... on ProjectV2FieldCommon{name}}}}}}}}}}"""
+
+
+def board_items(pid):
+    out, after = {}, None
+    while True:
+        page = gql(ITEMS_Q, id=pid, after=after)["node"]["items"]
+        for n in page["nodes"]:
+            if n["content"]:
+                vals = {v["field"]["name"]: v["name"] for v in n["fieldValues"]["nodes"] if v and v.get("field")}
+                out[n["content"]["id"]] = (n["id"], vals)
+        if not page["pageInfo"]["hasNextPage"]:
+            return out
+        after = page["pageInfo"]["endCursor"]
+
+
+def run_batched(ops):
+    """ops: list of (alias, mutation-fragment). Returns merged data."""
+    data = {}
+    for i in range(0, len(ops), BATCH):
+        chunk = ops[i:i + BATCH]
+        data.update(gql("mutation{" + " ".join(f"{a}:{m}" for a, m in chunk) + "}"))
+    return data
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--plan", action="store_true")
+    args = ap.parse_args()
+    kinds = repos()
+    proj = find_project()
+    if not proj:
+        print(f"{'plan: ' if args.plan else ''}create project '{CFG['project']['title']}' for {OWNER}")
+        if args.plan:
+            print("repos:", ", ".join(sorted(kinds)))
+            return
+        owner_id = gql("query($l:String!){user(login:$l){id}}", l=OWNER)["user"]["id"]
+        proj = gql("mutation($o:ID!,$t:String!){createProjectV2(input:{ownerId:$o,title:$t}){projectV2{id number title url}}}",
+                   o=owner_id, t=CFG["project"]["title"])["createProjectV2"]["projectV2"]
+    pid = proj["id"]
+    if not args.plan:
+        readme = (ROOT / "docs/guides/factory-board.md").read_text()
+        gql("mutation($p:ID!,$d:String!,$r:String!){updateProjectV2(input:{projectId:$p,shortDescription:$d,readme:$r}){clientMutationId}}",
+            p=pid, d=CFG["project"]["short_description"], r=readme)
+    fmap = ensure_schema(pid, kinds, args.plan)
+    opt = {name: {o["name"]: o["id"] for o in f.get("options", [])} for name, f in fmap.items()}
+    on_board = board_items(pid)
+
+    wanted, missing = [], []
+    for repo, kind in sorted(kinds.items()):
+        if not args.plan:  # show the board in each repo's Projects tab
+            rid = json.loads(gh("repo", "view", repo, "--json", "id"))["id"]
+            gql("mutation($p:ID!,$r:ID!){linkProjectV2ToRepository(input:{projectId:$p,repositoryId:$r}){clientMutationId}}", p=pid, r=rid)
+        default, items = repo_items(repo)
+        for it in items:
+            derived = {"Kind": kind, "Agent": agent_of(it), "Lane": lane_of(it, default)}
+            fill = {"Status": status_of(it), "Priority": priority_of(it)}
+            wanted.append((it, derived, fill))
+            if it["id"] not in on_board:
+                missing.append(it)
+        print(f"{repo}: {len(items)} open items")
+    print(f"{len(missing)} to add, {len(wanted) - len(missing)} already on board")
+    if args.plan:
+        return
+
+    added = run_batched([(f"a{i}", f'addProjectV2ItemById(input:{{projectId:"{pid}",contentId:"{it["id"]}"}}){{item{{id}}}}')
+                         for i, it in enumerate(missing)])
+    for i, it in enumerate(missing):
+        on_board[it["id"]] = (added[f"a{i}"]["item"]["id"], {})
+
+    ops = []
+    for it, derived, fill in wanted:
+        item_id, cur = on_board[it["id"]]
+        changes = {k: v for k, v in derived.items() if v and cur.get(k) != v}
+        changes.update({k: v for k, v in fill.items() if v and not cur.get(k)})
+        for field, value in changes.items():
+            oid = opt.get(field, {}).get(value)
+            if oid is None:
+                print(f"skip {it['url']}: {field}={value} is not an option")
+                continue
+            ops.append((f"u{len(ops)}", f'updateProjectV2ItemFieldValue(input:{{projectId:"{pid}",itemId:"{item_id}",'
+                                        f'fieldId:"{fmap[field]["id"]}",value:{{singleSelectOptionId:"{oid}"}}}}){{clientMutationId}}'))
+    run_batched(ops)
+    print(f"added {len(missing)}, set {len(ops)} field values -> {proj['url']}")
+
+
+if __name__ == "__main__":
+    main()

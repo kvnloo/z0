@@ -1,0 +1,61 @@
+# z0 factory board — one GitHub Projects (v2) board over every z0 repo.
+# The board is a projection of GitHub: scripts/board-sync fills it from issues/PRs.
+# Git stays the source of truth; nobody hand-maintains cards.
+
+project:
+  owner: kvnloo
+  title: z0 factory
+  short_description: Every z0 issue and PR in one place. Main = minimal core; nightly = everything else.
+
+# Repos: every registry component whose repo kvnloo owns, plus these.
+extra_repos: [kvnloo/z0, kvnloo/verified-oss-loop]
+skip_repos: []
+
+# Status mirrors the Hermes Ship lifecycle (grok-ship/HERMES_SHIP.md).
+# Humans own the moves into Todo and Maintainer Review; sync never makes them.
+status:
+  - {name: Triage, color: GRAY, description: Discovery and evidence; not ready to prioritize}
+  - {name: Backlog, color: BLUE, description: Bounded proposal, waiting for a human to queue it}
+  - {name: Todo, color: GREEN, description: Human-queued; next to claim}
+  - {name: In Progress, color: YELLOW, description: Claimed; implementation or draft PR}
+  - {name: Ready to Review, color: ORANGE, description: Verified candidate; waiting for review}
+  - {name: Maintainer Review, color: RED, description: Human-approved for publication or merge}
+  - {name: Done, color: PURPLE, description: Merged or closed}
+
+fields:
+  Lane:
+    - {name: Core, color: GREEN, description: Targets the default branch (minimal, wired, tested)}
+    - {name: Nightly, color: BLUE, description: Feature that ships on nightly first}
+    - {name: Frontier, color: PURPLE, description: Research / experiment / RFC}
+  Priority:
+    - {name: P0, color: RED, description: Now}
+    - {name: P1, color: ORANGE, description: Next}
+    - {name: P2, color: YELLOW, description: Later}
+    - {name: P3, color: GRAY, description: Someday}
+  Kind: from_registry   # options = registry component kinds (runtime, intelligence, ...)
+  Agent:
+    - {name: human, color: GRAY, description: Written by kvnloo by hand}
+    - {name: claude, color: ORANGE, description: Claude Code}
+    - {name: grok, color: BLUE, description: grok-bot}
+    - {name: omp, color: GREEN, description: Oh My Pi}
+    - {name: hermes, color: PURPLE, description: Hermes profiles}
+    - {name: codex, color: GRAY, description: Codex}
+    - {name: cursor, color: GRAY, description: Cursor agents}
+    - {name: dependabot, color: GRAY, description: Dependency bots}
+    - {name: detail, color: GRAY, description: Detail app docs-fix bot}
+    - {name: other, color: GRAY, description: Anyone else}
+
+# First match wins. Matched against labels (agent:<x>), head branch prefix, PR/issue body, author login.
+agent_rules:
+  - {agent: claude, labels: [agent:claude], branch_prefixes: [claude/], body: ["Generated with [Claude Code]", "Co-Authored-By: Claude"]}
+  - {agent: grok, labels: [agent:grok, grok-bot], branch_prefixes: [grok/], body: [grok-bot]}
+  - {agent: omp, labels: [agent:omp], branch_prefixes: [omp/], body: ["omp-bot"]}
+  - {agent: hermes, labels: [agent:hermes], branch_prefixes: [hermes/, fm/], body: [hermes-bot]}
+  - {agent: codex, labels: [agent:codex], branch_prefixes: [codex/], body: []}
+  - {agent: cursor, labels: [agent:cursor], branch_prefixes: [cursor/], body: []}
+  - {agent: dependabot, authors: ["app/dependabot", dependabot], branch_prefixes: [dependabot/], body: []}
+  - {agent: detail, authors: ["app/detail-app"], branch_prefixes: [detail/], body: []}
+
+# Lane for PRs comes from the base branch; for issues from labels or title prefix.
+nightly_bases: [nightly, preview, dev]
+frontier_title_prefixes: ["RFC", "research", "experiment", "spike", "frontier"]
