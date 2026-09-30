@@ -44,12 +44,29 @@ repositories:
     authority: derived
     status: active
     depends_on_repositories: [activegraph, graphcon-deck]
-    supports_components: [oh-my-pi, tokenomics, z0intelligence, kerdoios, evolution-lab, frontier-kb, aodl, agenttrace, memento, openjev]
+    supports_components: [oh-my-pi, tokenomics, z0intelligence, kerdoios, evolution-lab, frontier-kb, aodl, agenttrace, memento]
     lifecycle: architecture-truth
     summary: Dynamic architecture world model, exact-ref implementation evidence, history, counterfactuals, and semantic compression.
     evidence:
       - kvnloo/z0archy:README.md
       - kvnloo/z0archy:docs/ARCHITECTURE.md
+
+  agentweb:
+    name: AgentWeb / Emma
+    repo: kvnloo/agentweb
+    upstream: AgentWebPro/agentweb
+    role: execution_runtime
+    authority: implementation
+    status: experimental
+    extends_harnesses: [agentweb]
+    supports_components: [z0intelligence]
+    summary: >
+      Experimental AgentWeb/Emma runtime integration surface. The fork preserves
+      AgentWeb action guards while testing z0intelligence routing, idempotency,
+      privacy-safe evidence projection, and receipt semantics in shadow first.
+    evidence:
+      - kvnloo/agentweb:zer0.repo.yaml
+      - kvnloo/agentweb:research/rfc/H-Z0-first-class-intelligence.md
 
   z0evals:
     name: z0evals

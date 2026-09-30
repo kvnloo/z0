@@ -2,6 +2,7 @@
 
 | ID | Name | Kind | Adoption | Repo | AODL id | Catalog gap |
 |----|------|------|----------|------|---------|-------------|
+| `agentweb` | AgentWeb / Emma | executor | research | `kvnloo/agentweb` | `agentweb` |  |
 | `codex` | Codex | executor | active | `openai/codex` | `codex` |  |
 | `deepseek` | DeepSeek Harness | executor | active | `kvnloo/deepseek-harness` | `` | yes |
 | `hermes` | Hermes Agent | executor | primary | `kvnloo/hermes-agent` | `hermes` |  |
