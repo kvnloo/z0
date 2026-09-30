@@ -85,6 +85,7 @@ interfaces:
   - tokenomics.event.v0
   - tokenomics.report.v1
   - z0int.decision_receipt.v1
+  - z0int.context_resolve.v1
   - flow_prediction.v1
   - aodl.intent.v1
   - kerdoios.route.v1
@@ -100,6 +101,8 @@ architecture_dimensions:
     ids:
       - rlm-context-spill
       - jev-typed-decision
+      - unified-memory-evidence-path
+      - verified-specialist-evolution
       - sol-pi-action-fusion
       - sol-pi-observation-pack
       - sol-pi-evidence-reducer
