@@ -27,7 +27,7 @@ components:
     install:
       clone: https://github.com/kvnloo/oh-my-pi.git
       branch: rfc/interactive-performance-stack
-      ref: d707478d4c5c72784c058a0163b616988f559230
+      ref: ef9b1e65190a4d36ebf2e25c49017f4063c4867a
       command: bun install && bun run build
     verify:
       command: bun test packages/coding-agent/test/rlm-tokenomics-bridge.test.ts
