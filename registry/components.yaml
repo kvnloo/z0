@@ -129,7 +129,7 @@ components:
     install:
       clone: https://github.com/kvnloo/z0intelligence.git
       branch: master
-      ref: 88c2b540633898bfb2b1590cc12d095bf2329d79
+      ref: 0563ed7a52071cca63ccc91b8c9040207ad23e5d
       command: pip install -e .
     verify:
       command: python3 -m z0int --help
@@ -159,7 +159,7 @@ components:
     install:
       clone: https://github.com/kvnloo/kerdoios.git
       branch: main
-      ref: e3100ae4b779253c3ff3e9a95cc79f0321edb784
+      ref: cdb43b05a328a50649d5120bffcdecea09492219
       command: pip install -e .
     boundaries:
       owns: [provider routing, allocation policy]
@@ -211,7 +211,7 @@ components:
     install:
       clone: https://github.com/kvnloo/frontier-kb.git
       branch: main
-      ref: aac71e8f73cbfe78118d2dd399ecceece2e42e71
+      ref: 22b4c0f1088abfef6184840cb79a0a6a6aceda44
       command: echo 'Knowledge base — see README for ingest workflow'
     boundaries:
       owns: [research evidence, external references]
@@ -262,7 +262,7 @@ components:
     install:
       clone: https://github.com/kvnloo/agenttrace.git
       branch: master
-      ref: a34dea2b6ff7e2133b9e548b93d30bfe6ccf6ff5
+      ref: 6848aa10df9dae7034a7bfeaf9f51a7d55424862
       command: pip install -e .
     boundaries:
       owns: [agent span history, TUI]
