@@ -5,7 +5,7 @@
 | `agenttrace` | AgentTrace | observability | experimental | log_only | `kvnloo/agenttrace` | `972b9512bc7f` |
 | `aodl` | AODL | contract | experimental | shadow | `kvnloo/aodl` | `416736c80a72` |
 | `evolution-lab` | Evolution Lab | research | experimental | shadow | `kvnloo/evolution-lab` | `1c9b5235d341` |
-| `flow` | Flow | desktop | experimental | shadow | `kvnloo/.files` | `5259013185d9` |
+| `flow` | Flow | desktop | experimental | shadow | `kvnloo/.files` | `7796260d5162` |
 | `frontier-kb` | frontier-kb | research | experimental | shadow | `kvnloo/frontier-kb` | `22b4c0f1088a` |
 | `kerdoios` | Kerdoios | compute | experimental | live | `kvnloo/kerdoios` | `cdb43b05a328` |
 | `memento` | Memento | memory | idea | shadow | `kvnloo/Memento` | `513a80c2ba15` |
