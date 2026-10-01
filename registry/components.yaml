@@ -27,7 +27,7 @@ components:
     install:
       clone: https://github.com/kvnloo/oh-my-pi.git
       branch: rfc/interactive-performance-stack
-      ref: d707478d4c5c72784c058a0163b616988f559230
+      ref: ef9b1e65190a4d36ebf2e25c49017f4063c4867a
       command: bun install && bun run build
     verify:
       command: bun test packages/coding-agent/test/rlm-tokenomics-bridge.test.ts
@@ -95,7 +95,7 @@ components:
     install:
       clone: https://github.com/kvnloo/.files.git
       branch: feat/workspace-copilot-flow
-      ref: 5259013185d97422022fc225fa70245595b046ea
+      ref: 7796260d5162830dee3df75d4354603b3e60af25
       command: echo 'Flow scripts live in scripts/workspace_flow.py — see component README'
     verify:
       command: python3 scripts/workspace_flow.py --help
@@ -262,7 +262,7 @@ components:
     install:
       clone: https://github.com/kvnloo/agenttrace.git
       branch: master
-      ref: 6848aa10df9dae7034a7bfeaf9f51a7d55424862
+      ref: 972b9512bc7f3ab0cb031c9627ad70f672c67448
       command: pip install -e .
     boundaries:
       owns: [agent span history, TUI]
