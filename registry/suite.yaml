@@ -289,3 +289,61 @@ repositories:
     summary: Original research-program surface whose experiment engine now lives in Evolution Lab.
     evidence:
       - kvnloo/flyforge:README.md
+
+  agent-orchestrator:
+    name: Agent Orchestrator
+    repo: kvnloo/agent-orchestrator
+    role: orchestration_runtime
+    authority: implementation
+    status: experimental
+    supports_components: [z0intelligence, aodl]
+    summary: Agent orchestration surface integrated with z0intelligence decision and outcome contracts.
+    evidence:
+      - kvnloo/agent-orchestrator:README.md
+
+  optmem:
+    name: OptMem
+    repo: kvnloo/OptMem
+    role: memory_research
+    authority: external_research
+    status: experimental
+    supports_components: [z0intelligence]
+    summary: Memory research substrate used for temporal projection and bounded-cover experiments without becoming canonical memory authority.
+    evidence:
+      - kvnloo/OptMem:README.md
+
+  bend:
+    name: Bend
+    repo: kvnloo/bend
+    upstream: bendlang/bend
+    role: verified_compilation_substrate
+    authority: external_substrate
+    status: experimental
+    supports_components: [z0intelligence, aodl]
+    summary: Parallel proof-oriented language explored as an enforceable compilation target for Zer0 orchestration contracts.
+    evidence:
+      - kvnloo/bend:README.md
+
+  agentweb:
+    name: AgentWeb
+    repo: kvnloo/agentweb
+    upstream: AgentWebPro/agentweb
+    role: agent_marketplace_harness
+    authority: downstream_integration
+    status: experimental
+    supports_components: [z0intelligence, aodl]
+    summary: Downstream AgentWeb/Emma integration surface for typed decisions, personal context, and z0 orchestration experiments.
+    evidence:
+      - kvnloo/agentweb:README.md
+
+  sol-pi-omp:
+    name: SoL-Pi OMP
+    repo: kvnloo/sol-pi-omp
+    role: mechanism_port
+    authority: implementation
+    status: experimental
+    depends_on_repositories: [sol-pi]
+    extends_harnesses: [pi]
+    summary: OMP-focused packaging and experiments for reusable SoL-Pi efficiency mechanisms.
+    evidence:
+      - kvnloo/sol-pi-omp:README.md
