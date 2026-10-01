@@ -3,6 +3,9 @@
 | ID | Name | Role | Authority | Status | Repository |
 |----|------|------|-----------|--------|------------|
 | `activegraph` | ActiveGraph | temporal_graph_substrate | external_substrate | active | `kvnloo/activegraph` |
+| `agent-orchestrator` | Agent Orchestrator | orchestration_runtime | implementation | experimental | `kvnloo/agent-orchestrator` |
+| `agentweb` | AgentWeb | agent_marketplace_harness | downstream_integration | experimental | `kvnloo/agentweb` |
+| `bend` | Bend | verified_compilation_substrate | external_substrate | experimental | `kvnloo/bend` |
 | `codex-router` | Codex Router | provider_router | implementation | experimental | `kvnloo/codex-router` |
 | `company-os` | Company OS | operational_projection | read_only_projection | experimental | `kvnloo/company-os` |
 | `deepseek-harness` | DeepSeek Harness | execution_runtime | implementation | developer_preview | `kvnloo/deepseek-harness` |
@@ -19,9 +22,11 @@
 | `hermes-privilege-broker` | Hermes Privilege Broker | privilege_boundary | security_reference | development_candidate | `kvnloo/hermes-privilege-broker` |
 | `hermes-talk` | Hermes Talk | voice_orchestrator | implementation | experimental | `kvnloo/hermes-talk` |
 | `hermes3d` | Hermes3D | spatial_frontend | projection | experimental | `kvnloo/Hermes3D` |
+| `optmem` | OptMem | memory_research | external_research | experimental | `kvnloo/OptMem` |
 | `ripple` | Ripple | intent_surface | interaction | experimental | `kvnloo/ripple` |
 | `sol-pi` | SoL-Pi | mechanism_bundle | implementation | experimental | `kvnloo/SoL-Pi` |
 | `sol-pi-hermes` | sol-pi-hermes | mechanism_port | implementation | experimental | `kvnloo/sol-pi-hermes` |
+| `sol-pi-omp` | SoL-Pi OMP | mechanism_port | implementation | experimental | `kvnloo/sol-pi-omp` |
 | `verified-oss-loop` | Verified OSS Loop | contribution_protocol | protocol | active | `kvnloo/verified-oss-loop` |
 | `z0` | Zer0 | architecture_registry | canonical | active | `kvnloo/z0` |
 | `z0archy` | z0archy | architecture_projection | derived | active | `kvnloo/z0archy` |
