@@ -95,7 +95,7 @@ components:
     install:
       clone: https://github.com/kvnloo/.files.git
       branch: feat/workspace-copilot-flow
-      ref: 5259013185d97422022fc225fa70245595b046ea
+      ref: 7796260d5162830dee3df75d4354603b3e60af25
       command: echo 'Flow scripts live in scripts/workspace_flow.py — see component README'
     verify:
       command: python3 scripts/workspace_flow.py --help
