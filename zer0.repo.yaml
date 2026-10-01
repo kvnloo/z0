@@ -1,0 +1,88 @@
+version: 1
+repo: kvnloo/z0
+id: z0
+kind: suite
+summary: Canonical Zer0 architecture registry: semantic identities, ownership boundaries, install profiles, repository catalog, validation schemas, generated reference docs, and the CLI/library that compiles them.
+
+architecture:
+  subsystems:
+    - id: semantic-registry
+      name: Canonical semantic registries
+      kind: authority
+      summary: Owns cross-system component, harness, mechanism, interface, lifecycle, representation, evidence-dependency, profile, and suite-repository identities.
+      paths:
+        - registry/
+      depends_on: []
+
+    - id: registry-validation
+      name: Registry validation contracts
+      kind: contract
+      summary: Defines machine-checkable component/repository schemas and fail-closed cross-reference invariants for canonical registry declarations.
+      paths:
+        - schemas/
+        - scripts/registry-check
+      depends_on: [semantic-registry]
+
+    - id: registry-library
+      name: Registry library and CLI
+      kind: compiler
+      summary: Loads, resolves, validates, and exposes canonical registry data through the z0 Python library and command surface.
+      paths:
+        - lib/z0/
+        - z0
+      depends_on: [semantic-registry, registry-validation]
+
+    - id: docs-compiler
+      name: Generated architecture documentation
+      kind: presentation
+      summary: Compiles canonical registry truth into generated component/interface/harness/mechanism/lifecycle/suite/install references and ownership documentation.
+      paths:
+        - lib/z0/generate.py
+        - scripts/docs-generate
+        - scripts/docs-check
+        - generated/
+        - docs/reference/
+      depends_on: [registry-library]
+
+    - id: human-architecture-guides
+      name: Human architecture and onboarding guides
+      kind: documentation
+      summary: Explains system boundaries, components, profiles, and operating conventions without replacing the machine-readable registries as authority.
+      paths:
+        - ARCHITECTURE.md
+        - SYSTEM.md
+        - README.md
+        - docs/
+      depends_on: [semantic-registry]
+
+  provides_interfaces: []
+  consumes_interfaces: []
+  produces_representations: []
+  consumes_representations: []
+
+  boundaries:
+    owns:
+      - canonical cross-system semantic identities
+      - component and repository ownership declarations
+      - install profiles and maturity declarations
+      - registry validation contracts
+      - generated canonical reference documentation
+    not_here:
+      - runtime execution
+      - implementation-specific subsystem truth
+      - experiment evidence generation
+      - model routing or provider execution
+      - inferred architecture from source code
+
+  evidence:
+    docs:
+      - README.md
+      - ARCHITECTURE.md
+      - SYSTEM.md
+      - docs/reference/
+    tests:
+      - scripts/registry-check
+      - scripts/docs-check
+    schemas:
+      - schemas/component.schema.json
+      - schemas/repo.schema.json
