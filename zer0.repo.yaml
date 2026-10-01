@@ -1,0 +1,57 @@
+version: 1
+repo: kvnloo/z0
+id: z0
+kind: suite
+summary: Canonical Zer0 architecture registry, installer, contract map, generated documentation source, and repository-suite authority.
+
+architecture:
+  subsystems:
+    - id: canonical-registries
+      name: Canonical architecture registries
+      kind: registry
+      summary: Owns canonical components, harnesses, mechanisms, interfaces, lifecycles, representations, evidence dependencies, suite roles, and install profiles.
+      paths: [registry/, zer0.registry.yaml]
+    - id: registry-library
+      name: Registry library
+      kind: contract
+      summary: Loads and resolves canonical registry facts for CLI, validation, generation, and downstream architecture tooling.
+      paths: [lib/]
+      depends_on: [canonical-registries]
+    - id: cli-installer
+      name: Zer0 CLI and installer
+      kind: tooling
+      summary: Resolves profiles, installation plans, status, doctor checks, graph views, and documentation generation without becoming a runtime.
+      paths: [z0, scripts/]
+      depends_on: [registry-library]
+    - id: schema-contracts
+      name: Schema contracts
+      kind: contract
+      summary: Defines validation contracts for repository manifests and canonical registry structures.
+      paths: [schemas/]
+      depends_on: [canonical-registries]
+    - id: generated-docs
+      name: Generated architecture documentation
+      kind: presentation
+      summary: Materializes human-readable maps and indexes from the canonical registries and rejects stale generated outputs in CI.
+      paths: [generated/, docs/reference/]
+      depends_on: [registry-library]
+    - id: rfc-surface
+      name: Cross-repository RFC surface
+      kind: governance
+      summary: Stores cross-system architecture proposals while preserving implementation ownership in the relevant repositories.
+      paths: [rfcs/, docs/architecture/]
+      depends_on: [canonical-registries]
+
+  provides_interfaces: []
+  consumes_interfaces: []
+  produces_representations: []
+  consumes_representations: []
+
+  boundaries:
+    owns: [canonical Zer0 semantic identities, cross-system architecture map, suite membership, install profiles, architecture schema contracts]
+    not_here: [agent runtime execution, model/provider routing, source-memory databases, experiment execution]
+
+  evidence:
+    docs: [README.md, ARCHITECTURE.md, SYSTEM.md, docs/]
+    tests: [scripts/registry-check]
+    schemas: [schemas/]
