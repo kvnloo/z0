@@ -2,7 +2,7 @@
 
 | ID | Name | Kind | Status | Execution | Repo | Stable ref |
 |----|------|------|--------|-----------|------|------------|
-| `agenttrace` | AgentTrace | observability | experimental | log_only | `kvnloo/agenttrace` | `6848aa10df9d` |
+| `agenttrace` | AgentTrace | observability | experimental | log_only | `kvnloo/agenttrace` | `972b9512bc7f` |
 | `aodl` | AODL | contract | experimental | shadow | `kvnloo/aodl` | `416736c80a72` |
 | `evolution-lab` | Evolution Lab | research | experimental | shadow | `kvnloo/evolution-lab` | `1c9b5235d341` |
 | `flow` | Flow | desktop | experimental | shadow | `kvnloo/.files` | `5259013185d9` |
