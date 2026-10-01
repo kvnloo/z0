@@ -1,4 +1,5 @@
 {"id": "architecture.measurement-plane", "path": "docs/architecture/measurement-plane.md", "title": "Measurement Plane", "components": ["oh-my-pi", "tokenomics", "z0intelligence"]}
+{"id": "architecture.rfc-nemo-relay-runtime-observation", "path": "docs/architecture/rfc-nemo-relay-runtime-observation.md", "title": "Rfc Nemo Relay Runtime Observation", "components": ["oh-my-pi", "tokenomics", "z0intelligence", "evolution-lab", "aodl", "agenttrace"]}
 {"id": "architecture.system-map", "path": "docs/architecture/system-map.md", "title": "System Map", "components": ["tokenomics", "flow", "z0intelligence", "kerdoios", "frontier-kb", "aodl", "agenttrace"]}
 {"id": "components.agenttrace", "path": "docs/components/agenttrace.md", "title": "Agenttrace", "components": ["agenttrace"]}
 {"id": "components.aodl", "path": "docs/components/aodl.md", "title": "Aodl", "components": ["aodl"]}
