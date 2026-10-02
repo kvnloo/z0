@@ -12,15 +12,15 @@ evidence_dependencies:
     to: repo:kvnloo/bend
     relation: uses_verifier
     required_evidence:
-      - https://github.com/kvnloo/hermes-agent/blob/014d33c366855ceb918e6c548cee9a2f12ee933b/README.md
-      - https://github.com/kvnloo/hermes-agent/blob/014d33c366855ceb918e6c548cee9a2f12ee933b/plugin.yaml
+      - https://github.com/kvnloo/bend-native/blob/7b891019204ee10b88e78ef142ec00c3db5fe36a/README.md
+      - https://github.com/kvnloo/bend-native/blob/7b891019204ee10b88e78ef142ec00c3db5fe36a/plugin.yaml
       - https://github.com/kvnloo/hermes-agent/issues/324
       - https://github.com/kvnloo/hermes-agent/issues/389
     invariants:
       - The standalone native plugin uses the public Hermes API; Hermes retains execution ownership.
       - Receipts identify captured inputs, cached dependencies, the Bend installation and the private kernel.
       - A Bend verdict covers the emitted book, not source equivalence, task success or an execution grant.
-      - The independent plugin tree lives on plugins/bend-native in the Hermes fork; use the exact evidence SHA.
+      - The standalone plugin lives in kvnloo/bend-native; use the exact evidence SHA.
     invalidators:
       - A source, dependency, runtime or kernel identity changes without invalidating the receipt.
       - A consumer interprets a raw Bend pass as AODL admission or whole-task verified success.
@@ -38,7 +38,7 @@ evidence_dependencies:
     required_evidence:
       - https://github.com/kvnloo/z0intelligence/issues/48
       - https://github.com/kvnloo/z0intelligence/blob/a0e95785fe810ae0d1cfbb128096b5deca5c2712/bend/aodl_gate/README.md
-      - https://github.com/kvnloo/hermes-agent/blob/014d33c366855ceb918e6c548cee9a2f12ee933b/scripts/smoke.py
+      - https://github.com/kvnloo/bend-native/blob/7b891019204ee10b88e78ef142ec00c3db5fe36a/scripts/smoke.py
     invariants:
       - AODL owns the contract and canonical Python validation remains the admission authority.
       - Bend is an experimental specification and CI verifier; measured parity does not prove equivalence.

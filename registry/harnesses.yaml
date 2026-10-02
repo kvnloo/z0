@@ -34,6 +34,7 @@ harnesses:
       scheduled automation and trajectory generation/compression.
     extensions:
       - kvnloo/sol-pi-hermes
+      - kvnloo/bend-native
     evidence:
       - kvnloo/aodl:harnesses/catalog.json#hermes
       - kvnloo/hermes-agent:README.md
