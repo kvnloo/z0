@@ -35,10 +35,15 @@ harnesses:
       scheduled automation and trajectory generation/compression.
     extensions:
       - kvnloo/sol-pi-hermes
+      # Native plugin. Not a Hermes core patch and not an install pin.
+      - kvnloo/bend-native
     evidence:
       - kvnloo/aodl:harnesses/catalog.json#hermes
       - kvnloo/hermes-agent:README.md
       - kvnloo/sol-pi-hermes:README.md
+      # Lab evidence only. Do not copy these SHAs into tested_ref.
+      - kvnloo/hermes-agent@ce5c027bbacc2c4d60a17eb61f80a76910410313:lab/z0int/full-observer-v0
+      - kvnloo/bend-native@7b891019204ee10b88e78ef142ec00c3db5fe36a:README.md
 
   deepseek:
     name: DeepSeek Harness
