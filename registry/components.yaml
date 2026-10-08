@@ -122,6 +122,7 @@ components:
     provides:
       - z0int.decision_receipt.v1
       - z0int.context_resolve.v1
+      - z0int.file_search.v1
     consumes:
       - tokenomics.report.v1
       - flow_prediction.v1
@@ -129,7 +130,7 @@ components:
     install:
       clone: https://github.com/kvnloo/z0intelligence.git
       branch: master
-      ref: 0563ed7a52071cca63ccc91b8c9040207ad23e5d
+      ref: 5873723eb33bd5c09e5220b3619e25e01efacd64
       command: pip install -e .
     verify:
       command: python3 -m z0int --help

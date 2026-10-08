@@ -86,6 +86,7 @@ interfaces:
   - tokenomics.report.v1
   - z0int.decision_receipt.v1
   - z0int.context_resolve.v1
+  - z0int.file_search.v1
   - flow_prediction.v1
   - aodl.intent.v1
   - kerdoios.route.v1
