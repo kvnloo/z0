@@ -44,4 +44,8 @@
 - **Owner:** `z0intelligence`
 - **Summary:** Structured decision receipt for routing and policy audit.
 
+## `z0int.file_search.v1`
+- **Owner:** `z0intelligence`
+- **Summary:** Bounded resident file and symbol search result with freshness metadata, consumed through context resolution.
+
 _Generated from `registry/interfaces.yaml`._

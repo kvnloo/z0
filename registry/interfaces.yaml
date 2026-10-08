@@ -17,6 +17,10 @@ interfaces:
     owner: z0intelligence
     summary: Provenance-preserving bounded context packet for source-backed retrieval and harness injection.
 
+  z0int.file_search.v1:
+    owner: z0intelligence
+    summary: Bounded resident file and symbol search result with freshness metadata, consumed through context resolution.
+
   flow_prediction.v1:
     owner: flow
     summary: OS-context prediction with horizon metadata and gates.

@@ -27,7 +27,7 @@ mechanisms:
       - component: oh-my-pi
         repo: kvnloo/oh-my-pi
     evidence:
-      - kvnloo/z0intelligence:README.md#current-foundation-openjev-runtime
+      - kvnloo/z0intelligence:README.md#decision-stack-current-truth
       - registry/components.yaml#components.oh-my-pi
 
   sol-pi-action-fusion:
@@ -242,7 +242,7 @@ mechanisms:
       - repo: kvnloo/hermes-talk
         harness: hermes
     evidence:
-      - kvnloo/hermes-talk:README.md#what-this-actually-is
+      - kvnloo/hermes-talk:README.md
 
   z0archy-semantic-compression:
     name: Loss-aware semantic architecture compression
