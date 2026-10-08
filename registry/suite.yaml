@@ -15,6 +15,52 @@ repositories:
     evidence:
       - kvnloo/activegraph:README.md
 
+  agentsview:
+    name: AgentsView
+    repo: kvnloo/agentsview
+    upstream: kenn-io/agentsview
+    role: session_archive_index
+    authority: external_substrate
+    status: active
+    supports_components: [z0intelligence]
+    summary: Local-first session search and token-use statistics. Archival evidence access and indexing, not a memory authority (z0#15 ownership table).
+    evidence:
+      - kvnloo/agentsview:README.md
+
+  ai-data-extraction:
+    name: AI Data Extraction
+    repo: kvnloo/ai-data-extraction
+    upstream: sybil-solutions/ai-data-extraction
+    role: history_export_adapter
+    authority: external_research
+    status: reference
+    summary: Exports personal session history from coding-agent clients. An adapter and reference, not a new authority (z0#27).
+    evidence:
+      - kvnloo/ai-data-extraction:README.md
+
+  ctx:
+    name: ctx
+    repo: kvnloo/ctx
+    upstream: ctxrs/ctx
+    role: session_history_recall
+    authority: external_substrate
+    status: active
+    supports_components: [z0intelligence]
+    summary: Recall over coding-agent history already on the machine. Historical evidence retrieval for z0intelligence, which keeps ownership of memory and routing (z0#27).
+    evidence:
+      - kvnloo/ctx:README.md
+
+  dash:
+    name: Dash
+    repo: kvnloo/dash
+    role: phone_control_surface
+    authority: interaction
+    status: active
+    supports_components: [aodl]
+    summary: Phone UI for laptop coding agents over Tailscale. A surface, not an executor; it owns neither execution nor intent.
+    evidence:
+      - kvnloo/dash:README.md
+
   graphcon-deck:
     name: graphcon-deck
     repo: kvnloo/graphcon-deck
@@ -25,6 +71,64 @@ repositories:
     summary: Spatial knowledge-graph presentation substrate adapted by z0archy for authored scenes and interactive architecture exploration.
     evidence:
       - kvnloo/graphcon-deck:README.md
+
+  herdr:
+    name: Herdr
+    repo: kvnloo/herdr
+    upstream: herdrdev/herdr
+    role: agent_runtime_reference
+    authority: external_research
+    status: reference
+    summary: Runtime for long-lived coding agents. Credited upstream reference in z0#15; an independent system, not z0-owned.
+    evidence:
+      - kvnloo/herdr:README.md
+
+  hermes-agent-cluster:
+    name: Hermes Agent Cluster
+    repo: kvnloo/hermes-agent-cluster
+    upstream: HughesCuit/hermes-agent-cluster
+    role: worker_cluster_scheduler
+    authority: downstream_integration
+    status: experimental
+    depends_on_repositories: [hermes-agent]
+    extends_harnesses: [hermes]
+    summary: Cluster of Hermes workers with its own capability scheduler, leases and heartbeats. It performs resource placement, which the architecture assigns to Kerdoios; recorded so the overlap stays visible.
+    evidence:
+      - kvnloo/hermes-agent-cluster:README.md
+
+  kvnloo-skills:
+    name: kvnloo skills
+    repo: kvnloo/kvnloo-skills
+    role: skill_bundle
+    authority: implementation
+    status: active
+    extends_harnesses: [hermes]
+    summary: Personal Hermes skills, starting with Hyprland UI testing. Skills only; no architecture.
+    evidence:
+      - kvnloo/kvnloo-skills:README.md
+
+  o8:
+    name: o8
+    repo: kvnloo/o8
+    upstream: hurttlocker/o8
+    role: execution_surface
+    authority: external_substrate
+    status: experimental
+    summary: Agent coordination runtime used as an execution surface that emits and consumes receipts (z0#27). It does not own routing or memory.
+    evidence:
+      - kvnloo/o8:README.md
+
+  omp-herdsman:
+    name: OMP Herdsman
+    repo: kvnloo/omp-herdsman
+    upstream: yagizkaterli/omp-herdsman
+    role: subagent_fleet_orchestration
+    authority: external_research
+    status: reference
+    extends_harnesses: [omp]
+    summary: Asynchronous OMP subagents and fleet orchestration. A collaborator's independent system (z0#15), not z0-owned.
+    evidence:
+      - kvnloo/omp-herdsman:README.md
 
   z0:
     name: Zer0
