@@ -341,9 +341,12 @@ repositories:
     repo: kvnloo/sol-pi-omp
     role: mechanism_port
     authority: implementation
-    status: experimental
+    status: bootstrap
     depends_on_repositories: [sol-pi]
     extends_harnesses: [pi]
-    summary: OMP-focused packaging and experiments for reusable SoL-Pi efficiency mechanisms.
+    summary: >
+      OMP-focused packaging for reusable SoL-Pi efficiency mechanisms. The default
+      branch holds only the license; the wrapper is unmerged on
+      cursor/sol-pi-omp-wrapper-af0c (kvnloo/sol-pi-omp#1).
     evidence:
-      - kvnloo/sol-pi-omp:README.md
+      - kvnloo/sol-pi-omp:LICENSE

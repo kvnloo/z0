@@ -26,7 +26,7 @@
 | `ripple` | Ripple | intent_surface | interaction | experimental | `kvnloo/ripple` |
 | `sol-pi` | SoL-Pi | mechanism_bundle | implementation | experimental | `kvnloo/SoL-Pi` |
 | `sol-pi-hermes` | sol-pi-hermes | mechanism_port | implementation | experimental | `kvnloo/sol-pi-hermes` |
-| `sol-pi-omp` | SoL-Pi OMP | mechanism_port | implementation | experimental | `kvnloo/sol-pi-omp` |
+| `sol-pi-omp` | SoL-Pi OMP | mechanism_port | implementation | bootstrap | `kvnloo/sol-pi-omp` |
 | `verified-oss-loop` | Verified OSS Loop | contribution_protocol | protocol | active | `kvnloo/verified-oss-loop` |
 | `z0` | Zer0 | architecture_registry | canonical | active | `kvnloo/z0` |
 | `z0archy` | z0archy | architecture_projection | derived | active | `kvnloo/z0archy` |
