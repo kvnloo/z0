@@ -1,0 +1,15 @@
+# Keep this host setting and comment.
+model = "fixture-model"
+
+[projects."/work"]
+trust_level = "trusted"
+
+[mcp_servers.unrelated]
+command = "keep-me"
+[mcp_servers.unrelated.env]
+PRIVATE_TOKEN = "unrelated-secret"
+
+[mcp_servers.archive]
+command = "old-archive"
+[mcp_servers.archive.env]
+ACCESS_TOKEN = "fixture-secret"

@@ -13,6 +13,15 @@
     "execution": { "enum": ["shadow", "log_only", "canary", "live"] },
     "summary": { "type": "string" },
     "evidence_source_for": { "$ref": "#/$defs/stringList" },
+    "service": {
+      "description": "Optional user systemd unit to observe, never to enable or start.",
+      "type": "object",
+      "required": ["unit"],
+      "properties": {
+        "unit": { "type": "string", "pattern": "^[A-Za-z0-9_@.:-]+\\.(service|socket|timer|target)$" }
+      },
+      "additionalProperties": false
+    },
     "observed": {
       "description": "Dated evidence, separate from declarative bindings and host intent.",
       "type": "object",

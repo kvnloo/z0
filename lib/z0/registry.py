@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from pathlib import Path
 from typing import Any
 from urllib.request import urlopen
@@ -110,6 +111,12 @@ def validate_components(
             value = meta.get(field)
             if not isinstance(value, str) or value not in allowed:
                 raise ValueError(f"{where} has unknown {field} {value!r}")
+        if "service" in meta:
+            service = meta["service"]
+            if not isinstance(service, dict) or set(service) != {"unit"} or not isinstance(service["unit"], str):
+                raise ValueError(f"{where}.service requires a unit name")
+            if not re.fullmatch(r"[A-Za-z0-9_@.:-]+\.(service|socket|timer|target)", service["unit"]):
+                raise ValueError(f"{where}.service.unit must be a systemd unit name")
         if "observed" in meta:
             observed = meta["observed"]
             if not isinstance(observed, dict):

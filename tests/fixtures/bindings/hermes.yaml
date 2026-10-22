@@ -1,0 +1,14 @@
+# Keep this host setting and comment.
+model: fixture-model
+mcp_servers:
+  unrelated:
+    command: keep-me
+    env:
+      PRIVATE_TOKEN: unrelated-secret
+  archive:
+    command: old-archive
+    env:
+      ACCESS_TOKEN: fixture-secret
+memory:
+  provider: old_provider
+  max_tokens: 4096

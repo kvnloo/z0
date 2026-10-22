@@ -482,6 +482,8 @@ components:
       command: ctx --help
     docs:
       readme: README.md
+    service:
+      unit: ctx.service
     bindings:
       mcp:
         command: ctx
@@ -528,6 +530,8 @@ components:
       command: curl --fail --silent http://127.0.0.1:8420/health
     docs:
       readme: README.md
+    service:
+      unit: tencentdb-memory.service
     bindings:
       harnesses: [hermes, omp]
       hermes:
