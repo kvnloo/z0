@@ -6,6 +6,7 @@ python3 - <<'PY'
 from z0 import registry
 
 comps = registry.components()
+registry.validate_components(comps)
 profs = registry.profiles()
 harnesses = registry.harnesses()
 mechanisms = registry.mechanisms()
