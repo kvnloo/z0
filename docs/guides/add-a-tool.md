@@ -15,10 +15,12 @@ without moving its implementation into `z0`.
 > **Implementation status (2026-10-22): proposed, not deployed.** This guide
 > describes the contract requested in [z0 #15](https://github.com/kvnloo/z0/issues/15#issuecomment-6353289693).
 > Today `./z0 init --dry-run`, `./z0 add`, `./z0 status` and `./z0 doctor`
-> exist. The `bindings` validator, `.files` `fleet.toml` `z0_components`
-> field, `z0 apply`, harness-config drift checks and `fleet health` integration
-> are **future slices**. The YAML/TOML below is illustrative, **not** accepted
-> or deployed configuration. Do not infer host adoption from this document.
+> exist. The `bindings` validator is proposed in
+> [PR #30](https://github.com/kvnloo/z0/pull/30) (`feat/component-bindings`);
+> the registry examples below follow that draft schema. The `.files`
+> `z0_components` field, `z0 apply`, harness-config drift checks and
+> `fleet health` integration remain **future slices**, not deployed config.
+> Do not infer host adoption from this document.
 
 ## The three steps
 
@@ -33,10 +35,11 @@ without moving its implementation into `z0`.
    (notably `claude`, not `claude-code`). Do not turn every model, research
    note, or worker into an installable component just to get a registry row.
 2. **Enable — `kvnloo/.files`.** A reviewed `fleet.toml` host profile
-   (proposed) declares `z0_components` and eligible harnesses for each host
-   (e.g. `groot`, `mbp`, phones). `.files` owns installation, service startup,
-   host-specific paths and secret references. A registry entry alone enables
-   nothing. Host intent must not contain raw credentials.
+   (proposed) declares a `[hosts.<logical_id>.z0_components]` table:
+   exact registry component IDs map to explicit harness/profile selector arrays.
+   Use logical IDs `desktop`, `mbp`, `phone` (not the hostname `groot`).
+   `.files` owns installation, service startup, host-specific paths and secret
+   references. A registry entry alone enables nothing; never commit credentials.
 3. **Bind — `z0 apply` / `z0 doctor`.** The **planned**
    `z0 apply --dry-run` renders a diff of each *native* harness config.
    After human inspection, an explicit `--apply` may write only the
@@ -86,7 +89,7 @@ server command or an invitation to expose a whole home directory:
 components:
   filesystem-mcp:
     name: Scoped filesystem MCP
-    kind: tool
+    kind: service
     status: experimental
     execution: shadow
     boundaries:
@@ -156,9 +159,15 @@ component **only if** the host/harness integration changes:
 # Illustrative addition to the existing components.kerdoios mapping
 bindings:
   harnesses: [hermes, omp, codex]
-  # Adapter key/shape must be finalized by the binding-schema slice:
-  provider_adapter: kerdoios
+  hermes: {provider_adapter: kerdoios}
+  omp: {provider_adapter: kerdoios}
+  codex: {provider_adapter: kerdoios}
 ```
+
+PR #30 permits adapter metadata under a selected harness ID, not arbitrary
+top-level keys such as `bindings.provider_adapter`. These proposed
+`provider_adapter` hooks are descriptive; no native renderer implements them
+yet. Do not infer adapter support merely because the metadata validates.
 
 Enable `kerdoios` for the intended host in `.files`; pass credentials by
 host-local secret references, never committed YAML or a generated diff.
@@ -191,14 +200,14 @@ components:
     verify:
       command: "<owner contract and readback checks>"
     bindings:
-      harnesses: [omp, hermes]
-      worker:
-        contract_owner: kvnloo/oss-factory
-        require_claim_and_receipt: true
+      # PR #30 records no supported native harness binding yet.
+      harnesses: []
 ```
 
-Enable the coordinator on approved hosts, **not** all harnesses by default.
-A harness plugin may request an authorized worker card; oss-factory owns
+Enable the coordinator's local runtime on approved hosts with an empty
+selector array, **not** all harnesses by default. Register a harness-specific
+adapter only after its contract exists. A harness plugin may then request an
+authorized worker card; oss-factory owns
 claim/collision checks and durable receipts. A configured worker is not an
 executed card, verified outcome or authorized upstream promotion. Reuse
 [factory #201](https://github.com/kvnloo/oss-factory/issues/201) for its
@@ -206,20 +215,44 @@ existing preflight ownership.
 
 ## Host profile and verification
 
-The `.files` host intent is illustrative until its `fleet.toml` slice lands:
+Follow the [`.files` field proposal](https://github.com/kvnloo/.files/issues/16#issuecomment-6353585727),
+normalizing its display name `claude-code` to AODL's **`claude`**:
 
 ```toml
-# Proposed host-profile shape; do not treat as existing .files syntax.
-[hosts.groot]
-z0_components = ["filesystem-mcp", "graphrag", "kerdoios", "oss-factory"]
-harnesses = ["hermes", "omp", "claude", "codex"]
+# Proposed .files syntax; none of these selections are deployed by this guide.
+[hosts.desktop.z0_components]
+"filesystem-mcp" = ["hermes:default", "claude", "codex", "omp"]
+"graphrag" = ["hermes:default"]  # only after its proposed adapter exists
+"kerdoios" = ["hermes:default", "codex", "omp"]
+"oss-factory" = []             # local runtime only, no harness injection
 ```
 
-Expected selection = registered bindings **intersection** host opt-in
-**intersection** supported harness/adapter. Reject unknown AODL IDs,
-missing commands, disabled profiles, secrets without local references,
-unsupported platforms and disallowed tool scopes. A phone profile may
-intentionally enable none of these.
+Keys must match exact registry IDs; for example PR #30 uses
+`tencentdb-memory`, not the host proposal's `tencentdb-gateway`.
+Selectors use canonical AODL harness IDs, with `hermes:<profile>` selecting
+one explicit Hermes profile. No wildcard or implicit profile expansion.
+Empty arrays request local presence only; absence is not a deletion request
+for unmanaged configuration. Hermes `clean` remains `ctx`/`noop` only, without
+TencentDB or a z0intelligence memory hook; missing IDs/adapters remain blocked.
+
+Logical-host joins are explicit: `desktop → groot`, `mbp → mbp`,
+`phone → omarchy-phone`; the proposed `phone_s22plus → galaxy-s22plus`
+requires verified identity before automatic planning. An ambiguous PRoot
+hostname is insufficient; PRoot has no systemd or K3s.
+
+Expected selection = registered `bindings.harnesses` **intersection** explicit
+host/component selectors **intersection** supported native adapter. Profile
+selection belongs in `.files`, not in `bindings.harnesses`. Reject unknown
+AODL IDs, missing commands, disabled profiles, secrets without local references,
+unsupported platforms and disallowed tool scopes. The GraphRAG, Kerdoios and
+worker examples above describe future adapters, not current PR #30 enablement.
+
+In PR #30, `bindings` accepts shared `mcp`, `harnesses`, and per-harness
+mapping overrides whose keys must appear in `harnesses`. MCP declares exactly
+one of `command` or `url`; stdio permits `args`/`env`, HTTP permits `headers`.
+`memory_provider` is a per-harness string or null. The GraphRAG example's
+`hermes.memory_provider: null` declares no native provider activation.
+The host proposal does not enable GraphRAG/QMD/Supermemory/Memento by default.
 
 ```bash
 # Available today (registry/install inspection, not harness binding):
