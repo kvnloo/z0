@@ -58,6 +58,54 @@ manifest cannot redefine the canonical identity owned by the central registries.
 z0archy can therefore read the same contract from a GitHub branch or local worktree
 without guessing repository structure from filenames alone.
 
+### Component bindings and observations
+
+`registry/components.yaml` optionally records **declarative consumption recipes**:
+
+```yaml
+bindings:
+  mcp: {command: example-mcp, args: [--root, "${EXAMPLE_ROOT}"]}
+  harnesses: [hermes]       # authoritative AODL ids, not local aliases
+  hermes: {memory_provider: null}
+evidence_source_for: [z0intelligence.context-packet]
+```
+
+`mcp` accepts either stdio `command`/optional `args`/`env`, or remote `url`/optional
+`headers`. Values may refer to environment variables; never commit credentials.
+Per-harness mappings are native adapter settings; `memory_provider` is a string
+or null, and an optional per-harness `mcp` replaces the shared server definition.
+Each override key must occur in `bindings.harnesses`. A missing/empty harness list
+does not claim integration. `evidence_source_for` declares an evidence dependency
+seam, not proof of consumer adoption or memory quality.
+
+AODL's `harnesses/catalog.json` owns ids (for example, Claude Code is `claude`,
+not `claude-code`). Validation reads that authority, not a copied catalog in z0.
+By default it fetches the catalog using `registry/harnesses.yaml`; for offline
+checks set `Z0_AODL_CATALOG=/path/to/aodl/harnesses/catalog.json`. Missing authority
+or an unknown id fails closed.
+
+Artifact `status` and optional rollout `execution` retain their existing meanings.
+A separate optional `observed` mapping requires `at`, `host`, `summary` and a
+nonempty `evidence` list. These dated, source-linked snapshots distinguish built,
+configured, running, blocked and unknown facts without treating them as desired
+state. A running unit does not prove retrieval quality or cross-harness continuity.
+See [the generated binding/evidence view](generated/component-bindings.md).
+
+`.files` owns host/profile enablement intent. Native harness adapters own binding.
+This registry slice neither enables services nor writes live harness configuration;
+it does not implement `z0 apply` or a binding-drift doctor.
+
+Check locally:
+
+```bash
+scripts/docs-generate
+scripts/registry-check
+PYTHONPATH=lib python3 -m unittest discover -s tests -v
+```
+
+The dependency-light unit suite uses a small injected catalog and makes no
+network calls. The full registry check uses AODL (or `Z0_AODL_CATALOG`).
+
 ## Profiles
 
 | Profile | Components | For |
