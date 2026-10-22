@@ -8,10 +8,65 @@
     "id": { "type": "string" },
     "name": { "type": "string" },
     "repo": { "type": "string" },
-    "kind": { "type": "string" },
-    "status": { "type": "string" },
-    "execution": { "type": "string" },
-    "summary": { "type": "string" }
+    "kind": { "enum": ["runtime", "measurement", "desktop", "intelligence", "compute", "research", "contract", "observability", "memory-source", "service", "worker-coordinator", "sensor"] },
+    "status": { "enum": ["idea", "prototype", "experimental", "canary", "stable", "deprecated", "reference"] },
+    "execution": { "enum": ["shadow", "log_only", "canary", "live"] },
+    "summary": { "type": "string" },
+    "evidence_source_for": { "$ref": "#/$defs/stringList" },
+    "observed": {
+      "description": "Dated evidence, separate from declarative bindings and host intent.",
+      "type": "object",
+      "required": ["at", "host", "summary", "evidence"],
+      "properties": {
+        "at": { "type": "string", "minLength": 1 },
+        "host": { "type": "string", "minLength": 1 },
+        "summary": { "type": "string", "minLength": 1 },
+        "evidence": { "allOf": [{ "$ref": "#/$defs/stringList" }], "minItems": 1 }
+      }
+    },
+    "bindings": {
+      "description": "Declarative consumption recipes, not observed enablement. Harness keys and harnesses entries must be authoritative AODL ids (checked by lib/z0/registry.py).",
+      "type": "object",
+      "properties": {
+        "mcp": { "$ref": "#/$defs/mcp" },
+        "harnesses": { "$ref": "#/$defs/stringList" }
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "memory_provider": { "type": ["string", "null"], "minLength": 1 },
+          "mcp": { "$ref": "#/$defs/mcp" }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "$defs": {
+    "stringList": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "stringMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": { "type": "string" }
+    },
+    "mcp": {
+      "type": "object",
+      "properties": {
+        "command": { "type": "string", "minLength": 1 },
+        "args": { "type": "array", "items": { "type": "string" } },
+        "env": { "$ref": "#/$defs/stringMap" },
+        "url": { "type": "string", "minLength": 1 },
+        "headers": { "$ref": "#/$defs/stringMap" }
+      },
+      "oneOf": [
+        { "required": ["command"], "not": { "anyOf": [{ "required": ["url"] }, { "required": ["headers"] }] } },
+        { "required": ["url"], "not": { "anyOf": [{ "required": ["command"] }, { "required": ["args"] }, { "required": ["env"] }] } }
+      ],
+      "additionalProperties": false
+    }
   },
   "additionalProperties": true
 }
