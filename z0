@@ -2,8 +2,8 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export PYTHONPATH="${ROOT}/lib${PYTHONPATH:+:$PYTHONPATH}"
-if ! python3 -c 'import yaml' 2>/dev/null; then
-  echo "z0: PyYAML required — pip install -r requirements.txt" >&2
+if ! python3 -c 'import yaml, ruamel.yaml, tomlkit' 2>/dev/null; then
+  echo "z0: config parsers required — pip install -r requirements.txt" >&2
   exit 1
 fi
 exec python3 -m z0 "$@"

@@ -133,6 +133,26 @@ components:
       command: pip install -e .
     verify:
       command: python3 -m z0int --help
+    # Source-backed stdio server: src/z0int/intelligence_mcp.py.
+    # The installed Python path is host intent, never guessed by the registry.
+    # Requires Z0INT_PYTHON to point at an environment with z0int installed.
+    bindings:
+      harnesses: [hermes, claude, codex]
+      hermes:
+        mcp:
+          command: "${Z0INT_PYTHON}"
+          args: [-m, z0int.intelligence_mcp]
+          env: {Z0INT_HARNESS: hermes, Z0INT_SHARED_ONLY: "1"}
+      claude:
+        mcp:
+          command: "${Z0INT_PYTHON}"
+          args: [-m, z0int.intelligence_mcp]
+          env: {Z0INT_HARNESS: claude-code, Z0INT_SHARED_ONLY: "1"}
+      codex:
+        mcp:
+          command: "${Z0INT_PYTHON}"
+          args: [-m, z0int.intelligence_mcp]
+          env: {Z0INT_HARNESS: codex, Z0INT_SHARED_ONLY: "1"}
     boundaries:
       owns: [personal policy, provenance-backed context resolution, bounded decision backends, routine promotion, specialist runtime]
       not_here: [source memory databases, harness execution, experiment promotion, OS prediction, measurement kernel]
@@ -271,23 +291,446 @@ components:
   memento:
     name: Memento
     repo: kvnloo/Memento
-    kind: memory
+    kind: sensor
     status: idea
-    execution: shadow
-    owner: Memory
+    owner: Screen-recording recall sensor
     summary: >
-      Visual private history and episodic recall (design stage).
+      Kevin's future screen-recording recall sensor: capture, OCR and search of
+      private visual history. Not enabled; not the shared runtime memory owner.
     required: false
     profiles: []
     depends_on: [z0intelligence]
     integrates_with: [flow]
     provides: []
     consumes: []
-    install:
-      clone: https://github.com/kvnloo/Memento.git
-      branch: main
-      ref: 513a80c2ba155115dfcea0bc808b0c41a1fd4380
-      command: echo 'Not yet installable — status idea'
+    docs:
+      readme: README.md
+    bindings:
+      harnesses: []
+    observed:
+      at: "2026-10-22"
+      host: groot
+      summary: >
+        Not enabled. The repository implements a screen-capture/timeline app;
+        Kevin's ecosystem sensor integration remains an idea, not a running service.
+      evidence:
+        - https://github.com/kvnloo/Memento/blob/main/README.md
+        - https://github.com/kvnloo/z0/issues/1
+        - https://github.com/kvnloo/z0/issues/15#issuecomment-6353289693
     boundaries:
-      owns: [visual private history]
-      not_here: [research KB, agent runtime]
+      owns: [future screen-recording recall sensor]
+      not_here: [shared runtime memory, research KB, agent runtime]
+
+  z0live:
+    name: z0live
+    repo: kvnloo/z0live
+    kind: service
+    status: experimental
+    owner: Realtime interaction
+    summary: >
+      Realtime ConversationActor, floor, barge-in and attention behavior,
+      canonical voice fixtures and actor/harness adapters.
+    required: false
+    profiles: []
+    depends_on: [z0intelligence]
+    integrates_with: [oh-my-pi, z0bridge]
+    provides: []
+    consumes: []
+    install:
+      clone: https://github.com/kvnloo/z0live.git
+      branch: main
+      command: ./bin/z0live serve
+    docs:
+      readme: README.md
+    bindings:
+      harnesses: [hermes, omp]
+    observed:
+      at: "2026-10-22"
+      host: source-only
+      summary: >
+        README documents portable actor/harness integration and a desktop phone
+        broker. This entry does not establish a running host service or physical
+        phone/audio acceptance; OMP /live product parity remains a separate gate.
+      evidence:
+        - https://github.com/kvnloo/z0live/blob/e1b485c40a11ab67b52b0aaf43362ac40d756fab/README.md
+        - https://github.com/kvnloo/z0live/issues/32
+    boundaries:
+      owns: [realtime actor, floor and barge behavior, voice fixtures, interaction adapters]
+      not_here: [model selection, harness effect authority, approvals]
+
+  z0bridge:
+    name: z0bridge
+    repo: kvnloo/z0bridge
+    kind: service
+    status: experimental
+    owner: Identity and session transport
+    summary: >
+      Shared device pairing, scoped revocable credentials, discovery and session
+      transport; HTTP/SSE clients reach harness-native ACP execution.
+    required: false
+    profiles: []
+    depends_on: []
+    integrates_with: [z0live]
+    provides: []
+    consumes: []
+    install:
+      clone: https://github.com/kvnloo/z0bridge.git
+      branch: main
+      command: bun install
+    verify:
+      command: bun src/cli.ts --help
+    docs:
+      readme: README.md
+    bindings:
+      harnesses: [hermes]
+    observed:
+      at: "2026-10-22"
+      host: source-only
+      summary: >
+        README documents the Hermes ACP adapter and identity/pairing service.
+        Other harness adapters are future work. Identity-only deployment and a
+        NOOP consumer do not prove migration of every application; this entry
+        does not assert a currently running service.
+      evidence:
+        - https://github.com/kvnloo/z0bridge/blob/99f513b2f3de1c9b6ce5da29de137281497488e2/README.md
+        - https://github.com/kvnloo/z0bridge/issues/3
+        - https://github.com/kvnloo/z0bridge/pull/2#issuecomment-6310221595
+    boundaries:
+      owns: [pairing, scoped credentials, discovery, session transport]
+      not_here: [proxying all z0int traffic, provider keys, harness execution authority]
+
+  oss-factory:
+    name: OSS Factory
+    repo: kvnloo/oss-factory
+    kind: worker-coordinator
+    status: experimental
+    owner: Factory operations
+    summary: >
+      Project routing, bounded worker coordination, durable claims/handoffs and
+      contribution operations using GitHub as the coordination/evidence bus.
+    required: false
+    profiles: []
+    depends_on: []
+    integrates_with: [z0intelligence, kerdoios]
+    provides: []
+    consumes: []
+    install:
+      clone: https://github.com/kvnloo/oss-factory.git
+      branch: main
+    docs:
+      readme: README.md
+    bindings:
+      harnesses: []
+    observed:
+      at: "2026-10-22"
+      host: source-only
+      summary: >
+        Existing factory operations are documented; app-worker concurrency and
+        durable one-turn handoffs have separate open qualification work. No MCP
+        server, universal harness binding or thousand-worker readiness is claimed.
+      evidence:
+        - https://github.com/kvnloo/oss-factory/blob/842af1a26b4854d4e2702d175ae5b45d75877d70/README.md
+        - https://github.com/kvnloo/oss-factory/issues/214
+        - https://github.com/kvnloo/oss-factory/pull/215
+    boundaries:
+      owns: [factory operations, worker coordination, project routing, durable handoffs]
+      not_here: [project implementation backlogs, semantic routing authority, new task database]
+
+  agentsview:
+    name: AgentsView
+    repo: kenn-io/agentsview
+    kind: memory-source
+    status: experimental
+    owner: Source-history archive
+    summary: >
+      Agent-session archive, browsing, FTS search and usage analytics. Read-only
+      MCP exposes original recorded history, not current belief or authority.
+    required: false
+    profiles: []
+    depends_on: []
+    integrates_with: [z0intelligence]
+    provides: []
+    consumes: []
+    install:
+      clone: https://github.com/kenn-io/agentsview.git
+      branch: main
+    verify:
+      command: agentsview mcp --help
+    docs:
+      readme: README.md
+      integration: docs/commands.md
+    bindings:
+      mcp:
+        command: agentsview
+        args: [mcp]
+      harnesses: [hermes, omp, claude, codex]
+    evidence_source_for: [z0intelligence.context-packet]
+    observed:
+      at: "2026-10-22"
+      host: groot
+      summary: >
+        The capability snapshot records MCP configured in Hermes chiefstaff,
+        OMP, Claude Code and Codex, plus an agentsview-sync timer. It does not
+        prove every connection is live or establish shared-continuity acceptance.
+      evidence:
+        - https://github.com/kenn-io/agentsview/blob/main/README.md
+        - https://github.com/kenn-io/agentsview/blob/main/docs/commands.md
+        - /mnt/zer0models/workspace/zer0/data/operations/capability-matrix/20261022.md
+    boundaries:
+      owns: [source-history archival indexing, history retrieval, archive browsing]
+      not_here: [current belief authority, shared state compiler, action authorization]
+
+  ctx:
+    name: ctx
+    repo: ctxrs/ctx
+    kind: memory-source
+    status: experimental
+    owner: Source-history retrieval
+    summary: >
+      Local source-history indexing, search and exact event/session hydration.
+      A pull-only evidence source, not a replacement shared memory authority.
+    required: false
+    profiles: []
+    depends_on: []
+    integrates_with: [z0intelligence]
+    provides: []
+    consumes: []
+    install:
+      clone: https://github.com/ctxrs/ctx.git
+      branch: main
+    verify:
+      command: ctx --help
+    docs:
+      readme: README.md
+    service:
+      unit: ctx.service
+    bindings:
+      mcp:
+        command: ctx
+        args: [mcp, serve]
+      harnesses: [hermes]
+    evidence_source_for: [z0intelligence.context-packet]
+    observed:
+      at: "2026-10-22"
+      host: groot
+      summary: >
+        systemctl --user show reports ctx.service enabled, active/running. The
+        unit runs ctx daemon run; installed ctx mcp --help documents stdio serve.
+        The snapshot records MCP configured in Hermes clean and rippletern.
+        This is not a universal default switch or qualified continuity result.
+      evidence:
+        - https://github.com/ctxrs/ctx/blob/main/README.md
+        - /home/kvn/.config/systemd/user/ctx.service
+        - "systemctl --user show ctx.service --property=Id,ActiveState,SubState,UnitFileState,FragmentPath (2026-10-22)"
+        - "ctx mcp --help (2026-10-22)"
+        - /mnt/zer0models/workspace/zer0/data/operations/capability-matrix/20261022.md
+    boundaries:
+      owns: [source-history search, exact hydration, provenance retrieval]
+      not_here: [universal memory backend selection, automatic context push, current belief authority]
+
+  tencentdb-memory:
+    name: TencentDB Agent Memory gateway
+    repo: TencentCloud/TencentDB-Agent-Memory
+    kind: memory-source
+    status: experimental
+    owner: Memory gateway
+    summary: >
+      Memory Core HTTP gateway with conversation capture and derived memory;
+      Hermes memory_tencentdb and an OMP native extension consume the gateway.
+    required: false
+    profiles: []
+    depends_on: []
+    integrates_with: [z0intelligence]
+    provides: []
+    consumes: []
+    install:
+      clone: https://github.com/TencentCloud/TencentDB-Agent-Memory.git
+      branch: main
+    verify:
+      command: curl --fail --silent http://127.0.0.1:8420/health
+    docs:
+      readme: README.md
+    service:
+      unit: tencentdb-memory.service
+    bindings:
+      harnesses: [hermes, omp]
+      hermes:
+        memory_provider: memory_tencentdb
+      omp:
+        extension: tencentdb-memory
+    evidence_source_for: [z0intelligence.context-packet]
+    observed:
+      at: "2026-10-22"
+      host: groot
+      summary: >
+        systemctl --user show reports tencentdb-memory.service enabled,
+        active/running. The unit starts the local Docker gateway wrapper on
+        loopback :8420. The snapshot records memory_tencentdb only in Hermes
+        default/chiefstaff/memory-lab and the OMP extension; Hermes clean has no
+        memory provider. Unit state does not establish useful extraction,
+        embeddings, all-host connectivity or fresh shared-continuity acceptance.
+      evidence:
+        - https://github.com/TencentCloud/TencentDB-Agent-Memory/blob/main/README.md
+        - /mnt/zer0models/z0-wt/wiring/ops/tencentdb/README.md
+        - /home/kvn/.config/systemd/user/tencentdb-memory.service
+        - "systemctl --user show tencentdb-memory.service --property=Id,ActiveState,SubState,UnitFileState,FragmentPath (2026-10-22)"
+        - /mnt/zer0models/workspace/zer0/data/operations/capability-matrix/20261022.md
+    boundaries:
+      owns: [memory gateway, backend capture and retrieval, derived memory storage]
+      not_here: [cross-harness continuity qualification, harness config ownership, canonical source archives]
+
+  z0-memory-readonly:
+    name: Scoped read-only memory MCP
+    repo: kvnloo/z0intelligence
+    kind: memory-source
+    status: experimental
+    owner: Personal Intelligence
+    summary: >
+      Explicit opt-in native registration for the existing z0intelligence
+      MemoryServer: search and fetch authorized AgentsView originals only.
+      Evidence is not permission; no host or harness is enabled by this entry.
+    required: false
+    profiles: []
+    depends_on: []
+    integrates_with: []
+    provides: []
+    consumes: []
+    # The host operator installs and approves a stdio wrapper at this path.
+    # The wrapper owns principal=operator, interpreter, exact source/scope grants
+    # and policy; models never supply commands, credentials or permission.
+    # No browser, tunnel, HTTP endpoint, server flags or second memory store.
+    bindings:
+      harnesses: [hermes, claude, codex, omp]
+      mcp:
+        command: "${Z0_MEMORY_MCP_BIN}"
+        args: []
+    docs:
+      readme: src/z0int/memory_mcp.py
+    boundaries:
+      owns: [opt-in native read-only memory MCP registration recipe]
+      not_here: [memory storage, source grants, host intent, identity transport, execution authority]
+
+  qmd:
+    name: QMD
+    repo: tobi/qmd
+    kind: memory-source
+    status: experimental
+    owner: Docs and notes retrieval
+    summary: >
+      Local docs/notes retrieval with lexical, vector and reranked search;
+      complementary and need-specific, not a mandatory universal router.
+    required: false
+    profiles: []
+    depends_on: []
+    integrates_with: [z0intelligence]
+    provides: []
+    consumes: []
+    install:
+      clone: https://github.com/tobi/qmd.git
+      branch: main
+      command: npm install -g @tobilu/qmd
+    verify:
+      command: qmd --help
+    docs:
+      readme: README.md
+    bindings:
+      mcp:
+        command: qmd
+        args: [mcp]
+      harnesses: []
+    evidence_source_for: [z0intelligence.context-packet]
+    observed:
+      at: "2026-10-22"
+      host: source-only
+      summary: >
+        Upstream documents CLI and stdio/HTTP MCP. The inspected host snapshot
+        lists no QMD MCP binding; actual host enablement is not established here.
+        Registry evidence-source intent does not promote it to a universal tier.
+      evidence:
+        - https://github.com/tobi/qmd/blob/main/README.md
+        - https://github.com/kvnloo/z0intelligence/issues/136
+        - /mnt/zer0models/workspace/zer0/data/operations/capability-matrix/20261022.md
+    boundaries:
+      owns: [docs and notes retrieval, local search index]
+      not_here: [mandatory retrieval router, native history authority, shared state compiler]
+
+  graphrag:
+    name: Microsoft GraphRAG
+    repo: kvnloo/graphrag
+    kind: memory-source
+    status: prototype
+    owner: Batch graph-memory research
+    summary: >
+      Built batch GraphRAG 3.3.0 pilot for private memory research. Unbound:
+      no query service, MCP server or harness skill exposes the local index.
+    required: false
+    profiles: []
+    depends_on: []
+    integrates_with: []
+    provides: []
+    consumes: []
+    install:
+      clone: https://github.com/kvnloo/graphrag.git
+      branch: main
+    verify:
+      command: /mnt/zer0models/venvs/graphrag/bin/graphrag --version
+    docs:
+      readme: README.md
+    bindings:
+      harnesses: []
+    evidence_source_for: [z0intelligence.context-packet]
+    observed:
+      at: "2026-10-22"
+      host: groot
+      summary: >
+        The local README documents installed GraphRAG 3.3.0 and batch commands,
+        with no service. The newer capability snapshot records an incomplete
+        full index and no finished graph/query service/MCP/skill. Built does not
+        mean integrated or query-ready; no private corpus is published here.
+      evidence:
+        - https://github.com/kvnloo/graphrag/blob/main/README.md
+        - /mnt/zer0models/sft-svlm/data/graphrag/README.md
+        - /mnt/zer0models/workspace/zer0/data/operations/capability-matrix/20261022.md
+    boundaries:
+      owns: [batch graph index research, candidate graph retrieval]
+      not_here: [accepted universal memory backend, live query service, raw archive authority]
+
+  supermemory:
+    name: Supermemory
+    repo: supermemoryai/supermemory
+    kind: memory-source
+    status: experimental
+    owner: Credential-gated memory candidate
+    summary: >
+      External memory API/MCP candidate. Local staging is disabled and
+      credential-blocked; not an enabled or evaluated replacement backend.
+    required: false
+    profiles: []
+    depends_on: []
+    integrates_with: []
+    provides: []
+    consumes: []
+    install:
+      clone: https://github.com/supermemoryai/supermemory.git
+      branch: main
+    docs:
+      readme: README.md
+    bindings:
+      mcp:
+        url: https://mcp.supermemory.ai/mcp
+      harnesses: []
+    evidence_source_for: [z0intelligence.context-packet]
+    observed:
+      at: "2026-10-22"
+      host: groot
+      summary: >
+        The capability snapshot records disabled staging in an isolated Hermes
+        home, blocked on a missing API key on October 21. No credential, live
+        connection, provider comparison or all-harness availability is claimed.
+      evidence:
+        - https://github.com/supermemoryai/supermemory/blob/main/README.md
+        - /mnt/zer0models/workspace/zer0/data/operations/capability-matrix/20261022.md
+        - https://github.com/kvnloo/z0evals/pull/114
+    boundaries:
+      owns: [external memory candidate API and MCP]
+      not_here: [accepted default memory, credential custody, canonical source archive]

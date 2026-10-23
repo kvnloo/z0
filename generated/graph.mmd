@@ -9,6 +9,16 @@ graph TD
   aodl["AODL"]
   agenttrace["AgentTrace"]
   memento["Memento"]
+  z0live["z0live"]
+  z0bridge["z0bridge"]
+  oss_factory["OSS Factory"]
+  agentsview["AgentsView"]
+  ctx["ctx"]
+  tencentdb_memory["TencentDB Agent Memory gateway"]
+  z0_memory_readonly["Scoped read-only memory MCP"]
+  qmd["QMD"]
+  graphrag["Microsoft GraphRAG"]
+  supermemory["Supermemory"]
   oh_my_pi -.-> tokenomics
   oh_my_pi -.-> z0intelligence
   oh_my_pi -.-> aodl
@@ -41,3 +51,13 @@ graph TD
   agenttrace -.-> tokenomics
   z0intelligence --> memento
   memento -.-> flow
+  z0intelligence --> z0live
+  z0live -.-> oh_my_pi
+  z0live -.-> z0bridge
+  z0bridge -.-> z0live
+  oss_factory -.-> z0intelligence
+  oss_factory -.-> kerdoios
+  agentsview -.-> z0intelligence
+  ctx -.-> z0intelligence
+  tencentdb_memory -.-> z0intelligence
+  qmd -.-> z0intelligence

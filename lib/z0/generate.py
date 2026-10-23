@@ -62,6 +62,38 @@ def component_table() -> str:
     return "\n".join(lines)
 
 
+def bindings_md() -> str:
+    lines = [
+        "# Component bindings and observed evidence",
+        "",
+        "Bindings are declarative consumption recipes, not host enablement or runtime proof.",
+        "Harness ids come from AODL. `.files` owns host/profile intent; native adapters bind tools.",
+        "Dated observations are separate snapshots, not continuously refreshed health checks.",
+        "",
+    ]
+    for cid, meta in sorted(registry.components().items()):
+        if not any(key in meta for key in ("bindings", "evidence_source_for", "observed")):
+            continue
+        lines += [f"## `{cid}`", ""]
+        if "bindings" in meta:
+            lines += ["### Declarative bindings", "", "```json",
+                      json.dumps(meta["bindings"], indent=2), "```", ""]
+        if meta.get("evidence_source_for"):
+            lines += ["Evidence source for: " + ", ".join(
+                f"`{target}`" for target in meta["evidence_source_for"]
+            ), ""]
+        observed = meta.get("observed")
+        if observed:
+            lines += [
+                f"### Observation ({observed['at']}, {observed['host']})", "",
+                " ".join(observed["summary"].split()), "",
+            ]
+            lines += [f"- {source}" for source in observed["evidence"]]
+            lines.append("")
+    lines += ["_Generated from `registry/components.yaml`. Do not edit by hand._", ""]
+    return "\n".join(lines)
+
+
 def interfaces_md() -> str:
     lines = ["# Interface registry", ""]
     for name, meta in sorted(registry.interfaces().items()):
@@ -175,7 +207,8 @@ def ownership_table() -> str:
         "| I need to change… | Owner component |",
         "|-------------------|-----------------|",
         "| Coding agent runtime | `oh-my-pi` |",
-        "| Voice / Stage / computer use | `oh-my-pi` |",
+        "| Realtime voice actor / floor / barge | `z0live` |",
+        "| Native Stage / computer use effects | `oh-my-pi` / harness plugins |",
         "| Context spill / RLM | `oh-my-pi` |",
         "| OS prediction / prepare | `flow` |",
         "| Personal learned policy | `z0intelligence` |",
@@ -186,7 +219,14 @@ def ownership_table() -> str:
         "| Research knowledge | `frontier-kb` |",
         "| Typed intent / plan schema | `aodl` |",
         "| Historical agent TUI | `agenttrace` |",
-        "| Visual private history | `memento` |",
+        "| Device pairing / scoped session transport | `z0bridge` |",
+        "| Worker coordination / durable handoffs | `oss-factory` |",
+        "| Source-history retrieval | `agentsview` / `ctx` |",
+        "| Shared memory gateway | `tencentdb-memory` |",
+        "| Docs / notes retrieval | `qmd` |",
+        "| Batch graph-memory research | `graphrag` |",
+        "| Credential-gated memory candidate | `supermemory` |",
+        "| Future screen-recording recall sensor (not enabled) | `memento` |",
         "",
         "## Do NOT put…",
         "",
@@ -229,6 +269,7 @@ def write_all() -> list[Path]:
     outputs = {
         GENERATED / "graph.mmd": graph_mermaid(),
         GENERATED / "components.md": component_table(),
+        GENERATED / "component-bindings.md": bindings_md(),
         GENERATED / "interfaces.md": interfaces_md(),
         GENERATED / "harnesses.md": harnesses_md(),
         GENERATED / "mechanisms.md": mechanisms_md(),
@@ -236,10 +277,13 @@ def write_all() -> list[Path]:
         GENERATED / "suite.md": suite_md(),
         GENERATED / "install-matrix.md": install_matrix(),
         DOCS_GEN / "ownership.md": ownership_table(),
-        GENERATED / "docs-index.jsonl": docs_index_jsonl(),
     }
     written: list[Path] = []
     for path, content in outputs.items():
         path.write_text(content, encoding="utf-8")
         written.append(path)
+    # Index the just-written reference docs, not their previous generation.
+    index = GENERATED / "docs-index.jsonl"
+    index.write_text(docs_index_jsonl(), encoding="utf-8")
+    written.append(index)
     return written

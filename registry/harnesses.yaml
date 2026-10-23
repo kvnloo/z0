@@ -5,6 +5,7 @@
 catalog:
   authority: kvnloo/aodl
   path: harnesses/catalog.json
+  ref: 55db6314f9e05c145dc47710ea6a7dba21d5af60
   rule: AODL ids remain authoritative for typed orchestration; rows here describe Zer0 usage.
 
 harnesses:
