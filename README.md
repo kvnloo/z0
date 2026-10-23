@@ -104,31 +104,75 @@ See [the generated binding/evidence view](generated/component-bindings.md).
 ./z0 doctor --bindings --components agentsview,tencentdb-memory
 ```
 
-Use `--profile <z0-profile>` or `--components a,b` until `.files` supplies its
-host intent field. An existing z0 workspace `profile` is the fallback desired
-selection. Configured bindings never become desired state automatically.
-Without intent, doctor marks desired state unknown. Apply refuses to infer it.
-An empty `--components ''` selects no components. It does not prune old entries.
+Use `--profile <z0-profile>`, `--components a,b`, or canonical
+`.files/fleet.toml` via `--host-profile /path/to/fleet.toml`. An existing
+z0 workspace profile is a fallback **only when no explicit intent file exists**.
+Missing `z0_components` means **UNKNOWN**, not inherited adoption.
+Explicit `components = []` means no desired native bindings at that level,
+not permission to delete an existing server. Exact logical host ids take
+priority over a single matching `match_hostnames` alias; ambiguous aliases
+fail closed. `--host` still accepts only the local machine, never a remote host.
 
-Both commands accept `--host-profile /path/to/intent.yaml`. The input is an
-explicit temporary contract, not a claim about an existing `.files` field:
+```toml
+[hosts.desktop]
+match_hostnames = ["groot", "0"]
+
+# .files owns this table, z0 consumes it without copying a registry.
+[hosts.desktop.z0_components.harnesses.hermes.profiles.clean]
+components = ["tencentdb-memory", "z0intelligence"]
+```
+
+The existing YAML host-intent format is retained:
 
 ```yaml
-host: groot                     # optional, must match this host
+host: groot
 components: [agentsview]
 harnesses:
   hermes:
     profiles:
       clean:
         components: [ctx]
-      chiefstaff:
-        components: [agentsview, tencentdb-memory]
 ```
 
-Each selection uses either `components` or a z0 `profile`. Native profile
-selections override harness selections, which override the host selection.
-A multi-host file can use `hosts: {groot: {components: [agentsview]}}`.
-All selections must name registered components. Unknown fields fail closed.
+Host selections override only their own scope: Hermes profile > harness >
+global `components` or z0 `profile`. Unspecified sections stay unknown;
+`--harness hermes --harness-profile clean` limits readback or plans to clean.
+An explicit profile absent from native config is included in observation as
+missing. Unsupported harness identifiers and invalid profile path names fail
+closed; no implicit wildcards.
+
+```bash
+./z0 doctor --bindings --json --host-profile /path/to/fleet.toml
+./z0 doctor --bindings --json --host-profile /path/to/fleet.toml --harness hermes --harness-profile clean
+./z0 apply --dry-run --host-profile /path/to/fleet.toml --harness hermes --harness-profile clean
+```
+
+The JSON document contains `status`, `configs[]` with per-config `status`,
+`desired`, `bound` and typed `findings[]`, `services`, `logical_host` and
+a receipt path. `MATCH` means all selected, observable native recipes
+match; **it does not prove a working MCP session, retrieval, model input or
+verified outcome**. `DRIFT` covers requested missing/disabled, mismatched
+or inactive native bindings. `UNKNOWN` covers missing intent, unavailable
+service readback or unsupported/unresolved recipes. `ERROR` covers unreadable
+configs, changed files or unsafe input. Unselected recipes, unknown
+native server names and unrelated entries are informational (`INFO` findings).
+Exit 1 means observed drift/error; exit 2 means observation/preflight error;
+exit 0 can still mean `UNKNOWN`. Fleet consumers must parse `status`, not
+infer health from exit 0. JSON stdout contains only one observation; a separate
+exclusive-create receipt is written with owner-only permissions.
+
+The `z0intelligence` MCP recipe is sourced from
+[`src/z0int/intelligence_mcp.py`](https://github.com/kvnloo/z0intelligence/blob/master/src/z0int/intelligence_mcp.py)
+and the
+[Claude plugin entrypoint](https://github.com/kvnloo/z0intelligence/blob/master/harness-adapters/claude-code-z0intelligence/bin/z0int-mcp).
+To plan/apply it, the operator must export `Z0INT_PYTHON` as the actual installed
+Python executable importing `z0int.intelligence_mcp`, and separately verify
+its configured host service; no binary path or URL is guessed by z0. Recipe
+metadata is not runtime readiness. GraphRAG remains deliberately unbound:
+its current incomplete graph has no qualified query backend. The clean
+selection uses only existing Hermes `memory.provider` and `mcp_servers`
+keys, preserving `ctx`, `noop` and unmanaged entries. No service is
+enabled and no profile is changed by doctor or dry-run.
 
 Supported adapters are Hermes YAML, Claude Code JSON (`claude`), Codex TOML,
 and OMP JSON. Hermes includes its root config (`default`) and every existing
@@ -152,9 +196,9 @@ YAML and TOML retain unrelated settings and comments. JSON retains unrelated
 values, but its whitespace is normalized. Symlink configs refuse writes.
 Config changes after the plan refuse replacement.
 
-Doctor distinguishes registered-but-unbound, bound-but-unregistered,
-bound-but-service-not-running, missing desired components, recipe mismatches,
-and bindings outside the observable native surfaces. Disabled servers do not
+Doctor distinguishes requested drift from informational registry observations:
+registered-but-unbound, bound-but-unregistered, inactive requested services,
+missing desired components, recipe mismatches and unobservable native bindings. Disabled servers do not
 count as bound. `service: {unit: ctx.service}` declares an optional user unit
 for `systemctl --user is-active`; doctor never starts or enables it.
 A configured component without a declared unit has no inferred service state.
