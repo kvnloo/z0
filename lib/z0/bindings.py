@@ -209,7 +209,7 @@ class Intent:
 def intent_targets(home: Path, intent: Intent, harness: str | None = None,
                    harness_profile: str | None = None) -> list[Target]:
     """Inspect explicitly selected Hermes profiles even before their config exists."""
-    selected = targets(home, harness, harness_profile)
+    selected = targets(home, harness)
     if harness not in (None, "hermes"):
         return selected
     profiles = intent.spec.get("harnesses", {}).get("hermes", {}).get("profiles", {})
@@ -217,6 +217,11 @@ def intent_targets(home: Path, intent: Intent, harness: str | None = None,
     for name in sorted(profiles):
         if name not in names and (not harness_profile or harness_profile == name):
             selected.append(Target("hermes", name, home / ".hermes/profiles" / name / "config.yaml"))
+    if harness_profile:
+        selected = [target for target in selected
+                    if target.harness == "hermes" and target.profile == harness_profile]
+        if not selected:
+            raise ValueError("no config found for --harness-profile")
     return selected
 
 
@@ -507,114 +512,186 @@ def enabled(server: Any) -> bool:
 
 def observe(target: Target, desired: list[str] | None, comps: dict[str, Any],
             services: dict[str, str]) -> dict[str, Any]:
-    record: dict[str, Any] = {"harness": target.harness, "profile": target.profile,
-                              "path": str(target.path), "mtime_ns": None,
-                              "desired": desired, "bound": [], "findings": []}
+    """Report requested health separately from informational registry observations."""
     before = signature(target.path)
-    record["mtime_ns"] = before[-1] if before else None
+    record: dict[str, Any] = {
+        "harness": target.harness, "profile": target.profile, "path": str(target.path),
+        "mtime_ns": before[-1] if before else None, "desired": desired,
+        "bound": [], "status": "UNKNOWN" if desired is None else "MATCH", "findings": [],
+    }
+
+    def finding(kind: str, cid: str | None = None, *, status: str = "INFO",
+                **extra: Any) -> None:
+        item: dict[str, Any] = {"kind": kind, "status": status}
+        if cid is not None:
+            item["component"] = cid
+        item.update(extra)
+        record["findings"].append(item)
+
+    def set_status() -> None:
+        for severity in ("ERROR", "DRIFT", "UNKNOWN"):
+            if any(item["status"] == severity for item in record["findings"]):
+                record["status"] = severity
+                return
+
     try:
         _, data = read_config(target)
     except (OSError, ValueError):
-        record["findings"].append({"kind": "unreadable-config"})
+        finding("unreadable-config", status="ERROR")
+        record["status"] = "ERROR"
         return record
     servers = data.get(MCP_KEYS[target.harness], {})
     provider = data.get("memory", {}).get("provider") if target.harness == "hermes" else None
     bound = {cid for cid, server in servers.items() if enabled(server)}
-    providers = {meta.get("bindings", {}).get("hermes", {}).get("memory_provider"): cid
-                 for cid, meta in comps.items()
-                 if meta.get("bindings", {}).get("hermes", {}).get("memory_provider")}
+    providers = {
+        meta.get("bindings", {}).get("hermes", {}).get("memory_provider"): cid
+        for cid, meta in comps.items()
+        if meta.get("bindings", {}).get("hermes", {}).get("memory_provider")
+    }
     if provider:
         bound.add(providers.get(provider, f"memory.provider:{provider}"))
     record["bound"] = sorted(bound)
-    def finding(kind: str, cid: str, **extra: Any) -> None:
-        record["findings"].append({"kind": kind, "component": cid, **extra})
-    def recipe_present(cid: str, spec: dict[str, Any]) -> bool:
-        mcp_present = "mcp" not in spec or enabled(servers.get(cid))
-        memory_present = "memory_provider" not in spec or provider == spec["memory_provider"]
-        return bool(spec) and mcp_present and memory_present
+    selected = set(desired or [])
+
+    # Unmanaged keys and unselected recipes are visible evidence, not drift requests.
     for cid in sorted(bound):
         if cid not in comps:
             finding("bound-but-unregistered", cid)
+    for cid, meta in sorted(comps.items()):
+        spec = recipe(meta, target.harness)
+        if not spec and target.harness in meta.get("bindings", {}).get("harnesses", []):
+            if cid not in selected:
+                finding("binding-not-observable", cid)
+        elif spec and cid not in selected:
+            if "mcp" in spec and not enabled(servers.get(cid)):
+                finding("registered-but-unbound", cid)
+            elif "mcp" in spec and enabled(servers.get(cid)):
+                expected = native_mcp(expand(spec["mcp"]), target.harness)
+                if "${" not in json.dumps(expected) and any(
+                    plain(servers[cid].get(key)) != value for key, value in expected.items()
+                ):
+                    finding("binding-mismatch", cid)
+        if cid not in selected:
             continue
-        unit = comps[cid].get("service", {}).get("unit")
+        if not spec:
+            finding("binding-not-observable", cid, status="UNKNOWN",
+                    reason="no-supported-native-binding")
+        else:
+            if "mcp" in spec:
+                server = servers.get(cid)
+                if not enabled(server):
+                    finding("missing-desired-component", cid, status="DRIFT",
+                            reason="disabled" if isinstance(server, dict) else "missing")
+                else:
+                    expected = native_mcp(expand(spec["mcp"]), target.harness)
+                    if "${" in json.dumps(expected):
+                        finding("binding-not-observable", cid, status="UNKNOWN",
+                                reason="unresolved-binding-environment")
+                    elif any(plain(server.get(key)) != value for key, value in expected.items()):
+                        finding("binding-mismatch", cid, status="DRIFT",
+                                reason="native-recipe-mismatch")
+            if "memory_provider" in spec and provider != spec["memory_provider"]:
+                finding("binding-mismatch", cid, status="DRIFT",
+                        reason="memory-provider-mismatch")
+        unit = meta.get("service", {}).get("unit")
         if unit:
             if unit not in services:
                 services[unit] = service_state(unit)
-            if services[unit] != "active":
-                finding("bound-but-service-not-running", cid, unit=unit, state=services[unit])
-    for cid, meta in sorted(comps.items()):
-        spec = recipe(meta, target.harness)
-        declared = target.harness in meta.get("bindings", {}).get("harnesses", [])
-        if declared and not spec:
-            finding("binding-not-observable", cid)
-        elif spec and not recipe_present(cid, spec):
-            finding("registered-but-unbound", cid)
-        if "mcp" in spec and enabled(servers.get(cid)):
-            expected = native_mcp(expand(spec["mcp"]), target.harness)
-            # Presence does not imply the native recipe matches. Extra native options are allowed.
-            if any(plain(servers[cid].get(key)) != value for key, value in expected.items()):
-                finding("binding-mismatch", cid)
-    if desired is not None:
-        for cid in desired:
-            spec = recipe(comps[cid], target.harness)
-            satisfied = recipe_present(cid, spec) if spec else cid in bound
-            if not satisfied:
-                finding("missing-desired-component", cid,
-                        reason="not-bound" if spec else "no-supported-native-binding")
+            state = services[unit]
+            if state == "unknown":
+                finding("service-not-observable", cid, status="UNKNOWN", unit=unit, state=state)
+            elif state != "active":
+                finding("bound-but-service-not-running", cid, status="DRIFT",
+                        unit=unit, state=state)
+
+    # Unselected service state is useful diagnostic evidence but cannot turn a
+    # selected clean profile red merely because some other component is inactive.
+    for cid in sorted(bound - selected):
+        unit = comps.get(cid, {}).get("service", {}).get("unit")
+        if not unit:
+            continue
+        if unit not in services:
+            services[unit] = service_state(unit)
+        if services[unit] != "active":
+            finding("bound-but-service-not-running", cid, unit=unit, state=services[unit])
     if before != signature(target.path):
-        record["findings"].append({"kind": "config-changed-during-observation"})
+        finding("config-changed-during-observation", status="ERROR")
+    set_status()
     return record
+
+
+def observation_status(configs: list[dict[str, Any]]) -> str:
+    states = {record["status"] for record in configs}
+    for state in ("ERROR", "DRIFT", "UNKNOWN", "MATCH"):
+        if state in states:
+            return state
+    return "UNKNOWN"
 
 
 def cmd_doctor(*, host: str | None = None, harness: str | None = None,
                harness_profile: str | None = None, profile: str | None = None,
                components: str | None = None, host_profile: str | None = None,
-               receipt: str | None = None) -> int:
+               receipt: str | None = None, json_output: bool = False) -> int:
+    timestamp = datetime.now(timezone.utc)
+    report: dict[str, Any] = {
+        "kind": "binding-observation", "schema_version": 1,
+        "host": socket.gethostname(), "logical_host": None,
+        "timestamp": timestamp.isoformat(), "status": "UNKNOWN",
+        "services": {}, "configs": [], "registered_without_native_binding": [],
+    }
     try:
         actual = local_host(host)
         intent = Intent(host=actual, profile=profile, components=components, host_profile=host_profile)
         comps = registry.components()
         services: dict[str, str] = {}
         records = [observe(target, intent.desired(target), comps, services)
-                   for target in targets(Path.home(), harness, harness_profile)]
+                   for target in intent_targets(Path.home(), intent, harness, harness_profile)]
         observed_names = {cid for record in records for cid in record["bound"]}
         unbound = sorted(cid for cid, meta in comps.items()
                          if "bindings" in meta and not meta["bindings"].get("harnesses")
                          and cid not in observed_names)
-        timestamp = datetime.now(timezone.utc)
-        report = {"kind": "binding-observation", "host": actual,
-                  "timestamp": timestamp.isoformat(), "services": services, "configs": records,
-                  "registered_without_native_binding": unbound}
+        report.update(host=actual, logical_host=intent.logical_host, services=services,
+                      configs=records, status=observation_status(records),
+                      registered_without_native_binding=unbound)
         destination = Path(receipt) if receipt else registry.z0_home() / "observations" / (
             "bindings-" + timestamp.strftime("%Y%m%dT%H%M%S.%fZ") + ".json")
-        # An explicit receipt must never overwrite a config, registry or old observation.
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        with destination.open("x", encoding="utf-8") as handle:
+        report["receipt"] = str(destination)
+        destination.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+        # O_EXCL refuses previous receipts and existing native configs or symlinks.
+        fd = os.open(destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
             handle.write(json.dumps(report, indent=2) + "\n")
-        print(f"Binding observation: {actual} at {timestamp.isoformat()}")
-        print("Configured does not mean running or verified. This report never promotes a stage.")
-        if unbound:
-            print("\n[registry/inspected-native-scope]")
+        if json_output:
+            print(json.dumps(report, indent=2))
+        else:
+            print(f"Binding observation: {actual} at {timestamp.isoformat()}")
+            print("Configured does not mean running or verified. This report never promotes a stage.")
+            print(f"Health: {report['status']} (desired scope only)")
             for cid in unbound:
                 print(f"  registered-but-unbound: {cid} (no declared harness binding)")
-        for record in records:
-            print(f"\n[{record['harness']}/{record['profile']}] {record['path']}")
-            print("  configured: " + (", ".join(record["bound"]) or "none"))
-            if record["desired"] is None:
-                print("  desired: unknown (pass --profile, --components or --host-profile)")
-            else:
-                print("  desired: " + (", ".join(record["desired"]) or "none"))
-            for finding in record["findings"]:
-                detail = finding.get("component", "")
-                if "unit" in finding:
-                    detail += f" ({finding['unit']}: {finding['state']})"
-                if "reason" in finding:
-                    detail += f" ({finding['reason']})"
-                print(f"  {finding['kind']}: {detail}".rstrip())
-            if not record["findings"]:
-                print("  No binding drift observed.")
-        print(f"\nObservation receipt: {destination}")
-        return 0
+            for record in records:
+                print(f"\n[{record['harness']}/{record['profile']}] {record['path']}")
+                print(f"  status: {record['status']}")
+                print("  configured: " + (", ".join(record["bound"]) or "none"))
+                print("  desired: " + ("unknown" if record["desired"] is None else
+                                       ", ".join(record["desired"]) or "none"))
+                for item in record["findings"]:
+                    detail = item.get("component", "")
+                    if "reason" in item:
+                        detail += f" ({item['reason']})"
+                    if "unit" in item:
+                        detail += f" ({item['unit']}: {item['state']})"
+                    print(f"  {item['status']}: {item['kind']}: {detail}".rstrip())
+            print(f"\nObservation receipt: {destination}")
+        return 1 if report["status"] in {"DRIFT", "ERROR"} else 0
     except (OSError, ValueError) as exc:
-        print(f"Error: {exc}")
+        # Read errors never echo source lines. A failed receipt must not
+        # print partial non-JSON output to a fleet machine consumer.
+        report["status"] = "ERROR"
+        report["findings"] = [{"kind": "observation-error", "status": "ERROR",
+                               "reason": str(exc)}]
+        if json_output:
+            print(json.dumps(report, indent=2))
+        else:
+            print(f"Error: {exc}")
         return 2
