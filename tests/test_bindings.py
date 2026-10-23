@@ -458,15 +458,15 @@ class NativeBindingTests(unittest.TestCase):
         self.memory_readonly()
         clean = self.add_hermes_profile(
             "clean",
-            "model: existing-model\\n"
-            "accounts:\\n  local:\\n    token: existing-secret\\n"
-            "mcp_servers:\\n"
-            "  ctx:\\n    command: ctx\\n    args: [mcp, serve]\\n"
-            "  z0intelligence:\\n    command: /operator/python\\n"
-            "    args: [-m, z0int.intelligence_mcp]\\n"
-            "memory:\\n  provider: memory_tencentdb\\n  max_tokens: 8192\\n",
+            "model: existing-model\n"
+            "accounts:\n  local:\n    token: existing-secret\n"
+            "mcp_servers:\n"
+            "  ctx:\n    command: ctx\n    args: [mcp, serve]\n"
+            "  z0intelligence:\n    command: /operator/python\n"
+            "    args: [-m, z0int.intelligence_mcp]\n"
+            "memory:\n  provider: memory_tencentdb\n  max_tokens: 8192\n",
         )
-        chief = self.add_hermes_profile("chiefstaff", "mcp_servers: {}\\n")
+        chief = self.add_hermes_profile("chiefstaff", "mcp_servers: {}\n")
         chief_before = chief.read_bytes()
         root_before = self.targets["hermes"].path.read_bytes()
         target = bindings.Target("hermes", "clean", clean)
