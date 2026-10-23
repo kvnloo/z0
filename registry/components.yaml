@@ -133,6 +133,26 @@ components:
       command: pip install -e .
     verify:
       command: python3 -m z0int --help
+    # Source-backed stdio server: src/z0int/intelligence_mcp.py.
+    # The installed Python path is host intent, never guessed by the registry.
+    # Requires Z0INT_PYTHON to point at an environment with z0int installed.
+    bindings:
+      harnesses: [hermes, claude, codex]
+      hermes:
+        mcp:
+          command: "${Z0INT_PYTHON}"
+          args: [-m, z0int.intelligence_mcp]
+          env: {Z0INT_HARNESS: hermes, Z0INT_SHARED_ONLY: "1"}
+      claude:
+        mcp:
+          command: "${Z0INT_PYTHON}"
+          args: [-m, z0int.intelligence_mcp]
+          env: {Z0INT_HARNESS: claude-code, Z0INT_SHARED_ONLY: "1"}
+      codex:
+        mcp:
+          command: "${Z0INT_PYTHON}"
+          args: [-m, z0int.intelligence_mcp]
+          env: {Z0INT_HARNESS: codex, Z0INT_SHARED_ONLY: "1"}
     boundaries:
       owns: [personal policy, provenance-backed context resolution, bounded decision backends, routine promotion, specialist runtime]
       not_here: [source memory databases, harness execution, experiment promotion, OS prediction, measurement kernel]
