@@ -92,20 +92,53 @@ class Intent:
         if sum(value is not None for value in (profile, components, host_profile)) > 1:
             raise ValueError("choose one of --profile, --components or --host-profile")
         self.spec: dict[str, Any] = {}
+        self.logical_host = host
         if host_profile:
+            source = Path(host_profile)
+            fleet = source.suffix.lower() == ".toml"
             try:
-                data = yaml.safe_load(Path(host_profile).read_text(encoding="utf-8"))
-            except (OSError, yaml.YAMLError):
-                raise ValueError("cannot read host-profile YAML") from None
+                text = source.read_text(encoding="utf-8")
+                data = tomlkit.parse(text).unwrap() if fleet else yaml.safe_load(text)
+            except (OSError, ValueError, yaml.YAMLError, tomlkit.exceptions.ParseError):
+                # Parser exceptions may contain source lines and private values.
+                raise ValueError("cannot read host-profile TOML" if fleet else
+                                 "cannot read host-profile YAML") from None
             if not isinstance(data, dict):
                 raise ValueError("host-profile must be a mapping")
             if "hosts" in data:
                 hosts = data["hosts"]
-                if not isinstance(hosts, dict) or host not in hosts:
-                    raise ValueError("host-profile has no entry for this host")
-                data = hosts[host]
-            if not isinstance(data, dict) or data.get("host", host) != host:
-                raise ValueError("host-profile does not name this host")
+                if not isinstance(hosts, dict) or not hosts:
+                    raise ValueError("host-profile hosts must be a nonempty mapping")
+                for hid, entry in hosts.items():
+                    if not isinstance(hid, str) or not isinstance(entry, dict):
+                        raise ValueError("host-profile hosts must map logical ids to mappings")
+                    aliases = entry.get("match_hostnames", [])
+                    if not isinstance(aliases, list) or any(
+                        not isinstance(alias, str) or not alias for alias in aliases
+                    ):
+                        raise ValueError("match_hostnames must be a list of nonempty strings")
+                if host in hosts:
+                    logical = host
+                else:
+                    matches = [hid for hid, entry in hosts.items()
+                               if host in entry.get("match_hostnames", [])]
+                    if len(matches) > 1:
+                        raise ValueError("ambiguous host-profile match_hostnames for this host")
+                    if not matches:
+                        raise ValueError("host-profile has no entry for this host")
+                    logical = matches[0]
+                self.logical_host = logical
+                entry = hosts[logical]
+                if fleet:
+                    # .files owns all host fields; z0 only reads its optional table.
+                    data = entry.get("z0_components", {})
+                else:
+                    data = entry.get("z0_components", entry)
+            elif fleet:
+                raise ValueError("fleet TOML requires hosts table")
+            if not isinstance(data, dict) or (not fleet and
+                    data.get("host", host) not in {host, self.logical_host}):
+                raise ValueError("host-profile intent must be a mapping for this host")
             self.spec = data
         elif components is not None:
             self.spec = {"components": [cid.strip() for cid in components.split(",") if cid.strip()]}
@@ -151,11 +184,16 @@ class Intent:
                 raise ValueError("intent harnesses must use supported harness ids")
         elif level == 1:
             children = spec.get("profiles", {})
-            if not isinstance(children, dict) or any(not isinstance(key, str) for key in children):
-                raise ValueError("intent profiles must map native profile names to selections")
+            if not isinstance(children, dict) or any(
+                not isinstance(key, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", key)
+                or key in {".", ".."} for key in children
+            ):
+                raise ValueError("intent profiles must map safe native profile names to selections")
         else:
             children = {}
-        for child in children.values():
+        for hid, child in children.items():
+            if level == 0 and hid != "hermes" and isinstance(child, dict) and "profiles" in child:
+                raise ValueError("only Hermes supports per-profile intent")
             self._validate_spec(child, level + 1)
 
     def desired(self, target: Target) -> list[str] | None:
@@ -166,6 +204,20 @@ class Intent:
             if selection is not None:
                 return selection
         return None
+
+
+def intent_targets(home: Path, intent: Intent, harness: str | None = None,
+                   harness_profile: str | None = None) -> list[Target]:
+    """Inspect explicitly selected Hermes profiles even before their config exists."""
+    selected = targets(home, harness, harness_profile)
+    if harness not in (None, "hermes"):
+        return selected
+    profiles = intent.spec.get("harnesses", {}).get("hermes", {}).get("profiles", {})
+    names = {target.profile for target in selected if target.harness == "hermes"}
+    for name in sorted(profiles):
+        if name not in names and (not harness_profile or harness_profile == name):
+            selected.append(Target("hermes", name, home / ".hermes/profiles" / name / "config.yaml"))
+    return selected
 
 
 def recipe(meta: dict[str, Any], harness: str) -> dict[str, Any]:
