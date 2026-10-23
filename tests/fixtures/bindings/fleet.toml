@@ -1,0 +1,31 @@
+schema = 1
+
+[hosts.desktop]
+match_hostnames = ["0", "groot"]
+platform = "cachyos"
+
+[hosts.desktop.z0_components]
+components = ["archive"]
+
+[hosts.desktop.z0_components.harnesses.hermes]
+components = ["memory"]
+
+[hosts.desktop.z0_components.harnesses.hermes.profiles.clean]
+components = ["archive", "memory"]
+
+[hosts.desktop.z0_components.harnesses.hermes.profiles.empty]
+components = []
+
+[hosts.desktop.z0_components.harnesses.codex]
+components = []
+
+[hosts.mbp]
+match_hostnames = ["mbp"]
+platform = "cachyos"
+
+[hosts.mbp.z0_components]
+components = []
+
+[hosts.phone]
+match_hostnames = ["omarchy-phone"]
+platform = "arch"
