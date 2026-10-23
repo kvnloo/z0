@@ -579,6 +579,37 @@ components:
       owns: [memory gateway, backend capture and retrieval, derived memory storage]
       not_here: [cross-harness continuity qualification, harness config ownership, canonical source archives]
 
+  z0-memory-readonly:
+    name: Scoped read-only memory MCP
+    repo: kvnloo/z0intelligence
+    kind: memory-source
+    status: experimental
+    owner: Personal Intelligence
+    summary: >
+      Explicit opt-in native registration for the existing z0intelligence
+      MemoryServer: search and fetch authorized AgentsView originals only.
+      Evidence is not permission; no host or harness is enabled by this entry.
+    required: false
+    profiles: []
+    depends_on: []
+    integrates_with: []
+    provides: []
+    consumes: []
+    # The host operator installs and approves a stdio wrapper at this path.
+    # The wrapper owns principal=operator, interpreter, exact source/scope grants
+    # and policy; models never supply commands, credentials or permission.
+    # No browser, tunnel, HTTP endpoint, server flags or second memory store.
+    bindings:
+      harnesses: [hermes, claude, codex, omp]
+      mcp:
+        command: "${Z0_MEMORY_MCP_BIN}"
+        args: []
+    docs:
+      readme: src/z0int/memory_mcp.py
+    boundaries:
+      owns: [opt-in native read-only memory MCP registration recipe]
+      not_here: [memory storage, source grants, host intent, identity transport, execution authority]
+
   qmd:
     name: QMD
     repo: tobi/qmd
