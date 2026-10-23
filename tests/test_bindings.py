@@ -227,7 +227,7 @@ class NativeBindingTests(unittest.TestCase):
         with patch.object(bindings, "service_state", return_value="inactive") as state:
             status, output = self.invoke(["doctor", "--bindings", "--harness", "hermes",
                                           "--host-profile", str(source)])
-        self.assertEqual(status, 0, output)
+        self.assertEqual(status, 1, output)  # requested inactive memory service is drift
         receipt = json.loads(next((self.home / ".z0/observations").glob("*.json")).read_text())
         records = {record["profile"]: record for record in receipt["configs"]}
         self.assertEqual(set(records), {"default", "clean", "chiefstaff"})
@@ -262,7 +262,7 @@ class NativeBindingTests(unittest.TestCase):
         self.add_hermes_profile("empty", "mcp_servers: {}\n")
         with patch.object(bindings, "service_state", return_value="failed"):
             status, output = self.invoke(["doctor", "--bindings", "--components", "archive,memory"])
-        self.assertEqual(status, 0, output)
+        self.assertEqual(status, 1, output)  # desired binding/service drift fails the health gate
         for kind in ("registered-but-unbound", "bound-but-unregistered", "bound-but-service-not-running",
                      "missing-desired-component", "binding-mismatch", "binding-not-observable"):
             self.assertIn(kind, output)
@@ -331,7 +331,9 @@ class NativeBindingTests(unittest.TestCase):
         self.comps["memory"]["bindings"]["hermes"]["memory_provider"] = None
         record = bindings.observe(target, ["memory"], self.comps, {})
         self.assertNotIn("memory", record["bound"])
-        self.assertFalse(any(finding.get("component") == "memory" for finding in record["findings"]))
+        self.assertFalse(any(finding.get("component") == "memory" and finding["kind"] in
+                             {"missing-desired-component", "binding-mismatch"}
+                             for finding in record["findings"]))
 
     def test_composite_recipe_requires_all_native_surfaces(self):
         target = self.targets["hermes"]
