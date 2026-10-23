@@ -21,6 +21,7 @@ def main(argv: list[str] | None = None) -> int:
 
     p_doctor = sub.add_parser("doctor", help="Inspect installed components or native binding drift")
     p_doctor.add_argument("--bindings", action="store_true", help="Read-only native binding observation")
+    p_doctor.add_argument("--json", action="store_true", help="Emit one machine-readable binding observation")
     p_doctor.add_argument("--receipt", help="New JSON observation receipt path (never overwritten)")
 
     p_apply = sub.add_parser("apply", help="Reconcile owned native config fragments (dry-run by default)")
@@ -35,7 +36,7 @@ def main(argv: list[str] | None = None) -> int:
         intent = native.add_mutually_exclusive_group()
         intent.add_argument("--profile", help="Desired z0 component profile")
         intent.add_argument("--components", help="Desired comma-separated component ids (empty means none)")
-        intent.add_argument("--host-profile", help="Host intent YAML input")
+        intent.add_argument("--host-profile", help="Host intent YAML or .files fleet.toml input")
     sub.add_parser("status", help="Development state table")
 
     p_graph = sub.add_parser("graph", help="Dependency graph")
@@ -57,8 +58,8 @@ def main(argv: list[str] | None = None) -> int:
         if args.cmd == "apply":
             return bindings.cmd_apply(dry_run=args.dry_run, apply=args.apply, yes=args.yes, **native)
         if args.bindings:
-            return bindings.cmd_doctor(receipt=args.receipt, **native)
-        if any(value is not None for value in native.values()) or args.receipt:
+            return bindings.cmd_doctor(receipt=args.receipt, json_output=args.json, **native)
+        if any(value is not None for value in native.values()) or args.receipt or args.json:
             parser.error("native config options require doctor --bindings")
         return commands.cmd_doctor()
     if args.cmd == "status":
