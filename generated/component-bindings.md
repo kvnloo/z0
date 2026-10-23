@@ -202,6 +202,25 @@ systemctl --user show reports tencentdb-memory.service enabled, active/running. 
 - systemctl --user show tencentdb-memory.service --property=Id,ActiveState,SubState,UnitFileState,FragmentPath (2026-10-22)
 - /mnt/zer0models/workspace/zer0/data/operations/capability-matrix/20261022.md
 
+## `z0-memory-readonly`
+
+### Declarative bindings
+
+```json
+{
+  "harnesses": [
+    "hermes",
+    "claude",
+    "codex",
+    "omp"
+  ],
+  "mcp": {
+    "command": "${Z0_MEMORY_MCP_BIN}",
+    "args": []
+  }
+}
+```
+
 ## `z0bridge`
 
 ### Declarative bindings
