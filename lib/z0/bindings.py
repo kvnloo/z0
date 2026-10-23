@@ -133,7 +133,11 @@ class Intent:
                     # .files owns all host fields; z0 only reads its optional table.
                     data = entry.get("z0_components", {})
                 else:
-                    data = entry.get("z0_components", entry)
+                    # Legacy YAML intent remains valid beside optional host metadata.
+                    data = entry.get("z0_components", {
+                        key: value for key, value in entry.items()
+                        if key in {"host", "profile", "components", "harnesses"}
+                    })
             elif fleet:
                 raise ValueError("fleet TOML requires hosts table")
             if not isinstance(data, dict) or (not fleet and
@@ -209,6 +213,8 @@ class Intent:
 def intent_targets(home: Path, intent: Intent, harness: str | None = None,
                    harness_profile: str | None = None) -> list[Target]:
     """Inspect explicitly selected Hermes profiles even before their config exists."""
+    if harness_profile and harness != "hermes":
+        raise ValueError("--harness-profile requires --harness hermes")
     selected = targets(home, harness)
     if harness not in (None, "hermes"):
         return selected
