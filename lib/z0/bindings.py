@@ -643,7 +643,8 @@ def cmd_doctor(*, host: str | None = None, harness: str | None = None,
         "kind": "binding-observation", "schema_version": 1,
         "host": socket.gethostname(), "logical_host": None,
         "timestamp": timestamp.isoformat(), "status": "UNKNOWN",
-        "services": {}, "configs": [], "registered_without_native_binding": [],
+        "services": {}, "configs": [], "findings": [],
+        "registered_without_native_binding": [],
     }
     try:
         actual = local_host(host)
@@ -656,8 +657,14 @@ def cmd_doctor(*, host: str | None = None, harness: str | None = None,
         unbound = sorted(cid for cid, meta in comps.items()
                          if "bindings" in meta and not meta["bindings"].get("harnesses")
                          and cid not in observed_names)
+        findings = [
+            {"harness": record["harness"], "profile": record["profile"], **item}
+            for record in records for item in record["findings"]
+        ]
+        findings.extend({"kind": "registered-without-native-binding", "status": "INFO",
+                         "component": cid} for cid in unbound)
         report.update(host=actual, logical_host=intent.logical_host, services=services,
-                      configs=records, status=observation_status(records),
+                      configs=records, findings=findings, status=observation_status(records),
                       registered_without_native_binding=unbound)
         destination = Path(receipt) if receipt else registry.z0_home() / "observations" / (
             "bindings-" + timestamp.strftime("%Y%m%dT%H%M%S.%fZ") + ".json")
