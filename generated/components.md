@@ -18,6 +18,7 @@
 | `supermemory` | Supermemory | memory-source | experimental |  | `supermemoryai/supermemory` | `` |
 | `tencentdb-memory` | TencentDB Agent Memory gateway | memory-source | experimental |  | `TencentCloud/TencentDB-Agent-Memory` | `` |
 | `tokenomics` | Tokenomics | measurement | experimental | live | `kvnloo/tokenomics` | `65e8f2dd9d6c` |
+| `z0-memory-readonly` | Scoped read-only memory MCP | memory-source | experimental |  | `kvnloo/z0intelligence` | `` |
 | `z0bridge` | z0bridge | service | experimental |  | `kvnloo/z0bridge` | `` |
 | `z0intelligence` | z0intelligence | intelligence | experimental | log_only | `kvnloo/z0intelligence` | `0563ed7a5207` |
 | `z0live` | z0live | service | experimental |  | `kvnloo/z0live` | `` |

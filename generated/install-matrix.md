@@ -18,6 +18,7 @@
 | `supermemory` |  |  |  |  |  |  |  |
 | `tencentdb-memory` |  |  |  |  |  |  |  |
 | `tokenomics` |  | yes | yes | yes | yes | yes | yes |
+| `z0-memory-readonly` |  |  |  |  |  |  |  |
 | `z0bridge` |  |  |  |  |  |  |  |
 | `z0intelligence` |  |  | yes |  |  | yes | yes |
 | `z0live` |  |  |  |  |  |  |  |
