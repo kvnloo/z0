@@ -222,6 +222,59 @@ README documents the Hermes ACP adapter and identity/pairing service. Other harn
 - https://github.com/kvnloo/z0bridge/issues/3
 - https://github.com/kvnloo/z0bridge/pull/2#issuecomment-6310221595
 
+## `z0intelligence`
+
+### Declarative bindings
+
+```json
+{
+  "harnesses": [
+    "hermes",
+    "claude",
+    "codex"
+  ],
+  "hermes": {
+    "mcp": {
+      "command": "${Z0INT_PYTHON}",
+      "args": [
+        "-m",
+        "z0int.intelligence_mcp"
+      ],
+      "env": {
+        "Z0INT_HARNESS": "hermes",
+        "Z0INT_SHARED_ONLY": "1"
+      }
+    }
+  },
+  "claude": {
+    "mcp": {
+      "command": "${Z0INT_PYTHON}",
+      "args": [
+        "-m",
+        "z0int.intelligence_mcp"
+      ],
+      "env": {
+        "Z0INT_HARNESS": "claude-code",
+        "Z0INT_SHARED_ONLY": "1"
+      }
+    }
+  },
+  "codex": {
+    "mcp": {
+      "command": "${Z0INT_PYTHON}",
+      "args": [
+        "-m",
+        "z0int.intelligence_mcp"
+      ],
+      "env": {
+        "Z0INT_HARNESS": "codex",
+        "Z0INT_SHARED_ONLY": "1"
+      }
+    }
+  }
+}
+```
+
 ## `z0live`
 
 ### Declarative bindings
