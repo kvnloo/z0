@@ -16,6 +16,9 @@ from z0.__main__ import main
 
 FIXTURES = Path(__file__).parent / "fixtures" / "bindings"
 
+# Keep the real YAML loader before fixture tests patch registry.components.
+CANONICAL_COMPONENTS = registry.components
+
 
 def components():
     return {
@@ -369,6 +372,136 @@ class NativeBindingTests(unittest.TestCase):
                         {"unit": 123}, {"unit": "not a unit.service"}):
             with self.subTest(service=service), self.assertRaises(ValueError):
                 registry.validate_components({"archive": {**meta, "service": service}})
+
+
+    def memory_readonly(self):
+        """Use the canonical, parsed registry recipe in isolated native fixtures."""
+        meta = copy.deepcopy(CANONICAL_COMPONENTS()["z0-memory-readonly"])
+        self.comps["z0-memory-readonly"] = meta
+        return meta
+
+    def test_memory_readonly_opt_in_and_operator_owned_transport_contract(self):
+        meta = self.memory_readonly()
+        self.assertEqual(meta["repo"], "kvnloo/z0intelligence")
+        self.assertFalse(meta["required"])
+        self.assertEqual(meta["profiles"], [])
+        self.assertNotIn("service", meta)
+        self.assertEqual(meta["bindings"], {
+            "harnesses": list(bindings.HARNESSES),
+            "mcp": {"command": "${Z0_MEMORY_MCP_BIN}", "args": []},
+        })
+        for name in registry.profiles():
+            with self.subTest(profile=name):
+                self.assertNotIn("z0-memory-readonly", registry.resolve_profile(name))
+        with patch.object(registry, "aodl_harness_ids", return_value=set(bindings.HARNESSES)):
+            registry.validate_components({"z0-memory-readonly": meta})
+
+    def test_memory_readonly_four_native_parsers_owned_fragment_and_idempotence(self):
+        self.memory_readonly()
+        wrapper = "/opt/operator/bin/z0-memory-mcp"
+        with patch.dict(os.environ, {"Z0_MEMORY_MCP_BIN": wrapper}):
+            for harness, target in self.targets.items():
+                with self.subTest(harness=harness):
+                    original, before_doc = bindings.read_config(target)
+                    before = bindings.plain(before_doc)
+                    key = bindings.MCP_KEYS[harness]
+                    plan = bindings.make_plan(target, ["z0-memory-readonly"], self.comps, strict=True)
+                    self.assertTrue(plan.changed)
+                    self.assertIn("z0-memory-readonly", plan.diff)
+                    self.assertNotIn("unrelated-secret", plan.diff)
+                    self.assertNotIn("fixture-secret", plan.diff)
+                    backup = bindings.write_plan(plan)
+                    self.assertIsNotNone(backup)
+                    self.assertEqual(backup.read_text(), original)
+                    _, native = bindings.read_config(target)
+                    actual = bindings.plain(native)
+                    self.assertEqual(
+                        actual[key]["z0-memory-readonly"],
+                        bindings.native_mcp({"command": wrapper, "args": []}, harness),
+                    )
+                    self.assertNotIn("env", actual[key]["z0-memory-readonly"])
+                    self.assertNotIn("url", actual[key]["z0-memory-readonly"])
+                    for name, value in before[key].items():
+                        self.assertEqual(actual[key][name], value)
+                    for name, value in before.items():
+                        if name != key:
+                            self.assertEqual(actual[name], value)
+                    self.assertFalse(
+                        bindings.make_plan(target, ["z0-memory-readonly"], self.comps, strict=True).changed
+                    )
+
+    def test_memory_readonly_explicit_dry_run_and_unset_wrapper_fail_closed(self):
+        self.memory_readonly()
+        before = {target.path: target.path.read_bytes() for target in self.targets.values()}
+        with patch.dict(os.environ, {"Z0_MEMORY_MCP_BIN": "/opt/operator/bin/z0-memory-mcp"}):
+            status, output = self.invoke(
+                ["apply", "--dry-run", "--components", "z0-memory-readonly"]
+            )
+        self.assertEqual(status, 0, output)
+        for target in self.targets.values():
+            self.assertIn(f"[{target.label}]", output)
+        for secret in ("unrelated-secret", "fixture-secret", "desired-secret"):
+            self.assertNotIn(secret, output)
+        self.assertEqual(before, {path: path.read_bytes() for path in before})
+        self.assertFalse(list(self.home.rglob("*.z0-backup-*")))
+        # --apply is strict; never persist the unresolved placeholder as a command.
+        with patch.dict(os.environ, {}, clear=True):
+            status, output = self.invoke(
+                ["apply", "--apply", "--yes", "--components", "z0-memory-readonly"]
+            )
+        self.assertEqual(status, 2, output)
+        self.assertIn("unset", output)
+        self.assertEqual(before, {path: path.read_bytes() for path in before})
+        self.assertFalse(list(self.home.rglob("*.z0-backup-*")))
+
+    def test_memory_readonly_hermes_clean_preserves_existing_mcp_and_provider(self):
+        self.memory_readonly()
+        clean = self.add_hermes_profile(
+            "clean",
+            "model: existing-model\\n"
+            "accounts:\\n  local:\\n    token: existing-secret\\n"
+            "mcp_servers:\\n"
+            "  ctx:\\n    command: ctx\\n    args: [mcp, serve]\\n"
+            "  z0intelligence:\\n    command: /operator/python\\n"
+            "    args: [-m, z0int.intelligence_mcp]\\n"
+            "memory:\\n  provider: memory_tencentdb\\n  max_tokens: 8192\\n",
+        )
+        chief = self.add_hermes_profile("chiefstaff", "mcp_servers: {}\\n")
+        chief_before = chief.read_bytes()
+        root_before = self.targets["hermes"].path.read_bytes()
+        target = bindings.Target("hermes", "clean", clean)
+        _, doc = bindings.read_config(target)
+        before = bindings.plain(doc)
+        with patch.dict(os.environ, {"Z0_MEMORY_MCP_BIN": "/operator/memory-wrapper"}):
+            plan = bindings.make_plan(target, ["z0-memory-readonly"], self.comps, strict=True)
+            self.assertTrue(plan.changed)
+            self.assertNotIn("existing-secret", plan.diff)
+            bindings.write_plan(plan)
+            _, native = bindings.read_config(target)
+            actual = bindings.plain(native)
+            self.assertEqual(actual["memory"], before["memory"])
+            self.assertEqual(actual["accounts"], before["accounts"])
+            self.assertEqual(actual["model"], before["model"])
+            for name in ("ctx", "z0intelligence"):
+                self.assertEqual(actual["mcp_servers"][name], before["mcp_servers"][name])
+            self.assertEqual(
+                actual["mcp_servers"]["z0-memory-readonly"],
+                {"command": "/operator/memory-wrapper", "args": []},
+            )
+            self.assertFalse(bindings.make_plan(
+                target, ["z0-memory-readonly"], self.comps, strict=True
+            ).changed)
+            status, output = self.invoke(
+                ["apply", "--dry-run", "--components", "z0-memory-readonly",
+                 "--harness", "hermes", "--harness-profile", "clean"]
+            )
+        self.assertEqual(status, 0, output)
+        self.assertIn("[hermes/clean]", output)
+        self.assertNotIn("[hermes/default]", output)
+        self.assertNotIn("[hermes/chiefstaff]", output)
+        self.assertEqual(chief.read_bytes(), chief_before)
+        self.assertEqual(self.targets["hermes"].path.read_bytes(), root_before)
+
 
 
 if __name__ == "__main__":
