@@ -147,8 +147,9 @@ closed; no implicit wildcards.
 ./z0 apply --dry-run --host-profile /path/to/fleet.toml --harness hermes --harness-profile clean
 ```
 
-The JSON document contains `status`, `configs[]` with per-config `status`,
-`desired`, `bound` and typed `findings[]`, `services`, `logical_host` and
+The JSON document contains `status`, flattened `findings[]`, `configs[]`
+with per-config `status`, `desired`, `bound` and typed `findings[]`,
+`services`, `logical_host` and
 a receipt path. `MATCH` means all selected, observable native recipes
 match; **it does not prove a working MCP session, retrieval, model input or
 verified outcome**. `DRIFT` covers requested missing/disabled, mismatched
