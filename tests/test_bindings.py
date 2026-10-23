@@ -340,7 +340,11 @@ class NativeBindingTests(unittest.TestCase):
         self.comps["archive"]["bindings"]["hermes"] = {"memory_provider": "archive_memory"}
         record = bindings.observe(target, ["archive"], self.comps, {})
         self.assertIn("archive", record["bound"])
-        self.assertTrue(any(finding["kind"] == "missing-desired-component" and finding["component"] == "archive"
+        self.assertEqual(record["status"], "DRIFT")
+        self.assertTrue(any(finding["kind"] == "binding-mismatch"
+                            and finding["component"] == "archive"
+                            and finding["reason"] == "memory-provider-mismatch"
+                            and finding["status"] == "DRIFT"
                             for finding in record["findings"]))
 
     def test_yaml_aliases_do_not_extend_owned_keys(self):
