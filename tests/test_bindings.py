@@ -373,7 +373,6 @@ class NativeBindingTests(unittest.TestCase):
             with self.subTest(service=service), self.assertRaises(ValueError):
                 registry.validate_components({"archive": {**meta, "service": service}})
 
-
     def memory_readonly(self):
         """Use the canonical, parsed registry recipe in isolated native fixtures."""
         meta = copy.deepcopy(CANONICAL_COMPONENTS()["z0-memory-readonly"])
@@ -501,7 +500,6 @@ class NativeBindingTests(unittest.TestCase):
         self.assertNotIn("[hermes/chiefstaff]", output)
         self.assertEqual(chief.read_bytes(), chief_before)
         self.assertEqual(self.targets["hermes"].path.read_bytes(), root_before)
-
 
 
 if __name__ == "__main__":
