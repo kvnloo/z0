@@ -12,8 +12,8 @@ If the user asks for general help with this repo, or you have no task, onboard t
    yourself**: those grant consent bundles (toolchains, harness, services, models) that only the
    user may grant. A first run takes 15-40 minutes (clones and builds), longer than most agent
    shell timeouts, so run it detached and poll, and do not end your turn while it runs:
-   `nohup ./z0 onboard --auto --llm none < /dev/null > ~/.z0-onboard.log 2>&1; echo "exit=$?" >> ~/.z0-onboard.log` (in the background), then check
-   `tail -5 ~/.z0-onboard.log` every few minutes until it prints `exit=`. If a run was killed,
+   `mkdir -p ~/.z0/logs && nohup sh -c './z0 onboard --auto --llm none < /dev/null > ~/.z0/logs/onboard.log 2>&1; echo "exit=$?" >> ~/.z0/logs/onboard.log' &`,
+   then check `tail -5 ~/.z0/logs/onboard.log` every few minutes until it prints `exit=`. If a run was killed,
    just run it again: it resumes (finished steps are skipped). Exit 0 = done; exit 3 = done
    except steps that need the user's consent. Any other exit = report the `FAILED` lines.
 2. Show the user the "What you need to do" section of the printed report (also in
@@ -24,9 +24,10 @@ If the user asks for general help with this repo, or you have no task, onboard t
    repo-local `.venv`, so do not stop to ask about it; then `z0int contribute --json`, follow `next_action` until it
    is `ask_human`, and show the user the pick, its alternatives and `needs_human`). Ask before
    claiming anything.
-4. Never push, never post to GitHub (issues, comments, PRs) and never log in to anything
+4. Keep every log you write under `~/.z0/logs/`; write nothing else in the user's home.
+5. Never push, never post to GitHub (issues, comments, PRs) and never log in to anything
    (gh, tailscale, harnesses) without the user's explicit yes.
-5. Undo everything z0 did: `./z0 onboard rollback` (owned files only).
+6. Undo everything z0 did: `./z0 onboard rollback` (owned files only).
 
 ## Before modifying code
 

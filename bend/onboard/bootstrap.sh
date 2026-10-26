@@ -17,8 +17,8 @@ if [ ! -f "$lean" ]; then
   curl --fail --location --max-time 600 --max-filesize 600000000 --output "$lean" \
     https://github.com/leanprover/lean4/releases/download/v4.34.0/lean-4.34.0-linux.tar.zst
 fi
-printf '%s  %s\n' 78106a97af242429dcc057258eb8d10f69cddebcd5e263022185a52d003e09bf "$bend" | sha256sum --check --strict -
-printf '%s  %s\n' caaa98356098c85dc0fcbbd28e1ec66f39eb6551829972b752ff20e1286b646b "$lean" | sha256sum --check --strict -
+printf '%s  %s\n' 78106a97af242429dcc057258eb8d10f69cddebcd5e263022185a52d003e09bf "$bend" | sha256sum --check --strict - >&2
+printf '%s  %s\n' caaa98356098c85dc0fcbbd28e1ec66f39eb6551829972b752ff20e1286b646b "$lean" | sha256sum --check --strict - >&2
 tar -xzf "$bend" -C "$root"
 tar --zstd -xf "$lean" -C "$root"
 printf 'BEND=%s/bend/bin/bend\nLEAN_BIN=%s/lean-4.34.0-linux/bin\n' "$root" "$root"

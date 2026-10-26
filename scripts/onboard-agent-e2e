@@ -145,7 +145,8 @@ open(path, "w", encoding="utf-8").write(head + tail)
 PY
 fi
 git -C "$WORK/cand" add -A
-git -C "$WORK/cand" -c user.name=e2e -c user.email=e2e@example.invalid commit -qm "e2e: candidate (pins z0intelligence ${Z0INT_SHA:-as registered})" || true
+GIT_AUTHOR_DATE=2026-01-01T00:00:00Z GIT_COMMITTER_DATE=2026-01-01T00:00:00Z \
+  git -C "$WORK/cand" -c user.name=e2e -c user.email=e2e@example.invalid commit -qm "e2e: candidate (pins z0intelligence ${Z0INT_SHA:-as registered})" || true
 Z0_SHA="$(git -C "$WORK/cand" rev-parse HEAD)"
 Z0INT_SHA="${Z0INT_SHA:-$(sed -n '/^  z0intelligence:/,/^  [a-z]/p' "$WORK/cand/registry/components.yaml" | sed -n 's/^      ref: \([0-9a-f]\{40\}\).*/\1/p' | head -1)}"
 git clone -q --bare "$WORK/cand" "$WORK/z0.git"
