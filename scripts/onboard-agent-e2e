@@ -53,6 +53,11 @@ if ((INSIDE)); then
   useradd -m -s /bin/bash "$U" 2> /dev/null || true
   CANARY="Z0CANARY$(head -c 12 /dev/urandom | od -An -tx1 | tr -d ' \n')"
   runuser -u "$U" -- bash /e2e/tests/contrib_e2e/make_home.sh "$PROFILE" "$H" "$CANARY"
+  # a shared download cache (speed only; every cell still installs from scratch)
+  if [[ -d /pipcache ]]; then
+    chown "$U:" /pipcache
+    mkdir -p "$H/.cache" && chown "$U:" "$H/.cache" && ln -s /pipcache "$H/.cache/pip"
+  fi
   as_user() {
     runuser -u "$U" -- env -i HOME="$H" USER="$U" LOGNAME="$U" LANG=C.UTF-8 TERM=dumb \
       PATH="$H/.local/bin:/usr/local/bin:/usr/bin:/bin" ${AGENT_ENV:-} bash -c "$1"
@@ -173,7 +178,7 @@ fi
 NAME="z0-agent-e2e-$HARNESS-$PROFILE-$RUN-$$"
 set +e
 "$ENGINE" run --rm --name "$NAME" --hostname z0-agent-e2e --memory 8g \
-  -v "$ROOT:/e2e:ro" -v "$WORK/z0.git:/mirror/z0.git:ro" -v "$SECRETS:/e2e-secrets:ro" -v "$OUT:/out" \
+  -v "$ROOT:/e2e:ro" -v "$WORK/z0.git:/mirror/z0.git:ro" -v z0-agent-e2e-pipcache:/pipcache -v "$SECRETS:/e2e-secrets:ro" -v "$OUT:/out" \
   -e Z0_SHA="$Z0_SHA" -e Z0INT_SHA="$Z0INT_SHA" \
   "$TAG" bash /e2e/scripts/onboard-agent-e2e --inside --harness "$HARNESS" --profile "$PROFILE" --run "$RUN"
 rc=$?

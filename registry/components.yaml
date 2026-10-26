@@ -122,7 +122,7 @@ components:
            creates: ["$Z0_HOME/venvs/{id}"], probe: {exists: "$Z0_HOME/venvs/{id}/bin/python"},
            undo: {kind: remove_owned}}
         - {id: tokenomics.install.python, kind: pip_install, consent: {class: C0}, network: true, where: venv,
-           needs: [tokenomics.venv], argv: [pip, install, -e, packages/python],
+           needs: [tokenomics.venv], argv: [pip, install, -e, .],
            probe: {exists: "$Z0_HOME/venvs/{id}/bin/tokenomics"}, legacy_projection: true}
         - {id: tokenomics.install.npm, kind: run, consent: {class: C0}, network: true, where: build,
            needs: [tokenomics.source], argv: [npm, install, -w, packages/typescript],
@@ -595,7 +595,10 @@ components:
         - {id: dash.gate.security, kind: check, consent: {class: C0}, where: build,
            needs: [dash.build.bridge_deps],
            argv: [bun, test, bridge/src/bridge-security.test.ts, bridge/src/bridge-security-entry.test.ts,
-                  bridge/src/pairing-http.test.ts, bridge/src/pairing-audio.test.ts]}
+                  bridge/src/pairing-http.test.ts]}
+        - {id: dash.gate.audio, kind: check, consent: {class: C0}, where: build,
+           needs: [dash.build.bridge_deps], when: [{fact: toolchains.ffmpeg.state, op: eq, value: present}],
+           argv: [bun, test, bridge/src/pairing-audio.test.ts]}
         - {id: dash.release.bridge, kind: stage_release, consent: {class: C0}, where: release,
            needs: [dash.build.bridge, dash.gate.security], creates: ["~/.local/lib/dash/releases/{rev_bridge}"],
            undo: {kind: remove_owned}}
@@ -634,7 +637,7 @@ components:
            argv: [echo, "Android dev-client APK build is C2 (scripts/build-native-android.sh)"]}
       acceptance:
         tiers:
-          - {name: static, checks: [dash.gate.typecheck, dash.gate.lint, dash.gate.test, dash.gate.security]}
+          - {name: static, checks: [dash.gate.typecheck, dash.gate.lint, dash.gate.test, dash.gate.security, dash.gate.audio]}
           - {name: live, checks: [dash.health]}
       remediations: [use_public_install, mark_unavailable]
 

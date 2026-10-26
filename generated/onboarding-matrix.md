@@ -4,7 +4,7 @@
 |-----------|------|-------------|-------|-------|------------|-----------|----------|
 | `agenttrace` | generic |  | git, python>=3.10 | 4 | - | - | - |
 | `aodl` | generic |  | git, python>=3.10 | 4 | - | - | - |
-| `dash` | dash | yes | bun>=1.4.3, git, python>=3.10 | 19 | services | 1 | dash-bridge.service (tailnet_ipv4:4747) |
+| `dash` | dash | yes | bun>=1.4.3, git, python>=3.10 | 20 | services | 1 | dash-bridge.service (tailnet_ipv4:4747) |
 | `evolution-lab` | generic |  | git, python>=3.10 | 4 | - | - | - |
 | `flow` | generic |  | git, python>=3.10 | 3 | - | 1 | - |
 | `frontier-kb` | generic |  | git | 2 | - | - | - |
@@ -26,7 +26,7 @@
 - `flow`: install `-`; verify `python3 scripts/workspace_flow.py --help`
 - `kerdoios`: install `pip install -e .`; verify `-`
 - `oh-my-pi`: install `bun install && bun run build`; verify `bun test packages/coding-agent/test/rlm-tokenomics-bridge.test.ts`
-- `tokenomics`: install `pip install -e packages/python && npm install -w packages/typescript`; verify `tokenomics report --range today`
+- `tokenomics`: install `pip install -e . && npm install -w packages/typescript`; verify `tokenomics report --range today`
 - `z0evals`: install `python3 -m venv .venv && .venv/bin/pip install -r requirements.txt`; verify `.venv/bin/python scripts/validate.py`
 - `z0intelligence`: install `pip install -e .`; verify `python3 -m z0int --help`
 

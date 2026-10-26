@@ -6,7 +6,8 @@ You are operating in the Zer0 ecosystem.
 
 If the user asks for general help with this repo, or you have no task, onboard this host first:
 
-1. Run `./z0 onboard --auto --llm none < /dev/null` from this checkout. It needs only bash, git and
+1. Run `./z0 onboard --auto --llm none < /dev/null` from this checkout (it sets up z0evals,
+   z0intelligence and dash next to the hardware-default profile). It needs only bash, git and
    curl; it installs into `~/.z0` and user-local dirs. **Never add `--yes` or `--accept`
    yourself**: those grant consent bundles (toolchains, harness, services, models) that only the
    user may grant. Exit 0 = done; exit 3 = done except steps that need the user's consent.

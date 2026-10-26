@@ -4,7 +4,7 @@
       "command": "./z0 onboard --accept toolchains   (or --yes for every bundle)",
       "consent": "C1",
       "id": "toolchain.bun",
-      "impact": 29,
+      "impact": 30,
       "reason": "user-local download of bun 1.4.3 into $Z0_HOME/toolchains (needs consent: toolchains bundle)"
     },
     {
@@ -78,7 +78,7 @@
   "llm": "local",
   "mode": "auto",
   "pin_policy": "pinned",
-  "plan_hash": "3beff62aaed8c2e1b3b8b2f65a851facf3ebb75ee2e5b9cf57cdc490d0914f3b",
+  "plan_hash": "5b64046c56b8b0dcbb4ccf0c422b9733cb559ad4e36372790bf2dadcf8f9851b",
   "prepared_path": [
     "/opt/homebrew/bin",
     "/usr/bin",
@@ -86,10 +86,10 @@
   ],
   "profile": "personal",
   "registry": {
-    "registry/components.yaml": "7446d03140fc8c2dfd59d3ca5952a2eb3d23f5ba1079dac25e2be5e664aa3b3a",
+    "registry/components.yaml": "c6bd6d157f40f0aff49df7b793538c4e690ec653e3a29ea4c30160451724fe56",
     "registry/harnesses.yaml": "1c2b9ba37ca974e4aa1ed1f6990561ea303fc7e1f73c0fb4c6cc4802d5b4a7b8",
     "registry/onboarding.yaml": "b0c3e2b4c8e7a17bde8a5cb2378c90f6009b4464879a76406f6ae3cdc7e9b9ce",
-    "registry/profiles.yaml": "1078cbeef86e532c77478eb5025ec08f6f3f8156a1c77707774416e79d51f819",
+    "registry/profiles.yaml": "8ef0b2b147bf7db252328ee9cfc981a81867bcf6533362621138bee1abd2e6eb",
     "registry/toolchains.yaml": "10255da4b970f08ef57b4e9fd68b7dedfbc5f43bde284a35caecac4bcd0213b1"
   },
   "steps": [
@@ -317,7 +317,7 @@
           "pip",
           "install",
           "-e",
-          "packages/python"
+          "."
         ],
         "component": "tokenomics",
         "consent": {
@@ -1455,8 +1455,7 @@
           "test",
           "bridge/src/bridge-security.test.ts",
           "bridge/src/bridge-security-entry.test.ts",
-          "bridge/src/pairing-http.test.ts",
-          "bridge/src/pairing-audio.test.ts"
+          "bridge/src/pairing-http.test.ts"
         ],
         "component": "dash",
         "consent": {
@@ -1466,6 +1465,36 @@
         "kind": "check",
         "needs": [
           "dash.build.bridge_deps"
+        ],
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "reason": "condition:toolchains.ffmpeg.state eq present",
+        "status": "unavailable"
+      },
+      "step": {
+        "argv": [
+          "bun",
+          "test",
+          "bridge/src/pairing-audio.test.ts"
+        ],
+        "component": "dash",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "dash.gate.audio",
+        "kind": "check",
+        "needs": [
+          "dash.build.bridge_deps"
+        ],
+        "when": [
+          {
+            "fact": "toolchains.ffmpeg.state",
+            "op": "eq",
+            "value": "present"
+          }
         ],
         "where": "build"
       }

@@ -57,7 +57,7 @@ class OnboardCli(unittest.TestCase):
         (cls.fa.z0_home / "venv" / ".z0-owned").write_text("stage0\n")
         (cls.fa.z0_home / "onboard" / "runs").mkdir(parents=True)
         cls.before = tree_bytes(cls.fa.home, skip=(cls.fa.z0_home / "onboard",))
-        common = ["--auto", "--profile", "minimal", "--without", "oh-my-pi,dash", "--llm", "none"]
+        common = ["--auto", "--profile", "minimal", "--without", "oh-my-pi,dash,z0intelligence", "--llm", "none"]
         cls.no_yes = cls.z0(*common)
         cls.runs_after_no_yes = sorted(os.listdir(cls.fa.z0_home / "onboard" / "runs"))
         cls.node_after_no_yes = (cls.fa.z0_home / "toolchains").exists()

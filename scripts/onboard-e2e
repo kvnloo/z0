@@ -240,8 +240,9 @@ if [[ "$PHASE" == full ]]; then
     done
     [[ "$(pyq "$R7" "d['acceptance']['dash']['bridge']")" == passed ]] && ok "7 dash bridge loopback self-test passed" \
       || bad "7 dash bridge is $(pyq "$R7" "d['acceptance'].get('dash')")"
-    [[ "$(pyq "$R7" "d['acceptance']['dash'].get('static')")" == passed ]] && ok "7 dash static gates passed" \
-      || bad "7 dash static gates: $(pyq "$R7" "d['acceptance']['dash'].get('static')")"
+    gates="$(pyq "$R7" "sorted((s['id'], s['status']) for s in d['steps'] if s['id'] in ('dash.gate.typecheck', 'dash.gate.lint', 'dash.gate.security'))")"
+    [[ "$gates" == "[('dash.gate.lint', 'passed'), ('dash.gate.security', 'passed'), ('dash.gate.typecheck', 'passed')]" ]] \
+      && ok "7 dash typecheck, lint and security gates passed" || bad "7 dash gates: $gates"
     [[ "$(pyq "$R7" "d['acceptance']['z0evals']['tier1']")" == passed ]] && ok "7 z0evals tier1 passed" || bad "7 z0evals tier1"
     [[ "$(pyq "$R7" "d['secrets_scan']['canary_found']")" == False ]] && ok "7 secrets scan clean" || bad "7 secrets scan"
     echo "--- report.md (head)"

@@ -164,7 +164,7 @@ class FakeApply:
         return host
 
     def request(self, grants: Optional[dict] = None, mode: str = "auto") -> dict:
-        return {"mode": mode, "profile": "minimal", "with_ids": [], "without_ids": ["oh-my-pi", "dash"],
+        return {"mode": mode, "profile": "minimal", "with_ids": [], "without_ids": ["oh-my-pi", "dash", "z0intelligence"],
                 "grants": grants or {"bundles": [], "source": "none"}, "pin_policy": "pinned",
                 "llm": "none"}
 

@@ -55,7 +55,7 @@ profiles:
 # unchanged: `./z0 onboard --auto` targets the hardware-default profile plus these
 # supplementals, each gated by its own `onboard:` block. `--without` removes any of them.
 onboard:
-  auto_supplementals: [dash, z0evals]
+  auto_supplementals: [z0intelligence, dash, z0evals]
   # §8.1: install order hint; `*` stands for every other component. depends_on and
   # step `needs` edges always win over this hint (law O1).
   order: [tokenomics, z0intelligence, oh-my-pi, "*", dash, z0evals]
