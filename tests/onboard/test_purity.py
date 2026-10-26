@@ -110,7 +110,7 @@ class DryRunPurity(unittest.TestCase):
 
     def test_H1_recorded_host_json_from_another_host_is_refused(self):
         other = Path(self.tmp.name) / "other-host.json"
-        other.write_text((Path(__file__).parent / "fixtures/hosts/mbp-cpu-15g.json").read_text())
+        other.write_text((Path(__file__).parent / "fixtures/hosts/laptop-cpu-15g.json").read_text())
         out = self.run_z0("plan", "--stdout", "--host", str(other))
         self.assertEqual(out.returncode, 4, out.stderr)
         plan = json.loads(out.stdout)

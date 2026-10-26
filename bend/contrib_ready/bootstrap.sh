@@ -2,7 +2,7 @@
 # Extract the official verifier only inside a caller-owned destination.
 set -euo pipefail
 [ "$(uname -s)-$(uname -m)" = Linux-x86_64 ] || {
-  echo 'z0 contrib_ready law verifier requires Linux x86_64 (including the Linux MBP)' >&2
+  echo 'z0 contrib_ready law verifier requires Linux x86_64 (including the Linux laptop)' >&2
   exit 1
 }
 root=$(realpath -m "${1:?usage: bootstrap.sh OWNED_DESTINATION}")

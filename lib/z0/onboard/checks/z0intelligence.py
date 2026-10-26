@@ -76,9 +76,9 @@ def evaluate(view) -> list:
             warnings.append(f"z0intelligence plugin for {harness}: {status}; finish with "
                             "`./z0 onboard --auto --accept harness`")
     if lines:
-        bad = any(s.endswith("=failed") for s in lines)
-        out.append(_entry("harness_plugins", "failed" if bad else "passed", ", ".join(lines),
-                          required=False, warnings=warnings))
+        status = "failed" if any(s.endswith("=failed") for s in lines) else \
+            ("passed" if all(s.endswith("=passed") for s in lines) else "unavailable")
+        out.append(_entry("harness_plugins", status, ", ".join(lines), required=False, warnings=warnings))
     else:
         out.append(_entry("harness_plugins", "unavailable", "no supported harness detected", required=False))
 

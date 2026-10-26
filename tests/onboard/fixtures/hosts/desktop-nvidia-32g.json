@@ -291,7 +291,7 @@
     "installed": true,
     "ipv4": "100.64.0.2",
     "logged_in": true,
-    "magicdns": "groot.example.ts.net"
+    "magicdns": "desktop.example.ts.net"
   },
   "toolchains": {
     "bun": {

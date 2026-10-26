@@ -245,8 +245,10 @@ def execute_plan(ctx: ActionCtx, plan_obj: dict, deps: Deps) -> dict:
             results[sid] = {"status": state["status"], "reason": state.get("reason", "")}
             continue
         blocker = next((n for n in step.get("needs") or [] if n in bad), None)
+        source = step["kind"] == "adopt_or_clone"   # needs only git (plan.py, same rule)
         if blocker is None and cid:
-            blocker = next((t for t, who in users.items() if t in bad and cid in who), None)
+            blocker = next((t for t, who in users.items() if t in bad and cid in who
+                            and (not source or t == "toolchain.git")), None)
         if blocker is None and cid:
             blocker = next((d for d in (comps.get(cid) or {}).get("depends_on") or []
                             if d in bad_components), None)

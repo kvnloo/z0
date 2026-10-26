@@ -11,7 +11,7 @@
       "command": "./z0 onboard --accept toolchains   (or --yes for every bundle)",
       "consent": "C1",
       "id": "toolchain.bun",
-      "impact": 30,
+      "impact": 29,
       "reason": "user-local download of bun 1.4.3 into $Z0_HOME/toolchains (needs consent: toolchains bundle)"
     }
   ],
@@ -39,7 +39,6 @@
     },
     "z0intelligence": {
       "adopted": false,
-      "blocked_by": "tokenomics",
       "tree": "$Z0_HOME/repos/z0intelligence",
       "verdict": "allow"
     }
@@ -52,14 +51,14 @@
   "llm": "local",
   "mode": "auto",
   "pin_policy": "pinned",
-  "plan_hash": "6de91f2d1f25176e40304a30097a99ce8f4a017263f8a2b19d863daf4f16c3d8",
+  "plan_hash": "389dc6bee47c17b10d49bdbb96fe8f97214245b76bd60ec486fee1f77faf75bc",
   "prepared_path": [
     "/usr/bin",
     "/bin"
   ],
   "profile": "personal",
   "registry": {
-    "registry/components.yaml": "fabc37e4ea615c810218080aaccfe7a38e389d5e97048a8fe4feabd0c47227fd",
+    "registry/components.yaml": "9427475c26e47e94bac37aa5bde23ea7b27455633d7b1cd1273b097c62936572",
     "registry/harnesses.yaml": "1c2b9ba37ca974e4aa1ed1f6990561ea303fc7e1f73c0fb4c6cc4802d5b4a7b8",
     "registry/onboarding.yaml": "b0c3e2b4c8e7a17bde8a5cb2378c90f6009b4464879a76406f6ae3cdc7e9b9ce",
     "registry/profiles.yaml": "8ef0b2b147bf7db252328ee9cfc981a81867bcf6533362621138bee1abd2e6eb",
@@ -375,7 +374,7 @@
     },
     {
       "state": {
-        "blocked_by": "tokenomics.verify",
+        "blocked_by": "toolchain.git",
         "reason": "dependency",
         "status": "blocked"
       },
@@ -395,9 +394,8 @@
     },
     {
       "state": {
-        "blocked_by": "tokenomics.verify",
-        "reason": "dependency",
-        "status": "blocked"
+        "reason": "condition:mode eq guided",
+        "status": "unavailable"
       },
       "step": {
         "argv": [
@@ -432,7 +430,7 @@
     },
     {
       "state": {
-        "blocked_by": "tokenomics.verify",
+        "blocked_by": "toolchain.git",
         "reason": "dependency",
         "status": "blocked"
       },
@@ -455,7 +453,7 @@
     },
     {
       "state": {
-        "blocked_by": "tokenomics.verify",
+        "blocked_by": "z0intelligence.build",
         "reason": "dependency",
         "status": "blocked"
       },
@@ -480,7 +478,7 @@
     },
     {
       "state": {
-        "blocked_by": "tokenomics.verify",
+        "blocked_by": "z0intelligence.release",
         "reason": "dependency",
         "status": "blocked"
       },
@@ -509,7 +507,7 @@
     },
     {
       "state": {
-        "blocked_by": "tokenomics.verify",
+        "blocked_by": "z0intelligence.runtime",
         "reason": "dependency",
         "status": "blocked"
       },
@@ -540,9 +538,8 @@
     },
     {
       "state": {
-        "blocked_by": "tokenomics.verify",
-        "reason": "dependency",
-        "status": "blocked"
+        "reason": "condition:network.github eq True",
+        "status": "unavailable"
       },
       "step": {
         "argv": [
@@ -575,7 +572,7 @@
     },
     {
       "state": {
-        "blocked_by": "tokenomics.verify",
+        "blocked_by": "z0intelligence.install",
         "reason": "dependency",
         "status": "blocked"
       },
@@ -602,7 +599,7 @@
     },
     {
       "state": {
-        "blocked_by": "tokenomics.verify",
+        "blocked_by": "z0intelligence.shim",
         "reason": "dependency",
         "status": "blocked"
       },
@@ -629,7 +626,7 @@
     },
     {
       "state": {
-        "blocked_by": "tokenomics.verify",
+        "blocked_by": "z0intelligence.shim",
         "reason": "dependency",
         "status": "blocked"
       },
@@ -653,7 +650,7 @@
     },
     {
       "state": {
-        "blocked_by": "tokenomics.verify",
+        "blocked_by": "z0intelligence.checks.import",
         "reason": "dependency",
         "status": "blocked"
       },
@@ -677,7 +674,7 @@
     },
     {
       "state": {
-        "blocked_by": "tokenomics.verify",
+        "blocked_by": "z0intelligence.install",
         "reason": "dependency",
         "status": "blocked"
       },
@@ -703,9 +700,8 @@
     },
     {
       "state": {
-        "blocked_by": "tokenomics.verify",
-        "reason": "dependency",
-        "status": "blocked"
+        "reason": "condition:harnesses.claude_code.state eq installed",
+        "status": "unavailable"
       },
       "step": {
         "argv": [
@@ -743,9 +739,8 @@
     },
     {
       "state": {
-        "blocked_by": "tokenomics.verify",
-        "reason": "dependency",
-        "status": "blocked"
+        "reason": "condition:harnesses.codex.state eq installed",
+        "status": "unavailable"
       },
       "step": {
         "argv": [
@@ -783,9 +778,8 @@
     },
     {
       "state": {
-        "blocked_by": "tokenomics.verify",
-        "reason": "dependency",
-        "status": "blocked"
+        "reason": "condition:harnesses.omp.state eq installed",
+        "status": "unavailable"
       },
       "step": {
         "argv": [
@@ -821,9 +815,8 @@
     },
     {
       "state": {
-        "blocked_by": "tokenomics.verify",
-        "reason": "dependency",
-        "status": "blocked"
+        "reason": "condition:harnesses.hermes.state eq installed",
+        "status": "unavailable"
       },
       "step": {
         "argv": [
@@ -847,7 +840,7 @@
     },
     {
       "state": {
-        "blocked_by": "tokenomics.verify",
+        "blocked_by": "z0intelligence.shim",
         "reason": "dependency",
         "status": "blocked"
       },
@@ -881,7 +874,7 @@
     },
     {
       "state": {
-        "blocked_by": "tokenomics.verify",
+        "blocked_by": "z0intelligence.shim",
         "reason": "dependency",
         "status": "blocked"
       },
@@ -930,7 +923,7 @@
     },
     {
       "state": {
-        "blocked_by": "tokenomics.verify",
+        "blocked_by": "z0intelligence.shim",
         "reason": "dependency",
         "status": "blocked"
       },
@@ -952,7 +945,7 @@
     },
     {
       "state": {
-        "blocked_by": "toolchain.bun",
+        "blocked_by": "toolchain.git",
         "reason": "dependency",
         "status": "blocked"
       },

@@ -29,7 +29,7 @@ class GoldenPlans(unittest.TestCase):
 
     def test_fixtures_cover_the_required_hosts(self):
         names = set(support.fixture_names())
-        for required in ("groot-nvidia-32g", "mbp-cpu-15g", "apple-m-32g", "tiny-4g-vps", "offline"):
+        for required in ("desktop-nvidia-32g", "laptop-cpu-15g", "apple-m-32g", "tiny-4g-vps", "offline"):
             self.assertIn(required, names)
 
     def test_golden_plans(self):
@@ -62,7 +62,7 @@ class GoldenPlans(unittest.TestCase):
                 self.assertEqual(support.render(first), support.render(again))
 
     def test_hash_covers_every_field(self):
-        plan_obj = self.make("mbp-cpu-15g", {})
+        plan_obj = self.make("laptop-cpu-15g", {})
         tampered = json.loads(json.dumps(plan_obj))
         tampered["steps"][0]["state"]["status"] = "already_satisfied"
         self.assertNotEqual(self.plan_hash(tampered), plan_obj["plan_hash"])

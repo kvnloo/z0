@@ -107,7 +107,7 @@ class PlanLaws(unittest.TestCase):
                     self.assertLess(position[before], position[after])
 
     def test_O1_red_detects_a_reordered_plan(self):
-        plan_obj = self.p.plan(support.fixture("mbp-cpu-15g"), self.snap)
+        plan_obj = self.p.plan(support.fixture("laptop-cpu-15g"), self.snap)
         steps = plan_obj["steps"]
         swapped = dict(plan_obj, steps=[steps[-1], *steps[1:-1], steps[0]])
         position = {e["step"]["id"]: i for i, e in enumerate(swapped["steps"])}
@@ -143,7 +143,7 @@ class PlanLaws(unittest.TestCase):
                         self.assertIn(consent.get("bundle"), granted, "ungranted C1 executed")
 
     def test_C2_shadow_and_manual_asks_never_todo_even_with_yes(self):
-        plan_obj = self.p.plan(support.fixture("mbp-cpu-15g"), self.snap, grants=ALL_BUNDLES,
+        plan_obj = self.p.plan(support.fixture("laptop-cpu-15g"), self.snap, grants=ALL_BUNDLES,
                                with_ids=["flow", "evolution-lab"])
         for entry in plan_obj["steps"]:
             if entry["step"]["component"] in ("flow", "evolution-lab") or entry["step"]["kind"] == "ask":
@@ -170,7 +170,7 @@ class PlanLaws(unittest.TestCase):
             "id": "z0intelligence.plugin.grok", "kind": "harness_plugin", "harness": "grok",
             "consent": {"class": "C1", "bundle": "harness"}, "where": "release",
             "probe": {"exists": "$Z0_HOME/onboard/stamps/grok"}})
-        plan_obj = self.p.plan(support.fixture("groot-nvidia-32g"), snap, grants=ALL_BUNDLES)
+        plan_obj = self.p.plan(support.fixture("desktop-nvidia-32g"), snap, grants=ALL_BUNDLES)
         state = {e["step"]["id"]: e["state"] for e in plan_obj["steps"]}["z0intelligence.plugin.grok"]
         self.assertEqual(state, {"status": "refused", "reason": "forbidden_provider"})
 
@@ -181,7 +181,7 @@ class PlanLaws(unittest.TestCase):
                               and e["state"]["status"] == "todo"], name)
 
     def test_M2_shadow_is_an_ask(self):
-        plan_obj = self.p.plan(support.fixture("groot-nvidia-32g"), self.snap,
+        plan_obj = self.p.plan(support.fixture("desktop-nvidia-32g"), self.snap,
                                with_ids=["evolution-lab"], grants=ALL_BUNDLES)
         summary = plan_obj["components"]["evolution-lab"]
         self.assertEqual((summary["verdict"], summary["reason"]), ("ask", "shadow"))
@@ -201,7 +201,7 @@ class PlanLaws(unittest.TestCase):
 
     # --- D1 / D2 -------------------------------------------------------------------
     def test_D1_dash_rev_not_on_origin_is_unavailable_and_rest_continues(self):
-        host = support.fixture("mbp-cpu-15g")
+        host = support.fixture("laptop-cpu-15g")
         for fact in host["revs"].values():
             if fact["repo"] == "kvnloo/dash":
                 fact.update(on_origin="no", evidence="mirror")
@@ -216,7 +216,7 @@ class PlanLaws(unittest.TestCase):
 
     def test_D1_unchecked_dash_rev_is_unverified_not_unpushed(self):
         """No mirror and no checkout: say so, never claim the maintainer must push."""
-        for fixture in ("mbp-cpu-15g", "fresh-stranger"):
+        for fixture in ("laptop-cpu-15g", "fresh-stranger"):
             plan_obj = self.p.plan(support.fixture(fixture), self.snap)
             self.assertEqual(plan_obj["components"]["dash"]["reason"], "rev_unverified", fixture)
             entry = next(u for u in plan_obj["unavailable"] if u["id"] == "dash")
@@ -225,7 +225,7 @@ class PlanLaws(unittest.TestCase):
             self.assertNotIn("maintainer must push", text, fixture)
 
     def test_D2_legacy_dash_is_refused(self):
-        host = support.fixture("groot-nvidia-32g")
+        host = support.fixture("desktop-nvidia-32g")
         for fact in host["revs"].values():
             if fact["repo"] == "kvnloo/dash":
                 fact["flavour"] = "legacy"
@@ -235,7 +235,7 @@ class PlanLaws(unittest.TestCase):
 
     # --- S1 / S2 / S3 ----------------------------------------------------------------
     def test_S2_no_tailnet_means_no_bridge_unit(self):
-        host = support.fixture("groot-nvidia-32g")
+        host = support.fixture("desktop-nvidia-32g")
         host["tailscale"] = {"installed": True, "logged_in": False}
         host["services"]["units"] = []
         host["workspace"]["owned"] = []
@@ -251,7 +251,7 @@ class PlanLaws(unittest.TestCase):
         steps = snap["components"]["components"]["dash"]["onboard"]["steps"]
         unit = next(s for s in steps if s["id"] == "dash.bridge.unit")
         unit["service"]["bind"] = "0.0.0.0"
-        host = support.fixture("groot-nvidia-32g")
+        host = support.fixture("desktop-nvidia-32g")
         host["services"]["units"] = []
         host["workspace"]["owned"] = []
         state = {e["step"]["id"]: e["state"] for e in
@@ -268,7 +268,7 @@ class PlanLaws(unittest.TestCase):
         snap = support.snapshot()
         steps = snap["components"]["components"]["oh-my-pi"]["onboard"]["steps"]
         setup = next(s for s in steps if s["id"] == "oh-my-pi.setup")
-        host = support.fixture("groot-nvidia-32g")
+        host = support.fixture("desktop-nvidia-32g")
         state = {e["step"]["id"]: e["state"] for e in
                  self.p.plan(host, snap, grants=ALL_BUNDLES)["steps"]}
         self.assertEqual(state["oh-my-pi.setup"]["status"], "todo")
@@ -292,7 +292,7 @@ class PlanLaws(unittest.TestCase):
         steps = snap["components"]["components"]["z0intelligence"]["onboard"]["steps"]
         next(s for s in steps if s["id"] == "z0intelligence.shim")["target_where"] = "build"
         state = {e["step"]["id"]: e["state"] for e in
-                 self.p.plan(support.fixture("groot-nvidia-32g"), snap, grants=ALL_BUNDLES)["steps"]}
+                 self.p.plan(support.fixture("desktop-nvidia-32g"), snap, grants=ALL_BUNDLES)["steps"]}
         self.assertEqual(state["z0intelligence.shim"], {"status": "refused", "reason": "through_checkout"})
 
     # --- §3 / §6.1 blocked(dep) over depends_on --------------------------------------
@@ -302,9 +302,13 @@ class PlanLaws(unittest.TestCase):
         by_comp: dict = {}
         for entry in plan_obj["steps"]:
             by_comp.setdefault(entry["step"]["component"], []).append(entry["state"]["status"])
-        self.assertNotIn("todo", by_comp["tokenomics"])
+        # the dependency's own C0 source clone needs only git and may still run; every
+        # other tokenomics step must not (its toolchains are not granted)
+        own = [e["state"]["status"] for e in plan_obj["steps"]
+               if e["step"]["component"] == "tokenomics" and e["step"]["kind"] != "adopt_or_clone"]
+        self.assertNotIn("todo", own)
         self.assertNotIn("already_satisfied", by_comp["tokenomics"])
-        for dependent in ("kerdoios", "z0intelligence"):
+        for dependent in ("kerdoios",):  # z0intelligence only integrates with tokenomics (test extra), it does not depend on it
             with self.subTest(dependent=dependent):
                 self.assertNotIn("todo", by_comp[dependent])
         self.assertEqual(state["kerdoios.source"]["status"], "blocked")
@@ -332,24 +336,24 @@ class PlanLaws(unittest.TestCase):
                             self.assertNotIn(bin_dir, plan_obj["prepared_path"])
                             self.assertIn("$Z0_HOME/bin/links", plan_obj["prepared_path"])
         self.assertGreater(checked, 0, "no fixture exercises a shared never-harness dir")
-        groot = self.p.plan(support.fixture("groot-nvidia-32g"), self.snap)
-        self.assertEqual(groot["prepared_path"],
+        desktop = self.p.plan(support.fixture("desktop-nvidia-32g"), self.snap)
+        self.assertEqual(desktop["prepared_path"],
                          ["$Z0_HOME/bin/links", "~/.bun/bin", "/usr/bin", "/bin"])
-        links = {link["link"].rsplit("/", 1)[1]: link["target"] for link in groot["path_links"]}
+        links = {link["link"].rsplit("/", 1)[1]: link["target"] for link in desktop["path_links"]}
         self.assertEqual(links["claude"], "~/.local/bin/claude")
         self.assertEqual(links["uv"], "~/.local/bin/uv")
         self.assertNotIn("grok", links)
-        self.assertEqual(groot["steps"][0]["step"]["id"], "z0.path_links")
+        self.assertEqual(desktop["steps"][0]["step"]["id"], "z0.path_links")
 
     def test_P1_red_without_bin_dir_the_shared_dir_stays(self):
-        host = support.fixture("groot-nvidia-32g")
+        host = support.fixture("desktop-nvidia-32g")
         del host["harnesses"]["grok"]["bin_dir"]
         host["harnesses"]["grok"].pop("bin_dirs", None)
         self.assertIn("~/.local/bin", self.p.plan(host, self.snap)["prepared_path"])
 
     def test_P1_every_bin_dir_of_a_never_harness_is_dropped(self):
         """grok in two prepared-PATH dirs: both are swapped out, not only the first."""
-        host = support.fixture("groot-nvidia-32g")
+        host = support.fixture("desktop-nvidia-32g")
         host["harnesses"]["grok"]["bin_dirs"] = ["~/.local/bin", "~/.bun/bin"]
         path = self.p.plan(host, self.snap)["prepared_path"]
         self.assertNotIn("~/.local/bin", path)
@@ -406,7 +410,7 @@ class PlanLaws(unittest.TestCase):
         self.assertIn("  dash: unavailable (could not check the pinned revs on origin;", text)
 
     def test_S3_adopted_unit_same_sha_kept_other_sha_is_C2(self):
-        plan_obj = self.p.plan(support.fixture("groot-nvidia-32g"), self.snap, grants=ALL_BUNDLES)
+        plan_obj = self.p.plan(support.fixture("desktop-nvidia-32g"), self.snap, grants=ALL_BUNDLES)
         state = {e["step"]["id"]: e["state"] for e in plan_obj["steps"]}
         self.assertEqual(state["dash.bridge.unit"]["status"], "already_satisfied")
         self.assertEqual(state["z0intelligence.router.unit"],
@@ -415,7 +419,7 @@ class PlanLaws(unittest.TestCase):
     def test_S3_red_adopted_unit_with_its_unit_file_present_still_asks(self):
         """On a configured host the adopted unit's file exists (detect puts it in
         `owned`). That must not turn a redeploy at another SHA into already_satisfied."""
-        host = support.fixture("groot-nvidia-32g")
+        host = support.fixture("desktop-nvidia-32g")
         host["workspace"]["owned"].append("~/.config/systemd/user/z0intelligence.service")
         unit = next(u for u in host["services"]["units"] if u["name"] == "z0intelligence.service")
         pin = self.snap["components"]["components"]["z0intelligence"]["install"]["ref"]
@@ -438,7 +442,7 @@ class PlanLaws(unittest.TestCase):
     def test_C2_a_bundle_grant_never_confirms_a_C2_step(self):
         """§3: guided asks C2 per step. A TTY grant of every bundle is not a per-step
         confirmation: the adopted other-SHA unit, ask steps and shadow components stay asks."""
-        host = support.fixture("groot-nvidia-32g")
+        host = support.fixture("desktop-nvidia-32g")
         host["workspace"]["owned"].append("~/.config/systemd/user/z0intelligence.service")
         plan_obj = self.p.plan(host, self.snap, mode="guided", grants=TTY_ALL,
                                with_ids=["evolution-lab", "flow"])
@@ -463,7 +467,7 @@ class PlanLaws(unittest.TestCase):
     def test_I1_tracked_file_never_satisfies_a_generator(self):
         """web/data/study.json is tracked, so every adopted z0evals checkout has it.
         Only the untracked generator output may say build_site_data.py already ran."""
-        host = support.fixture("mbp-cpu-15g")
+        host = support.fixture("laptop-cpu-15g")
         summary = self.p.plan(host, self.snap)["components"]["z0evals"]
         self.assertTrue(summary["adopted"])
         tree = summary["tree"]
@@ -486,7 +490,7 @@ class PlanLaws(unittest.TestCase):
 
     # --- §2.6 repo-local setup ----------------------------------------------------------
     def test_repo_setup_registry_wins_and_conflicts_are_reported(self):
-        host = support.fixture("mbp-cpu-15g")
+        host = support.fixture("laptop-cpu-15g")
         plan_obj = self.p.plan(host, self.snap, repo_setups=support.SETUP_CONFLICT)
         by_id = {e["step"]["id"]: e for e in plan_obj["steps"]}
         registry = {s["id"]: s for s in self.snap["components"]["components"]["z0evals"]["onboard"]["steps"]}
@@ -515,7 +519,7 @@ class PlanLaws(unittest.TestCase):
     def test_repo_setup_read_at_another_sha_is_ignored(self):
         setups = json.loads(json.dumps(support.SETUP_CONFLICT))
         setups["z0evals"]["ref"] = "0" * 40
-        plan_obj = self.p.plan(support.fixture("mbp-cpu-15g"), self.snap, repo_setups=setups)
+        plan_obj = self.p.plan(support.fixture("laptop-cpu-15g"), self.snap, repo_setups=setups)
         self.assertNotIn("conflicts", plan_obj)
         self.assertNotIn("z0evals.t1.repo_setup", [e["step"]["id"] for e in plan_obj["steps"]])
         self.assertTrue(any("not at the pin" in w for w in plan_obj["warnings"]))
@@ -537,11 +541,11 @@ class PlanLaws(unittest.TestCase):
 
     # --- Z1 / Z2 -------------------------------------------------------------------
     def test_Z2_cpu_class_uses_the_cpu_torch_index(self):
-        plan_obj = self.p.plan(support.fixture("mbp-cpu-15g"), self.snap)
+        plan_obj = self.p.plan(support.fixture("laptop-cpu-15g"), self.snap)
         torch = next(e["step"] for e in plan_obj["steps"] if e["step"]["id"] == "z0intelligence.torch")
         self.assertEqual(torch["argv"][-2:], ["--index-url", "https://download.pytorch.org/whl/cpu"])
-        groot = self.p.plan(support.fixture("groot-nvidia-32g"), self.snap)
-        torch = next(e["step"] for e in groot["steps"] if e["step"]["id"] == "z0intelligence.torch")
+        desktop = self.p.plan(support.fixture("desktop-nvidia-32g"), self.snap)
+        torch = next(e["step"] for e in desktop["steps"] if e["step"]["id"] == "z0intelligence.torch")
         self.assertNotIn("--index-url", torch["argv"])
 
     def test_Z1_intel_mac_refuses_z0intelligence(self):
@@ -592,14 +596,14 @@ class PlanLaws(unittest.TestCase):
         self.assertNotEqual(state["toolchain.python3"]["status"], "already_satisfied")
 
     def test_T1_red_tool_off_the_prepared_path_is_not_satisfied(self):
-        host = support.fixture("mbp-cpu-15g")
+        host = support.fixture("laptop-cpu-15g")
         host["toolchains"]["bun"]["sh_resolves"] = False
         state = {e["step"]["id"]: e["state"] for e in self.p.plan(host, self.snap)["steps"]}
         self.assertNotEqual(state["toolchain.bun"]["status"], "already_satisfied")
 
     # --- profiles (§5.2) ----------------------------------------------------------
     def test_profile_defaults(self):
-        expect = {"groot-nvidia-32g": "personal", "mbp-cpu-15g": "personal",
+        expect = {"desktop-nvidia-32g": "personal", "laptop-cpu-15g": "personal",
                   "apple-m-32g": "personal", "tiny-4g-vps": "core", "offline": "personal"}
         for fixture, profile in expect.items():
             self.assertEqual(self.p.plan(support.fixture(fixture), self.snap)["profile"], profile)

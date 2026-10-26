@@ -191,7 +191,7 @@ components:
       bounded decision backends, specialist/routine runtime, and auditable receipts.
     required: false
     profiles: [personal, research, full]
-    depends_on: [tokenomics]
+    depends_on: []
     integrates_with: [oh-my-pi, kerdoios, evolution-lab, tokenomics, aodl]
     provides:
       - z0int.decision_receipt.v1

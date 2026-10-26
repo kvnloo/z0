@@ -1,18 +1,11 @@
 {
   "asks": [
     {
-      "command": "./z0 onboard --accept models   (or --yes for every bundle)",
-      "consent": "C1",
-      "id": "z0intelligence.torch",
-      "impact": 14,
-      "reason": "installs torch==2.10.0 --index-url https://download.pytorch.org/whl/cpu into the z0intelligence venv (needs consent: models bundle)"
-    },
-    {
-      "command": "./z0 onboard --accept harness   (or --yes for every bundle)",
-      "consent": "C1",
-      "id": "oh-my-pi.setup",
+      "command": "manual: Android dev-client APK build is C2 (scripts/build-native-android.sh)",
+      "consent": "C2",
+      "id": "dash.apk",
       "impact": 1,
-      "reason": "omp integration for oh-my-pi (the harness config is backed up first) (needs consent: harness bundle)"
+      "reason": "manual step, never automatic (C2)"
     },
     {
       "command": "manual: CLAUDE.md pointer to AGENTS.md (the repo discourages duplicate instruction files)",
@@ -36,33 +29,46 @@
       "reason": "manual step, never automatic (C2)"
     },
     {
+      "command": "manual: z0int onboard (delegate contract z0int-onboard-v1 pending WP-I1)",
+      "consent": "C2",
+      "id": "z0intelligence.delegate",
+      "impact": 1,
+      "reason": "manual step, never automatic (C2)"
+    },
+    {
       "command": "manual: Hermes: choose the profile and edit its config.yaml yourself (always an ask)",
       "consent": "C2",
       "id": "z0intelligence.plugin.hermes",
       "impact": 1,
       "reason": "manual step, never automatic (C2)"
+    },
+    {
+      "command": "manual: keep the running unit, or redeploy it yourself at the pinned SHA",
+      "consent": "C2",
+      "id": "z0intelligence.router.unit",
+      "impact": 1,
+      "reason": "adopted z0intelligence.service runs 0563ed7a5207; redeploying it is C2 (C2)"
     }
   ],
   "components": {
     "dash": {
       "adopted": false,
-      "reason": "rev_unverified",
       "tree": "$Z0_HOME/repos/dash",
-      "verdict": "unavailable"
+      "verdict": "allow"
     },
     "oh-my-pi": {
-      "adopted": true,
-      "tree": "~/workspace/oh-my-pi",
+      "adopted": false,
+      "tree": "$Z0_HOME/repos/oh-my-pi",
       "verdict": "allow"
     },
     "tokenomics": {
-      "adopted": true,
-      "tree": "~/workspace/tokenomics",
+      "adopted": false,
+      "tree": "$Z0_HOME/repos/tokenomics",
       "verdict": "allow"
     },
     "z0evals": {
       "adopted": true,
-      "tree": "~/workspace/z0evals",
+      "tree": "~/zer0/oss/z0evals",
       "verdict": "allow"
     },
     "z0intelligence": {
@@ -72,12 +78,17 @@
     }
   },
   "grants": {
-    "bundles": [],
-    "source": "none"
+    "bundles": [
+      "harness",
+      "models",
+      "services",
+      "toolchains"
+    ],
+    "source": "flag"
   },
-  "host_id": "0a1b2c3d4e5f6071",
+  "host_id": "1f2e3d4c5b6a7980",
   "llm": "local",
-  "mode": "guided",
+  "mode": "auto",
   "path_links": [
     {
       "link": "$Z0_HOME/bin/links/claude",
@@ -86,14 +97,6 @@
     {
       "link": "$Z0_HOME/bin/links/codex",
       "target": "~/.local/bin/codex"
-    },
-    {
-      "link": "$Z0_HOME/bin/links/codexbar",
-      "target": "~/.local/bin/codexbar"
-    },
-    {
-      "link": "$Z0_HOME/bin/links/fx",
-      "target": "~/.local/bin/fx"
     },
     {
       "link": "$Z0_HOME/bin/links/hermes",
@@ -105,17 +108,16 @@
     }
   ],
   "pin_policy": "pinned",
-  "plan_hash": "bd1911b2fad95731fd86aa2e433823d83f30549ffdfa19050723574ee9a9fffb",
+  "plan_hash": "3ee7a491d4c8859b024511ec5e21796c7593b8ef69adcc3b7772250eeff4bdc3",
   "prepared_path": [
     "$Z0_HOME/bin/links",
     "~/.bun/bin",
-    "~/.cargo/bin",
     "/usr/bin",
     "/bin"
   ],
   "profile": "personal",
   "registry": {
-    "registry/components.yaml": "fabc37e4ea615c810218080aaccfe7a38e389d5e97048a8fe4feabd0c47227fd",
+    "registry/components.yaml": "9427475c26e47e94bac37aa5bde23ea7b27455633d7b1cd1273b097c62936572",
     "registry/harnesses.yaml": "1c2b9ba37ca974e4aa1ed1f6990561ea303fc7e1f73c0fb4c6cc4802d5b4a7b8",
     "registry/onboarding.yaml": "b0c3e2b4c8e7a17bde8a5cb2378c90f6009b4464879a76406f6ae3cdc7e9b9ce",
     "registry/profiles.yaml": "8ef0b2b147bf7db252328ee9cfc981a81867bcf6533362621138bee1abd2e6eb",
@@ -142,14 +144,6 @@
           {
             "kind": "symlink",
             "path": "$Z0_HOME/bin/links/codex"
-          },
-          {
-            "kind": "symlink",
-            "path": "$Z0_HOME/bin/links/codexbar"
-          },
-          {
-            "kind": "symlink",
-            "path": "$Z0_HOME/bin/links/fx"
           },
           {
             "kind": "symlink",
@@ -181,7 +175,7 @@
           "class": "C0"
         },
         "env": {
-          "PATH": "$Z0_HOME/venv/bin:$Z0_HOME/bin/links:~/.bun/bin:~/.cargo/bin:/usr/bin:/bin"
+          "PATH": "$Z0_HOME/venv/bin:$Z0_HOME/bin/links:~/.bun/bin:/usr/bin:/bin"
         },
         "id": "z0.registry_check",
         "kind": "check"
@@ -204,7 +198,7 @@
           "class": "C0"
         },
         "env": {
-          "PATH": "$Z0_HOME/venv/bin:$Z0_HOME/bin/links:~/.bun/bin:~/.cargo/bin:/usr/bin:/bin"
+          "PATH": "$Z0_HOME/venv/bin:$Z0_HOME/bin/links:~/.bun/bin:/usr/bin:/bin"
         },
         "id": "z0.plan_deterministic",
         "kind": "check"
@@ -227,7 +221,7 @@
           "class": "C0"
         },
         "env": {
-          "PATH": "$Z0_HOME/venv/bin:$Z0_HOME/bin/links:~/.bun/bin:~/.cargo/bin:/usr/bin:/bin"
+          "PATH": "$Z0_HOME/venv/bin:$Z0_HOME/bin/links:~/.bun/bin:/usr/bin:/bin"
         },
         "id": "z0.init_dry_run",
         "kind": "check"
@@ -235,7 +229,7 @@
     },
     {
       "state": {
-        "status": "already_satisfied"
+        "status": "todo"
       },
       "step": {
         "component": "z0",
@@ -426,7 +420,7 @@
           "class": "C0"
         },
         "creates": [
-          "~/workspace/tokenomics/node_modules"
+          "$Z0_HOME/repos/tokenomics/node_modules"
         ],
         "id": "tokenomics.install.npm",
         "kind": "run",
@@ -483,7 +477,8 @@
     },
     {
       "state": {
-        "status": "todo"
+        "reason": "condition:mode eq guided",
+        "status": "unavailable"
       },
       "step": {
         "argv": [
@@ -589,16 +584,13 @@
     },
     {
       "state": {
-        "reason": "c1_ungranted",
-        "status": "ask"
+        "status": "todo"
       },
       "step": {
         "argv": [
           "pip",
           "install",
-          "torch==2.10.0",
-          "--index-url",
-          "https://download.pytorch.org/whl/cpu"
+          "torch==2.10.0"
         ],
         "component": "z0intelligence",
         "consent": {
@@ -619,9 +611,7 @@
     },
     {
       "state": {
-        "blocked_by": "z0intelligence.torch",
-        "reason": "dependency",
-        "status": "blocked"
+        "status": "todo"
       },
       "step": {
         "argv": [
@@ -654,9 +644,7 @@
     },
     {
       "state": {
-        "blocked_by": "z0intelligence.install",
-        "reason": "dependency",
-        "status": "blocked"
+        "status": "todo"
       },
       "step": {
         "component": "z0intelligence",
@@ -681,9 +669,7 @@
     },
     {
       "state": {
-        "blocked_by": "z0intelligence.shim",
-        "reason": "dependency",
-        "status": "blocked"
+        "status": "todo"
       },
       "step": {
         "component": "z0intelligence",
@@ -708,9 +694,7 @@
     },
     {
       "state": {
-        "blocked_by": "z0intelligence.shim",
-        "reason": "dependency",
-        "status": "blocked"
+        "status": "todo"
       },
       "step": {
         "argv": [
@@ -732,9 +716,7 @@
     },
     {
       "state": {
-        "blocked_by": "z0intelligence.checks.import",
-        "reason": "dependency",
-        "status": "blocked"
+        "status": "todo"
       },
       "step": {
         "argv": [
@@ -756,9 +738,7 @@
     },
     {
       "state": {
-        "blocked_by": "z0intelligence.install",
-        "reason": "dependency",
-        "status": "blocked"
+        "status": "todo"
       },
       "step": {
         "argv": [
@@ -782,9 +762,7 @@
     },
     {
       "state": {
-        "blocked_by": "z0intelligence.checks.import",
-        "reason": "dependency",
-        "status": "blocked"
+        "status": "todo"
       },
       "step": {
         "argv": [
@@ -822,9 +800,7 @@
     },
     {
       "state": {
-        "blocked_by": "z0intelligence.checks.import",
-        "reason": "dependency",
-        "status": "blocked"
+        "status": "todo"
       },
       "step": {
         "argv": [
@@ -862,9 +838,7 @@
     },
     {
       "state": {
-        "blocked_by": "z0intelligence.checks.import",
-        "reason": "dependency",
-        "status": "blocked"
+        "status": "todo"
       },
       "step": {
         "argv": [
@@ -925,9 +899,7 @@
     },
     {
       "state": {
-        "blocked_by": "z0intelligence.shim",
-        "reason": "dependency",
-        "status": "blocked"
+        "status": "todo"
       },
       "step": {
         "component": "z0intelligence",
@@ -959,15 +931,13 @@
     },
     {
       "state": {
-        "blocked_by": "z0intelligence.shim",
-        "reason": "dependency",
-        "status": "blocked"
+        "reason": "c2_never_auto",
+        "status": "ask"
       },
       "step": {
         "component": "z0intelligence",
         "consent": {
-          "bundle": "services",
-          "class": "C1"
+          "class": "C2"
         },
         "id": "z0intelligence.router.unit",
         "kind": "service_unit",
@@ -1008,9 +978,8 @@
     },
     {
       "state": {
-        "blocked_by": "z0intelligence.shim",
-        "reason": "dependency",
-        "status": "blocked"
+        "reason": "manual",
+        "status": "ask"
       },
       "step": {
         "argv": [
@@ -1048,7 +1017,7 @@
     },
     {
       "state": {
-        "status": "already_satisfied"
+        "status": "todo"
       },
       "step": {
         "argv": [
@@ -1060,7 +1029,7 @@
           "class": "C0"
         },
         "creates": [
-          "~/workspace/oh-my-pi/node_modules"
+          "$Z0_HOME/repos/oh-my-pi/node_modules"
         ],
         "id": "oh-my-pi.install",
         "kind": "run",
@@ -1094,7 +1063,7 @@
           "oh-my-pi.install"
         ],
         "probe": {
-          "exists": "~/workspace/oh-my-pi/packages/coding-agent/dist"
+          "exists": "$Z0_HOME/repos/oh-my-pi/packages/coding-agent/dist"
         },
         "timeout_s": 1800,
         "where": "build"
@@ -1226,8 +1195,7 @@
     },
     {
       "state": {
-        "reason": "c1_ungranted",
-        "status": "ask"
+        "status": "todo"
       },
       "step": {
         "argv": [
@@ -1263,9 +1231,7 @@
     },
     {
       "state": {
-        "blocked_by": "z0intelligence.checks.import",
-        "reason": "dependency",
-        "status": "blocked"
+        "status": "todo"
       },
       "step": {
         "argv": [
@@ -1290,8 +1256,7 @@
     },
     {
       "state": {
-        "reason": "rev_unverified",
-        "status": "unavailable"
+        "status": "todo"
       },
       "step": {
         "component": "dash",
@@ -1312,8 +1277,7 @@
     },
     {
       "state": {
-        "reason": "rev_unverified",
-        "status": "unavailable"
+        "status": "todo"
       },
       "step": {
         "component": "dash",
@@ -1334,8 +1298,7 @@
     },
     {
       "state": {
-        "reason": "rev_unverified",
-        "status": "unavailable"
+        "status": "todo"
       },
       "step": {
         "argv": [
@@ -1364,8 +1327,7 @@
     },
     {
       "state": {
-        "reason": "rev_unverified",
-        "status": "unavailable"
+        "status": "todo"
       },
       "step": {
         "argv": [
@@ -1392,8 +1354,7 @@
     },
     {
       "state": {
-        "reason": "rev_unverified",
-        "status": "unavailable"
+        "status": "todo"
       },
       "step": {
         "argv": [
@@ -1423,8 +1384,7 @@
     },
     {
       "state": {
-        "reason": "rev_unverified",
-        "status": "unavailable"
+        "status": "todo"
       },
       "step": {
         "argv": [
@@ -1448,8 +1408,7 @@
     },
     {
       "state": {
-        "reason": "rev_unverified",
-        "status": "unavailable"
+        "status": "todo"
       },
       "step": {
         "argv": [
@@ -1473,8 +1432,7 @@
     },
     {
       "state": {
-        "reason": "rev_unverified",
-        "status": "unavailable"
+        "status": "todo"
       },
       "step": {
         "argv": [
@@ -1505,8 +1463,7 @@
     },
     {
       "state": {
-        "reason": "rev_unverified",
-        "status": "unavailable"
+        "status": "todo"
       },
       "step": {
         "argv": [
@@ -1530,8 +1487,7 @@
     },
     {
       "state": {
-        "reason": "rev_unverified",
-        "status": "unavailable"
+        "status": "todo"
       },
       "step": {
         "argv": [
@@ -1560,8 +1516,7 @@
     },
     {
       "state": {
-        "reason": "rev_unverified",
-        "status": "unavailable"
+        "status": "already_satisfied"
       },
       "step": {
         "component": "dash",
@@ -1585,8 +1540,7 @@
     },
     {
       "state": {
-        "reason": "rev_unverified",
-        "status": "unavailable"
+        "status": "todo"
       },
       "step": {
         "argv": [
@@ -1616,8 +1570,7 @@
     },
     {
       "state": {
-        "reason": "rev_unverified",
-        "status": "unavailable"
+        "status": "todo"
       },
       "step": {
         "argv": [
@@ -1653,7 +1606,7 @@
     },
     {
       "state": {
-        "reason": "rev_unverified",
+        "reason": "condition:tailscale.ipv4 missing",
         "status": "unavailable"
       },
       "step": {
@@ -1699,8 +1652,7 @@
     },
     {
       "state": {
-        "reason": "rev_unverified",
-        "status": "unavailable"
+        "status": "already_satisfied"
       },
       "step": {
         "component": "dash",
@@ -1731,8 +1683,7 @@
     },
     {
       "state": {
-        "reason": "rev_unverified",
-        "status": "unavailable"
+        "status": "already_satisfied"
       },
       "step": {
         "component": "dash",
@@ -1762,8 +1713,7 @@
     },
     {
       "state": {
-        "reason": "rev_unverified",
-        "status": "unavailable"
+        "status": "already_satisfied"
       },
       "step": {
         "component": "dash",
@@ -1815,8 +1765,7 @@
     },
     {
       "state": {
-        "reason": "rev_unverified",
-        "status": "unavailable"
+        "status": "already_satisfied"
       },
       "step": {
         "component": "dash",
@@ -1840,8 +1789,7 @@
     },
     {
       "state": {
-        "reason": "rev_unverified",
-        "status": "unavailable"
+        "status": "todo"
       },
       "step": {
         "component": "dash",
@@ -1865,8 +1813,8 @@
     },
     {
       "state": {
-        "reason": "rev_unverified",
-        "status": "unavailable"
+        "reason": "manual",
+        "status": "ask"
       },
       "step": {
         "argv": [
@@ -2014,7 +1962,7 @@
           "class": "C0"
         },
         "creates": [
-          "~/workspace/z0evals/.venv"
+          "~/zer0/oss/z0evals/.venv"
         ],
         "id": "z0evals.venv",
         "kind": "venv",
@@ -2023,7 +1971,7 @@
           "z0evals.source"
         ],
         "probe": {
-          "exists": "~/workspace/z0evals/.venv/bin/python"
+          "exists": "~/zer0/oss/z0evals/.venv/bin/python"
         },
         "where": "venv"
       }
@@ -2051,7 +1999,7 @@
         ],
         "network": true,
         "probe": {
-          "exists": "~/workspace/z0evals/.venv/.z0/requirements-29a28336e526edfb4c3913c30df6eff12b28b2d6"
+          "exists": "~/zer0/oss/z0evals/.venv/.z0/requirements-29a28336e526edfb4c3913c30df6eff12b28b2d6"
         },
         "where": "venv"
       }
@@ -2189,7 +2137,7 @@
     },
     {
       "state": {
-        "status": "already_satisfied"
+        "status": "todo"
       },
       "step": {
         "argv": [
@@ -2201,7 +2149,7 @@
           "class": "C0"
         },
         "creates": [
-          "~/workspace/z0evals/site/index.html"
+          "~/zer0/oss/z0evals/site/index.html"
         ],
         "id": "z0evals.t1.build_site",
         "kind": "run",
@@ -2225,7 +2173,7 @@
           "class": "C0"
         },
         "creates": [
-          "~/workspace/z0evals/web/data/optchat-long-horizon-v0.json"
+          "~/zer0/oss/z0evals/web/data/optchat-long-horizon-v0.json"
         ],
         "id": "z0evals.t1.site_data",
         "kind": "run",
@@ -2249,7 +2197,7 @@
           "class": "C0"
         },
         "creates": [
-          "~/workspace/z0evals/web/data/posts"
+          "~/zer0/oss/z0evals/web/data/posts"
         ],
         "id": "z0evals.t1.posts",
         "kind": "run",
@@ -2333,7 +2281,7 @@
           "class": "C0"
         },
         "creates": [
-          "~/workspace/z0evals/web/node_modules"
+          "~/zer0/oss/z0evals/web/node_modules"
         ],
         "id": "z0evals.web.deps",
         "kind": "run",
@@ -2386,7 +2334,7 @@
           "class": "C0"
         },
         "creates": [
-          "~/workspace/z0evals/web/out/index.html"
+          "~/zer0/oss/z0evals/web/out/index.html"
         ],
         "env": {
           "Z0_BASE_PATH": "/z0evals"
@@ -2516,14 +2464,7 @@
     "dash",
     "z0evals"
   ],
-  "unavailable": [
-    {
-      "detail": "could not check the pinned revs on origin; re-run `./z0 onboard plan` with network so z0 can fetch them into its mirror",
-      "id": "dash",
-      "reason": "rev_unverified",
-      "status": "unavailable"
-    }
-  ],
+  "unavailable": [],
   "version": 1,
   "warnings": [
     "prepared PATH: ~/.local/bin also holds a policy-excluded harness; $Z0_HOME/bin/links replaces it (P1)",

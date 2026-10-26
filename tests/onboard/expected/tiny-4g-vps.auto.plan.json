@@ -4,14 +4,14 @@
       "command": "./z0 onboard --accept toolchains   (or --yes for every bundle)",
       "consent": "C1",
       "id": "toolchain.bun",
-      "impact": 30,
+      "impact": 29,
       "reason": "user-local download of bun 1.4.3 into $Z0_HOME/toolchains (needs consent: toolchains bundle)"
     },
     {
       "command": "./z0 onboard --accept toolchains   (or --yes for every bundle)",
       "consent": "C1",
       "id": "toolchain.node",
-      "impact": 12,
+      "impact": 11,
       "reason": "user-local download of node 22.23.4 into $Z0_HOME/toolchains (needs consent: toolchains bundle)"
     },
     {
@@ -72,14 +72,14 @@
   "llm": "local",
   "mode": "auto",
   "pin_policy": "pinned",
-  "plan_hash": "35edca76f49b299f28858112de1010c49012e95341af9ce2e12e3b3742778a71",
+  "plan_hash": "59c9a182bc33ab202c692785694fb56e1ce8cc8f15bcf7f68918a6920a177720",
   "prepared_path": [
     "/usr/bin",
     "/bin"
   ],
   "profile": "core",
   "registry": {
-    "registry/components.yaml": "fabc37e4ea615c810218080aaccfe7a38e389d5e97048a8fe4feabd0c47227fd",
+    "registry/components.yaml": "9427475c26e47e94bac37aa5bde23ea7b27455633d7b1cd1273b097c62936572",
     "registry/harnesses.yaml": "1c2b9ba37ca974e4aa1ed1f6990561ea303fc7e1f73c0fb4c6cc4802d5b4a7b8",
     "registry/onboarding.yaml": "b0c3e2b4c8e7a17bde8a5cb2378c90f6009b4464879a76406f6ae3cdc7e9b9ce",
     "registry/profiles.yaml": "8ef0b2b147bf7db252328ee9cfc981a81867bcf6533362621138bee1abd2e6eb",
@@ -260,9 +260,7 @@
     },
     {
       "state": {
-        "blocked_by": "toolchain.node",
-        "reason": "dependency",
-        "status": "blocked"
+        "status": "todo"
       },
       "step": {
         "component": "tokenomics",
@@ -280,7 +278,7 @@
     },
     {
       "state": {
-        "blocked_by": "tokenomics.source",
+        "blocked_by": "toolchain.node",
         "reason": "dependency",
         "status": "blocked"
       },
@@ -338,7 +336,7 @@
     },
     {
       "state": {
-        "blocked_by": "tokenomics.source",
+        "blocked_by": "toolchain.node",
         "reason": "dependency",
         "status": "blocked"
       },
@@ -953,9 +951,7 @@
     },
     {
       "state": {
-        "blocked_by": "toolchain.bun",
-        "reason": "dependency",
-        "status": "blocked"
+        "status": "todo"
       },
       "step": {
         "component": "oh-my-pi",
@@ -973,7 +969,7 @@
     },
     {
       "state": {
-        "blocked_by": "oh-my-pi.source",
+        "blocked_by": "toolchain.bun",
         "reason": "dependency",
         "status": "blocked"
       },

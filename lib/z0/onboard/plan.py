@@ -528,7 +528,12 @@ def plan(host: dict, snap: dict, *, mode: str = "auto", profile: Optional[str] =
         cid = owner[step["id"]]
         needs = [n for n in step.get("needs") or [] if n in ids]
         if cid is not None:
-            needs += tool_users.get(cid, [])
+            # fetching a component's source needs only git: an ungranted runtime toolchain
+            # (python window, bun, node) must not stop the C0 clone (degrade, don't fail)
+            tools = tool_users.get(cid, [])
+            if step["kind"] == "adopt_or_clone":
+                tools = [t for t in tools if t == "toolchain.git"]
+            needs += tools
             first_of.setdefault(cid, step["id"])
         edges[step["id"]] = needs
     # depends_on: a dependency's steps all precede the dependent's (ordering only).
