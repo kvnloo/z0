@@ -1,0 +1,52 @@
+name: onboard
+
+# Design §10 layer 1 and §11: pure kernel tests on every PR, and the Bend laws job
+# (PROOF --verdict, exhaustive Bend/Python twin parity, mutants). No host effects:
+# no harness configs, no services, nothing outside the runner's temp dirs.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      # stdlib unittest only; Bend-dependent cases skip here and run in `laws`.
+      - run: python -m unittest discover -s tests -t . -v
+
+  laws:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      Z0_REQUIRE_BEND: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Cache pinned Bend + Lean archives
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/bend-toolchain/downloads
+          key: bend-2.0.34-lean-4.34.0-${{ hashFiles('bend/onboard/toolchain.json') }}
+      - name: Install pinned verifier (sha256-checked)
+        run: bash bend/onboard/bootstrap.sh "$RUNNER_TEMP/bend-toolchain" >> "$GITHUB_ENV"
+      - name: Laws (bend PROOF.bend --verdict)
+        working-directory: bend/onboard
+        run: |
+          PATH="/usr/bin:$PATH:$LEAN_BIN" "$BEND" PROOF.bend --verdict | tee "$RUNNER_TEMP/verdict.txt"
+          grep -qx "ALL PROOFS CHECK" "$RUNNER_TEMP/verdict.txt"
+      - name: Twin parity (exhaustive) and mutants
+        run: python -m unittest tests.onboard.test_kernel_twin tests.onboard.test_kernel_mutation -v

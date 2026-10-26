@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kvnloo/z0/schemas/onboard-plan.schema.json",
+  "title": "Zer0OnboardPlan",
+  "description": "plan.json: the pure output of plan(host, registry, answers, mode, grants) (design §6.1). APPLY runs only a plan whose canonical-JSON sha256 equals plan_hash. Every step's state comes from lib/z0/onboard/kernel.py.",
+  "type": "object",
+  "required": ["version", "plan_hash", "host_id", "mode", "grants", "registry", "steps"],
+  "properties": {
+    "version": { "const": 1 },
+    "plan_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "host_id": { "type": "string", "pattern": "^[0-9a-f]{16}$" },
+    "mode": { "enum": ["auto", "guided"] },
+    "profile": { "type": "string" },
+    "pin_policy": { "enum": ["pinned", "tip"] },
+    "llm": { "enum": ["none", "local", "auto"] },
+    "grants": {
+      "type": "object",
+      "required": ["bundles", "source"],
+      "properties": {
+        "bundles": {
+          "type": "array",
+          "items": { "enum": ["toolchains", "harness", "services", "models"] },
+          "uniqueItems": true
+        },
+        "source": { "enum": ["tty", "flag", "none"], "description": "An LLM is never a grant source (L-LLM)." }
+      },
+      "additionalProperties": false
+    },
+    "registry": {
+      "type": "object",
+      "description": "sha256 of each registry source file the plan read.",
+      "propertyNames": { "pattern": "^registry/[a-z_]+\\.yaml$" },
+      "additionalProperties": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+    },
+    "answers_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "targets": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "steps": {
+      "type": "array",
+      "description": "Topological order over depends_on ∪ needs ∪ implicit edges (O1).",
+      "items": {
+        "type": "object",
+        "required": ["step", "state"],
+        "properties": {
+          "step": { "$ref": "onboard-step.schema.json" },
+          "state": { "$ref": "#/$defs/state" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "asks": { "type": "array", "items": { "$ref": "#/$defs/ask" } },
+    "warnings": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "state": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": { "enum": ["todo", "already_satisfied", "ask", "unavailable", "refused", "blocked"] },
+        "reason": {
+          "description": "kernel.Reason as snake_case, or a dependency id for `blocked`.",
+          "type": "string"
+        },
+        "blocked_by": { "type": "string" }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "enum": ["ask", "unavailable", "refused", "blocked"] } } },
+          "then": { "required": ["reason"] }
+        }
+      ]
+    },
+    "ask": {
+      "type": "object",
+      "required": ["id", "reason", "command"],
+      "properties": {
+        "id": { "type": "string" },
+        "reason": { "type": "string" },
+        "command": { "type": "string", "description": "The exact command that finishes it, e.g. `./z0 onboard accept <id>`." },
+        "consent": { "enum": ["C1", "C2"] },
+        "impact": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    }
+  }
+}

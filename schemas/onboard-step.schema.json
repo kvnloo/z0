@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kvnloo/z0/schemas/onboard-step.schema.json",
+  "title": "Zer0OnboardStep",
+  "description": "One closed-kind onboarding step (design §2.5). `when` is structured data matched by a small matcher, never evaluated. `where` and the service bind class are closed sets so registry-check can enforce S1 (never through a checkout) and S2 (closed bind) statically.",
+  "type": "object",
+  "required": ["id", "component", "kind", "consent"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_.-]*$" },
+    "component": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]*$" },
+    "kind": { "$ref": "#/$defs/kind" },
+    "when": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["fact", "op"],
+        "properties": {
+          "fact": { "type": "string", "pattern": "^[a-z0-9_]+(\\.[a-z0-9_]+)*$" },
+          "op": { "enum": ["eq", "ne", "lt", "le", "gt", "ge", "in", "not_in", "exists", "missing"] },
+          "value": {}
+        },
+        "additionalProperties": false
+      }
+    },
+    "needs": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "consent": { "$ref": "#/$defs/consent" },
+    "network": { "type": "boolean", "default": false },
+    "where": { "$ref": "#/$defs/where" },
+    "argv": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "env": {
+      "type": "object",
+      "description": "Allowlisted environment for this step. Names only for secrets: values never appear in a step.",
+      "additionalProperties": { "type": "string" }
+    },
+    "timeout_s": { "type": "integer", "minimum": 1, "maximum": 7200 },
+    "creates": { "type": "array", "items": { "$ref": "#/$defs/path" }, "minItems": 1 },
+    "probe": { "$ref": "#/$defs/check" },
+    "effects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path"],
+        "properties": {
+          "path": { "$ref": "#/$defs/path" },
+          "kind": { "enum": ["file", "dir", "symlink", "unit", "plugin", "venv", "toolchain"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "undo": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": { "enum": ["remove_owned", "restore_symlink", "restore_backup", "uninstall", "delegate", "declared", "irreversible", "none"] },
+        "argv": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "verify": { "$ref": "#/$defs/check" },
+    "service": { "$ref": "#/$defs/service" },
+    "harness": { "type": "string", "description": "Harness id; registry-check refuses a `configure: never` harness (grok, cursor-agent)." },
+    "toolchain": {
+      "type": "object",
+      "required": ["tool", "version"],
+      "properties": {
+        "tool": { "type": "string" },
+        "version": { "type": "string" },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false
+    },
+    "remediations": { "type": "array", "items": { "type": "string" } },
+    "legacy_projection": { "type": "boolean" }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": { "properties": { "kind": { "const": "run" } } },
+      "then": {
+        "required": ["argv", "where"],
+        "anyOf": [{ "required": ["creates"] }, { "required": ["probe"] }]
+      }
+    },
+    {
+      "if": { "properties": { "kind": { "const": "service_unit" } } },
+      "then": { "required": ["service", "where"] }
+    },
+    {
+      "if": { "properties": { "kind": { "const": "ensure_toolchain" } } },
+      "then": { "required": ["toolchain"] }
+    },
+    {
+      "if": { "properties": { "kind": { "const": "harness_plugin" } } },
+      "then": { "required": ["harness"] }
+    },
+    {
+      "if": { "properties": { "kind": { "enum": ["check", "ask"] } } },
+      "then": { "properties": { "consent": { "properties": { "class": { "const": "C0" } } } } }
+    },
+    {
+      "if": { "properties": { "consent": { "properties": { "class": { "const": "C1" } } } } },
+      "then": { "properties": { "consent": { "required": ["bundle"] } } }
+    }
+  ],
+  "$defs": {
+    "kind": {
+      "enum": ["ensure_toolchain", "adopt_or_clone", "build_tree", "stage_release", "swap_current", "venv", "pip_install", "run", "write_file", "service_unit", "harness_plugin", "delegate", "check", "ask"]
+    },
+    "where": {
+      "description": "Closed set. There is no `checkout`: live code never runs from a mutable checkout (S1).",
+      "enum": ["mirror", "build", "release", "venv", "home"]
+    },
+    "bind": {
+      "description": "Closed set (S2). A wildcard or LAN address cannot be expressed.",
+      "enum": ["loopback", "tailnet_ipv4"]
+    },
+    "consent": {
+      "type": "object",
+      "required": ["class"],
+      "properties": {
+        "class": { "enum": ["C0", "C1", "C2"] },
+        "bundle": { "enum": ["toolchains", "harness", "services", "models"] }
+      },
+      "additionalProperties": false
+    },
+    "path": {
+      "type": "string",
+      "description": "Home-relative (`~/...`) or absolute outside /home and /Users: $HOME is written as ~ (§4).",
+      "pattern": "^(~(/|$)|\\$Z0_HOME(/|$)|/(?!home/|Users/))"
+    },
+    "check": {
+      "type": "object",
+      "properties": {
+        "argv": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "where": { "$ref": "#/$defs/where" },
+        "exists": { "$ref": "#/$defs/path" },
+        "http": {
+          "type": "object",
+          "required": ["port", "expect_status"],
+          "properties": {
+            "bind": { "$ref": "#/$defs/bind" },
+            "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+            "path": { "type": "string" },
+            "expect_status": { "type": "integer" }
+          },
+          "additionalProperties": false
+        },
+        "expect_exit": { "type": "integer", "default": 0 }
+      },
+      "minProperties": 1,
+      "additionalProperties": false
+    },
+    "service": {
+      "type": "object",
+      "required": ["template", "bind", "port"],
+      "properties": {
+        "template": { "type": "string" },
+        "unit": { "type": "string" },
+        "bind": { "$ref": "#/$defs/bind" },
+        "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+        "health": { "$ref": "#/$defs/check" },
+        "start_order": { "type": "integer", "minimum": 0 },
+        "limits": {
+          "type": "object",
+          "properties": {
+            "memory_max": { "type": "string", "pattern": "^[0-9]+[KMG]$" },
+            "restart_sec": { "type": "integer", "minimum": 0 },
+            "timeout_start_sec": { "type": "integer", "minimum": 0 }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
