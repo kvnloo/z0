@@ -1,0 +1,32 @@
+{
+  "source": "kvnloo/z0intelligence tests/fixtures/contrib_profiles/systems-rust.json at the candidate sha",
+  "profile_facts": {
+    "toolchains": [
+      "python",
+      "cargo",
+      "go"
+    ],
+    "harnesses": [
+      "codex"
+    ],
+    "gpu": {
+      "class": "none",
+      "vram_gib": 0
+    }
+  },
+  "oracle": {
+    "allowed_pick_skills_any": [
+      "rust",
+      "systems",
+      "latency"
+    ],
+    "forbidden": {
+      "newcomer_false": true,
+      "gpu_vram_gib_gt": 0,
+      "frontend_only": true
+    },
+    "reasons": [
+      "skill_match:systems"
+    ]
+  }
+}

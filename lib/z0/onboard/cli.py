@@ -376,8 +376,28 @@ def onboard(args, host, snap, profile, plan_obj) -> int:
     except ApplyError as exc:
         print(f"z0 onboard: {exc}", file=sys.stderr)
         return exc.code
+    _handoff(run, receipt, snap, result.host)
     print(receipt_summary(run, receipt))
     return code
+
+
+def _handoff(run: Path, receipt: dict, snap: dict, host: Optional[dict]) -> None:
+    """CW7: the state and profile files `z0int contribute` reads (handoff.py)."""
+    from . import handoff
+    from .redact import from_env
+
+    home = os.environ.get("HOME") or str(Path.home())
+    redactor = from_env(snap, dict(os.environ), home)
+    try:
+        handoff.write_state(str(_z0_home()), run, receipt, str(_repo_root()), redactor)
+    except (OSError, ValueError) as exc:
+        print(f"z0 onboard: onboard/state not written ({exc})", file=sys.stderr)
+    handoff.write_profile(str(_z0_home()), host, snap, redactor)
+
+
+def _repo_root() -> Path:
+    from . import regsnap
+    return Path(regsnap.ROOT)
 
 
 def receipt_summary(run: Path, receipt: dict) -> str:
@@ -436,6 +456,7 @@ def cmd_verify(args) -> int:
     except ApplyError as exc:
         print(f"z0 onboard verify: {exc}", file=sys.stderr)
         return exc.code
+    _handoff(run, receipt, snap, None)
     print(receipt_summary(run, receipt))
     return code
 
@@ -455,6 +476,8 @@ def cmd_rollback(args) -> int:
         print(f"z0 onboard rollback: {exc}", file=sys.stderr)
         return exc.code
     print(f"rolled back {run.name}: " + (", ".join(f"{k}={v}" for k, v in sorted(counts.items())) or "nothing to undo"))
+    from . import handoff
+    handoff.mark_rolled_back(str(_z0_home()), run.name)
     if args.purge:
         print("purged: " + (", ".join(purge(str(_z0_home()), "cache")) or "nothing"))
     if args.purge_bootstrap:

@@ -1,0 +1,32 @@
+{
+  "source": "kvnloo/z0intelligence tests/fixtures/contrib_profiles/frontend.json at the candidate sha",
+  "profile_facts": {
+    "toolchains": [
+      "python",
+      "node",
+      "bun"
+    ],
+    "harnesses": [
+      "claude"
+    ],
+    "gpu": {
+      "class": "none",
+      "vram_gib": 0
+    }
+  },
+  "oracle": {
+    "allowed_pick_skills_any": [
+      "typescript",
+      "javascript",
+      "frontend"
+    ],
+    "forbidden": {
+      "newcomer_false": true,
+      "gpu_vram_gib_gt": 0
+    },
+    "reasons": [
+      "skill_match:typescript",
+      "first_task_size:S"
+    ]
+  }
+}

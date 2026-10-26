@@ -23,6 +23,13 @@
 #       outside $Z0_HOME/{onboard,cache,bootstrap,venv} and tool caches (~/.npm, ~/.cache)
 #   5b  python present, no TTY, no --yes: C0 applies (z0evals green), C1 stays an ask, exit 3
 #   6   offline: z0evals python tiers still pass; the web tier is unavailable
+#   --full (work packages Z3/Z4/CW7), a fresh HOME volume:
+#   7   --auto --yes --llm none --profile core --with z0intelligence --without oh-my-pi:
+#       z0int runtime venv (CPU torch), shim, import check; dash built from origin pins,
+#       static gates, staged release, loopback self-test (no tailnet in a container);
+#       onboard/state ok and onboard/profile.json written (0600): exit 0
+#   7b  idempotent re-run: no effectful todo step
+#   7c  rollback restores the tree; onboard/state says rolled_back
 #
 # Exit 0 only when every scenario passed. No host literals; nothing outside the
 # container (or, with --inside, outside the test user's HOME) is written.
@@ -35,6 +42,7 @@ ENGINE=""
 INSIDE=0
 OFFLINE_SIM=0
 KEEP=0
+FULL=0
 PHASE="online"
 E2E_USER="${E2E_USER:-stranger}"
 E2E_WITHOUT="${E2E_WITHOUT:-oh-my-pi,tokenomics,dash}"
@@ -47,6 +55,7 @@ while (($#)); do
     --offline-sim) OFFLINE_SIM=1; shift ;;
     --phase) PHASE="$2"; shift 2 ;;
     --keep) KEEP=1; shift ;;
+    --full) FULL=1; shift ;;
     -h | --help) sed -n '2,34p' "$SELF"; exit 0 ;;
     *) echo "onboard-e2e: unknown argument $1" >&2; exit 2 ;;
   esac
@@ -88,6 +97,11 @@ if ((!INSIDE)); then
       "$TAG" bash /src/scripts/onboard-e2e --inside --phase "$phase"
   }
   rc=0
+  if ((FULL)); then
+    say "phase full (scenarios 7, 7b, 7c) on a fresh HOME"
+    run_phase full || rc=1
+    exit "$rc"
+  fi
   say "phase online (scenarios 5a, 1, 3, 4, 5b)"
   run_phase online || rc=1
   say "phase offline (scenario 6, --network none)"
@@ -201,6 +215,65 @@ if [[ "$PHASE" == online ]]; then
     || bad "5b z0evals tier1"
   as_user "test ! -e \$HOME/.z0/toolchains/node" && ok "5b C1 toolchain not installed" || bad "5b node installed without consent"
   if ((OFFLINE_SIM)); then PHASE=offline; E2E_EXTRA_ENV="Z0_DETECT_OFFLINE=1"; fi
+fi
+
+if [[ "$PHASE" == full ]]; then
+  say "copying the checkout to $Z0 (owned by $E2E_USER)"
+  rm -rf "$Z0"
+  mkdir -p "$Z0"
+  tar -C "$SRC" --exclude=.git -cf - . | tar -C "$Z0" -xf -
+  chown -R "$E2E_USER:" "$Z0"
+  FARGS="--auto --llm none --profile core --with z0intelligence --without ${E2E_FULL_WITHOUT:-oh-my-pi}"
+  BEFORE="$(snapshot)"
+  say "scenario 7: ./z0 onboard $FARGS --yes"
+  set +e
+  as_user "./z0 onboard $FARGS --yes < /dev/null" 2>&1 | tee /tmp/e2e-7.log | tail -60
+  rc=${PIPESTATUS[0]}
+  set -e
+  [[ $rc == 0 ]] && ok "7 exit 0" || bad "7 exit $rc (want 0)"
+  RUN7="$(last_run)"
+  R7="$HOMEDIR/.z0/onboard/runs/$RUN7/receipt.json"
+  if [[ -f "$R7" ]]; then
+    for check in runtime import; do
+      [[ "$(pyq "$R7" "d['acceptance']['z0intelligence']['$check']")" == passed ]] && ok "7 z0intelligence $check passed" \
+        || bad "7 z0intelligence $check is $(pyq "$R7" "d['acceptance']['z0intelligence'].get('$check')")"
+    done
+    [[ "$(pyq "$R7" "d['acceptance']['dash']['bridge']")" == passed ]] && ok "7 dash bridge loopback self-test passed" \
+      || bad "7 dash bridge is $(pyq "$R7" "d['acceptance'].get('dash')")"
+    [[ "$(pyq "$R7" "d['acceptance']['dash'].get('static')")" == passed ]] && ok "7 dash static gates passed" \
+      || bad "7 dash static gates: $(pyq "$R7" "d['acceptance']['dash'].get('static')")"
+    [[ "$(pyq "$R7" "d['acceptance']['z0evals']['tier1']")" == passed ]] && ok "7 z0evals tier1 passed" || bad "7 z0evals tier1"
+    [[ "$(pyq "$R7" "d['secrets_scan']['canary_found']")" == False ]] && ok "7 secrets scan clean" || bad "7 secrets scan"
+    echo "--- report.md (head)"
+    head -60 "$HOMEDIR/.z0/onboard/runs/$RUN7/report.md" || true
+  else
+    bad "7 no receipt"
+  fi
+  as_user "\$HOME/.z0int/bin/python -c 'import z0int, mcp, aodl_contract'" && ok "7 shim imports z0int" || bad "7 shim import"
+  [[ "$(pyq "$HOMEDIR/.z0/onboard/state" "d['ok']")" == True ]] && ok "7 onboard/state ok" \
+    || bad "7 onboard/state: $(pyq "$HOMEDIR/.z0/onboard/state" "d")"
+  [[ "$(stat -c %a "$HOMEDIR/.z0/onboard/profile.json" 2>/dev/null)" == 600 ]] && ok "7 profile.json written 0600" \
+    || bad "7 profile.json missing or not 0600"
+
+  say "scenario 7b: idempotent re-run plans nothing"
+  as_user "./z0 onboard plan --stdout $FARGS --yes < /dev/null > /tmp/e2e-plan7.json" || true
+  todo="$(pyq /tmp/e2e-plan7.json "[e['step']['id'] for e in d['steps'] if e['state']['status'] == 'todo' and e['step']['kind'] not in ('check', 'ask')]")"
+  [[ "$todo" == "[]" ]] && ok "7b no todo step" || bad "7b todo steps: $todo"
+
+  say "scenario 7c: rollback restores the tree"
+  for _ in 1 2 3 4 5; do
+    as_user "test -L \$HOME/.z0/onboard/current" || break
+    as_user "./z0 onboard rollback" > /dev/null || bad "7c rollback exit non-zero"
+  done
+  AFTER="$(snapshot)"
+  if [[ "$BEFORE" == "$AFTER" ]]; then
+    ok "7c tree equal outside runs/, cache/, bootstrap and tool caches"
+  else
+    bad "7c tree differs:"
+    diff <(printf '%s\n' "$BEFORE") <(printf '%s\n' "$AFTER") | head -40 || true
+  fi
+  [[ "$(pyq "$HOMEDIR/.z0/onboard/state" "d['status']")" == rolled_back ]] && ok "7c onboard/state rolled_back" \
+    || bad "7c onboard/state not marked rolled_back"
 fi
 
 if [[ "$PHASE" == offline ]]; then
