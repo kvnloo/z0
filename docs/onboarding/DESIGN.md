@@ -418,7 +418,7 @@ There is no Hermes profile pick; Hermes is always an ask.
   2. `build_tree` for both SHAs. Run the static gates there: `bun run typecheck`, `lint`, `test` with `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1`, plus the bridge security tests (spec §8.2–3).
   3. `stage_release` for both SHAs to `<largest volume>/…/dash/releases/<sha>` (`DASH_RELEASE_ROOT` overrides), each with its own `node_modules`:
      1. root `bun install --frozen-lockfile`
-     2. the app: a full install if `git ls-remote git@github.com:kvnloo/aodl-views.git` succeeds (probe only), else `bun scripts/install-public-ci.ts`, reported as "null renderer"
+     2. the app: a full install if `git ls-remote https://github.com/kvnloo/aodl-views.git` succeeds (probe only), else `bun scripts/install-public-ci.ts`, reported as "null renderer"
      3. `--cwd bridge`
      4. `--cwd bridge/acp-adapters` when claude or codex is installed (fixes B8)
   4. Write `~/.config/dash-services/bridge.env` (0600):
