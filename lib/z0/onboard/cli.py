@@ -1,8 +1,14 @@
-"""`./z0 onboard ...` (design §1.2). Work package Z1 ships `detect` and `plan`.
+"""`./z0 onboard ...` (design §1.2): detect, plan, (confirm), apply, verify, rollback.
 
 Dry-run purity (law P0): `detect` writes nothing; `plan` writes only the origin
 mirrors under $Z0_HOME/cache/git/ (§6.2) and its run dir under $Z0_HOME/onboard/runs/;
 with `--stdout` (or `--host`) it writes nothing at all.
+
+Consent (§3, owner decision D-1): C0 always applies. C1 runs only for granted bundles:
+`--yes` grants all, `--accept B,..` a subset, and on a TTY `--auto` shows ONE
+enumerated go/no-go confirmation. Without a TTY and without a grant, C1 stays an ask,
+C0 still applies, and the run exits 3. C2 is never automatic. The kernel decides every
+step, at plan time and again right before it runs.
 """
 from __future__ import annotations
 
@@ -15,8 +21,7 @@ from pathlib import Path
 from typing import Optional
 
 BUNDLES = ("toolchains", "harness", "services", "models")
-LATER = {"apply": "Z2", "verify": "Z2", "rollback": "Z2", "accept": "Z2", "status": "Z2",
-         "pair": "Z4"}
+LATER = {"accept": "Z6", "status": "Z6", "pair": "Z4"}
 
 
 def _ids(text: Optional[str]) -> list:
@@ -50,6 +55,17 @@ def build_parser() -> argparse.ArgumentParser:
                         help="plan twice from one detection and compare plan hashes")
     p_plan.add_argument("--host", metavar="HOST_JSON", help="plan from a recorded host.json")
     sub.add_parser("detect", help="print host.json (read-only; writes nothing)")
+    p_apply = sub.add_parser("apply", help="apply a written plan, checked by its hash")
+    p_apply.add_argument("run_id", help="a run under $Z0_HOME/onboard/runs/")
+    p_apply.add_argument("--yes", action="store_true",
+                         help="accepted for symmetry; it never widens the plan's grants")
+    p_verify = sub.add_parser("verify", help="acceptance checks; writes receipt.json and report.md")
+    p_verify.add_argument("run_id", nargs="?", help="default: the current run")
+    p_back = sub.add_parser("rollback", help="undo a run from its journal (owned artifacts only)")
+    p_back.add_argument("run_id", nargs="?", help="default: the current run")
+    p_back.add_argument("--purge-bootstrap", action="store_true",
+                        help="also remove stage 0's $Z0_HOME/{bootstrap,venv}")
+    p_back.add_argument("--purge", action="store_true", help="also remove the cache/git mirrors")
     for name in LATER:
         later = sub.add_parser(name, help=f"arrives in work package {LATER[name]}")
         later.add_argument("rest", nargs="*")
@@ -230,11 +246,220 @@ def cmd_plan(args, bare: bool = False) -> int:
     if getattr(args, "stdout", False):
         sys.stdout.write(json.dumps(plan_obj, indent=2, sort_keys=True) + "\n")
         return exit_code(plan_obj)
+    if bare and not args.plan_only and exit_code(plan_obj) == 0:
+        return onboard(args, host, snap, profile, plan_obj)
     run = write_run_dir(host, plan_obj)
     sys.stdout.write(summary_text(plan_obj, run))
-    if bare and not args.plan_only:
-        print("apply arrives in work package Z2; this run stopped after the plan.")
     return exit_code(plan_obj)
+
+
+# --- apply / verify / rollback (work package Z2) -----------------------------------
+
+def replan_from(snap: dict) -> "callable":
+    from .plan import plan
+
+    def replan(host: dict, request: dict) -> dict:
+        return plan(host, snap, mode=request.get("mode", "auto"), profile=request.get("profile"),
+                    with_ids=request.get("with_ids") or [], without_ids=request.get("without_ids") or [],
+                    grants=request.get("grants"), pin_policy=request.get("pin_policy", "pinned"),
+                    llm=request.get("llm", "local"))
+    return replan
+
+
+def _confirm(lines: list) -> bool:
+    for line in lines:
+        print(line)
+    try:
+        answer = input("Proceed? [y/N] ").strip().lower()
+    except EOFError:
+        return False
+    return answer in ("y", "yes")
+
+
+def make_deps(snap: dict, *, detect: bool):
+    from . import regsnap
+    from .apply import Deps
+
+    def redetect():
+        host, _ = run_detect(fetch=False)
+        return host
+
+    return Deps(z0_home=str(_z0_home()), home=os.environ.get("HOME") or str(Path.home()),
+                repo_root=str(regsnap.ROOT), snap=snap, detect=redetect if detect else None,
+                replan=replan_from(snap), confirm=_confirm if _tty() else None)
+
+
+def _outside_z0(step: dict) -> list:
+    paths = list(step.get("creates") or []) + ([step["probe"]["exists"]]
+                                               if (step.get("probe") or {}).get("exists") else [])
+    return [p for p in paths if not p.startswith("$Z0_HOME")]
+
+
+def confirmation_lines(base: dict, candidate: dict) -> tuple:
+    """(lines, needed bundles, newly granted C1 steps) for the ONE go/no-go (D-1)."""
+    from .plan import _c1_reason
+
+    before = {e["step"]["id"]: e["state"] for e in base["steps"]}
+    todo = [e["step"] for e in candidate["steps"] if e["state"]["status"] == "todo"]
+    new_c1 = [s for s in todo if s["consent"]["class"] == "C1"
+              and before.get(s["id"], {}).get("status") != "todo"]
+    outside = [s for s in todo if s["consent"]["class"] == "C0" and _outside_z0(s)]
+    bundles = sorted({s["consent"].get("bundle", "") for s in new_c1})
+    lines = [f"Apply {len(todo)} steps; {len(new_c1) + len(outside)} write outside ~/.z0:"]
+    for bundle in bundles:
+        lines.append(f"  [{bundle}]")
+        lines += [f"    {s['id']}: {_c1_reason(s)}" for s in new_c1 if s["consent"].get("bundle") == bundle]
+    if outside:
+        lines.append("  [repo-local, C0]")
+        lines += [f"    {s['id']}: {', '.join(_outside_z0(s))}" for s in outside]
+    return lines, bundles, new_c1
+
+
+def _consent(args, host, snap, profile, plan_obj) -> tuple:
+    """Returns (plan to apply, consent exit code, abort code or None)."""
+    if args.yes or plan_obj["grants"]["source"] != "none":
+        return plan_obj, 0, None
+    from .plan import plan
+
+    candidate = plan(host, snap, mode=args.mode, profile=profile, with_ids=_ids(args.with_ids),
+                     without_ids=_ids(args.without_ids),
+                     grants={"bundles": list(BUNDLES), "source": "tty"},
+                     pin_policy=args.pin_policy, llm=args.llm)
+    lines, bundles, new_c1 = confirmation_lines(plan_obj, candidate)
+    if len(lines) == 1:
+        return plan_obj, 0, None
+    if not _tty():
+        if new_c1:
+            print(f"z0 onboard: {len(new_c1)} C1 step(s) need consent and there is no TTY; "
+                  "they stay asks (re-run with --yes, or --accept "
+                  f"{','.join(bundles)}). C0 steps still apply.", file=sys.stderr)
+        return plan_obj, 3 if new_c1 else 0, None
+    granted = list(bundles)
+    if args.mode == "guided":
+        granted = [b for b in bundles if _confirm([f"Grant the {b} bundle?"] +
+                                                  [l for l in lines if l.startswith("    ")])]
+    elif not _confirm(lines):
+        print("z0 onboard: nothing applied (declined). `--accept BUNDLES` grants a subset.")
+        return plan_obj, 3, 3
+    if not granted:
+        return plan_obj, 3 if new_c1 else 0, None
+    granted_plan = plan(host, snap, mode=args.mode, profile=profile, with_ids=_ids(args.with_ids),
+                        without_ids=_ids(args.without_ids),
+                        grants={"bundles": granted, "source": "tty"},
+                        pin_policy=args.pin_policy, llm=args.llm)
+    left = [e for e in granted_plan["steps"] if e["state"].get("reason") == "c1_ungranted"]
+    return granted_plan, 3 if left else 0, None
+
+
+def onboard(args, host, snap, profile, plan_obj) -> int:
+    """The bare `./z0 onboard`: (confirm), write the run, apply, verify (§1.1)."""
+    from .apply import ApplyError, apply_run
+    from .lock import LockHeld
+    from .verify import verify_run
+
+    plan_obj, consent_code, abort = _consent(args, host, snap, profile, plan_obj)
+    run = write_run_dir(host, plan_obj)
+    sys.stdout.write(summary_text(plan_obj, run))
+    if abort is not None:
+        return abort
+    from .lock import hold
+
+    deps = make_deps(snap, detect=False)
+    try:
+        result = apply_run(run, deps, yes=args.yes)
+        with hold(deps.z0_home):
+            code, receipt = verify_run(run, deps, prior=result.results, host=result.host,
+                                       apply_code=result.code, consent_code=consent_code)
+    except LockHeld as exc:
+        print(f"z0 onboard: {exc}", file=sys.stderr)
+        return 1
+    except ApplyError as exc:
+        print(f"z0 onboard: {exc}", file=sys.stderr)
+        return exc.code
+    print(receipt_summary(run, receipt))
+    return code
+
+
+def receipt_summary(run: Path, receipt: dict) -> str:
+    counts: dict = {}
+    for step in receipt["steps"]:
+        counts[step["status"]] = counts.get(step["status"], 0) + 1
+    lines = ["steps: " + ", ".join(f"{k}={v}" for k, v in sorted(counts.items()))]
+    for cid, tiers in sorted(receipt["acceptance"].items()):
+        lines.append(f"  {cid}: " + ", ".join(f"{n} {s}" for n, s in tiers.items()))
+    for step in receipt["steps"]:
+        if step["status"] == "failed":
+            lines.append(f"FAILED {step['id']}: {step.get('reason', '')}")
+    lines.append(f"exit {receipt['exit_code']}; report: {run / 'report.md'}")
+    return "\n".join(lines)
+
+
+def _snap() -> dict:
+    from . import mirror, regsnap
+    snap = regsnap.load()
+    snap["repo_setups"] = mirror.read_setups(snap, str(_z0_home()), lazy=False)
+    return snap
+
+
+def cmd_apply(args) -> int:
+    from .apply import ApplyError, apply_run, run_dir_for
+    from .lock import LockHeld
+
+    try:
+        run = run_dir_for(_z0_home(), args.run_id)
+        snap = _snap()
+        result = apply_run(run, make_deps(snap, detect=True), yes=args.yes)
+    except LockHeld as exc:
+        print(f"z0 onboard apply: {exc}", file=sys.stderr)
+        return 1
+    except ApplyError as exc:
+        print(f"z0 onboard apply: {exc}", file=sys.stderr)
+        return exc.code
+    failed = [sid for sid, r in result.results.items() if r["status"] == "failed"]
+    print(f"applied {run.name}: {len(failed)} failed step(s). Next: ./z0 onboard verify {run.name}")
+    return result.code
+
+
+def cmd_verify(args) -> int:
+    from .apply import ApplyError, run_dir_for
+    from .lock import LockHeld, hold
+    from .verify import verify_run
+
+    try:
+        run = run_dir_for(_z0_home(), args.run_id)
+        snap = _snap()
+        with hold(_z0_home()):
+            code, receipt = verify_run(run, make_deps(snap, detect=False))
+    except LockHeld as exc:
+        print(f"z0 onboard verify: {exc}", file=sys.stderr)
+        return 1
+    except ApplyError as exc:
+        print(f"z0 onboard verify: {exc}", file=sys.stderr)
+        return exc.code
+    print(receipt_summary(run, receipt))
+    return code
+
+
+def cmd_rollback(args) -> int:
+    from .apply import ApplyError, run_dir_for
+    from .lock import LockHeld
+    from .rollback import purge, rollback_run
+
+    try:
+        run = run_dir_for(_z0_home(), args.run_id)
+        counts = rollback_run(run, str(_z0_home()), os.environ.get("HOME") or str(Path.home()))
+    except LockHeld as exc:
+        print(f"z0 onboard rollback: {exc}", file=sys.stderr)
+        return 1
+    except ApplyError as exc:
+        print(f"z0 onboard rollback: {exc}", file=sys.stderr)
+        return exc.code
+    print(f"rolled back {run.name}: " + (", ".join(f"{k}={v}" for k, v in sorted(counts.items())) or "nothing to undo"))
+    if args.purge:
+        print("purged: " + (", ".join(purge(str(_z0_home()), "cache")) or "nothing"))
+    if args.purge_bootstrap:
+        print("purged: " + (", ".join(purge(str(_z0_home()), "bootstrap")) or "nothing"))
+    return 1 if counts.get("error") else 0
 
 
 def main(argv: Optional[list] = None) -> int:
@@ -245,6 +470,12 @@ def main(argv: Optional[list] = None) -> int:
         return 0
     if args.cmd == "plan":
         return cmd_plan(args)
+    if args.cmd == "apply":
+        return cmd_apply(args)
+    if args.cmd == "verify":
+        return cmd_verify(args)
+    if args.cmd == "rollback":
+        return cmd_rollback(args)
     if args.cmd in LATER:
         print(f"z0 onboard {args.cmd}: arrives in work package {LATER[args.cmd]}", file=sys.stderr)
         return 2

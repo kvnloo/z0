@@ -118,9 +118,17 @@ class DryRunPurity(unittest.TestCase):
 
     def test_later_subcommands_refuse_cleanly(self):
         before_home = self.home()
-        out = self.run_z0("apply", "x")
+        out = self.run_z0("pair", "dash")
         self.assertEqual(out.returncode, 2)
-        self.assertIn("Z2", out.stderr)
+        self.assertIn("Z4", out.stderr)
+        self.assertEqual(self.home(), before_home)
+
+    def test_apply_of_an_unknown_run_is_a_usage_error_and_writes_nothing(self):
+        before_home = self.home()
+        for args in (("apply", "x"), ("apply", "../x"), ("verify", "x"), ("rollback", "x")):
+            out = self.run_z0(*args)
+            self.assertEqual(out.returncode, 2, (args, out.stderr))
+            self.assertIn("run", out.stderr)
         self.assertEqual(self.home(), before_home)
 
 
