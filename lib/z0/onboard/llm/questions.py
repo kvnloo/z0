@@ -11,7 +11,6 @@ from dataclasses import dataclass
 from typing import Callable
 
 from .. import kernel as k
-from ..when import first_failure
 
 KINDS = ("harness_classify", "config_dir_pick", "fork_match", "port_owner",
          "gpu_vendor_resolve", "pkg_hint", "failure_triage")
@@ -122,7 +121,14 @@ def question(raw: dict, snap: dict) -> Question:
     else:
         # Remediation conditions are evaluated by the collector, not by the model.
         legal = set(facts.get("remediations", [])) | {"mark_unavailable"}
-    candidates = tuple(c for c in supplied if c in legal)
+    # Probe results are typed detection metadata only, never user file contents.
+    recorded = raw.get("facts", {}).get("probe_results", {})
+    facts["probe_results"] = {
+        pid: {key: row[key] for key in ("exists", "mode") if key in row
+              and (type(row[key]) is bool if key == "exists" else type(row[key]) is int)}
+        for pid, row in recorded.items() if isinstance(row, dict)
+    } if isinstance(recorded, dict) else {}
+    candidates = tuple(dict.fromkeys(c for c in supplied if c in legal))
     return Question(raw["id"], kind, facts, candidates, DEFAULTS[kind], VERIFIERS[kind])
 
 

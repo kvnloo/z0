@@ -14,6 +14,7 @@ import signal
 import socket
 import threading
 import time
+from typing import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -44,10 +45,17 @@ class Context:
     canaries: tuple = field(default=(), repr=False)
     redactor: Redactor | None = field(default=None, repr=False)
     providers: list | None = None
-    clock: object = time.monotonic
+    clock: Callable[[], float] = time.monotonic
 
     def privacy(self):
-        return self.redactor or from_env(self.snap, self.env, self.home)
+        redactor = self.redactor or from_env(self.snap, self.env, self.home)
+        # All environment values we touched stay in memory and are scrubbed, not
+        # only known key names. Identity gets the dedicated home/user/host forms.
+        identity = {self.home, self.username, *self.hostnames}
+        for value in self.env.values():
+            if isinstance(value, str) and value not in identity:
+                redactor.register(value)
+        return redactor
 
 
 def default_context():
@@ -140,6 +148,13 @@ def freeze(path, envelope):
         os.fsync(fh.fileno())
 
 
+def frozen_envelope(questions, mode, grants, llm_flag, host_id, answers):
+    fingerprint = digest({"questions": [q.payload() for q in questions], "host_id": host_id,
+                          "mode": mode, "grants": grants, "llm": llm_flag})
+    return {"version": 1, "host_id": host_id, "input_sha256": fingerprint,
+            "answers_sha256": digest(answers), "answers": answers}
+
+
 def resolve(questions, mode, grants, llm_flag, answers_path, *, context=None):
     """Return {'llm': {question id: frozen record}}; never return consent fields.
 
@@ -157,6 +172,7 @@ def resolve(questions, mode, grants, llm_flag, answers_path, *, context=None):
     grants = grants or {}
     fingerprint = digest({"questions": [q.payload() for q in questions], "host_id": ctx.host_id,
                           "mode": mode, "grants": grants, "llm": llm_flag})
+    answers = {}
     if answers_path is not None and Path(answers_path).exists():
         try:
             envelope = json.loads(Path(answers_path).read_text(encoding="utf-8"))
@@ -183,7 +199,8 @@ def resolve(questions, mode, grants, llm_flag, answers_path, *, context=None):
     rounds = max(0, min(2, int(budget.get("probe_rounds", 2))))
     start, calls = ctx.clock(), 0
     redactor = ctx.privacy()
-    selected, selection_reason = None, "no_provider"
+    selected = None
+    selection_reason = "no_provider" if max_calls and timeout and total else "budget_exhausted"
     # Crucially: prepare/check ALL prompts before discovery or smoke sends.
     prompts = {}
     for q in questions:

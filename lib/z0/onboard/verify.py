@@ -230,7 +230,7 @@ def verify_run(run: Path, deps: Deps, *, prior: Optional[dict] = None, host: Opt
         "asks": [{key: ask[key] for key in ("id", "reason", "command", "consent") if key in ask}
                  for ask in plan_obj.get("asks") or []],
         "harnesses": harness_table(host),
-        "llm_decisions": [],
+        "llm_decisions": plan_obj.get("llm_decisions", []),
         "laws": LAWS,
         "secrets_scan": scan,
     }
