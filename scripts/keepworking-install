@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Install the keepworking Stop hook as a stamped release (keeps the previous one).
+#   scripts/keepworking-install            install files + z0-keepworking CLI only
+#   scripts/keepworking-install --settings also register the Stop hook in ~/.claude/settings.json
+#   scripts/keepworking-install --rollback point "current" at the previous release
+set -euo pipefail
+repo=$(cd "$(dirname "$0")/.." && pwd)
+base=${Z0_KEEPWORKING_HOME:-$HOME/.local/share/z0-keepworking}
+bin=$HOME/.local/bin
+settings=$HOME/.claude/settings.json
+cmd="python3 -I $base/current/lib/z0/keepworking/hook.py"
+if [ "${1:-}" = --rollback ]; then
+  prev=$(readlink "$base/previous")
+  ln -sfn "$prev" "$base/current"; echo "current -> $prev"; exit 0
+fi
+sha=$(git -C "$repo" rev-parse --short HEAD)
+dirty=$(git -C "$repo" status --porcelain -- lib/z0/keepworking | grep -q . && echo -dirty || true)
+rel="$base/releases/$sha$dirty"
+mkdir -p "$rel/lib/z0" "$bin"
+cp "$repo/lib/z0/__init__.py" "$rel/lib/z0/"
+rm -rf "$rel/lib/z0/keepworking"; cp -r "$repo/lib/z0/keepworking" "$rel/lib/z0/"
+find "$rel" -name __pycache__ -prune -exec rm -rf {} +
+[ -L "$base/current" ] && [ "$(readlink "$base/current")" != "$rel" ] && ln -sfn "$(readlink "$base/current")" "$base/previous"
+ln -sfn "$rel" "$base/current"
+cat > "$bin/z0-keepworking" <<SH
+#!/usr/bin/env bash
+exec python3 -I -c "import sys; sys.path.insert(0, sys.argv.pop(1)); from z0.keepworking.__main__ import main; sys.exit(main(sys.argv[1:]))" "$base/current/lib" "\$@"
+SH
+chmod +x "$bin/z0-keepworking"
+echo "installed $rel (current)"
+if [ "${1:-}" = --settings ]; then
+  cp "$settings" "$settings.bak-keepworking-$(date +%Y%m%d%H%M%S)"
+  python3 - "$settings" "$cmd" <<'PY'
+import json, sys
+path, cmd = sys.argv[1], sys.argv[2]
+data = json.load(open(path))
+stop = data.setdefault("hooks", {}).setdefault("Stop", [])
+stop[:] = [g for g in stop if not any("keepworking/hook.py" in h.get("command", "") for h in g.get("hooks", []))]
+stop.append({"hooks": [{"type": "command", "command": cmd, "timeout": 20}]})
+json.dump(data, open(path, "w"), indent=2); open(path, "a").write("\n")
+print("Stop hook registered:", cmd)
+PY
+fi
