@@ -49,8 +49,13 @@ def render(plan_obj: dict, receipt: dict, extra: list, warnings: list) -> str:
     for hid, row in receipt["harnesses"].items():
         out.append(f"| {hid} | {row['state']} | {row['integration']} |")
     out += ["", "## LLM decisions", ""]
-    out.append("None (the LLM resolver arrives in work package Z5; every unknown took its safe default)."
-               if not receipt["llm_decisions"] else "")
+    if not receipt["llm_decisions"]:
+        out.append("None (LLM disabled or no unresolved questions).")
+    for row in receipt["llm_decisions"]:
+        via = f" via {row['provider']} ({row.get('model', '-')})" if row.get("provider") else ""
+        out.append(f"- {row['question_id']} [{row['kind']}]: {row['answer']} "
+                   f"({row['source']}{via}; {row.get('reason', '')}). "
+                   f"Prompt `{row.get('prompt_sha256', '-')}`.")
     out += ["", "## Upstream gaps and warnings", ""]
     out += [f"- {w}" for w in sorted(set(warnings))] or ["None."]
     out += ["", f"Secrets scan: {'CANARY FOUND' if receipt['secrets_scan']['canary_found'] else 'clean'} "

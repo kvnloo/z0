@@ -41,6 +41,7 @@ def _common(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--without", dest="without_ids", metavar="IDS", help="drop components")
     parser.add_argument("--pin-policy", choices=("pinned", "tip"), default="pinned")
     parser.add_argument("--llm", choices=("none", "local", "auto"), default="local")
+    parser.add_argument("--answers", metavar="ANSWERS_YAML", help="replay frozen answers (zero provider calls)")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -74,7 +75,9 @@ def build_parser() -> argparse.ArgumentParser:
 
 def _grants(args) -> dict:
     if args.yes:
-        return {"bundles": list(BUNDLES), "source": "flag"}
+        return {"bundles": list(BUNDLES), "source": "flag",
+                **({"llm_providers": ["claude", "codex", "openrouter-free", "vercel-free"]}
+                   if args.llm == "auto" else {})}
     accepted = _ids(args.accept)
     unknown = [b for b in accepted if b not in BUNDLES]
     if unknown:
@@ -144,6 +147,37 @@ def _make_plan(host, snap, args, profile):
                 pin_policy=args.pin_policy, llm=args.llm)
 
 
+def _resolve_plan(host, snap, args, profile, base, *, pure=False):
+    """Provider I/O happens after human consent, before the plan hash is frozen."""
+    from .plan import collect_questions, exit_code, plan
+    if args.llm == "none" or exit_code(base):
+        return base
+    from .llm.resolve import Context, ReplayError, resolve
+    from .llm.privacy import UnsafePrompt
+    import socket
+    replay = getattr(args, "answers", None)
+    if replay and not Path(replay).is_file():
+        from .plan import PlanError
+        raise PlanError("--answers must name an existing frozen answers file")
+    questions = collect_questions(host, snap)
+    if not questions and not getattr(args, "answers", None):
+        return base
+    env = dict(os.environ)
+    ctx = Context(snap=snap, env=env, host_id=host.get("host_id", ""),
+                  home=env.get("HOME") or str(Path.home()), username=env.get("USER", ""),
+                  hostnames=(socket.gethostname(), env.get("HOSTNAME", "")),
+                  providers=[] if pure else None)
+    try:
+        answers = resolve(questions, args.mode, base["grants"], args.llm,
+                          getattr(args, "answers", None), context=ctx)
+    except (ReplayError, UnsafePrompt) as exc:
+        from .plan import PlanError
+        raise PlanError(str(exc)) from None
+    return plan(host, snap, mode=args.mode, profile=profile, with_ids=_ids(args.with_ids),
+                without_ids=_ids(args.without_ids), grants=base["grants"],
+                pin_policy=args.pin_policy, llm=args.llm, answers=answers)
+
+
 def _z0_home() -> Path:
     return Path(os.environ.get("Z0_HOME") or Path.home() / ".z0")
 
@@ -156,7 +190,7 @@ def _write_private(path: Path, text: str) -> None:
         os.fsync(fh.fileno())
 
 
-def write_run_dir(host: dict, plan_obj: dict) -> Path:
+def write_run_dir(host: dict, plan_obj: dict, snap: Optional[dict] = None) -> Path:
     stamp = _dt.datetime.now(_dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     run = _z0_home() / "onboard" / "runs" / f"{stamp}-{plan_obj['plan_hash'][:8]}"
     old = os.umask(0o077)
@@ -166,6 +200,22 @@ def write_run_dir(host: dict, plan_obj: dict) -> Path:
         _write_private(run / "host.json", json.dumps(host, indent=2, sort_keys=True) + "\n")
         _write_private(run / "plan.json", json.dumps(plan_obj, indent=2, sort_keys=True) + "\n")
         _write_private(run / "plan.diff.txt", diff_text(plan_obj))
+        if plan_obj.get("llm_decisions"):
+            from .llm.resolve import freeze, frozen_envelope
+            from .plan import collect_questions
+            from . import regsnap
+            # The CLI passes the exact snapshot used for planning via write_run_dir's
+            # optional argument; legacy callers without LLM records need none.
+            answers = {"llm": {r["question_id"]: r for r in plan_obj["llm_decisions"]}}
+            envelope = frozen_envelope(collect_questions(host, snap or regsnap.load()),
+                                       plan_obj["mode"], plan_obj["grants"], plan_obj["llm"],
+                                       plan_obj["host_id"], answers)
+            path = run / "answers.yaml"
+            if path.exists():
+                if json.loads(path.read_text()) != envelope:
+                    raise ValueError("run already has different frozen answers")
+            else:
+                freeze(path, envelope)
     finally:
         os.umask(old)
     return run
@@ -235,8 +285,16 @@ def cmd_plan(args, bare: bool = False) -> int:
     profile = _choose_profile(args, snap)
     try:
         plan_obj = _make_plan(host, snap, args, profile)
+        if not bare or args.plan_only:
+            plan_obj = _resolve_plan(host, snap, args, profile, plan_obj,
+                                     pure=getattr(args, "stdout", False) or bool(getattr(args, "host", None)))
         if getattr(args, "check_deterministic", False):
-            again = _make_plan(json.loads(json.dumps(host)), snap, args, profile)
+            from .plan import plan
+            answers = {"llm": {r["question_id"]: r for r in plan_obj.get("llm_decisions", [])}}
+            again = plan(json.loads(json.dumps(host)), snap, mode=args.mode, profile=profile,
+                         with_ids=_ids(args.with_ids), without_ids=_ids(args.without_ids),
+                         grants=plan_obj["grants"], pin_policy=args.pin_policy, llm=args.llm,
+                         answers=answers if plan_obj.get("llm_decisions") else None)
             same = again["plan_hash"] == plan_obj["plan_hash"]
             print(f"{'deterministic' if same else 'NOT deterministic'} {plan_obj['plan_hash']}")
             return 0 if same else 1
@@ -248,7 +306,7 @@ def cmd_plan(args, bare: bool = False) -> int:
         return exit_code(plan_obj)
     if bare and not args.plan_only and exit_code(plan_obj) == 0:
         return onboard(args, host, snap, profile, plan_obj)
-    run = write_run_dir(host, plan_obj)
+    run = write_run_dir(host, plan_obj, snap)
     sys.stdout.write(summary_text(plan_obj, run))
     return exit_code(plan_obj)
 
@@ -259,10 +317,23 @@ def replan_from(snap: dict) -> "callable":
     from .plan import plan
 
     def replan(host: dict, request: dict) -> dict:
+        answers = request.get("answers")
+        if answers and request.get("llm", "local") != "none":
+            from .plan import collect_questions
+            from .llm.resolve import validate_record
+            from hashlib import sha256
+            records = {}
+            for q in collect_questions(host, snap):
+                row = (answers.get("llm") or {}).get(q.id)
+                records[q.id] = row if validate_record(q, row) else {
+                    "question_id": q.id, "kind": q.kind, "source": "safe_default",
+                    "answer": q.safe_default, "accepted": False, "reason": "facts_changed",
+                    "prompt_sha256": sha256(b"").hexdigest()}
+            answers = {"llm": records} if records else None
         return plan(host, snap, mode=request.get("mode", "auto"), profile=request.get("profile"),
                     with_ids=request.get("with_ids") or [], without_ids=request.get("without_ids") or [],
                     grants=request.get("grants"), pin_policy=request.get("pin_policy", "pinned"),
-                    llm=request.get("llm", "local"))
+                    llm=request.get("llm", "local"), answers=answers)
     return replan
 
 
@@ -315,6 +386,22 @@ def confirmation_lines(base: dict, candidate: dict) -> tuple:
     return lines, bundles, new_c1
 
 
+def _llm_offers(args, host, snap):
+    if args.llm != "auto" or not host.get("unknowns"):
+        return []
+    from .llm.providers import configured
+    from . import kernel as k
+    import shutil
+    offers = []
+    for provider in configured(snap):
+        if k.decide_provider(k.provider_from_id(provider.id)).kind is not k.Kind.ASK:
+            continue
+        if ((provider.id in ("claude", "codex") and shutil.which(provider.id))
+                or (provider.id not in ("claude", "codex") and provider.available())):
+            offers.append(provider.id)
+    return offers
+
+
 def _consent(args, host, snap, profile, plan_obj) -> tuple:
     """Returns (plan to apply, consent exit code, abort code or None)."""
     if args.yes or plan_obj["grants"]["source"] != "none":
@@ -326,6 +413,8 @@ def _consent(args, host, snap, profile, plan_obj) -> tuple:
                      grants={"bundles": list(BUNDLES), "source": "tty"},
                      pin_policy=args.pin_policy, llm=args.llm)
     lines, bundles, new_c1 = confirmation_lines(plan_obj, candidate)
+    llm_offers = _llm_offers(args, host, snap)
+    lines += [f"  LLM: up to 8 calls via {provider} (your quota)" for provider in llm_offers]
     if len(lines) == 1:
         return plan_obj, 0, None
     if not _tty():
@@ -341,11 +430,15 @@ def _consent(args, host, snap, profile, plan_obj) -> tuple:
     elif not _confirm(lines):
         print("z0 onboard: nothing applied (declined). `--accept BUNDLES` grants a subset.")
         return plan_obj, 3, 3
-    if not granted:
+    if args.mode == "guided" and llm_offers:
+        if not _confirm([l for l in lines if "LLM:" in l]):
+            llm_offers = []
+    if not granted and not llm_offers:
         return plan_obj, 3 if new_c1 else 0, None
     granted_plan = plan(host, snap, mode=args.mode, profile=profile, with_ids=_ids(args.with_ids),
                         without_ids=_ids(args.without_ids),
-                        grants={"bundles": granted, "source": "tty"},
+                        grants={"bundles": granted, "source": "tty",
+                                **({"llm_providers": llm_offers} if llm_offers else {})},
                         pin_policy=args.pin_policy, llm=args.llm)
     left = [e for e in granted_plan["steps"] if e["state"].get("reason") == "c1_ungranted"]
     return granted_plan, 3 if left else 0, None
@@ -358,7 +451,14 @@ def onboard(args, host, snap, profile, plan_obj) -> int:
     from .verify import verify_run
 
     plan_obj, consent_code, abort = _consent(args, host, snap, profile, plan_obj)
-    run = write_run_dir(host, plan_obj)
+    if abort is None:
+        from .plan import PlanError
+        try:
+            plan_obj = _resolve_plan(host, snap, args, profile, plan_obj)
+        except PlanError as exc:
+            print(f"z0 onboard: {exc}", file=sys.stderr)
+            return 2
+    run = write_run_dir(host, plan_obj, snap)
     sys.stdout.write(summary_text(plan_obj, run))
     if abort is not None:
         return abort

@@ -425,6 +425,12 @@ def component_steps(cid: str, comp: dict, setups: dict, pin: str) -> tuple:
     return steps + added, conflicts, warnings + errors
 
 
+def collect_questions(host: dict, snap: dict) -> list:
+    """Unknowns from DETECT, closed against registry evidence; no provider I/O."""
+    from .llm.questions import collect
+    return collect(host, snap)
+
+
 def plan(host: dict, snap: dict, *, mode: str = "auto", profile: Optional[str] = None,
          with_ids: Iterable[str] = (), without_ids: Iterable[str] = (),
          grants: Optional[dict] = None, pin_policy: str = "pinned", llm: str = "local",
@@ -556,7 +562,7 @@ def plan(host: dict, snap: dict, *, mode: str = "auto", profile: Optional[str] =
                                                                     k.Source.FLAG)
     kinds = {s["id"]: s["kind"] for s in steps}
     # Per-step C2 confirmations from a guided TTY run (answers.yaml `confirmed_steps`).
-    confirmed = set((answers or {}).get("confirmed_steps") or [])
+    confirmed = set((answers or {}).get("confirmed_steps") or []) if "llm" not in (answers or {}) else set()
     dep_blocker: dict = {}
 
     def dependency_blocker(cid: str) -> Optional[str]:
@@ -807,6 +813,17 @@ def plan(host: dict, snap: dict, *, mode: str = "auto", profile: Optional[str] =
         result["path_links"] = path_links
     if conflicts:
         result["conflicts"] = sorted(conflicts, key=lambda c: (c["component"], c["id"]))
+    if grants.get("llm_providers"):
+        result["grants"]["llm_providers"] = sorted(set(grants["llm_providers"]))
+    if (answers or {}).get("llm"):
+        from .llm.resolve import validate_record
+        questions = {q.id: q for q in collect_questions(host, snap)}
+        records = (answers or {})["llm"]
+        if any(qid not in questions or not validate_record(questions[qid], row)
+               for qid, row in records.items()):
+            raise PlanError("invalid LLM answers")
+        # Advisory only: answers cannot mutate host facts, steps, paths or states.
+        result["llm_decisions"] = [copy.deepcopy(records[qid]) for qid in sorted(records)]
     if answers:
         result["answers_sha256"] = sha256_text(canonical_json(answers))
     result["plan_hash"] = plan_hash(result)

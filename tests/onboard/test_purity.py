@@ -94,7 +94,11 @@ class DryRunPurity(unittest.TestCase):
         self.assertEqual(len(run_dirs), 1)
         self.assertEqual(stat.S_IMODE(run_dirs[0].stat().st_mode), 0o700)
         names = sorted(p.name for p in run_dirs[0].iterdir())
-        self.assertEqual(names, ["host.json", "plan.diff.txt", "plan.json"])
+        self.assertEqual(names, ["answers.yaml", "host.json", "plan.diff.txt", "plan.json"])
+        frozen = json.loads((run_dirs[0] / "answers.yaml").read_text())
+        planned = json.loads((run_dirs[0] / "plan.json").read_text())
+        self.assertEqual(frozen["host_id"], planned["host_id"])
+        self.assertEqual(list(frozen["answers"]["llm"].values()), planned["llm_decisions"])
         for path in run_dirs[0].iterdir():
             self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o600, path.name)
         self.assertNotIn(fakehost.CANARY, (run_dirs[0] / "host.json").read_text())
