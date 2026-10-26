@@ -72,14 +72,14 @@
   "llm": "local",
   "mode": "auto",
   "pin_policy": "pinned",
-  "plan_hash": "0d9acb40690ed3f9b77a3d18c622f272cbdbbe09f1e63d99c199f6845b46414e",
+  "plan_hash": "9f46abb589108eb1db6ea35c67218eb09a84289e9c989bd9a1edc5d4c63f9674",
   "prepared_path": [
     "/usr/bin",
     "/bin"
   ],
   "profile": "core",
   "registry": {
-    "registry/components.yaml": "c6bd6d157f40f0aff49df7b793538c4e690ec653e3a29ea4c30160451724fe56",
+    "registry/components.yaml": "cdc4805c03a2474f5a8867bc2f8e5a570c00ffcb64e37daf34d5db0926a18d2e",
     "registry/harnesses.yaml": "1c2b9ba37ca974e4aa1ed1f6990561ea303fc7e1f73c0fb4c6cc4802d5b4a7b8",
     "registry/onboarding.yaml": "b0c3e2b4c8e7a17bde8a5cb2378c90f6009b4464879a76406f6ae3cdc7e9b9ce",
     "registry/profiles.yaml": "8ef0b2b147bf7db252328ee9cfc981a81867bcf6533362621138bee1abd2e6eb",
