@@ -1,6 +1,29 @@
 """Desktop session, audio input, systemd --user, linger, launchd (§4)."""
 from __future__ import annotations
 
+import os
+
+
+def _audio_in(ctx) -> bool:
+    """A capture device, found without side effects (law P0).
+
+    1. /proc/asound/pcm lists every ALSA PCM; a `capture` line is an input. No process.
+    2. `pactl` only when a PulseAudio/PipeWire socket already exists at
+       $XDG_RUNTIME_DIR/pulse/native. Without one (ssh, cron, containers) libpulse
+       falls back to ~/.config/pulse and writes a runtime link there and a dir in /tmp,
+       so pactl is never run then.
+    3. `arecord -l` (reads ALSA, writes nothing).
+    """
+    pcm = ctx.read_text(ctx.sys("/proc/asound/pcm")) or ""
+    if any("capture" in line for line in pcm.splitlines()):
+        return True
+    runtime = ctx.env.get("XDG_RUNTIME_DIR") or ""
+    if runtime and os.path.isabs(runtime) and ctx.lexists(ctx.expand(os.path.join(runtime, "pulse", "native"))):
+        sources = ctx.run(["pactl", "list", "short", "sources"])
+        if any(line.strip() and ".monitor" not in line for line in sources.out.splitlines()):
+            return True
+    return "card" in ctx.run(["arecord", "-l"]).out
+
 
 def detect(ctx, os_name: str) -> dict:
     env = ctx.env
@@ -15,10 +38,7 @@ def detect(ctx, os_name: str) -> dict:
         desktop = "x11"
     else:
         desktop = "none"
-    sources = ctx.run(["pactl", "list", "short", "sources"])
-    audio_in = any(line.strip() and ".monitor" not in line for line in sources.out.splitlines())
-    if not audio_in:
-        audio_in = "card" in ctx.run(["arecord", "-l"]).out
+    audio_in = _audio_in(ctx)
     state = ctx.run(["systemctl", "--user", "is-system-running"]).out.strip()
     user = env.get("USER") or env.get("LOGNAME") or ""
     linger = False

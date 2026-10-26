@@ -695,13 +695,15 @@ components:
         - {id: z0evals.t1.build_site, kind: run, consent: {class: C0}, where: build, needs: [z0evals.deps],
            argv: [.venv/bin/python, scripts/build_site.py], creates: ["{tree}/site/index.html"]}
         - {id: z0evals.t1.site_data, kind: run, consent: {class: C0}, where: build, needs: [z0evals.t1.build_site],
-           argv: [.venv/bin/python, scripts/build_site_data.py], creates: ["{tree}/web/data/study.json"]}
+           argv: [.venv/bin/python, scripts/build_site_data.py],
+           creates: ["{tree}/web/data/optchat-long-horizon-v0.json"]}
         - {id: z0evals.t1.posts, kind: run, consent: {class: C0}, where: build, needs: [z0evals.t1.site_data],
            argv: [.venv/bin/python, scripts/build_posts.py], creates: ["{tree}/web/data/posts"]}
         - {id: z0evals.t1.posts_tests, kind: check, consent: {class: C0}, where: build, needs: [z0evals.t1.posts],
            argv: [.venv/bin/python, -m, unittest, tests/test_build_posts.py]}
         - {id: z0evals.web.gate, kind: check, consent: {class: C0}, needs: [z0evals.t1.posts, toolchain.node],
-           when: [{fact: network.fonts_google, op: eq, value: true}], argv: [node, --version]}
+           when: [{fact: network.fonts_google, op: eq, value: true}, {fact: network.npmjs, op: eq, value: true}],
+           argv: [node, --version]}
         - {id: z0evals.web.deps, kind: run, consent: {class: C0}, network: true, where: build,
            needs: [z0evals.web.gate], argv: [npm, ci, --no-audit, --no-fund, --prefix, web],
            creates: ["{tree}/web/node_modules"], timeout_s: 1800}

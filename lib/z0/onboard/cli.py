@@ -77,14 +77,18 @@ def run_detect(fetch: bool = False):
     from . import regsnap
     from .detect import Ctx, detect
 
+    from . import mirror
+
     snap = regsnap.load()
     outcomes = {}
-    if fetch and os.environ.get("Z0_DETECT_OFFLINE") != "1":
-        from . import mirror
+    online = fetch and os.environ.get("Z0_DETECT_OFFLINE") != "1"
+    if online:
         outcomes = mirror.ensure(snap, str(_z0_home()))
+    # §2.6: repo-local setup steps at each pin, from the mirror only. Without the fetch
+    # (--stdout, detect) only what the mirror already holds is read: nothing is written.
+    snap["repo_setups"] = mirror.read_setups(snap, str(_z0_home()), lazy=online)
     host = detect(Ctx(registry=snap, **sandbox_from_env(os.environ)))
     if outcomes:
-        from . import mirror
         mirror.merge(host, outcomes, snap)
     return host, snap
 
@@ -179,6 +183,12 @@ def summary_text(plan_obj: dict, run: Optional[Path]) -> str:
         out.append("Unavailable:")
         for entry in plan_obj["unavailable"]:
             out.append(f"  {entry['id']}: {entry['status']} ({entry['detail']})")
+    if plan_obj.get("conflicts"):
+        out.append("Repo setup conflicts (zer0.repo.yaml vs the registry; the registry wins):")
+        for conflict in plan_obj["conflicts"]:
+            what = (f"same argv as registry step {conflict['registry_id']}"
+                    if conflict.get("registry_id") else "differs in " + ", ".join(conflict["fields"]))
+            out.append(f"  {conflict['id']}: {what} ({conflict['source']})")
     for warning in plan_obj["warnings"]:
         out.append(f"warning: {warning}")
     if run is not None:
@@ -195,8 +205,9 @@ def cmd_plan(args, bare: bool = False) -> int:
             answer = input("auto or guided? [auto]: ").strip().lower()
             args.mode = "guided" if answer in ("g", "guided") else "auto"
     if getattr(args, "host", None):
-        from . import regsnap
+        from . import mirror, regsnap
         snap = regsnap.load()
+        snap["repo_setups"] = mirror.read_setups(snap, str(_z0_home()), lazy=False)
         host = json.loads(Path(args.host).read_text(encoding="utf-8"))
         # H1: a host.json recorded elsewhere is never planned as this host.
         from .detect import Ctx, osinfo

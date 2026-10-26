@@ -109,7 +109,7 @@
           "path": { "$ref": "#/$defs/path" },
           "version": { "type": "string" },
           "sh_resolves": { "type": "boolean", "description": "Resolves under `sh -c 'command -v X'` with the prepared PATH (T1)." },
-          "source": { "enum": ["path", "well_known_dir", "z0_toolchain", "version_manager"] }
+          "source": { "enum": ["path", "well_known_dir", "z0_toolchain", "version_manager", "z0_bootstrap"], "description": "z0_bootstrap: the python3 that stage 0 made ($Z0_HOME/venv or the bootstrap CPython), used when python3 is absent or outside [3.10, 3.14)." }
         },
         "additionalProperties": false
       }
@@ -145,7 +145,8 @@
           },
           "policy_excluded": { "type": "boolean" },
           "path": { "$ref": "#/$defs/path", "description": "The resolved binary of an allowed, installed harness." },
-          "bin_dir": { "$ref": "#/$defs/path", "description": "P1: the dir of a policy-excluded (`configure: never`) binary; the plan keeps that dir off the prepared PATH." }
+          "bin_dir": { "$ref": "#/$defs/path", "description": "P1: the first dir that holds a policy-excluded (`configure: never`) binary (kept for compatibility; see bin_dirs)." },
+          "bin_dirs": { "type": "array", "items": { "$ref": "#/$defs/path" }, "description": "P1: every search or prepared-PATH dir that holds a policy-excluded binary; the plan keeps each of them off the prepared PATH." }
         },
         "additionalProperties": false
       }

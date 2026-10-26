@@ -87,6 +87,9 @@
     },
     "grok": {
       "bin_dir": "~/.local/bin",
+      "bin_dirs": [
+        "~/.local/bin"
+      ],
       "config_dirs": [
         "~/.grok"
       ],

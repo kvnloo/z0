@@ -4,6 +4,7 @@ prepared PATH resolves every tool under `sh -c`)."""
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -150,6 +151,77 @@ class DetectFakeHost(unittest.TestCase):
         self.assertEqual(harnesses["grok"]["bin_dir"], "~/.local/bin")
         self.assertNotIn("path", harnesses["grok"])
         self.assertEqual(harnesses["claude-code"]["path"], "~/.local/bin/claude")
+
+    def test_P1_red_grok_in_two_prepared_dirs_is_kept_off_every_one(self):
+        """grok next to bun in ~/.bun/bin and next to claude/uv in ~/.local/bin: both
+        dirs are on the prepared PATH, so the plan must swap out both, not the first."""
+        from z0.onboard.plan import plan
+        with tempfile.TemporaryDirectory() as folder:
+            fake = fakehost.build(Path(folder))
+            fakehost._stub(fake["home"] / ".bun/bin/grok", 'touch "$FAKE_ROOT/grok-was-executed"',
+                           fake["root"])
+            host = self.detect_fn(self.ctx(env=dict(fake["env"]), sysroot=str(fake["sysroot"]),
+                                           system_dirs=[str(fake["sysbin"])]))
+            grok = host["harnesses"]["grok"]
+            self.assertEqual(sorted(grok["bin_dirs"]), ["~/.bun/bin", "~/.local/bin"])
+            self.assertIn("~/.bun/bin", host["prepared_path"])
+            self.assertIn("~/.local/bin", host["prepared_path"])
+            plan_obj = plan(host, support.snapshot())
+            self.assertTrue(plan_obj["prepared_path"])
+            for directory in plan_obj["prepared_path"]:
+                real = directory.replace("~", str(fake["home"]), 1)
+                with self.subTest(directory=directory):
+                    self.assertFalse(os.path.exists(os.path.join(real, "grok")))
+            # The allowed tools of both dropped dirs are still reachable through the links.
+            links = {link["link"].rsplit("/", 1)[1] for link in plan_obj["path_links"]}
+            self.assertTrue({"bun", "claude", "uv"} <= links, links)
+            self.assertNotIn("grok", links)
+            self.assertFalse((fake["root"] / "grok-was-executed").exists())
+
+    def test_T1_no_python3_on_path_uses_the_stage0_venv_python3(self):
+        """§1.3 stranger: no python3 anywhere on PATH; stage 0 made $Z0_HOME/venv.
+        detect records that python3 and puts its dir first on the prepared PATH."""
+        with tempfile.TemporaryDirectory() as folder:
+            fake = fakehost.build(Path(folder))
+            (fake["sysbin"] / "python3").unlink()
+            fakehost._stub(fake["home"] / ".z0/venv/bin/python3", 'echo "Python 3.12.9"', fake["root"])
+            host = self.detect_fn(self.ctx(env=dict(fake["env"]), sysroot=str(fake["sysroot"]),
+                                           system_dirs=[str(fake["sysbin"])]))
+        python = host["toolchains"]["python3"]
+        self.assertEqual((python["state"], python["source"], python["path"], python["version"]),
+                         ("present", "z0_bootstrap", "~/.z0/venv/bin/python3", "3.12.9"))
+        self.assertTrue(python["sh_resolves"])
+        self.assertEqual(host["prepared_path"][0], "~/.z0/venv/bin")
+        self.assertEqual(host["python_window"], "present")
+
+    def test_P0_pactl_never_runs_without_a_pulse_socket(self):
+        """Without $XDG_RUNTIME_DIR (ssh, cron, containers) libpulse writes under
+        ~/.config/pulse and /tmp. The fakebin pactl does the same: detect must not run it."""
+        calls = (self.fake["root"] / "calls.log").read_text().splitlines()
+        self.assertFalse([c for c in calls if c.startswith("pactl")])
+        self.assertFalse((self.fake["home"] / ".config/pulse").exists())
+        self.assertIn("arecord -l", calls)
+
+    def test_audio_in_from_proc_asound_or_a_live_pulse_socket(self):
+        with tempfile.TemporaryDirectory() as folder:
+            fake = fakehost.build(Path(folder))
+            pcm = fake["sysroot"] / "proc/asound/pcm"
+            pcm.parent.mkdir(parents=True)
+            pcm.write_text("00-00: ALC1220 Analog : ALC1220 Analog : playback 1 : capture 1\n")
+            host = self.detect_fn(self.ctx(env=dict(fake["env"]), sysroot=str(fake["sysroot"]),
+                                           system_dirs=[str(fake["sysbin"])]))
+            self.assertTrue(host["session"]["audio_in"])
+            self.assertNotIn("pactl", (fake["root"] / "calls.log").read_text())
+        with tempfile.TemporaryDirectory() as folder:
+            fake = fakehost.build(Path(folder))
+            socket = fake["sysroot"] / "run/user/1000/pulse/native"
+            socket.parent.mkdir(parents=True)
+            socket.write_text("")
+            env = dict(fake["env"], XDG_RUNTIME_DIR="/run/user/1000")
+            host = self.detect_fn(self.ctx(env=env, sysroot=str(fake["sysroot"]),
+                                           system_dirs=[str(fake["sysbin"])]))
+            self.assertTrue(host["session"]["audio_in"])
+            self.assertIn("pactl list short sources", (fake["root"] / "calls.log").read_text())
 
     def test_checkouts_only_registry_repos(self):
         paths = [c["path"] for c in self.host["checkouts"]]

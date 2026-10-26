@@ -5,6 +5,7 @@ to make. It answers the R0/D1 question "is this pinned SHA on origin?" for a str
 who has no checkout yet; `detect/checkouts.py` then reads the mirror (cat-file, and
 ls-tree for the dash flavour) like any other evidence. Adopted checkouts are never
 touched. `plan --stdout` and `plan --host` never fetch (they write nothing).
+`read_setups` reads each pin's `zer0.repo.yaml setup:` from the mirror (§2.6).
 
 Per pin: already in the mirror -> yes; else a shallow, blob-less fetch of that SHA
 from the registry clone URL: success -> yes; the server says the object is not
@@ -112,6 +113,72 @@ def ensure(snap: dict, z0_home: str, env: Optional[dict] = None, *,
             for out in pool.map(one, jobs):
                 results.update(out)
     return dict(sorted(results.items()))
+
+
+def _run_out(argv: list, env: dict, timeout: float) -> tuple:
+    try:
+        proc = subprocess.run(argv, env=env, stdin=subprocess.DEVNULL, capture_output=True,
+                              text=True, timeout=timeout, check=False)
+    except (OSError, subprocess.SubprocessError):
+        return None, "", ""
+    return proc.returncode, proc.stdout, proc.stderr
+
+
+# `git show <sha>:<path>` wording when the file is not in that commit.
+NO_SUCH_PATH = ("does not exist in", "exists on disk, but not in", "path '")
+
+
+def read_setups(snap: dict, z0_home: str, env: Optional[dict] = None, *, lazy: bool = True,
+                run: Callable = _run_out, timeout: float = 60.0) -> dict:
+    """§2.6: each component's `zer0.repo.yaml setup:` at its pinned SHA, read from the
+    origin mirror only (never a working tree). Returns {component: entry} with entry =
+    {repo, ref, sha256, setup (vetted steps only), errors}.
+
+    The mirror is blob-less, so `git show` fetches the one blob it needs from origin into
+    the mirror (a z0-private write that P0 allows `plan`). `lazy=False` (plan --stdout,
+    --host) forbids that fetch: only what the mirror already holds is read.
+    """
+    import yaml
+
+    from . import repo_setup
+    from .util import sha256_text
+
+    env = _env(dict(os.environ if env is None else env))
+    if not lazy:
+        env["GIT_NO_LAZY_FETCH"] = "1"
+    git = shutil.which("git", path=env["PATH"] + os.pathsep + "/usr/bin:/bin")
+    if git is None:
+        return {}
+    cache = Path(z0_home) / "cache" / "git"
+    out: dict = {}
+    for cid, comp in regsnap.components(snap).items():
+        ref = str((comp.get("install") or {}).get("ref") or "")
+        repo = str(comp.get("repo") or "")
+        mirror = cache / f"{repo.split('/', 1)[-1]}.git"
+        if comp.get("status") == "idea" or not ref or not repo or not (mirror / "HEAD").is_file():
+            continue
+        have, _, _ = run([git, "--git-dir", str(mirror), "cat-file", "-e", f"{ref}^{{commit}}"], env, 30)
+        if have != 0:
+            continue
+        rc, text, err = run([git, "--git-dir", str(mirror), "show", f"{ref}:zer0.repo.yaml"], env, timeout)
+        if rc != 0:
+            if rc is not None and any(marker in err for marker in NO_SUCH_PATH):
+                continue  # no zer0.repo.yaml at the pin: nothing repo-local to merge
+            out[cid] = {"repo": repo, "ref": ref, "errors": [
+                f"could not read zer0.repo.yaml at {ref[:12]} from the mirror"]}
+            continue
+        try:
+            doc = yaml.safe_load(text) or {}
+        except yaml.YAMLError:
+            out[cid] = {"repo": repo, "ref": ref, "errors": ["zer0.repo.yaml is not valid YAML"]}
+            continue
+        setup = doc.get("setup") if isinstance(doc, dict) else None
+        if not isinstance(setup, dict):
+            continue
+        vetted, errors = repo_setup.vet(snap, cid, setup)
+        out[cid] = {"repo": repo, "ref": ref, "sha256": sha256_text(text), "setup": vetted,
+                    "errors": errors}
+    return dict(sorted(out.items()))
 
 
 def merge(host: dict, outcomes: dict, snap: dict) -> None:

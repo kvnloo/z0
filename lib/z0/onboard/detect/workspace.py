@@ -9,6 +9,7 @@ import re
 
 from .. import kernel as k
 from ..expand import component_context, expand_step, step_paths
+from ..plan import component_steps
 
 _HOST_ID = re.compile(r"^host_id:\s*['\"]?([0-9a-f]{16})['\"]?\s*$", re.M)
 
@@ -23,9 +24,12 @@ def owned_paths(ctx, host: dict) -> list:
     comps = (ctx.registry.get("components") or {}).get("components") or {}
     onboarding = ctx.registry.get("onboarding") or {}
     found = set()
+    setups = ctx.registry.get("repo_setups") or {}
     for cid, comp in comps.items():
         context = component_context(cid, comp, host, onboarding)
-        for step in (comp.get("onboard") or {}).get("steps") or []:
+        # The registry's steps plus the repo's `setup:` steps at the pin (§2.6), as plan sees them.
+        steps, _, _ = component_steps(cid, comp, setups, context["pin"])
+        for step in steps:
             for path in step_paths(expand_step(step, context)):
                 if "{" in path:
                     continue

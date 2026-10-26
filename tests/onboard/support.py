@@ -62,6 +62,11 @@ def fixture_names() -> list:
 
 ALL_BUNDLES = {"bundles": ["toolchains", "harness", "services", "models"], "source": "flag"}
 
+# §2.6: a vetted zer0.repo.yaml `setup:` entry as mirror.read_setups returns it, with a
+# conflicting step, a duplicate argv, two new steps and one step z0 must leave out.
+SETUP_CONFLICT = json.loads((ROOT / "tests/onboard/fixtures/setups/z0evals-conflict.json")
+                            .read_text(encoding="utf-8"))
+
 # (expected file stem, fixture, plan kwargs)
 GOLDEN_CASES = [
     ("groot-nvidia-32g.auto", "groot-nvidia-32g", {}),
@@ -74,6 +79,10 @@ GOLDEN_CASES = [
     ("host-mismatch.auto", "host-mismatch", {}),
     # A stranger's fresh clone: no mirror, no checkouts, 4 GiB free (§1.2, §6.2).
     ("fresh-stranger.auto", "fresh-stranger", {}),
+    # No python3 on PATH; stage 0's venv python3 leads the prepared PATH (§1.3, T1).
+    ("no-python.auto", "no-python", {}),
+    # The pinned z0evals carries a `setup:` block that conflicts with the registry (§2.6).
+    ("mbp-cpu-15g.repo-setup", "mbp-cpu-15g", {"repo_setups": SETUP_CONFLICT}),
 ]
 
 
@@ -111,7 +120,11 @@ def simulate_apply(host: dict, plan_obj: dict) -> dict:
             tool = step["id"].split(".", 1)[1]
             if tool in ("python-window", "python3"):
                 after["python_window"] = "present"
-            else:
+            if tool == "python3":  # uv's CPython, on the prepared PATH (T1)
+                after.setdefault("toolchains", {})["python3"] = {
+                    "state": "present", "version": "3.12.0", "sh_resolves": True,
+                    "source": "z0_toolchain", "path": "/opt/z0-test/python3"}
+            elif tool != "python-window":
                 after.setdefault("toolchains", {})[tool] = {
                     "state": "present", "version": step["toolchain"]["version"],
                     "sh_resolves": True, "source": "z0_toolchain",

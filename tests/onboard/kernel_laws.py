@@ -96,6 +96,15 @@ def law_s2_closed_bind(k):
            "no tailnet: unavailable, not refused")
 
 
+def law_s3_adopt_before_create(k):
+    """S3: an existing unit is adopted or asked, never redeployed silently."""
+    _check(k.decide_adopt(True, False) == k.ask(k.Reason.ADOPTED_OTHER_SHA),
+           "S3: an adopted unit at another SHA must be asked (C2 redeploy)")
+    _check(k.decide_adopt(True, True) == k.ALLOW, "S3: an adopted unit at the pin is kept")
+    for same in BOOLS:
+        _check(k.decide_adopt(False, same) == k.ALLOW, "S3: no unit, create it")
+
+
 def law_p1_forbidden_provider(k):
     for provider in (k.Provider.GROK, k.Provider.CURSOR):
         _check(k.decide_provider(provider) == k.refuse(k.Reason.FORBIDDEN_PROVIDER),

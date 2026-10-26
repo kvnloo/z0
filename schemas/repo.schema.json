@@ -18,6 +18,29 @@
       "enum": ["component", "suite", "extension", "substrate", "projection", "protocol", "research", "runtime"]
     },
     "summary": { "type": "string" },
+    "setup": {
+      "type": "object",
+      "description": "Repo-local onboarding steps (z0 onboard design §2.6). z0 reads this block only from the pinned SHA in its origin mirror, never from a working tree. The z0 registry owns host-level and cross-repo steps and wins on a duplicate step id; the plan reports each conflict. Check a block with scripts/repo-setup-check.",
+      "required": ["version", "steps"],
+      "properties": {
+        "version": { "const": 1 },
+        "contract": { "type": "string", "description": "A delegate contract id, e.g. z0int-onboard-v1 (§8.4)." },
+        "tiers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "steps"],
+            "properties": {
+              "id": { "type": "string" },
+              "summary": { "type": "string" },
+              "when": { "type": "array" },
+              "steps": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        },
+        "steps": { "type": "array", "items": { "$ref": "onboard-step.schema.json" } }
+      }
+    },
     "architecture": {
       "type": "object",
       "properties": {

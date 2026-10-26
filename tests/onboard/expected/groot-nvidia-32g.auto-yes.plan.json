@@ -108,7 +108,7 @@
     }
   ],
   "pin_policy": "pinned",
-  "plan_hash": "adaf5c54548b0800c0cffad0de6f67f7254de074918869cef625dd2b00ce75f6",
+  "plan_hash": "af4236478ca75345f0bad55b76ba31eb2609e3ac913d9da6f3d8b1e51daa56cf",
   "prepared_path": [
     "$Z0_HOME/bin/links",
     "~/.bun/bin",
@@ -117,7 +117,7 @@
   ],
   "profile": "personal",
   "registry": {
-    "registry/components.yaml": "5094764350ddcc1504a2861e279a57336abca3435b6549c3016e7c344b7fbece",
+    "registry/components.yaml": "92bc79136d902cd3bd54ef2679747b4f9b7ec31cef8f658e3408058386827067",
     "registry/harnesses.yaml": "1c2b9ba37ca974e4aa1ed1f6990561ea303fc7e1f73c0fb4c6cc4802d5b4a7b8",
     "registry/onboarding.yaml": "b0c3e2b4c8e7a17bde8a5cb2378c90f6009b4464879a76406f6ae3cdc7e9b9ce",
     "registry/profiles.yaml": "1078cbeef86e532c77478eb5025ec08f6f3f8156a1c77707774416e79d51f819",
@@ -907,8 +907,7 @@
       "step": {
         "component": "z0intelligence",
         "consent": {
-          "bundle": "services",
-          "class": "C1"
+          "class": "C2"
         },
         "id": "z0intelligence.router.unit",
         "kind": "service_unit",
@@ -2098,7 +2097,7 @@
           "class": "C0"
         },
         "creates": [
-          "~/zer0/oss/z0evals/web/data/study.json"
+          "~/zer0/oss/z0evals/web/data/optchat-long-horizon-v0.json"
         ],
         "id": "z0evals.t1.site_data",
         "kind": "run",
@@ -2177,6 +2176,11 @@
         "when": [
           {
             "fact": "network.fonts_google",
+            "op": "eq",
+            "value": true
+          },
+          {
+            "fact": "network.npmjs",
             "op": "eq",
             "value": true
           }

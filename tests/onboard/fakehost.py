@@ -26,7 +26,10 @@ STUBS = {
   *show*) echo "ExecStart={ path=$FAKE_HOME/.local/lib/dash/releases/5f3ee27f6e431ba83abfe9a4a94b2c0757910ddb/bun ; argv[]=bun run index.ts }"; echo "WorkingDirectory=$FAKE_HOME/.local/lib/dash/releases/5f3ee27f6e431ba83abfe9a4a94b2c0757910ddb/bridge"; echo "ActiveState=active" ;;
 esac''',
     "loginctl": 'echo Linger=no',
-    "pactl": 'echo "0 alsa_output.monitor module"',
+    # Like libpulse without $XDG_RUNTIME_DIR/pulse/native: pactl writes under $HOME.
+    # Detect must never run it then (law P0).
+    "pactl": 'mkdir -p "$HOME/.config/pulse" && ln -sf /tmp/pulse-x "$HOME/.config/pulse/fake-runtime"; '
+             'echo "0 alsa_input.usb-mic module"',
     "arecord": 'exit 1',
     "ss": 'echo "LISTEN 0 512 100.64.0.7:4747 0.0.0.0:* users:((\\"bun\\",pid=42,fd=3))"',
     "tailscale": '''case "$1" in

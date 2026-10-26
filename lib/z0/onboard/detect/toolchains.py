@@ -79,22 +79,38 @@ def detect(ctx) -> tuple:
 
     window = "impossible"
     py = tools.get("python3") or {}
+    front = []
     if _in_window(result.get("python3", {}).get("version", "")):
         window = "present"
     else:
-        extra = _dirs(ctx, ["$Z0_HOME/bootstrap/python/*/bin"])
-        search = extra + dirs["well_known_dir"] + dirs["version_manager"] + dirs["path"] + dirs["system"]
-        for name in py.get("window_binaries") or []:
+        # The stranger case (§1.1, §1.3): python3 is absent or outside the window, and
+        # stage 0 made one (the z0 venv, from the bootstrap CPython). That interpreter
+        # becomes `python3` and its dir leads the prepared PATH, so every step that runs
+        # `python3` gets it (T1), not a missing or too-old one.
+        bootstrap = _dirs(ctx, ["$Z0_HOME/bootstrap/python/*/bin"])
+        for directory in _dirs(ctx, ["$Z0_HOME/venv/bin"]) + bootstrap:
+            path = ctx.which("python3", [directory])
+            version = _version(ctx, path, ["python3", "--version"]) if path else ""
+            if path and _in_window(version):
+                result["python3"] = {"state": "present", "path": ctx.tilde(path),
+                                     "version": version, "source": "z0_bootstrap"}
+                front = [directory]
+                window = "present"
+                break
+        search = bootstrap + dirs["well_known_dir"] + dirs["version_manager"] + dirs["path"] + dirs["system"]
+        names = (py.get("window_binaries") or []) if window != "present" else []
+        for name in names:
             path = ctx.which(name, search)
             if path and _in_window(_version(ctx, path, [name, "--version"])):
-                window = "present"
+                window = "present"  # z0int's own venv can use it; `python3` stays as found
                 break
     if window != "present" and (result.get("uv", {}).get("state") == "present"
                                 or result.get("curl", {}).get("state") == "present"):
         window = "makeable"
 
-    z0_bins = [d for d in dirs["z0_toolchain"] if d not in resolved_dirs]
-    ctx.prepared_path = resolved_dirs + z0_bins + [d for d in dirs["system"]]
+    resolved_dirs = [d for d in resolved_dirs if d not in front]
+    z0_bins = [d for d in dirs["z0_toolchain"] if d not in resolved_dirs and d not in front]
+    ctx.prepared_path = front + resolved_dirs + z0_bins + [d for d in dirs["system"]]
     return result, window
 
 

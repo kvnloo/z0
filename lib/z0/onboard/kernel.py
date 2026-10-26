@@ -146,6 +146,7 @@ class Reason(Enum):
     RAM_LOW = "RRamLow"
     SHADOW = "RShadow"
     REV_UNVERIFIED = "RRevUnverified"
+    ADOPTED_OTHER_SHA = "RAdoptedOtherSha"
 
 
 class Kind(Enum):
@@ -263,6 +264,20 @@ def decide_exec_root(root: RootKind) -> Verdict:
         return refuse(Reason.THROUGH_CHECKOUT)
     if root is RootKind.OTHER:
         return refuse(Reason.OUTSIDE_ROOTS)
+    return ALLOW
+
+
+# --- S3 ------------------------------------------------------------------------
+
+def decide_adopt(unit_exists: bool, same_sha: bool) -> Verdict:
+    """An existing unit with the same name is adopted, never duplicated (S3).
+
+    No unit: ALLOW (create it). A unit at the pinned SHA: ALLOW (kept as it is; the plan
+    marks the step already_satisfied). A unit at another SHA: redeploying it is C2, so
+    ask; the consent decision for that C2 step follows (decide_consent).
+    """
+    if unit_exists and not same_sha:
+        return ask(Reason.ADOPTED_OTHER_SHA)
     return ALLOW
 
 
@@ -392,12 +407,13 @@ DOMAINS = {
     "decide_replan": (BOOL, BOOL, BOOL),
     "decide_bind": (BindClass, IpSource),
     "decide_exec_root": (RootKind,),
+    "decide_adopt": (BOOL, BOOL),
     "decide_provider": (Provider,),
     "decide_component": (Gate, RevOrigin, Flavour, Maturity, HwClass, PyWindow, RamTier),
     "decide_profile": (RamTier, DiskTier, HwClass, PyWindow),
     "decide_torch_index": (HwClass, BOOL, BOOL, BOOL),
 }
-DOMAIN_ROWS = 3 + 36 + 8 + 12 + 6 + 8 + 3240 + 240 + 40
+DOMAIN_ROWS = 3 + 36 + 8 + 12 + 6 + 4 + 8 + 3240 + 240 + 40
 
 _KIND_CODE = {kind: index for index, kind in enumerate(Kind)}
 _REASON_CODE = {reason: index + 1 for index, reason in enumerate(Reason)}

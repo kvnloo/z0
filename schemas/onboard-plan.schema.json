@@ -28,8 +28,8 @@
     },
     "registry": {
       "type": "object",
-      "description": "sha256 of each registry source file the plan read.",
-      "propertyNames": { "pattern": "^registry/[a-z_]+\\.yaml$" },
+      "description": "sha256 of each registry source file the plan read, and of each zer0.repo.yaml read at a pin from the origin mirror (§2.6).",
+      "propertyNames": { "pattern": "^(registry/[a-z_]+\\.yaml|[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+@[0-9a-f]{40}:zer0\\.repo\\.yaml)$" },
       "additionalProperties": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
     },
     "answers_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
@@ -97,6 +97,23 @@
       }
     },
     "asks": { "type": "array", "items": { "$ref": "#/$defs/ask" } },
+    "conflicts": {
+      "type": "array",
+      "description": "§2.6: zer0.repo.yaml setup steps that collide with registry steps (same id, different step; or a new id with a registry step's argv). The registry wins; the report lists them for the maintainer.",
+      "items": {
+        "type": "object",
+        "required": ["component", "id", "fields", "source", "resolution"],
+        "properties": {
+          "component": { "type": "string" },
+          "id": { "type": "string" },
+          "fields": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+          "source": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+@[0-9a-f]{40}:zer0\\.repo\\.yaml$" },
+          "resolution": { "const": "registry" },
+          "registry_id": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
     "warnings": { "type": "array", "items": { "type": "string" } }
   },
   "additionalProperties": false,

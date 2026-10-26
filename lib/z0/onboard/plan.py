@@ -16,7 +16,7 @@ import heapq
 from typing import Iterable, Optional
 
 from . import kernel as k
-from . import regsnap
+from . import regsnap, repo_setup
 from .expand import component_context, expand_step, hw_class, select_tree, z0_disk_gib
 from .util import canonical_json, norm_key, parse_requirement, sha256_text, version_ge
 from .when import describe, first_failure
@@ -117,7 +117,8 @@ def rev_evidence(comp: dict, host: dict, warnings: list, cid: str) -> tuple:
 def prepared_path(host: dict, snap: dict) -> tuple:
     """(prepared PATH, links) for the plan (§4, P1).
 
-    A non-system bin dir that also holds a `configure: never` harness binary is dropped;
+    Every non-system bin dir that holds a `configure: never` harness binary (all of
+    detect's `bin_dirs`, not only the first hit) is dropped;
     LINK_DIR takes its place, with one link per allowed registry tool or harness that
     resolved there. A system dir cannot be dropped: that case stays a warning.
     """
@@ -125,8 +126,8 @@ def prepared_path(host: dict, snap: dict) -> tuple:
     never = {hid for hid, row in rows.items() if (row.get("policy") or {}).get("configure") == "never"}
     system = set((regsnap.toolchains(snap).get("detect") or {}).get("system_dirs") or ["/usr/bin", "/bin"])
     harnesses = host.get("harnesses") or {}
-    shared = {entry["bin_dir"] for hid, entry in harnesses.items()
-              if hid in never and entry.get("bin_dir")} - system
+    shared = {directory for hid, entry in harnesses.items() if hid in never
+              for directory in (entry.get("bin_dirs") or [entry.get("bin_dir")]) if directory} - system
     out, links = [], []
     for directory in host.get("prepared_path") or []:
         if directory not in shared:
@@ -289,9 +290,10 @@ def _tool_satisfied(step: dict, minimum: Optional[str], host: dict) -> bool:
     tool = step["id"].split(".", 1)[1]
     if tool == "python-window":
         return host.get("python_window") == "present"
+    # python3 (T1): the interpreter the steps run must itself be present, resolve under
+    # the prepared PATH and meet the requirement. A window python elsewhere (python3.12
+    # off the PATH, or z0int's) does not make `python3` work.
     fact = (host.get("toolchains") or {}).get(tool) or {}
-    if tool == "python3" and host.get("python_window") == "present":
-        return True
     if fact.get("state") != "present" or fact.get("sh_resolves") is False:
         return False
     return minimum is None or version_ge(fact.get("version"), minimum)
@@ -406,11 +408,31 @@ def _hardware_gap(comp: dict, host: dict) -> Optional[str]:
     return None
 
 
+def component_steps(cid: str, comp: dict, setups: dict, pin: str) -> tuple:
+    """(raw steps, conflicts, warnings): the registry's steps plus the repo-local
+    `zer0.repo.yaml setup:` steps read at the pin (§2.6; the registry wins)."""
+    steps = list((comp.get("onboard") or {}).get("steps") or [])
+    entry = setups.get(cid)
+    if not entry:
+        return steps, [], []
+    if entry.get("ref") != pin:
+        return steps, [], [f"{cid}: zer0.repo.yaml setup was read at {str(entry.get('ref'))[:12]}, "
+                           f"not at the pin {pin[:12]}; ignored"]
+    errors = [f"{cid}: zer0.repo.yaml setup: {error}" for error in entry.get("errors") or []]
+    if not repo_setup.usable(entry, pin):
+        return steps, [], errors
+    added, conflicts, warnings = repo_setup.merge(cid, steps, entry)
+    return steps + added, conflicts, warnings + errors
+
+
 def plan(host: dict, snap: dict, *, mode: str = "auto", profile: Optional[str] = None,
          with_ids: Iterable[str] = (), without_ids: Iterable[str] = (),
          grants: Optional[dict] = None, pin_policy: str = "pinned", llm: str = "local",
-         answers: Optional[dict] = None) -> dict:
+         answers: Optional[dict] = None, repo_setups: Optional[dict] = None) -> dict:
+    """`repo_setups`: {component: vetted setup entry} from the origin mirrors (§2.6);
+    defaults to the snapshot's `repo_setups` (filled by the CLI after the fetch)."""
     with_ids, without_ids = list(with_ids), list(without_ids)
+    setups = (snap.get("repo_setups") or {}) if repo_setups is None else repo_setups
     grants = grants or {"bundles": [], "source": "none"}
     comps = regsnap.components(snap)
     onboarding = regsnap.onboarding(snap)
@@ -487,8 +509,15 @@ def plan(host: dict, snap: dict, *, mode: str = "auto", profile: Optional[str] =
         owner[step["id"]] = None
         for cid in users:
             tool_users.setdefault(cid, []).append(step["id"])
+    conflicts: list = []
+    provenance = dict(snap.get("files") or {})
     for cid in targets:
-        for raw in (comps[cid].get("onboard") or {}).get("steps") or []:
+        raws, found, notes_setup = component_steps(cid, comps[cid], setups, contexts[cid]["pin"])
+        conflicts += found
+        warnings += notes_setup
+        if repo_setup.usable(setups.get(cid), contexts[cid]["pin"]) and setups[cid].get("sha256"):
+            provenance[repo_setup.source_key(setups[cid])] = setups[cid]["sha256"]
+        for raw in raws:
             step = expand_step(raw, contexts[cid])
             step["component"] = cid
             steps.append(step)
@@ -521,6 +550,8 @@ def plan(host: dict, snap: dict, *, mode: str = "auto", profile: Optional[str] =
     grant_source = {"tty": k.Source.TTY, "flag": k.Source.FLAG}.get(grants.get("source"),
                                                                     k.Source.FLAG)
     kinds = {s["id"]: s["kind"] for s in steps}
+    # Per-step C2 confirmations from a guided TTY run (answers.yaml `confirmed_steps`).
+    confirmed = set((answers or {}).get("confirmed_steps") or [])
     dep_blocker: dict = {}
 
     def dependency_blocker(cid: str) -> Optional[str]:
@@ -601,25 +632,33 @@ def plan(host: dict, snap: dict, *, mode: str = "auto", profile: Optional[str] =
             elif sid in ("toolchain.python-window", "toolchain.python3") \
                     and host.get("python_window") == "impossible":
                 state = {"status": "unavailable", "reason": "python_window"}
-        if state is None and step["kind"] == "service_unit":
-            unit = _adopted_unit(step, host)
-            if unit is not None:
-                target = contexts[cid]["rev_bridge"] if gate(comp) is k.Gate.DASH else contexts[cid]["pin"]
-                if unit.get("deployed_sha") and target.startswith(unit["deployed_sha"]):
-                    state = {"status": "already_satisfied"}
-                else:
-                    cls = k.ConsentClass.C2  # redeploying an adopted unit at another SHA
-                    notes[sid] = (f"adopted {unit.get('name')} runs "
-                                  f"{str(unit.get('deployed_sha') or 'an unknown SHA')[:12]}; "
-                                  "redeploying it is C2")
-        if state is None and step["kind"] in EFFECTFUL \
+        # S3: an existing unit with the same name is adopted (kept) or asked, never
+        # created again. The kernel decides (decide_adopt); its probe path existing says
+        # nothing about which SHA runs, so the `_satisfied` probe check is skipped.
+        unit = _adopted_unit(step, host) if step["kind"] == "service_unit" else None
+        if state is None and unit is not None:
+            target = contexts[cid]["rev_bridge"] if gate(comp) is k.Gate.DASH else contexts[cid]["pin"]
+            deployed = str(unit.get("deployed_sha") or "")
+            adopt = k.decide_adopt(True, bool(deployed) and target.startswith(deployed))
+            if adopt.kind is k.Kind.ALLOW:
+                state = {"status": "already_satisfied"}
+            else:
+                cls = k.ConsentClass.C2  # redeploying an adopted unit at another SHA
+                step["consent"] = {"class": "C2"}
+                notes[sid] = (f"adopted {unit.get('name')} runs "
+                              f"{deployed[:12] or 'an unknown SHA'}; redeploying it is C2")
+        if state is None and unit is None and step["kind"] in EFFECTFUL \
                 and _satisfied(step, host, owned, trees.get(cid) or {}):
             state = {"status": "already_satisfied"}
         if state is None and step["kind"] == "ask":
             state = {"status": "ask", "reason": "manual"}
             cls = k.ConsentClass.C2
         if state is None and step["kind"] != "check":
-            granted = step["consent"].get("bundle") in (grants.get("bundles") or [])
+            if cls is k.ConsentClass.C2:
+                # §3: C2 is confirmed per step on a TTY, never by a bundle grant.
+                granted = grants.get("source") == "tty" and sid in confirmed
+            else:
+                granted = step["consent"].get("bundle") in (grants.get("bundles") or [])
             verdict = k.decide_consent(kmode, cls, granted, grant_source)
             if verdict.kind is not k.Kind.ALLOW:
                 state = _state(verdict)
@@ -750,7 +789,7 @@ def plan(host: dict, snap: dict, *, mode: str = "auto", profile: Optional[str] =
         "llm": llm,
         "grants": {"bundles": sorted(set(grants.get("bundles") or [])),
                    "source": grants.get("source", "none")},
-        "registry": dict(sorted((snap.get("files") or {}).items())),
+        "registry": dict(sorted(provenance.items())),
         "targets": targets,
         "components": summary,
         "prepared_path": path_dirs,
@@ -761,6 +800,8 @@ def plan(host: dict, snap: dict, *, mode: str = "auto", profile: Optional[str] =
     }
     if path_links:
         result["path_links"] = path_links
+    if conflicts:
+        result["conflicts"] = sorted(conflicts, key=lambda c: (c["component"], c["id"]))
     if answers:
         result["answers_sha256"] = sha256_text(canonical_json(answers))
     result["plan_hash"] = plan_hash(result)

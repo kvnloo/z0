@@ -4,8 +4,9 @@
 - Config and session dirs: existence only, never opened.
 - `version_cmd` runs only when `policy.exec_probe: allowed` (grok, cursor: never).
 - Allowed harness bin dirs join the prepared PATH; `configure: never` ones do not. Each
-  installed allowed harness records its `path`; each policy-excluded binary records its
-  `bin_dir`, so the plan can keep a shared dir that holds it off the PATH (P1).
+  installed allowed harness records its `path`; each policy-excluded binary records
+  `bin_dirs`, every search or prepared-PATH dir that holds it (`bin_dir`, the first,
+  stays for compatibility), so the plan keeps each of those dirs off the PATH (P1).
 """
 from __future__ import annotations
 
@@ -50,7 +51,7 @@ def detect(ctx, dirs_by_source: dict) -> dict:
     rows = (ctx.registry.get("harnesses") or {}).get("harnesses") or {}
     search = (dirs_by_source["well_known_dir"] + dirs_by_source["version_manager"]
               + dirs_by_source["path"] + dirs_by_source["system"])
-    result, forbidden_bins = {}, []
+    result, forbidden_bins, never_rows = {}, [], []
     for hid, row in rows.items():
         det = row.get("detect")
         if not det:
@@ -68,9 +69,11 @@ def detect(ctx, dirs_by_source: dict) -> dict:
                 break
         dirs, overrides = _config_dirs(ctx, det.get("config_dirs"))
         entry: dict = {"state": "installed" if binary else ("config_only" if dirs else "absent")}
-        if binary:
-            entry["bin_dir" if never else "path"] = ctx.tilde(os.path.dirname(binary) if never
-                                                              else binary)
+        if binary and never:
+            never_rows.append((hid, det.get("binaries") or []))
+            entry["bin_dir"] = ctx.tilde(os.path.dirname(binary))
+        elif binary:
+            entry["path"] = ctx.tilde(binary)
         if dirs:
             entry["config_dirs"] = [ctx.tilde(d) for d in dirs]
         if overrides:
@@ -94,6 +97,14 @@ def detect(ctx, dirs_by_source: dict) -> dict:
             if parsed:
                 entry["version"] = ".".join(str(p) for p in parsed)
         result[hid] = entry
+    # P1: every dir that holds a policy-excluded binary, not only the first hit, so the
+    # plan can drop each one of them from the prepared PATH (a second copy in another
+    # prepared dir would otherwise still resolve).
+    scan = list(dict.fromkeys(search + list(ctx.prepared_path)))
+    for hid, names in never_rows:
+        held = [d for d in scan if any(os.path.isfile(os.path.join(d, n))
+                                       and os.access(os.path.join(d, n), os.X_OK) for n in names)]
+        result[hid]["bin_dirs"] = [ctx.tilde(d) for d in held]
     for name in forbidden_bins:
         if ctx.which(name, ctx.prepared_path):
             ctx.warn(f"prepared PATH dir also holds policy-excluded `{name}`; the plan "

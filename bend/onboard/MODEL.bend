@@ -124,6 +124,7 @@ type Reason is Data:
   RRamLow{}
   RShadow{}
   RRevUnverified{}
+  RAdoptedOtherSha{}
 
 type Verdict is Data:
   VAllow{}
@@ -230,6 +231,22 @@ def decide_exec_root(root: RootKind) -> Verdict:
       VRefuse{RThroughCheckout{}}
     case RkOther{}:
       VRefuse{ROutsideRoots{}}
+
+# S3: an existing unit is adopted, never duplicated. Same SHA: kept. Another SHA:
+# redeploying it is C2, so ask (decide_consent then decides that C2 step).
+def adopt_sha(same_sha: Bool) -> Verdict:
+  match same_sha:
+    case True{}:
+      VAllow{}
+    case False{}:
+      VAsk{RAdoptedOtherSha{}}
+
+def decide_adopt(unit_exists: Bool, same_sha: Bool) -> Verdict:
+  match unit_exists:
+    case False{}:
+      VAllow{}
+    case True{}:
+      adopt_sha(same_sha)
 
 # P1: grok and cursor are refused in every role; remote providers need consent.
 def decide_provider(p: Provider) -> Verdict:
@@ -495,6 +512,8 @@ def reason_code(r: Reason) -> Nat:
       19n
     case RRevUnverified{}:
       20n
+    case RAdoptedOtherSha{}:
+      21n
 
 def code_verdict(v: Verdict) -> Nat:
   match v:

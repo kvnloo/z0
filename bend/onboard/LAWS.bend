@@ -86,6 +86,18 @@ law build_tree_root_refuses:
 law undeclared_root_refuses:
   {M.decide_exec_root(M.RkOther{}) == M.VRefuse{M.ROutsideRoots{}} : M.Verdict}
 
+# S3 adopt_before_create: an existing unit at another SHA is never redeployed silently;
+# it is asked (a C2 step). An existing unit at the pinned SHA is kept (adopted).
+law adopted_other_sha_asks:
+  {M.decide_adopt(True{}, False{}) == M.VAsk{M.RAdoptedOtherSha{}} : M.Verdict}
+
+law adopted_same_sha_kept:
+  {M.decide_adopt(True{}, True{}) == M.VAllow{} : M.Verdict}
+
+law no_unit_creates:
+  for s: Bool
+  {M.decide_adopt(False{}, s) == M.VAllow{} : M.Verdict}
+
 # P1 forbidden_provider: grok and cursor are refused in every role.
 law grok_refused:
   {M.decide_provider(M.PvGrok{}) == M.VRefuse{M.RForbiddenProvider{}} : M.Verdict}

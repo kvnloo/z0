@@ -81,6 +81,15 @@ def Laws.build_tree_root_refuses():
 def Laws.undeclared_root_refuses():
   {==}
 
+def Laws.adopted_other_sha_asks():
+  {==}
+
+def Laws.adopted_same_sha_kept():
+  {==}
+
+def Laws.no_unit_creates(s):
+  {==}
+
 def Laws.grok_refused():
   {==}
 
