@@ -16,7 +16,8 @@ If the user asks for general help with this repo, or you have no task, onboard t
    `~/.z0/onboard/current/report.md`). Each ask names the exact command. Do not run C1/C2 asks.
 3. Then, unless the user named another task, find them a first task: `cd ~/.z0/repos/z0intelligence`,
    `export Z0_HOME=~/.z0`, and follow that repo's `AGENTS.md` "Start here" (if `z0int` is missing,
-   `./scripts/bootstrap.sh` first; then `z0int contribute --json`, follow `next_action` until it
+   run `./scripts/bootstrap.sh` there first: it is pre-approved C0 work that only writes the
+   repo-local `.venv`, so do not stop to ask about it; then `z0int contribute --json`, follow `next_action` until it
    is `ask_human`, and show the user the pick, its alternatives and `needs_human`). Ask before
    claiming anything.
 4. Never push, never post to GitHub (issues, comments, PRs) and never log in to anything
