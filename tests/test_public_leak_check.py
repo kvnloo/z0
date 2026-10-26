@@ -25,7 +25,7 @@ GH_TOKEN = "gh" + "p_" + "B" * 36
 
 
 def rules(text, denylist=()):
-    return [rule for _, rule, _ in plc.findings_in_text(text, denylist)]
+    return [rule for _, rule in plc.findings_in_text(text, denylist)]
 
 
 class Patterns(unittest.TestCase):
@@ -50,11 +50,29 @@ class Patterns(unittest.TestCase):
 
     def test_secret_flagged_without_echo(self):
         found = list(plc.findings_in_text(f"token: {GH_TOKEN}"))
-        self.assertEqual([(r, s) for _, r, s in found], [("github-token", "")])
+        self.assertEqual(found, [(1, "github-token")])
 
     def test_denylist_literal_flagged_without_echo(self):
         found = list(plc.findings_in_text("a\nroot=/very/private\n", ["/very/private"]))
-        self.assertEqual(found, [(2, "denylist", "")])
+        self.assertEqual(found, [(2, "denylist")])
+
+    def test_quad100_service_address_allowed(self):
+        self.assertEqual(rules("nameserver 100.100.100.100"), [])
+
+    def test_personal_paths_flagged(self):
+        user = "k" + "q" + "z"
+        self.assertEqual(rules(f"root=/home/{user}/x and /Users/{user}/y"), ["personal-path"] * 2)
+        self.assertEqual(rules("mount /mnt/" + "bigdisk" + "/models"), ["mount-path"])
+
+    def test_placeholder_paths_allowed(self):
+        self.assertEqual(rules("/home/user/x /home/someone/x /Users/runner/y /home/$USER/z ~/x"), [])
+
+    def test_personal_email_flagged_placeholders_allowed(self):
+        self.assertEqual(rules("mail " + "kqz" + "@" + "gmail" + ".com"), ["personal-email"])
+        self.assertEqual(rules("t@example.com 1+x@users.noreply.github.com noreply@anthropic.com"), [])
+
+    def test_line_numbers_are_exact(self):
+        self.assertEqual(list(plc.findings_in_text(f"a\nb\nhost {TS_IP}\n")), [(3, "tailnet-ipv4")])
 
     def test_clean_text(self):
         self.assertEqual(rules("port = 4747  # default\npath = ~/.config/z0-hosts"), [])
@@ -74,6 +92,24 @@ class Cli(unittest.TestCase):
             res = self.run_cli(str(tmp))
             self.assertEqual(res.returncode, 1)
             self.assertIn("bad.md:1: tailnet-ipv4", res.stdout)
+            self.assertNotIn(TS_IP, res.stdout + res.stderr)
+
+    def test_overlay_literals_denied_and_never_printed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            host = tmp / "hosts" / "h1"
+            host.mkdir(parents=True)
+            (host / "files.toml").write_text('[storage]\nmodel_root = "/srv/PRIVROOT"\n')
+            (host / "devices.toml").write_text('[p]\nkind = "phone"\nserial = "SER1AL99"\n')
+            (tmp / "tree").mkdir()
+            (tmp / "tree" / "f.txt").write_text("x /srv/PRIVROOT/y\nphone SER1AL99\n")
+            res = self.run_cli(str(tmp / "tree"), "--overlay", str(tmp))
+            self.assertEqual(res.returncode, 1)
+            self.assertIn("f.txt:1: denylist", res.stdout)
+            self.assertIn("f.txt:2: denylist", res.stdout)
+            self.assertNotIn("PRIVROOT", res.stdout + res.stderr)
+            self.assertNotIn("SER1AL99", res.stdout + res.stderr)
+            self.assertEqual(self.run_cli(str(tmp / "tree"), "--overlay", str(tmp / "none")).returncode, 2)
 
     def test_denylist_file_never_printed(self):
         with tempfile.TemporaryDirectory() as tmp:

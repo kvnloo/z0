@@ -7,12 +7,18 @@ Usage:
 With no PATH it scans the git-tracked files of the current repository; a PATH may be
 a file or a directory (walked, .git skipped). Patterns are generic (they name no real
 host): tailnet addresses (100.64.0.0/10 and the Tailscale IPv6 range), tailnet names
-(*.ts.net, tail<hex>) and secret-shaped values. Documentation fixtures stay allowed:
-100.64.0.x and example.ts.net.
+(*.ts.net, tail<hex>), secret-shaped values, personal home paths (/home/<user>,
+/Users/<user>), mount paths (/mnt/<x>) and personal email addresses. Documentation
+fixtures stay allowed: 100.64.0.x, 100.100.100.100 (Tailscale's fixed service address,
+the same on every tailnet), example.ts.net, placeholder users and example/noreply mail.
 
---denylist FILE adds one literal per line (blank lines and # comments skipped). Keep
-that file in your private z0-hosts instance; findings name the file and line but
-never print a denylisted literal or a secret.
+--denylist FILE adds one literal per line (blank lines and # comments skipped).
+--overlay [DIR] adds every private literal of a z0-hosts instance (absolute paths and
+device serials from hosts/*/*.toml; default DIR: $Z0_HOSTS_DIR or ~/.config/z0-hosts),
+so the private values never need to be written down a second time.
+
+Findings name the file, the line and the rule only. A matched value is never printed:
+the output of a check on a public repo can itself be public (CI logs).
 
 Exit 0 clean, 1 on findings, 2 on usage errors. Stdlib only (Python 3.10+).
 """
@@ -39,26 +45,39 @@ RULES = {
     "slack-token": re.compile(r"\bxox[abprs]-[A-Za-z0-9-]{10,}"),
     "google-api-key": re.compile(r"\bAIza[0-9A-Za-z_-]{35}\b"),
 }
-SECRET_RULES = {"tailscale-auth-key", "private-key", "github-token", "anthropic-key",
-                "openai-style-key", "aws-access-key", "slack-token", "google-api-key"}
+PLACEHOLDER_USERS = r"(?:user|username|runner|example|someone|alice|bob|you|me|name|USER|USERNAME)"
+RULES.update({
+    "personal-path": re.compile(
+        r"(?<![\w.-])/(?:home|Users)/(?!" + PLACEHOLDER_USERS + r"(?![\w.-]))[A-Za-z_][\w.-]*"),
+    "mount-path": re.compile(r"(?<![\w.-])/mnt/[A-Za-z0-9][\w.-]*"),
+    "personal-email": re.compile(
+        r"(?i)\b[a-z0-9._%+-]+@(?!(?:[a-z0-9-]+\.)*(?:example\.(?:com|org|net)|example|localhost|"
+        r"users\.noreply\.github\.com|noreply\.github\.com|anthropic\.com)\b)"
+        r"[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:com|net|org|io|dev|me|co|us|edu)\b"),
+})
+ALLOWED_V4 = {"100.100.100.100"}
 MAX_BYTES = 5 * 1024 * 1024
 
 
 def findings_in_text(text: str, denylist=()):
-    """Yield (line_no, rule, shown) for each finding; shown is '' when it must not be echoed."""
-    for no, line in enumerate(text.splitlines(), 1):
-        for m in TAILNET_V4.finditer(line):
-            if not (m.group(1) == "64" and m.group(2) == "0"):
-                yield no, "tailnet-ipv4", m.group(0)
-        for m in TS_NAME.finditer(line):
-            if m.group(1).lower() != "example":
-                yield no, "tailnet-name", m.group(0)
-        for rule, rx in RULES.items():
-            for m in rx.finditer(line):
-                yield no, rule, "" if rule in SECRET_RULES else m.group(0)
-        for lit in denylist:
-            if lit in line:
-                yield no, "denylist", ""
+    """Yield (line_no, rule) for each finding. The matched value is never returned."""
+    found = []
+    for m in TAILNET_V4.finditer(text):
+        if not (m.group(1) == "64" and m.group(2) == "0") and m.group(0) not in ALLOWED_V4:
+            found.append((m.start(), "tailnet-ipv4"))
+    for m in TS_NAME.finditer(text):
+        if m.group(1).lower() != "example":
+            found.append((m.start(), "tailnet-name"))
+    for rule, rx in RULES.items():
+        found += [(m.start(), rule) for m in rx.finditer(text)
+                  if not (rule == "personal-email" and m.group(0).lower().endswith(".ts.net"))]
+    for lit in denylist:
+        pos = text.find(lit)
+        while pos != -1:
+            found.append((pos, "denylist"))
+            pos = text.find(lit, pos + 1)
+    for pos, rule in sorted(found):
+        yield text.count("\n", 0, pos) + 1, rule
 
 
 def tracked_files(cwd: Path):
@@ -81,6 +100,32 @@ def read_denylist(path: str):
     return [ln.strip() for ln in lines if ln.strip() and not ln.strip().startswith("#")]
 
 
+def overlay_literals(root: Path):
+    """Private literals of a z0-hosts instance: absolute paths and device serials."""
+    try:
+        import tomllib
+    except ModuleNotFoundError:  # Python 3.10
+        return []
+    out = set()
+
+    def visit(node, key=""):
+        if isinstance(node, dict):
+            for k, v in node.items():
+                visit(v, k)
+        elif isinstance(node, list):
+            for v in node:
+                visit(v, key)
+        elif isinstance(node, str) and len(node) >= 6 and (node.startswith("/") or key == "serial"):
+            out.add(node.rstrip("/"))
+
+    for f in sorted(root.glob("hosts/*/*.toml")):
+        try:
+            visit(tomllib.loads(f.read_text()))
+        except (OSError, ValueError):
+            continue
+    return sorted(out)
+
+
 def scan(paths, denylist=()):
     results = []
     for path in paths:
@@ -90,7 +135,7 @@ def scan(paths, denylist=()):
             text = path.read_bytes().decode("utf-8")
         except (OSError, UnicodeDecodeError):
             continue
-        results += [(path, no, rule, shown) for no, rule, shown in findings_in_text(text, denylist)]
+        results += [(path, no, rule) for no, rule in findings_in_text(text, denylist)]
     return results
 
 
@@ -98,12 +143,21 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="public-leak-check", description=__doc__.splitlines()[0])
     ap.add_argument("paths", nargs="*", help="files or directories (default: git-tracked files)")
     ap.add_argument("--denylist", metavar="FILE", help="private literals that must not appear")
+    ap.add_argument("--overlay", metavar="DIR", nargs="?", const="",
+                    help="also deny the private literals of a z0-hosts instance "
+                         "(default DIR: $Z0_HOSTS_DIR or ~/.config/z0-hosts)")
     args = ap.parse_args(argv)
     try:
         denylist = read_denylist(args.denylist) if args.denylist else []
     except OSError as exc:
         print(f"public-leak-check: cannot read denylist: {exc.strerror}", file=sys.stderr)
         return 2
+    if args.overlay is not None:
+        root = Path(args.overlay or os.environ.get("Z0_HOSTS_DIR") or "~/.config/z0-hosts").expanduser()
+        if not (root / "hosts").is_dir():
+            print(f"public-leak-check: no z0-hosts instance at {root}", file=sys.stderr)
+            return 2
+        denylist += overlay_literals(root)
     if args.paths:
         missing = [p for p in args.paths if not Path(p).exists()]
         if missing:
@@ -117,8 +171,8 @@ def main(argv=None) -> int:
             print("public-leak-check: not a git repository; pass PATH", file=sys.stderr)
             return 2
     results = scan(files, denylist)
-    for path, no, rule, shown in results:
-        print(f"{path}:{no}: {rule}" + (f" ({shown})" if shown else ""))
+    for path, no, rule in results:
+        print(f"{path}:{no}: {rule}")
     print(f"public-leak-check: {len(files)} file(s), {len(denylist)} denylist literal(s), "
           f"{len(results)} finding(s)", file=sys.stderr)
     return 1 if results else 0
