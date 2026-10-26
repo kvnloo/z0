@@ -1,0 +1,46 @@
+name: contrib-ready
+
+# Contributor spec §4.4: the contrib_ready completion law (bend/contrib_ready), its
+# Python twin (scripts/contrib_ready.py), exhaustive/bounded twin parity and mutants.
+# The receipt-free parts (laws on the twin, CLI, constructor sets) also run in the
+# `onboard` unit job through `unittest discover`; this job makes Bend mandatory.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - bend/contrib_ready/**
+      - scripts/contrib_ready.py
+      - tests/contrib_ready/**
+      - tests/bend_verifier.py
+      - .github/workflows/contrib-ready.yml
+
+permissions:
+  contents: read
+
+jobs:
+  laws:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      Z0_REQUIRE_BEND: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Cache pinned Bend + Lean archives
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/bend-toolchain/downloads
+          key: bend-2.0.34-lean-4.34.0-${{ hashFiles('bend/contrib_ready/toolchain.json') }}
+      - name: Install pinned verifier (sha256-checked)
+        run: bash bend/contrib_ready/bootstrap.sh "$RUNNER_TEMP/bend-toolchain" >> "$GITHUB_ENV"
+      - name: Laws (bend PROOF.bend --verdict)
+        working-directory: bend/contrib_ready
+        run: |
+          PATH="/usr/bin:$PATH:$LEAN_BIN" "$BEND" PROOF.bend --verdict | tee "$RUNNER_TEMP/verdict.txt"
+          grep -qx "ALL PROOFS CHECK" "$RUNNER_TEMP/verdict.txt"
+      - name: Twin parity, Python laws, mutants and the gate CLI
+        run: python -m unittest discover -s tests/contrib_ready -t . -v
