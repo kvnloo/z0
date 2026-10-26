@@ -1,0 +1,9 @@
+toolchain = "bend-2.0.34"
+
+[[domain]]
+name = "onboard"
+dir = "bend/onboard"
+twin = "lib/z0/onboard/kernel.py"
+parity = "tests/onboard/test_kernel_twin.py"
+mutation = "tests/onboard/test_kernel_mutation.py"
+gate = []

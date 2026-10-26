@@ -9,7 +9,7 @@ import subprocess
 import tempfile
 
 from . import file_sha256
-from .cache import PINS, ensure_toolchain, ensure_checker, scratch_root
+from .cache import PINS, ensure_toolchain, ensure_checker, scratch_root, cache_root
 
 FILES_SHA256 = json.loads(PINS.read_text())['files_sha256']
 _ACTIVE: ContextVar[tuple[str, dict[str, str]] | None] = ContextVar('laws_verified_environment', default=None)
@@ -53,6 +53,7 @@ def verifier_environment(domain=None):
     # The Lean archive bundles clang. Always select the host compiler first.
     env['PATH'] = os.pathsep.join((str(Path(clang).parent), str(lean_bin), env.get('PATH', '')))
     env['TMPDIR'] = str(scratch_root())
+    env['XDG_CACHE_HOME'] = str(cache_root().parent)
     env['BEND'] = str(bend)
     env['LEAN_BIN'] = str(lean_bin)
     with tempfile.TemporaryDirectory(prefix='bend-verifier-', dir=env['TMPDIR']) as folder:

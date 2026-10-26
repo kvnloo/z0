@@ -4,3 +4,6 @@ __pycache__/
 venv/
 *.egg-info/
 .DS_Store
+.z0/laws.lock
+.z0/laws-state.lock
+.z0/laws.receipt.json

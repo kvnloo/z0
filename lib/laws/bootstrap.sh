@@ -11,18 +11,20 @@ export TMPDIR="${TMPDIR:-$root/work}"
 case "$(realpath -m "$TMPDIR")" in /tmp|/tmp/*) echo 'TMPDIR under /tmp is forbidden' >&2; exit 1;; esac
 mkdir -p "$TMPDIR"
 mkdir -p "$root/downloads"
+manifest="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/toolchain.json"
+mapfile -t pins < <(python3 -c 'import json,sys; p=json.load(open(sys.argv[1])); print("\n".join(p[k] for k in ("url", "sha256", "lean_url", "lean_sha256")))' "$manifest")
 bend=${BEND_ARCHIVE:-$root/downloads/bend-2.0.34-linux-x64.tar.gz}
 lean=${LEAN_ARCHIVE:-$root/downloads/lean-4.34.0-linux.tar.zst}
 if [ ! -f "$bend" ]; then
   curl --fail --location --max-time 180 --max-filesize 40000000 --output "$bend" \
-    https://github.com/bendlang/bend/releases/download/v2.0.34/bend-2.0.34-linux-x64.tar.gz
+    "${pins[0]}"
 fi
 if [ ! -f "$lean" ]; then
   curl --fail --location --max-time 600 --max-filesize 600000000 --output "$lean" \
-    https://github.com/leanprover/lean4/releases/download/v4.34.0/lean-4.34.0-linux.tar.zst
+    "${pins[2]}"
 fi
-printf '%s  %s\n' 78106a97af242429dcc057258eb8d10f69cddebcd5e263022185a52d003e09bf "$bend" | sha256sum --check --strict -
-printf '%s  %s\n' caaa98356098c85dc0fcbbd28e1ec66f39eb6551829972b752ff20e1286b646b "$lean" | sha256sum --check --strict -
+printf '%s  %s\n' "${pins[1]}" "$bend" | sha256sum --check --strict -
+printf '%s  %s\n' "${pins[3]}" "$lean" | sha256sum --check --strict -
 tar -xzf "$bend" -C "$root"
 tar --zstd -xf "$lean" -C "$root"
 printf 'BEND=%s/bend/bin/bend\nLEAN_BIN=%s/lean-4.34.0-linux/bin\n' "$root" "$root"

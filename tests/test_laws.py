@@ -9,16 +9,24 @@ import sys
 sys.path.insert(0, str(ROOT/'lib'))
 
 
+from laws.cache import scratch_root
+
+
+def temporary_directory():
+    return tempfile.TemporaryDirectory(dir=scratch_root())
+
+
 class FailClosedRegressions(unittest.TestCase):
     def test_cache_rejects_changed_symlink_and_unlisted_files(self):
         from laws.cache import seal
         from laws import validate_cache
-        with tempfile.TemporaryDirectory() as folder:
+        with temporary_directory() as folder:
             root = Path(folder)
             (root/'artifact').write_text('good')
             (root/'alias').symlink_to('artifact')
             seal(root, 'a'*64, [root/'artifact', root/'alias'])
             validate_cache(root, 'a'*64)
+            root.chmod(0o755)  # deliberate tampering bypasses incidental-write protection
             (root/'alias').unlink()
             (root/'alias').symlink_to('missing')
             with self.assertRaises(RuntimeError):
@@ -31,7 +39,7 @@ class FailClosedRegressions(unittest.TestCase):
 
     def test_manifest_rejects_non_table_domain(self):
         from laws import load_manifest
-        with tempfile.TemporaryDirectory() as folder:
+        with temporary_directory() as folder:
             root = Path(folder)
             (root/'laws.toml').write_text('toolchain="bend-2.0.34"\ndomain=[1]\n')
             with self.assertRaises(ValueError):
@@ -41,15 +49,17 @@ class FailClosedRegressions(unittest.TestCase):
         from laws.cli import init_domain
         from laws import load_manifest
         import subprocess
-        with tempfile.TemporaryDirectory() as folder:
+        with temporary_directory() as folder:
             root = Path(folder)
             init_domain(root, 'demo')
             domain = load_manifest(root)['domain'][0]
             for key in ('twin', 'parity', 'mutation'):
                 self.assertTrue((root/domain[key]).is_file())
+            import os
+            env = dict(os.environ, PYTHONPATH=str(ROOT/'lib'))
             for key in ('parity', 'mutation'):
                 result = subprocess.run([sys.executable, str(root/domain[key])], cwd=root,
-                                        capture_output=True, text=True)
+                                        env=env, capture_output=True, text=True)
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertIn('Ran 1 test', result.stderr)
             with self.assertRaises(ValueError):
@@ -63,7 +73,7 @@ class CacheTests(unittest.TestCase):
         import hashlib
         import json
         from laws import validate_cache
-        with tempfile.TemporaryDirectory() as folder:
+        with temporary_directory() as folder:
             root = Path(folder)
             (root/'checker').write_bytes(b'kernel')
             meta = {'input_sha256': 'a'*64, 'files': {'checker': hashlib.sha256(b'kernel').hexdigest()}}
@@ -82,7 +92,7 @@ class ProveTests(unittest.TestCase):
         self.assertTrue(hasattr(laws, 'prove'), 'prove command missing')
         import json
         from laws import prove
-        with tempfile.TemporaryDirectory() as folder:
+        with temporary_directory() as folder:
             root = Path(folder)
             domain = {'name':'demo','dir':'bend/demo'}
             directory = root/domain['dir']
@@ -114,7 +124,7 @@ class ManifestTests(unittest.TestCase):
     def test_parse_domain_and_reject_escape_unknown_toolchain_and_duplicates(self):
         self.assertIsNotNone(importlib.util.find_spec('laws'), 'shared laws library missing')
         from laws import load_manifest
-        with tempfile.TemporaryDirectory() as folder:
+        with temporary_directory() as folder:
             root = Path(folder)
             text = ('toolchain = "bend-2.0.34"\n[[domain]]\nname="demo"\n'
                     'dir="bend/demo"\ntwin="lib/demo.py"\n'

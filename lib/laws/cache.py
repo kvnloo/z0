@@ -50,6 +50,15 @@ def seal(directory, key, paths):
         elif path.is_file():
             files[name] = file_sha256(path)
     (directory/'cache.json').write_text(json.dumps(dict(input_sha256=key, files=files, links=links), sort_keys=True)+'\n')
+    freeze(directory)
+
+
+def freeze(directory):
+    """Prevent incidental writes to installed artifacts; hashes still govern reuse."""
+    for path in directory.rglob('*'):
+        if not path.is_symlink():
+            path.chmod(path.stat().st_mode & ~0o222)
+    directory.chmod(directory.stat().st_mode & ~0o222)
 
 
 def ensure_toolchain():

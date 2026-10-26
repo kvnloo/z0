@@ -8,6 +8,10 @@ import sys
 
 def main(argv: list[str] | None = None) -> int:
     argv = sys.argv[1:] if argv is None else argv
+    if argv and argv[0] == "laws":
+        from laws import cli
+
+        return cli.main(argv[1:])
     if argv and argv[0] == "onboard":
         from .onboard import cli  # before `commands`, so detect/plan import no registry.py
 
@@ -31,6 +35,7 @@ def main(argv: list[str] | None = None) -> int:
     p_graph.add_argument("--mermaid", action="store_true")
     p_graph.add_argument("--json", action="store_true")
 
+    sub.add_parser("laws", help="Formal laws: check, prove, init (see `z0 laws --help`)")
     sub.add_parser("onboard", help="Detect, plan and onboard this host (see `z0 onboard --help`)")
 
     p_docs = sub.add_parser("docs", help="Documentation tools")

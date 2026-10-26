@@ -61,16 +61,17 @@ def main():
     tmp = Path(os.environ['TMPDIR']).expanduser().resolve()
     if tmp == Path('/tmp') or Path('/tmp') in tmp.parents:
         parser.error('TMPDIR must not be under /tmp')
-    pins = ROOT / 'bend/onboard/toolchain.json'
+    pins = ROOT / 'lib/laws/toolchain.json'
     key = hashlib.sha256(pins.read_bytes()).hexdigest()
     cache = Path(os.environ.get('XDG_CACHE_HOME', Path.home()/'.cache'))/'z0/toolchains'/key
-    cache.mkdir(parents=True, exist_ok=True)
-    report = dict(schema=1, pin_sha256=key, method='20ms sampled logical TMPDIR bytes; compiler subprocess wall-time attribution', runs=[])
+    bootstrap_env = {'PYTHONPATH': str(ROOT/'lib')}
+    report = dict(schema=1, pin_sha256=key, method='20ms sampled logical TMPDIR bytes; compiler subprocess wall-time attribution; cold/warm checker HOME; toolchain may be cached', runs=[])
     for label in ('cold', 'warm'):
         import tempfile
         scratch = Path(tempfile.mkdtemp(prefix=label+'-', dir=tmp))
         phases = []
-        bootstrap = measure('toolchain_bootstrap', ['bash', str(ROOT/'bend/onboard/bootstrap.sh'), str(cache)], scratch, {})
+        bootstrap = measure('toolchain_bootstrap', [sys.executable, '-c',
+            'from laws.cache import ensure_toolchain; print(ensure_toolchain())'], scratch, bootstrap_env)
         phases.append(bootstrap)
         if bootstrap['returncode']:
             report['runs'].append(dict(run=label, phases=phases, unavailable='bootstrap failed; no cached toolchain'))
@@ -88,7 +89,8 @@ def main():
         home.mkdir(exist_ok=True)
         # Remove ambient Lean shims. Wrappers invoke the exact pinned binary.
         path = os.pathsep.join([str(wrappers), '/usr/bin', '/bin', str(lean)])
-        env = dict(HOME=str(home), PATH=path, BEND=str(bend), LEAN_BIN=str(lean))
+        env = dict(HOME=str(home), PATH=path, BEND=str(bend), LEAN_BIN=str(lean),
+                   PYTHONPATH=str(ROOT/'lib'), Z0_LAWS_FRESH_CHECKER='1')
         verdict = measure('verdict', [str(bend), str(ROOT/'bend/onboard/PROOF.bend'), '--verdict'], scratch,
                           dict(env, BEND_BENCH_DOMAIN=str(ROOT/'bend/onboard')))
         # Bend imports are relative to its argument, not this script's cwd.
