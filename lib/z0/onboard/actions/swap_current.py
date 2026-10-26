@@ -1,5 +1,6 @@
 """`swap_current` (§2.5, law S1): atomically point `<id>-current` at the staged release.
-Undo: restore the previous target from the journal.
+Undo: restore the previous target from the journal. When the swap feeds a service unit
+this run wrote, that unit is started (and health-checked) right after the swap.
 
 Before the swap the kernel decides the target's root kind (decide_exec_root): a target
 with a `.git` ancestor is a checkout and is refused, so live code can never be pointed
@@ -34,4 +35,12 @@ def execute(ctx: ActionCtx, step: dict) -> Outcome:
         raise ActionError(f"refused ({verdict.reason.name.lower()}): {ctx.form(target)} is not a "
                           "stamped release (S1)")
     ctx.symlink(link, target)
-    return Outcome(True, f"{ctx.form(link)} -> {ctx.form(target)}")
+    detail = f"{ctx.form(link)} -> {ctx.form(target)}"
+    # §8.3 step 7: swap, then start. A unit this step needs (written by this run, so its
+    # WorkingDirectory could not exist yet) is (re)started now and must become healthy.
+    unit_step = ctx.nearest(step, ("service_unit",))
+    if unit_step is not None and ctx.journal_steps_done(unit_step["id"]):
+        from .service_unit import start_and_check
+        outcome = start_and_check(ctx, unit_step)
+        detail += f"; {unit_step['service']['unit']} started, {outcome.detail}"
+    return Outcome(True, detail)

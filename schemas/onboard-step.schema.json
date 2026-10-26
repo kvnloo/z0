@@ -149,7 +149,21 @@
           },
           "additionalProperties": false
         },
-        "expect_exit": { "type": "integer", "default": 0 }
+        "expect_exit": { "type": "integer", "default": 0 },
+        "serve": {
+          "type": "object",
+          "description": "Self-test of a server without a unit: start argv in the background bound to loopback, GET path until expect_status, then stop it. Env values may use @port@ (a free loopback port chosen at run time) and @tmp@ (a fresh dir under the run dir, removed afterwards).",
+          "required": ["argv", "expect_status"],
+          "properties": {
+            "argv": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+            "cwd": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)*$" },
+            "env": { "type": "object", "additionalProperties": { "type": "string" } },
+            "path": { "type": "string" },
+            "expect_status": { "type": "integer" },
+            "timeout_s": { "type": "integer", "minimum": 1, "maximum": 600 }
+          },
+          "additionalProperties": false
+        }
       },
       "minProperties": 1,
       "additionalProperties": false

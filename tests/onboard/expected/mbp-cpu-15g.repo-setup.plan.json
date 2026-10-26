@@ -4,7 +4,7 @@
       "command": "./z0 onboard --accept models   (or --yes for every bundle)",
       "consent": "C1",
       "id": "z0intelligence.torch",
-      "impact": 13,
+      "impact": 14,
       "reason": "installs torch==2.10.0 --index-url https://download.pytorch.org/whl/cpu into the z0intelligence venv (needs consent: models bundle)"
     },
     {
@@ -126,7 +126,7 @@
     }
   ],
   "pin_policy": "pinned",
-  "plan_hash": "aab6ffd17e8ea5c33548f7554d0ee0d59f596368aa12d84a95cf95725e1d040d",
+  "plan_hash": "bfc4ece8370d9cd13637fbd680d2094162b769c2e92e37e4d72ebed4bdf61770",
   "prepared_path": [
     "$Z0_HOME/bin/links",
     "~/.bun/bin",
@@ -137,7 +137,7 @@
   "profile": "personal",
   "registry": {
     "kvnloo/z0evals@29a28336e526edfb4c3913c30df6eff12b28b2d6:zer0.repo.yaml": "5e642b7ecd24468cbd4f0d28d222393226487c9e07fcebb8f5ba9df0771b56d0",
-    "registry/components.yaml": "197817366d3b52169cddff78d94819664a68b03f3eac68ea4a8c2ca45aaff6ed",
+    "registry/components.yaml": "7446d03140fc8c2dfd59d3ca5952a2eb3d23f5ba1079dac25e2be5e664aa3b3a",
     "registry/harnesses.yaml": "1c2b9ba37ca974e4aa1ed1f6990561ea303fc7e1f73c0fb4c6cc4802d5b4a7b8",
     "registry/onboarding.yaml": "b0c3e2b4c8e7a17bde8a5cb2378c90f6009b4464879a76406f6ae3cdc7e9b9ce",
     "registry/profiles.yaml": "1078cbeef86e532c77478eb5025ec08f6f3f8156a1c77707774416e79d51f819",
@@ -960,10 +960,45 @@
           "bundle": "services",
           "class": "C1"
         },
+        "creates": [
+          "~/.config/z0intelligence/service.env"
+        ],
+        "id": "z0intelligence.service_env",
+        "kind": "write_file",
+        "needs": [
+          "z0intelligence.shim"
+        ],
+        "target_where": "venv",
+        "undo": {
+          "kind": "restore_backup"
+        },
+        "when": [
+          {
+            "fact": "session.systemd_user",
+            "op": "eq",
+            "value": true
+          }
+        ],
+        "where": "home"
+      }
+    },
+    {
+      "state": {
+        "blocked_by": "z0intelligence.shim",
+        "reason": "dependency",
+        "status": "blocked"
+      },
+      "step": {
+        "component": "z0intelligence",
+        "consent": {
+          "bundle": "services",
+          "class": "C1"
+        },
         "id": "z0intelligence.router.unit",
         "kind": "service_unit",
         "needs": [
-          "z0intelligence.shim"
+          "z0intelligence.shim",
+          "z0intelligence.service_env"
         ],
         "probe": {
           "exists": "~/.config/systemd/user/z0intelligence.service"
@@ -1618,11 +1653,6 @@
         "status": "unavailable"
       },
       "step": {
-        "argv": [
-          "bun",
-          "run",
-          "index.ts"
-        ],
         "component": "dash",
         "consent": {
           "class": "C0"
@@ -1632,6 +1662,28 @@
         "needs": [
           "dash.release.deps"
         ],
+        "verify": {
+          "serve": {
+            "argv": [
+              "bun",
+              "run",
+              "index.ts"
+            ],
+            "cwd": "bridge",
+            "env": {
+              "DASH_ALLOW_LOOPBACK": "1",
+              "DASH_CREDENTIAL_DIR": "@tmp@/credentials",
+              "DASH_CWD": "@tmp@",
+              "DASH_ENABLE_LEGACY_CLI": "0",
+              "DASH_HOST": "127.0.0.1",
+              "DASH_PORT": "@port@",
+              "DASH_STT_MODEL": "@tmp@/no-model"
+            },
+            "expect_status": 401,
+            "path": "/",
+            "timeout_s": 90
+          }
+        },
         "when": [
           {
             "fact": "tailscale.ipv4",

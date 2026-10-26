@@ -60,7 +60,7 @@
   "llm": "local",
   "mode": "auto",
   "pin_policy": "pinned",
-  "plan_hash": "abc2aff39780ff8526861c32eb4c6faec46d89c57f7308b2ddefcdb8499cb802",
+  "plan_hash": "76d51ce63d3a7e1ebcb7d4eca07a38f4d0132f1651c87d54f162416b950e3fbf",
   "prepared_path": [
     "~/.z0/venv/bin",
     "/usr/bin",
@@ -68,7 +68,7 @@
   ],
   "profile": "core",
   "registry": {
-    "registry/components.yaml": "197817366d3b52169cddff78d94819664a68b03f3eac68ea4a8c2ca45aaff6ed",
+    "registry/components.yaml": "7446d03140fc8c2dfd59d3ca5952a2eb3d23f5ba1079dac25e2be5e664aa3b3a",
     "registry/harnesses.yaml": "1c2b9ba37ca974e4aa1ed1f6990561ea303fc7e1f73c0fb4c6cc4802d5b4a7b8",
     "registry/onboarding.yaml": "b0c3e2b4c8e7a17bde8a5cb2378c90f6009b4464879a76406f6ae3cdc7e9b9ce",
     "registry/profiles.yaml": "1078cbeef86e532c77478eb5025ec08f6f3f8156a1c77707774416e79d51f819",
@@ -973,11 +973,6 @@
         "status": "unavailable"
       },
       "step": {
-        "argv": [
-          "bun",
-          "run",
-          "index.ts"
-        ],
         "component": "dash",
         "consent": {
           "class": "C0"
@@ -987,6 +982,28 @@
         "needs": [
           "dash.release.deps"
         ],
+        "verify": {
+          "serve": {
+            "argv": [
+              "bun",
+              "run",
+              "index.ts"
+            ],
+            "cwd": "bridge",
+            "env": {
+              "DASH_ALLOW_LOOPBACK": "1",
+              "DASH_CREDENTIAL_DIR": "@tmp@/credentials",
+              "DASH_CWD": "@tmp@",
+              "DASH_ENABLE_LEGACY_CLI": "0",
+              "DASH_HOST": "127.0.0.1",
+              "DASH_PORT": "@port@",
+              "DASH_STT_MODEL": "@tmp@/no-model"
+            },
+            "expect_status": 401,
+            "path": "/",
+            "timeout_s": 90
+          }
+        },
         "when": [
           {
             "fact": "tailscale.ipv4",

@@ -8,8 +8,9 @@ probes. Checks never write.
 """
 from __future__ import annotations
 
-from . import z0, z0evals
+from . import dash, z0, z0evals, z0intelligence
 
-CHECKS = {"z0": z0.evaluate, "z0evals": z0evals.evaluate}
+CHECKS = {"z0": z0.evaluate, "z0evals": z0evals.evaluate,
+          "z0intelligence": z0intelligence.evaluate, "dash": dash.evaluate}
 
 __all__ = ["CHECKS"]

@@ -172,14 +172,17 @@ def installed(ctx: ActionCtx, plan_obj: dict, results: dict) -> list:
     return out
 
 
-def harness_table(host: dict) -> dict:
+def harness_table(host: dict, plan_obj: Optional[dict] = None, results: Optional[dict] = None) -> dict:
+    plugged = {e["step"].get("harness") for e in (plan_obj or {}).get("steps", [])
+               if e["step"]["kind"] == "harness_plugin"
+               and (results or {}).get(e["step"]["id"], {}).get("status") in ("passed", "already_satisfied")}
     out = {}
     for hid, entry in sorted((host.get("harnesses") or {}).items()):
         state = entry.get("state", "absent")
         if state not in ("installed", "config_only", "absent"):
             state = "absent"
         integration = "policy_excluded" if entry.get("policy_excluded") or hid in ("grok", "cursor-agent") \
-            else "none"
+            else ("configured" if hid in plugged else "none")
         out[hid] = {"state": state, "integration": integration}
     return out
 
@@ -229,7 +232,7 @@ def verify_run(run: Path, deps: Deps, *, prior: Optional[dict] = None, host: Opt
         "acceptance": accept,
         "asks": [{key: ask[key] for key in ("id", "reason", "command", "consent") if key in ask}
                  for ask in plan_obj.get("asks") or []],
-        "harnesses": harness_table(host),
+        "harnesses": harness_table(host, plan_obj, results),
         "llm_decisions": [],
         "laws": LAWS,
         "secrets_scan": scan,

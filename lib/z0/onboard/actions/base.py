@@ -193,6 +193,11 @@ class ActionCtx:
         dep = self.nearest(step, ("venv",))
         return self.venv_dir(dep) if dep else None
 
+    def journal_steps_done(self, step_id: str) -> bool:
+        """True when this run journaled an effect for `step_id` (it ran here)."""
+        return any(e.get("event") == "effect" and e.get("step") == step_id
+                   for e in self.journal.entries())
+
     # --- env and PATH (law T1) ------------------------------------------------------
     def path_dirs(self, venv: Optional[str] = None) -> list:
         dirs = [self.expand(d) for d in self.plan.get("prepared_path") or []]

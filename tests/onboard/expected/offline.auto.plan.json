@@ -4,7 +4,7 @@
       "command": "sudo dnf install -y git",
       "consent": "C2",
       "id": "toolchain.git",
-      "impact": 78,
+      "impact": 79,
       "reason": "git is not installed (system package, C2)"
     },
     {
@@ -52,14 +52,14 @@
   "llm": "local",
   "mode": "auto",
   "pin_policy": "pinned",
-  "plan_hash": "306776ddae70e0d948002e130a50486cb87bcffbbcc1d6d56815432bd9851fdb",
+  "plan_hash": "81837cbec579f7b32e2d13aa97c9db5729a79c7f386e2fbe940ff977dabb4805",
   "prepared_path": [
     "/usr/bin",
     "/bin"
   ],
   "profile": "personal",
   "registry": {
-    "registry/components.yaml": "197817366d3b52169cddff78d94819664a68b03f3eac68ea4a8c2ca45aaff6ed",
+    "registry/components.yaml": "7446d03140fc8c2dfd59d3ca5952a2eb3d23f5ba1079dac25e2be5e664aa3b3a",
     "registry/harnesses.yaml": "1c2b9ba37ca974e4aa1ed1f6990561ea303fc7e1f73c0fb4c6cc4802d5b4a7b8",
     "registry/onboarding.yaml": "b0c3e2b4c8e7a17bde8a5cb2378c90f6009b4464879a76406f6ae3cdc7e9b9ce",
     "registry/profiles.yaml": "1078cbeef86e532c77478eb5025ec08f6f3f8156a1c77707774416e79d51f819",
@@ -859,10 +859,45 @@
           "bundle": "services",
           "class": "C1"
         },
+        "creates": [
+          "~/.config/z0intelligence/service.env"
+        ],
+        "id": "z0intelligence.service_env",
+        "kind": "write_file",
+        "needs": [
+          "z0intelligence.shim"
+        ],
+        "target_where": "venv",
+        "undo": {
+          "kind": "restore_backup"
+        },
+        "when": [
+          {
+            "fact": "session.systemd_user",
+            "op": "eq",
+            "value": true
+          }
+        ],
+        "where": "home"
+      }
+    },
+    {
+      "state": {
+        "blocked_by": "tokenomics.verify",
+        "reason": "dependency",
+        "status": "blocked"
+      },
+      "step": {
+        "component": "z0intelligence",
+        "consent": {
+          "bundle": "services",
+          "class": "C1"
+        },
         "id": "z0intelligence.router.unit",
         "kind": "service_unit",
         "needs": [
-          "z0intelligence.shim"
+          "z0intelligence.shim",
+          "z0intelligence.service_env"
         ],
         "probe": {
           "exists": "~/.config/systemd/user/z0intelligence.service"
@@ -1527,11 +1562,6 @@
         "status": "unavailable"
       },
       "step": {
-        "argv": [
-          "bun",
-          "run",
-          "index.ts"
-        ],
         "component": "dash",
         "consent": {
           "class": "C0"
@@ -1541,6 +1571,28 @@
         "needs": [
           "dash.release.deps"
         ],
+        "verify": {
+          "serve": {
+            "argv": [
+              "bun",
+              "run",
+              "index.ts"
+            ],
+            "cwd": "bridge",
+            "env": {
+              "DASH_ALLOW_LOOPBACK": "1",
+              "DASH_CREDENTIAL_DIR": "@tmp@/credentials",
+              "DASH_CWD": "@tmp@",
+              "DASH_ENABLE_LEGACY_CLI": "0",
+              "DASH_HOST": "127.0.0.1",
+              "DASH_PORT": "@port@",
+              "DASH_STT_MODEL": "@tmp@/no-model"
+            },
+            "expect_status": 401,
+            "path": "/",
+            "timeout_s": 90
+          }
+        },
         "when": [
           {
             "fact": "tailscale.ipv4",

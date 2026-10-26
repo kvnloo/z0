@@ -274,8 +274,12 @@ components:
         - {id: z0intelligence.plugin.hermes, kind: ask, consent: {class: C0},
            when: [{fact: harnesses.hermes.state, op: eq, value: installed}],
            argv: [echo, "Hermes: choose the profile and edit its config.yaml yourself (always an ask)"]}
+        - {id: z0intelligence.service_env, kind: write_file, consent: {class: C1, bundle: services}, where: home,
+           target_where: venv, needs: [z0intelligence.shim],
+           when: [{fact: session.systemd_user, op: eq, value: true}],
+           creates: ["~/.config/z0intelligence/service.env"], undo: {kind: restore_backup}}
         - {id: z0intelligence.router.unit, kind: service_unit, consent: {class: C1, bundle: services},
-           where: venv, needs: [z0intelligence.shim],
+           where: venv, needs: [z0intelligence.shim, z0intelligence.service_env],
            when: [{fact: session.systemd_user, op: eq, value: true}],
            service: {template: z0intelligence, unit: z0intelligence.service, bind: loopback, port: 11501,
                      health: {http: {bind: loopback, port: 11501, path: /healthz, expect_status: 200}},
@@ -604,7 +608,10 @@ components:
            creates: ["~/.local/lib/dash/releases/{rev_bridge}/bridge/acp-adapters/node_modules"], timeout_s: 1800}
         - {id: dash.selftest.loopback, kind: check, consent: {class: C0}, where: release,
            needs: [dash.release.deps], when: [{fact: tailscale.ipv4, op: missing}],
-           argv: [bun, run, index.ts]}
+           verify: {serve: {argv: [bun, run, index.ts], cwd: bridge, path: /, expect_status: 401, timeout_s: 90,
+                            env: {DASH_ALLOW_LOOPBACK: "1", DASH_HOST: 127.0.0.1, DASH_PORT: "@port@",
+                                  DASH_CREDENTIAL_DIR: "@tmp@/credentials", DASH_CWD: "@tmp@",
+                                  DASH_STT_MODEL: "@tmp@/no-model", DASH_ENABLE_LEGACY_CLI: "0"}}}}
         - {id: dash.bridge.env, kind: write_file, consent: {class: C1, bundle: services}, where: home,
            target_where: release, needs: [dash.release.deps], when: [{fact: tailscale.ipv4, op: exists}],
            creates: ["~/.config/dash-services/bridge.env"], undo: {kind: restore_backup}}
