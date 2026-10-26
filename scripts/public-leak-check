@@ -1,0 +1,128 @@
+#!/usr/bin/env python3
+"""Fail when a public tree holds host-specific or secret values.
+
+Usage:
+  scripts/public-leak-check [PATH ...] [--denylist FILE]
+
+With no PATH it scans the git-tracked files of the current repository; a PATH may be
+a file or a directory (walked, .git skipped). Patterns are generic (they name no real
+host): tailnet addresses (100.64.0.0/10 and the Tailscale IPv6 range), tailnet names
+(*.ts.net, tail<hex>) and secret-shaped values. Documentation fixtures stay allowed:
+100.64.0.x and example.ts.net.
+
+--denylist FILE adds one literal per line (blank lines and # comments skipped). Keep
+that file in your private z0-hosts instance; findings name the file and line but
+never print a denylisted literal or a secret.
+
+Exit 0 clean, 1 on findings, 2 on usage errors. Stdlib only (Python 3.10+).
+"""
+from __future__ import annotations
+
+import argparse
+import os
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+TAILNET_V4 = re.compile(r"(?<![\d.])100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.(\d{1,3})\.(\d{1,3})(?!\d)")
+TS_NAME = re.compile(r"(?i)\b([a-z0-9][a-z0-9-]*)\.ts\.net\b")
+RULES = {
+    "tailnet-ipv6": re.compile(r"(?i)(?<![0-9a-f:])fd7a:115c:a1e0:[0-9a-f:]*[0-9a-f]"),
+    "tailnet-id": re.compile(r"(?i)\btail[0-9a-f]{4,}\b"),
+    "tailscale-auth-key": re.compile(r"\btskey-[A-Za-z0-9-]{10,}"),
+    "private-key": re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----"),
+    "github-token": re.compile(r"\b(gh[pousr]_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{22,})"),
+    "anthropic-key": re.compile(r"\bsk-ant-[A-Za-z0-9_-]{20,}"),
+    "openai-style-key": re.compile(r"\bsk-[A-Za-z0-9]{32,}"),
+    "aws-access-key": re.compile(r"\bAKIA[0-9A-Z]{16}\b"),
+    "slack-token": re.compile(r"\bxox[abprs]-[A-Za-z0-9-]{10,}"),
+    "google-api-key": re.compile(r"\bAIza[0-9A-Za-z_-]{35}\b"),
+}
+SECRET_RULES = {"tailscale-auth-key", "private-key", "github-token", "anthropic-key",
+                "openai-style-key", "aws-access-key", "slack-token", "google-api-key"}
+MAX_BYTES = 5 * 1024 * 1024
+
+
+def findings_in_text(text: str, denylist=()):
+    """Yield (line_no, rule, shown) for each finding; shown is '' when it must not be echoed."""
+    for no, line in enumerate(text.splitlines(), 1):
+        for m in TAILNET_V4.finditer(line):
+            if not (m.group(1) == "64" and m.group(2) == "0"):
+                yield no, "tailnet-ipv4", m.group(0)
+        for m in TS_NAME.finditer(line):
+            if m.group(1).lower() != "example":
+                yield no, "tailnet-name", m.group(0)
+        for rule, rx in RULES.items():
+            for m in rx.finditer(line):
+                yield no, rule, "" if rule in SECRET_RULES else m.group(0)
+        for lit in denylist:
+            if lit in line:
+                yield no, "denylist", ""
+
+
+def tracked_files(cwd: Path):
+    out = subprocess.run(["git", "ls-files", "-z"], cwd=cwd, capture_output=True, check=True)
+    return [cwd / p for p in out.stdout.decode().split("\0") if p]
+
+
+def walk(path: Path):
+    if path.is_file():
+        yield path
+        return
+    for dirpath, dirnames, filenames in os.walk(path):
+        dirnames[:] = [d for d in dirnames if d != ".git"]
+        for name in filenames:
+            yield Path(dirpath) / name
+
+
+def read_denylist(path: str):
+    lines = Path(path).read_text().splitlines()
+    return [ln.strip() for ln in lines if ln.strip() and not ln.strip().startswith("#")]
+
+
+def scan(paths, denylist=()):
+    results = []
+    for path in paths:
+        try:
+            if path.is_symlink() or not path.is_file() or path.stat().st_size > MAX_BYTES:
+                continue
+            text = path.read_bytes().decode("utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        results += [(path, no, rule, shown) for no, rule, shown in findings_in_text(text, denylist)]
+    return results
+
+
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser(prog="public-leak-check", description=__doc__.splitlines()[0])
+    ap.add_argument("paths", nargs="*", help="files or directories (default: git-tracked files)")
+    ap.add_argument("--denylist", metavar="FILE", help="private literals that must not appear")
+    args = ap.parse_args(argv)
+    try:
+        denylist = read_denylist(args.denylist) if args.denylist else []
+    except OSError as exc:
+        print(f"public-leak-check: cannot read denylist: {exc.strerror}", file=sys.stderr)
+        return 2
+    if args.paths:
+        missing = [p for p in args.paths if not Path(p).exists()]
+        if missing:
+            print(f"public-leak-check: no such path: {', '.join(missing)}", file=sys.stderr)
+            return 2
+        files = [f for p in args.paths for f in walk(Path(p))]
+    else:
+        try:
+            files = tracked_files(Path.cwd())
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            print("public-leak-check: not a git repository; pass PATH", file=sys.stderr)
+            return 2
+    results = scan(files, denylist)
+    for path, no, rule, shown in results:
+        print(f"{path}:{no}: {rule}" + (f" ({shown})" if shown else ""))
+    print(f"public-leak-check: {len(files)} file(s), {len(denylist)} denylist literal(s), "
+          f"{len(results)} finding(s)", file=sys.stderr)
+    return 1 if results else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
