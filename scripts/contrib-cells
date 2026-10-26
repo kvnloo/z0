@@ -1,0 +1,147 @@
+#!/usr/bin/env bash
+# Deterministic cells of the `contrib_ready` matrix (contributor spec §4.3), one receipt
+# each, on the same candidate pair as scripts/contrib-matrix.
+#
+#   scripts/contrib-cells --z0int-sha SHA [--only CELL,...]
+#
+#   onboard_container  scripts/onboard-e2e --full from the candidate z0 tree (clean container)
+#   smoke              an S2_smoke_passed receipt on z0int_sha from an agent cell's
+#                      contribute receipts (z0int contribute smoke inside a clean container)
+#   laws_ci            pinned Bend + Lean verdicts for bend/onboard and bend/contrib_ready
+#                      (ALL PROOFS CHECK), then the twin, mutant and gate tests
+#   G1..G5             tests/onboard/test_profile.py privacy cells
+#   E1                 z0int tests/test_contribute_align.py (engine twin + oracles)
+#   E2                 tests/onboard/test_llm.py (Z5 guardrails a-g) AND z0int
+#                      first_task_pick cases (CW6); missing cases fail the cell
+#   P1, P2             z0int priorities-check tests; P2 adds the oracle newcomer test
+#   C1                 z0int claim race on the fake GitHub
+#   W1                 z0int scripted-yes S4-S7 loop
+#
+# Receipts land in $E2E_WORK/receipts/<cell>.json; a failed run is a `fail` receipt.
+set -uo pipefail
+ROOT="${CONTRIB_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"  # CONTRIB_ROOT: the frozen candidate checkout
+Z0INT_SHA="" ONLY=""
+while (($#)); do
+  case "$1" in
+    --z0int-sha) Z0INT_SHA="$2"; shift 2 ;;
+    --only) ONLY=",$2,"; shift 2 ;;
+    *) echo "contrib-cells: unknown argument $1" >&2; exit 2 ;;
+  esac
+done
+[[ -n "$Z0INT_SHA" ]] || { echo "--z0int-sha is required" >&2; exit 2; }
+WORK="${E2E_WORK:-$ROOT/.e2e-agent}"
+mkdir -p "$WORK/receipts" "$WORK/cells-det"
+LOG="$WORK/cells-det"
+want() { [[ -z "$ONLY" || "$ONLY" == *",$1,"* ]]; }
+
+# the candidate z0 commit: the same deterministic commit scripts/onboard-agent-e2e makes
+CAND="$WORK/cells-det/cand"
+rm -rf "$CAND"
+git clone -q --no-local "$ROOT" "$CAND"
+git -C "$CAND" checkout -q "$(git -C "$ROOT" rev-parse HEAD)"
+tar -C "$ROOT" --exclude=.git --exclude=.e2e-agent -cf - . | tar -C "$CAND" -xf -
+python3 - "$CAND/registry/components.yaml" "$Z0INT_SHA" << 'PY'
+import re, sys
+path, sha = sys.argv[1], sys.argv[2]
+text = open(path, encoding="utf-8").read()
+block = text.index("  z0intelligence:\n")
+head, tail = text[:block], text[block:]
+tail = re.sub(r"(\n      ref: )[0-9a-f]{40}", r"\g<1>" + sha, tail, count=1)
+open(path, "w", encoding="utf-8").write(head + tail)
+PY
+git -C "$CAND" add -A
+GIT_AUTHOR_DATE=2026-01-01T00:00:00Z GIT_COMMITTER_DATE=2026-01-01T00:00:00Z \
+  git -C "$CAND" -c user.name=e2e -c user.email=e2e@example.invalid commit -qm "e2e: candidate (pins z0intelligence $Z0INT_SHA)" || true
+Z0_SHA="$(git -C "$CAND" rev-parse HEAD)"
+echo "candidate pair: z0 $Z0_SHA, z0intelligence $Z0INT_SHA"
+
+receipt() { # receipt CELL STATUS DETAIL
+  python3 - "$WORK/receipts/$1.json" "$1" "$2" "$3" "$Z0_SHA" "$Z0INT_SHA" << 'PY'
+import json, sys
+path, cell, status, detail, z0, z0int = sys.argv[1:7]
+json.dump({"cell": cell, "z0_sha": z0, "z0int_sha": z0int, "status": status, "detail": detail},
+          open(path, "w"), indent=2, sort_keys=True)
+PY
+  echo "$1: $2 ($3)"
+}
+run_cell() { # run_cell CELL LOGNAME command...
+  local cell="$1" name="$2"
+  shift 2
+  if "$@" > "$LOG/$name.log" 2>&1; then receipt "$cell" pass "$name"; else receipt "$cell" fail "$name: see $LOG/$name.log"; fi
+}
+
+PY="${PYTHON:-python3}"
+python3 -c "import yaml" 2> /dev/null || { [[ -x "$HOME/.z0/venv/bin/python" ]] && PY="$HOME/.z0/venv/bin/python"; }
+
+# --- z0 side ------------------------------------------------------------------------
+if want onboard_container; then
+  run_cell onboard_container onboard-e2e-full bash "$CAND/scripts/onboard-e2e" --full
+fi
+for g in G1 G2 G3 G4 G5; do
+  want "$g" || continue
+  tests=$(grep -o "def test_${g}_[a-z0-9_]*" "$CAND/tests/onboard/test_profile.py" | sed "s/def /tests.onboard.test_profile.Profile./" | tr "\n" " ")
+  # shellcheck disable=SC2086
+  run_cell "$g" "$g" bash -c "cd '$CAND' && Z0_REQUIRE_YAML=1 '$PY' -m unittest $tests"
+done
+if want laws_ci; then
+  TOOL="$WORK/bend-toolchain"
+  laws() {
+    set -e
+    eval "$(bash "$CAND/bend/onboard/bootstrap.sh" "$TOOL" | sed 's/^/export /')"
+    for d in onboard contrib_ready; do
+      (cd "$CAND/bend/$d" && PATH="/usr/bin:$PATH:$LEAN_BIN" "$BEND" PROOF.bend --verdict | tee /dev/stderr | grep -qx "ALL PROOFS CHECK")
+    done
+    cd "$CAND" && "$PY" -m unittest tests.onboard.test_kernel_twin tests.onboard.test_kernel_mutation
+    "$PY" -m unittest discover -s tests/contrib_ready -t .
+  }
+  if (laws) > "$LOG/laws_ci.log" 2>&1; then receipt laws_ci pass "bend verdicts + twins"; else receipt laws_ci fail "see $LOG/laws_ci.log"; fi
+fi
+
+# --- z0intelligence side (a fresh checkout at the candidate sha, repo-local venv) ------
+need_z0int() { want E1 || want E2 || want P1 || want P2 || want C1 || want W1; }
+if need_z0int; then
+  ZI="$WORK/cells-det/z0intelligence"
+  if [[ ! -d "$ZI/.git" ]]; then git clone -q https://github.com/kvnloo/z0intelligence.git "$ZI"; fi
+  git -C "$ZI" fetch -q origin "$Z0INT_SHA" 2> /dev/null || git -C "$ZI" fetch -q origin
+  git -C "$ZI" checkout -q --detach "$Z0INT_SHA"
+  if [[ ! -x "$ZI/.venv/bin/python" ]]; then
+    rm -rf "$ZI/.venv"
+    if command -v uv > /dev/null; then   # z0intelligence needs Python >=3.10,<3.14
+      (cd "$ZI" && uv venv -q -p 3.12 .venv && uv pip install -q -p .venv/bin/python \
+        --extra-index-url https://download.pytorch.org/whl/cpu --index-strategy unsafe-best-match -e '.[test]') > "$LOG/z0int-venv.log" 2>&1
+    else
+      PYW="$(command -v python3.12 || command -v python3.11 || command -v python3.10 || echo python3)"
+      (cd "$ZI" && "$PYW" -m venv .venv && .venv/bin/pip install -q -U pip \
+        && .venv/bin/pip install -q --extra-index-url https://download.pytorch.org/whl/cpu -e '.[test]') > "$LOG/z0int-venv.log" 2>&1
+    fi
+  fi
+  zpy() { (cd "$ZI" && .venv/bin/python -m pytest -q -p no:cacheprovider "$@"); }
+  want E1 && run_cell E1 E1 zpy tests/test_contribute_align.py
+  want P1 && run_cell P1 P1 zpy tests/test_contribute_priorities.py
+  want P2 && run_cell P2 P2 zpy tests/test_contribute_priorities.py::test_each_acceptance_profile_has_a_newcomer_task \
+    tests/test_contribute_align.py -k "newcomer"
+  want C1 && run_cell C1 C1 zpy tests/test_contribute_claims.py
+  want W1 && run_cell W1 W1 zpy tests/test_contribute_cli.py
+  if want E2; then
+    e2() {
+      cd "$CAND" && "$PY" -m unittest tests.onboard.test_llm || return 1
+      grep -rqs "first_task_pick" "$ZI/tests" || { echo "z0int has no first_task_pick cases (CW6 not built)"; return 1; }
+      (cd "$ZI" && .venv/bin/python -m pytest -q -p no:cacheprovider -k first_task_pick tests)
+    }
+    if (e2) > "$LOG/E2.log" 2>&1; then receipt E2 pass "Z5 guardrails + first_task_pick"; else receipt E2 fail "$(tail -1 "$LOG/E2.log")"; fi
+  fi
+fi
+
+# --- smoke: from the agent cells' contribute receipts ---------------------------------
+if want smoke; then
+  found="$(find "$WORK" -path '*contribute/receipts/*S2_smoke_passed*.json' 2> /dev/null | head -50)"
+  ok=0
+  for f in $found; do
+    if python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); sys.exit(0 if d.get("sha")==sys.argv[2] and d.get("result")=="pass" else 1)' "$f" "$Z0INT_SHA" 2> /dev/null; then
+      ok=1; break
+    fi
+  done
+  ((ok)) && receipt smoke pass "S2_smoke_passed on $Z0INT_SHA (clean container, agent cell)" \
+    || receipt smoke fail "no passing S2 smoke receipt on $Z0INT_SHA"
+fi
+python3 "$ROOT/scripts/contrib_ready.py" --z0 "$Z0_SHA" --z0int "$Z0INT_SHA" --receipts "$WORK/receipts"
