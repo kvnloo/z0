@@ -88,7 +88,9 @@ class Provider:
         if self.id == "local":
             for endpoint, protocol in local_endpoints(self.env):
                 try:
-                    data = http_json(endpoint + ("/api/tags" if protocol == "ollama" else "/v1/models"),
+                    # /api/ps lists loaded models; /api/tags also lists cold models
+                    # whose selection would cause Ollama to start a new workload.
+                    data = http_json(endpoint + ("/api/ps" if protocol == "ollama" else "/v1/models"),
                                      None, timeout)
                     models = data.get("models" if protocol == "ollama" else "data", [])
                     model = next((m.get("name" if protocol == "ollama" else "id") for m in models

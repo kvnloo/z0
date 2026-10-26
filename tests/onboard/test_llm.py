@@ -464,6 +464,23 @@ class ProviderTests(unittest.TestCase):
             self.assertEqual(provider.model, "detected")
             self.assertEqual(http.call_count, 1)
 
+    def test_ollama_detects_loaded_models_only(self):
+        provider = providers.Provider("local", "", env={})
+        def http(url, body, timeout):
+            # An installed but unloaded model must not be started by classification.
+            return {"models": [] if url.endswith("/api/ps") else [{"name": "unloaded"}]}
+        with patch.object(providers, "local_endpoints", return_value=[("http://127.0.0.1:11434", "ollama")]), \
+                patch.object(providers, "http_json", side_effect=http):
+            self.assertFalse(provider.available())
+            self.assertEqual(provider.endpoint, "")
+
+    def test_ollama_uses_an_already_loaded_model(self):
+        provider = providers.Provider("local", "", env={})
+        with patch.object(providers, "local_endpoints", return_value=[("http://127.0.0.1:11434", "ollama")]), \
+                patch.object(providers, "http_json", return_value={"models": [{"name": "loaded"}]}):
+            self.assertTrue(provider.available())
+            self.assertEqual(provider.model, "loaded")
+
     def test_redirects_are_never_followed(self):
         self.assertIsNone(providers.NoRedirect().redirect_request(None, None, 302, "", {}, "https://example.invalid"))
 
