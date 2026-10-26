@@ -114,6 +114,8 @@ def prove(root, domains, *, verify=None, all_domains=False):
         lock = state/'laws.lock'
         try:
             previous = json.loads(lock.read_text()) if lock.exists() else {}
+            if not isinstance(previous, dict) or any(not isinstance(entry, dict) for entry in previous.values()):
+                raise ValueError('lock must map domain names to receipt objects')
         except (ValueError, OSError) as exc:
             raise RuntimeError('invalid laws.lock; refusing unchanged skip') from exc
         for domain in domains:

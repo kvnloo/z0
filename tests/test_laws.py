@@ -87,6 +87,46 @@ class CacheTests(unittest.TestCase):
 
 
 class ProveTests(unittest.TestCase):
+    def test_invalid_lock_shapes_fail_closed(self):
+        import json
+        from laws import prove
+        with temporary_directory() as folder:
+            root = Path(folder)
+            (root/'.z0').mkdir()
+            domain = {'name': 'demo', 'dir': 'bend/demo'}
+            directory = root/domain['dir']
+            directory.mkdir(parents=True)
+            for name in ('MODEL', 'LAWS', 'PROOF'):
+                (directory/(name+'.bend')).write_text(name)
+            for invalid in ([], None, {'demo': []}, {'demo': None}):
+                with self.subTest(lock=invalid):
+                    (root/'.z0/laws.lock').write_text(json.dumps(invalid))
+                    with self.assertRaises(RuntimeError):
+                        prove(root, [domain], verify=lambda _: self.fail('invalid lock accepted'))
+
+    def test_pins_change_invalidates_unchanged_skip(self):
+        from unittest.mock import patch
+        from laws import prove
+        with temporary_directory() as folder:
+            root = Path(folder)
+            domain = {'name': 'demo', 'dir': 'bend/demo'}
+            directory = root/domain['dir']
+            directory.mkdir(parents=True)
+            for name in ('MODEL', 'LAWS', 'PROOF'):
+                (directory/(name+'.bend')).write_text(name)
+            pins = root/'pins.json'
+            pins.write_text('first reviewed pins')
+            calls = []
+            def verify(path):
+                calls.append(path)
+                return 'ALL PROOFS CHECK'
+            with patch('laws.cache.PINS', pins):
+                self.assertEqual(prove(root, [domain], verify=verify)[0]['status'], 'proven')
+                self.assertEqual(prove(root, [domain], verify=verify)[0]['status'], 'unchanged')
+                pins.write_text('new reviewed pins')
+                self.assertEqual(prove(root, [domain], verify=verify)[0]['status'], 'proven')
+            self.assertEqual(len(calls), 2)
+
     def test_unchanged_writes_receipt_without_invoking_verifier(self):
         import laws
         self.assertTrue(hasattr(laws, 'prove'), 'prove command missing')
