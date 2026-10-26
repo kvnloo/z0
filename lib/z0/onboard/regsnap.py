@@ -5,7 +5,9 @@ parsed snapshot as data, so they stay stdlib-only and pure.
 """
 from __future__ import annotations
 
+import os
 from pathlib import Path
+from typing import Optional
 
 from .util import sha256_bytes
 
@@ -13,8 +15,13 @@ ROOT = Path(__file__).resolve().parents[3]
 FILES = ("components", "profiles", "harnesses", "toolchains", "onboarding")
 
 
-def load(root: Path = ROOT) -> dict:
+def load(root: Optional[Path] = None) -> dict:
+    """`root` defaults to this checkout, or to `$Z0_ONBOARD_REGISTRY` (a test and
+    container hook, like Z0_DETECT_*: a directory holding a `registry/` tree)."""
     import yaml  # z0 venv (stage 0) or a python that already has PyYAML
+
+    if root is None:
+        root = Path(os.environ["Z0_ONBOARD_REGISTRY"]) if os.environ.get("Z0_ONBOARD_REGISTRY") else ROOT
 
     snap: dict = {"files": {}}
     for name in FILES:
