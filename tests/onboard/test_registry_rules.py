@@ -127,10 +127,10 @@ class RegistryRules(unittest.TestCase):
 
     def test_red_denylisted_literal(self):
         for text, needle in ((f"# deploy to {self.MOUNT}/x", "/mnt/"),
-                             (f"# host groot.{self.TAILNET_ID}.ts.net", "tail[0-9a-f]"),
+                             (f"# host host-a.{self.TAILNET_ID}.ts.net", "tail[0-9a-f]"),
                              (f"# bind {self.TAILNET_IP}", "(6[4-9]|"),
                              ("# under /home/someone/x", "(home|Users)"),
-                             ("# /workspace/hermes-home", "'/workspace/'")):
+                             ("# /workspace/app-home", "'/workspace/'")):
             with self.subTest(text=text):
                 raw = dict(self.raw)
                 raw["registry/components.yaml"] += f"\n{text}\n"
@@ -140,7 +140,7 @@ class RegistryRules(unittest.TestCase):
         deny = support.snapshot()["onboarding"]["denylists"]["redaction"]
         self.assertEqual(self.rc.scan_literals("~/workspace/z0evals", deny), [])
         self.assertEqual(self.rc.scan_literals("$Z0_HOME/repos/x ~/.local/lib/dash", deny), [])
-        self.assertTrue(self.rc.scan_literals("/workspace/hermes-home", deny))
+        self.assertTrue(self.rc.scan_literals("/workspace/app-home", deny))
         self.assertTrue(self.rc.scan_literals("x /home/someone/y", deny))
         self.assertTrue(self.rc.scan_literals(self.MOUNT, deny))
 
