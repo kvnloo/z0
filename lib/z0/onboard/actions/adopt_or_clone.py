@@ -11,6 +11,7 @@ pinned tree is already complete.
 from __future__ import annotations
 
 import os
+import shutil
 
 from .base import ActionCtx, ActionError, Outcome
 
@@ -64,8 +65,19 @@ def execute(ctx: ActionCtx, step: dict) -> Outcome:
     if not pin:
         raise ActionError(f"{cid} has no pinned ref")
     url = source_url(ctx, comp)
+    # Crash safety: clone into a z0-named staging dir and rename it into place, so a run
+    # that is killed mid-clone (an agent's shell timeout, Ctrl-C) leaves no half tree at
+    # `tree`; the next run removes the stale staging dir (only z0 uses that name).
+    staging = f"{tree}.z0-partial"
+    if os.path.lexists(staging):
+        shutil.rmtree(staging, ignore_errors=True)
     with ctx.creating(tree):
-        checkout_pin(ctx, step, url, tree, pin)
+        try:
+            checkout_pin(ctx, step, url, staging, pin)
+            os.rename(staging, tree)
+        finally:
+            if os.path.lexists(staging):
+                shutil.rmtree(staging, ignore_errors=True)
     detail = f"cloned {comp.get('repo')} at {pin[:12]} into {ctx.form(tree)}"
     if step.get("argv"):
         if not git(ctx, step, list(step["argv"])[1:], cwd=tree, timeout=step.get("timeout_s", 600)).ok:

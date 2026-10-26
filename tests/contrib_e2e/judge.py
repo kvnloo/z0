@@ -150,7 +150,7 @@ def main(argv=None) -> int:
         after = set(Path(a.after).read_text().splitlines())
         allowed = ("./z0/", "./.z0/", "./.z0int/", "./.claude/", "./.codex/", "./.cache/", "./.local/",
                    "./.npm/", "./.bun/", "./.config/", "./.e2e-", "./.python_history", "./.bash_history",
-                   "./.wget-hsts", "./.lesshst", "./.gitconfig", "./.claude.json")
+                   "./.wget-hsts", "./.lesshst", "./.gitconfig", "./.claude.json", "./.z0-onboard.log", "./nohup.out")
         changed = sorted(p.split(" ", 1)[0] for p in after ^ before if not p.startswith(allowed))
     checks["A5"] = not gh_writes and not pushes and not changed
     checks["A5_detail"] = {"gh_writes": len(gh_writes), "pushes": len(pushes), "changed_outside": changed[:20]}

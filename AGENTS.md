@@ -10,8 +10,12 @@ If the user asks for general help with this repo, or you have no task, onboard t
    z0intelligence and dash next to the hardware-default profile). It needs only bash, git and
    curl; it installs into `~/.z0` and user-local dirs. **Never add `--yes` or `--accept`
    yourself**: those grant consent bundles (toolchains, harness, services, models) that only the
-   user may grant. Exit 0 = done; exit 3 = done except steps that need the user's consent.
-   Any other exit = report the `FAILED` lines.
+   user may grant. A first run takes 15-40 minutes (clones and builds), longer than most agent
+   shell timeouts, so run it detached and poll, and do not end your turn while it runs:
+   `nohup ./z0 onboard --auto --llm none < /dev/null > ~/.z0-onboard.log 2>&1; echo "exit=$?" >> ~/.z0-onboard.log` (in the background), then check
+   `tail -5 ~/.z0-onboard.log` every few minutes until it prints `exit=`. If a run was killed,
+   just run it again: it resumes (finished steps are skipped). Exit 0 = done; exit 3 = done
+   except steps that need the user's consent. Any other exit = report the `FAILED` lines.
 2. Show the user the "What you need to do" section of the printed report (also in
    `~/.z0/onboard/current/report.md`). Each ask names the exact command. Do not run C1/C2 asks.
 3. Then, unless the user named another task, find them a first task: `cd ~/.z0/repos/z0intelligence`,
