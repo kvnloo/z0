@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Source-publication checks only; these do not certify a clean-machine install.
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
+export PYTHONPATH="${ROOT}/lib${PYTHONPATH:+:$PYTHONPATH}"
+"$ROOT/scripts/public-leak-check"
+"$ROOT/scripts/registry-check"
+"$ROOT/scripts/docs-check"
+python3 -m unittest tests.onboard.test_legacy_commands tests.onboard.test_ui tests.onboard.test_status_accept
+printf '%s\n' 'Public source checks passed. Runtime installation still requires component actions and clean-machine acceptance receipts.'
