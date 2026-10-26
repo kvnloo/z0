@@ -76,6 +76,28 @@
       },
       "additionalProperties": false
     },
+    "prepared_path": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/path" },
+      "description": "Law T1: resolved toolchain and allowed-harness bin dirs, then $Z0_HOME toolchains, then system dirs. Every run, unit, env file and check gets exactly this PATH."
+    },
+    "revs": {
+      "type": "object",
+      "description": "Evidence that each registry pin exists on origin (dash gates D1/D2). Keys are pinned SHAs.",
+      "propertyNames": { "pattern": "^[0-9a-f]{7,40}$" },
+      "additionalProperties": {
+        "type": "object",
+        "required": ["repo", "on_origin"],
+        "properties": {
+          "repo": { "type": "string" },
+          "on_origin": { "enum": ["yes", "no", "unknown"] },
+          "evidence": { "enum": ["mirror", "checkout", "none"] },
+          "flavour": { "enum": ["current", "legacy", "unknown"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "warnings": { "type": "array", "items": { "type": "string" } },
     "python_window": { "enum": ["present", "makeable", "impossible"], "description": "A python in [3.10, 3.14): kernel.PyWindow." },
     "toolchains": {
       "type": "object",
@@ -203,7 +225,12 @@
       "properties": {
         "recorded_host_id": { "$ref": "#/$defs/host_id" },
         "host_match": { "enum": ["fresh", "same", "other"], "description": "kernel.HostMatch; `other` refuses (H1)." },
-        "stamps": { "type": "array", "items": { "$ref": "#/$defs/path" } }
+        "stamps": { "type": "array", "items": { "$ref": "#/$defs/path" } },
+        "owned": {
+          "type": "array",
+          "description": "Registry step paths (creates / probe.exists) that already exist; stat only. Drives already_satisfied and law I1.",
+          "items": { "type": "string", "pattern": "^(~(/|$)|\\$Z0_HOME(/|$)|/(?!home/|Users/))" }
+        }
       },
       "additionalProperties": false
     }

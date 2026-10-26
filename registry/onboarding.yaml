@@ -1,0 +1,122 @@
+# Onboarding policy data (design §2.4), validated by schemas/onboarding.schema.json.
+# Data only: lib/z0/onboard/kernel.py is the one place that decides refuse / ask / allow.
+
+version: 1
+
+consent:
+  classes:
+    C0: z0-private. Writes under $Z0_HOME, release roots, gitignored paths in a clean adopted checkout, and repo venvs. Always applied.
+    C1: User-scoped and reversible, in bundles. One enumerated go/no-go confirmation on a TTY, or --yes / --accept BUNDLES.
+    C2: Never automatic. Listed as an ask in report.md; `./z0 onboard accept <id>` resolves it.
+  bundles:
+    toolchains: User-local pinned downloads (uv, bun, node, rustup) into $Z0_HOME/toolchains, sha256-checked.
+    harness: Claude/Codex plugin installs, OMP extension links, the DSH patch and dash ACP adapters, each with a backup.
+    services: systemd user units or launchd agents with loopback or current-tailnet binds; the z0int shim and ~/.z0int/config/hermes.json.
+    models: The CPU torch wheel; the dash STT model (at most 1 GB) when disk allows.
+  never_automatic:
+    - sudo and system packages
+    - tailscale up
+    - loginctl enable-linger
+    - dotfiles link or apply (flow)
+    - approval-policy bypass
+    - grok and cursor in any role
+    - private repo clones (aodl-views, z0bridge)
+    - any bind outside the closed set
+    - redeploying an adopted running service at a different SHA
+    - HF sync over 1 GB and system_one_4b
+    - shadow components
+    - every Hermes config edit
+    - State Packet, memory injection, obspack
+    - maintainer scripts (promote.sh, import_local SHAs, verify_channels, create-labels, gitnexus analyze, /setup-pstack)
+    - z0evals CLAUDE.md, kit skill links and visual probes
+    - the native Android build
+    - remote LLM providers that spend the user's quota, unless listed and confirmed
+
+hardware:
+  hw_classes: [nvidia, amd, apple, intel_mac, cpu]
+  ram_tiers_gib: [4, 8, 16]
+  disk_tiers_gib: [3, 10, 40]
+  torch:
+    version: "2.10.0"
+    cpu_index: https://download.pytorch.org/whl/cpu
+    rocm_index: https://download.pytorch.org/whl/rocm7.1
+    min_cuda: "12.8"
+
+templates:
+  dash-bridge: {manager: systemd_user, path: templates/dash/dash-bridge.service.tmpl, bind: tailnet_ipv4}
+  dash-bridge-launchd: {manager: launchd, path: templates/dash/com.z0.dash-bridge.plist.tmpl, bind: tailnet_ipv4}
+  dash-metro: {manager: systemd_user, path: templates/dash/dash-metro.service.tmpl, bind: loopback}
+  dash-metro-relay: {manager: systemd_user, path: templates/dash/dash-metro-relay.service.tmpl, bind: tailnet_ipv4}
+  z0intelligence: {manager: systemd_user, path: templates/z0int/z0intelligence.service.tmpl, bind: loopback}
+
+bind_classes: [loopback, tailnet_ipv4]
+
+reserved_ports: [3000, 4747, 4788, 4789, 8212, 18212, 8917, 8921, 9333, 11500, 11501, 11503, 11510, 11520]
+
+llm:
+  default: local
+  providers:
+    - {id: local, order: 1}
+    - {id: claude, order: 2, model: haiku}
+    - {id: codex, order: 3, model: gpt-6.1-sol}
+    - {id: openrouter-free, order: 4, key_name: OPENROUTER_API_KEY}
+    - {id: vercel-free, order: 5, key_name: AI_GATEWAY_API_KEY}
+  claude_model: haiku
+  codex_model: gpt-6.1-sol
+  budget: {max_calls: 8, call_timeout_s: 30, total_s: 180, probe_rounds: 2}
+  forbidden: [grok, cursor, cursor-agent]
+
+probes:
+  bin_symlink: {kind: symlink_target}
+  bin_shebang: {kind: shebang}
+  path_exists: {kind: exists}
+  path_mode: {kind: stat}
+  tool_version: {kind: version}
+
+# The first `network:` key of each URL is the fact name detect/network.py reports.
+network_probes:
+  github: https://github.com
+  pypi: https://pypi.org
+  npmjs: https://registry.npmjs.org
+  fonts_google: https://fonts.googleapis.com
+  pytorch: https://download.pytorch.org
+  bun: https://bun.sh
+  k2_fsa: https://github.com/k2-fsa
+
+# Detect scans these roots (depth <= 3) for checkouts whose origin is a registry repo.
+checkout_roots: ["~/workspace", "~", "$Z0_HOME/repos", "~/zer0/oss"]
+
+denylists:
+  # Never opened (stat only, or not at all). Globs are fnmatch patterns over ~-paths.
+  reads:
+    - "~/.z0int/shadow"
+    - "~/.z0int/shadow/*"
+    - "~/.hermes/*"
+    - "~/.ssh"
+    - "~/.ssh/*"
+    - "~/.claude*/.credentials*"
+    - "~/.codex/auth*"
+    - "~/.config/agentsview/config.toml"
+    - "*.env"
+  # Host-literal classes that must never appear in the registry, templates or rendered
+  # artifacts (law H2), and that redaction masks before any output. Written as
+  # patterns (`re:`) so this public file names no real host: model mounts, personal
+  # home paths, the container /workspace root, tailnet ids and tailnet IPv4s (a
+  # rendered env file may carry only the IP from the current detection). A host's
+  # concrete private literals live in its z0-hosts overlay, never here
+  # (scripts/public-leak-check --overlay reads them from there).
+  redaction:
+    - "re:(?<![\\w.~/-])/mnt/[A-Za-z0-9]"
+    - "re:(?<![\\w.~/-])/(home|Users)/[A-Za-z_]"
+    - /workspace/
+    - "re:\\btail[0-9a-f]{4,}\\b"
+    - "re:(?<![\\d.])100\\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\\.[0-9]{1,3}\\.[0-9]{1,3}"
+
+# §8.1 hub steps, planned for every target set.
+hub:
+  steps:
+    - {id: z0.registry_check, kind: check, consent: {class: C0}, argv: [scripts/registry-check]}
+    - {id: z0.plan_deterministic, kind: check, consent: {class: C0},
+       argv: [./z0, onboard, plan, --stdout, --check-deterministic]}
+    - {id: z0.init_dry_run, kind: check, consent: {class: C0},
+       argv: [./z0, init, --profile, "{profile}", --dry-run]}

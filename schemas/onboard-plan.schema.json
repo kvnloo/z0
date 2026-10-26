@@ -34,6 +34,27 @@
     },
     "answers_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
     "targets": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "components": {
+      "type": "object",
+      "description": "Per-component kernel.decide_component verdict and the chosen work tree.",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["verdict"],
+        "properties": {
+          "verdict": { "enum": ["allow", "ask", "unavailable", "refuse"] },
+          "reason": { "type": "string" },
+          "blocked_by": { "type": "string" },
+          "tree": { "type": "string", "pattern": "^(~(/|$)|\\$Z0_HOME(/|$)|/(?!home/|Users/))" },
+          "adopted": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "prepared_path": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^(~(/|$)|/(?!home/|Users/))" },
+      "description": "Law T1: the PATH every run, unit, env file and check receives."
+    },
     "steps": {
       "type": "array",
       "description": "Topological order over depends_on ∪ needs ∪ implicit edges (O1).",

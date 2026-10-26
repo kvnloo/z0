@@ -21,6 +21,11 @@ harnesses:
     evidence:
       - registry/components.yaml#components.oh-my-pi
       - kvnloo/aodl:harnesses/catalog.json#omp
+    detect:
+      binaries: [omp]
+      config_dirs: [{env: PI_CODING_AGENT_DIR}, "~/.omp"]
+      version_cmd: [omp, --version]
+    policy: {configure: allowed, offload: allowed, exec_probe: allowed, dash_acp: null, bridge_path: included}
 
   hermes:
     name: Hermes Agent
@@ -38,6 +43,10 @@ harnesses:
       - kvnloo/aodl:harnesses/catalog.json#hermes
       - kvnloo/hermes-agent:README.md
       - kvnloo/sol-pi-hermes:README.md
+    detect:
+      binaries: [hermes]
+      config_dirs: [{env: HERMES_HOME}, "~/.hermes"]   # existence only; contents are never opened
+    policy: {configure: ask, offload: allowed, exec_probe: never, dash_acp: null, bridge_path: included}
 
   deepseek:
     name: DeepSeek Harness
@@ -54,6 +63,9 @@ harnesses:
     evidence:
       - kvnloo/deepseek-harness:README.md
       - kvnloo/deepseek-harness:docs/architecture.md
+    detect:
+      binaries: [deepseek]
+    policy: {configure: detect_only, offload: allowed, exec_probe: never, dash_acp: null, bridge_path: included}
 
   codex:
     name: Codex
@@ -64,6 +76,12 @@ harnesses:
     summary: External executor used in the multi-harness Zer0 workflow.
     evidence:
       - kvnloo/aodl:harnesses/catalog.json#codex
+    detect:
+      binaries: [codex]
+      config_dirs: [{env: CODEX_HOME}, "~/.codex"]
+      session_stores: ["{config}/sessions"]
+      version_cmd: [codex, --version]
+    policy: {configure: allowed, offload: allowed, exec_probe: allowed, dash_acp: codex-acp, bridge_path: included}
 
   pi:
     name: Pi
@@ -77,3 +95,111 @@ harnesses:
     evidence:
       - kvnloo/aodl:harnesses/catalog.json#pi
       - kvnloo/SoL-Pi:README.md
+    detect:
+      binaries: [pi]
+      config_dirs: ["~/.pi"]
+    policy: {configure: detect_only, offload: allowed, exec_probe: never, dash_acp: null, bridge_path: included}
+
+  claude-code:
+    name: Claude Code
+    repo: anthropics/claude-code
+    aodl_id: claude
+    kind: executor
+    adoption: active
+    catalog_gap: true
+    summary: Anthropic's coding-agent CLI; z0intelligence ships a Claude plugin and dash an ACP adapter.
+    detect:
+      binaries: [claude]                 # installed == binary resolves under the prepared PATH
+      config_dirs: [{env: CLAUDE_CONFIG_DIR}, "~/.claude-home", "~/.claude"]
+      pick: has_child:projects           # several matches -> all recorded (Z0INT_CLAUDE_PROJECTS_DIRS)
+      session_stores: ["{config}/projects"]
+      version_cmd: [claude, --version]
+    policy: {configure: allowed, offload: allowed, exec_probe: allowed, dash_acp: claude-agent-acp, bridge_path: included}
+
+  grok:
+    name: Grok CLI
+    repo: null
+    aodl_id: grok
+    kind: executor
+    adoption: excluded
+    catalog_gap: true
+    summary: Detected and reported only. Never configured, probed, offloaded to, or put on a bridge PATH.
+    detect: {binaries: [grok], config_dirs: ["~/.grok"]}
+    policy: {configure: never, offload: never, exec_probe: never, dash_acp: null, bridge_path: excluded}
+
+  cursor-agent:
+    name: Cursor Agent
+    repo: null
+    aodl_id: cursor-agent
+    kind: executor
+    adoption: excluded
+    catalog_gap: true
+    summary: Detected and reported only. Never configured, probed, offloaded to, or put on a bridge PATH.
+    detect: {binaries: [cursor-agent], config_dirs: ["~/.cursor"]}
+    policy: {configure: never, offload: never, exec_probe: never, dash_acp: null, bridge_path: excluded}
+
+  opencode:
+    name: opencode
+    repo: sst/opencode
+    aodl_id: opencode
+    kind: executor
+    adoption: research
+    catalog_gap: true
+    summary: Detected only; reads AGENTS.md natively.
+    detect: {binaries: [opencode], config_dirs: ["~/.config/opencode"]}
+    policy: {configure: detect_only, offload: never, exec_probe: never, dash_acp: null, bridge_path: included}
+
+  gemini:
+    name: Gemini CLI
+    repo: google-gemini/gemini-cli
+    aodl_id: gemini
+    kind: executor
+    adoption: research
+    catalog_gap: true
+    summary: Detected only. No GEMINI.md is ever created.
+    detect: {binaries: [gemini], config_dirs: ["~/.gemini"]}
+    policy: {configure: detect_only, offload: never, exec_probe: never, dash_acp: null, bridge_path: included}
+
+  kimi:
+    name: Kimi CLI
+    repo: MoonshotAI/kimi-cli
+    aodl_id: kimi
+    kind: executor
+    adoption: research
+    catalog_gap: true
+    summary: Detected only.
+    detect: {binaries: [kimi], config_dirs: ["~/.kimi"]}
+    policy: {configure: detect_only, offload: never, exec_probe: never, dash_acp: null, bridge_path: included}
+
+  fx:
+    name: fx
+    repo: null
+    aodl_id: fx
+    kind: executor
+    adoption: research
+    catalog_gap: true
+    summary: Detected only; dash can drive it as a CLI harness.
+    detect: {binaries: [fx]}
+    policy: {configure: detect_only, offload: never, exec_probe: never, dash_acp: null, bridge_path: included}
+
+  dsh:
+    name: DeepSeek Harness shell
+    repo: kvnloo/deepseek-harness
+    aodl_id: null
+    kind: executor
+    adoption: active
+    catalog_gap: true
+    summary: The deepseek-harness CLI; z0intelligence patches its cordis profile when node >= 22.
+    detect: {binaries: [dsh], config_dirs: ["~/.dsh"]}
+    policy: {configure: allowed, offload: allowed, exec_probe: never, dash_acp: null, bridge_path: included}
+
+  codexbar:
+    name: CodexBar
+    repo: null
+    aodl_id: null
+    kind: observer
+    adoption: research
+    catalog_gap: true
+    summary: Usage meter for agent quotas. Detected only.
+    detect: {binaries: [codexbar]}
+    policy: {configure: detect_only, offload: never, exec_probe: never, dash_acp: null, bridge_path: excluded}

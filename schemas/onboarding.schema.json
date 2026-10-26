@@ -128,6 +128,25 @@
         "additionalProperties": false
       }
     },
+    "network_probes": {
+      "type": "object",
+      "description": "Fact name -> HTTPS URL that detect/network.py HEADs (3 s timeout).",
+      "propertyNames": { "pattern": "^[a-z0-9_]+$" },
+      "additionalProperties": { "type": "string", "pattern": "^https://" }
+    },
+    "checkout_roots": {
+      "type": "array",
+      "description": "Roots scanned (depth <= 3) for checkouts whose origin is a registry repo.",
+      "items": { "type": "string", "pattern": "^(~(/|$)|\\$Z0_HOME(/|$))" }
+    },
+    "hub": {
+      "type": "object",
+      "description": "Design §8.1 hub steps, planned for every target set.",
+      "properties": {
+        "steps": { "type": "array", "items": { "type": "object", "required": ["id", "kind", "consent"] } }
+      },
+      "additionalProperties": false
+    },
     "denylists": {
       "type": "object",
       "required": ["reads", "redaction"],

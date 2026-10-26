@@ -5,10 +5,15 @@ from __future__ import annotations
 import argparse
 import sys
 
-from . import commands
-
 
 def main(argv: list[str] | None = None) -> int:
+    argv = sys.argv[1:] if argv is None else argv
+    if argv and argv[0] == "onboard":
+        from .onboard import cli  # before `commands`, so detect/plan import no registry.py
+
+        return cli.main(argv[1:])
+    from . import commands
+
     parser = argparse.ArgumentParser(prog="z0", description="Zer0 map, installer, and registry CLI")
     sub = parser.add_subparsers(dest="cmd")
 
@@ -25,6 +30,8 @@ def main(argv: list[str] | None = None) -> int:
     p_graph = sub.add_parser("graph", help="Dependency graph")
     p_graph.add_argument("--mermaid", action="store_true")
     p_graph.add_argument("--json", action="store_true")
+
+    sub.add_parser("onboard", help="Detect, plan and onboard this host (see `z0 onboard --help`)")
 
     p_docs = sub.add_parser("docs", help="Documentation tools")
     p_docs_sub = p_docs.add_subparsers(dest="docs_cmd")

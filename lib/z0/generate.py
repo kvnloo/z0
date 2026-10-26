@@ -223,6 +223,12 @@ def docs_index_jsonl() -> str:
     return "\n".join(json.dumps(e) for e in entries) + ("\n" if entries else "")
 
 
+def onboarding_matrix() -> str:
+    from .onboard import matrix, regsnap
+
+    return matrix.onboarding_matrix(regsnap.load(ROOT))
+
+
 def write_all() -> list[Path]:
     GENERATED.mkdir(parents=True, exist_ok=True)
     DOCS_GEN.mkdir(parents=True, exist_ok=True)
@@ -235,6 +241,7 @@ def write_all() -> list[Path]:
         GENERATED / "lifecycles.md": lifecycles_md(),
         GENERATED / "suite.md": suite_md(),
         GENERATED / "install-matrix.md": install_matrix(),
+        GENERATED / "onboarding-matrix.md": onboarding_matrix(),
         DOCS_GEN / "ownership.md": ownership_table(),
         GENERATED / "docs-index.jsonl": docs_index_jsonl(),
     }

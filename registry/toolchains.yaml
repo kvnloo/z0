@@ -1,0 +1,125 @@
+# Toolchains the onboarder detects and, with consent (C1 bundle `toolchains`), installs
+# user-local into $Z0_HOME/toolchains/<tool>/<version> (design §2.4).
+#
+# - detect: absolute well-known dirs first, then `sh -c 'command -v X'` under the prepared
+#   PATH (law T1). `--version` runs for these registry tools only.
+# - install: pinned version plus sha256 per os-arch. Never a "latest". Bump with
+#   scripts/toolchains-bump; a monthly CI job flags stale pins.
+# - system_pkg: printed as a hint only, never run in --auto (sudo is C2).
+#
+# stage0.sh reads the `uv` block with awk (no Python yet), so keep its layout:
+# `version:` and one `<os>-<arch>: {target: ..., sha256: ...}` line per target.
+
+version: 1
+
+detect:
+  well_known_dirs:
+    - "~/.bun/bin"
+    - "~/.local/bin"
+    - "~/.cargo/bin"
+    - "/opt/homebrew/bin"
+    - "/usr/local/bin"
+    - "~/.nvm/versions/node/*/bin"
+  shims:
+    - "~/.local/share/fnm/aliases/default/bin"
+    - "~/.local/share/mise/shims"
+    - "~/.volta/bin"
+    - "~/.pyenv/shims"
+  z0_dirs:
+    - "$Z0_HOME/toolchains/*/*/bin"
+    - "$Z0_HOME/toolchains/*/*"
+  system_dirs: ["/usr/bin", "/bin"]
+
+tools:
+  uv:
+    binaries: [uv]
+    version_cmd: [uv, --version]
+    install:
+      version: "0.12.21"
+      url: "https://github.com/astral-sh/uv/releases/download/{version}/uv-{target}.tar.gz"
+      layout: "uv-{target}/uv"
+      targets:
+        linux-x86_64: {target: x86_64-unknown-linux-musl, sha256: d69d543a55ec9cdf9d3d9f2648b0a161847e3dbddc477e3be6b5813a6d46f639}
+        linux-arm64: {target: aarch64-unknown-linux-musl, sha256: 67389a674e62adffa5a395d9a3b80688731c4aa7b33a6def3e62d00f7fec821f}
+        darwin-x86_64: {target: x86_64-apple-darwin, sha256: 2b336763b396ec6afa20c5a8b083538ca7402445b868311979d740a4344c17d8}
+        darwin-arm64: {target: aarch64-apple-darwin, sha256: b88bda573e566ef9bced66b155fe0408626fbbc053aee1c30ba686f0728c9447}
+
+  bun:
+    binaries: [bun]
+    version_cmd: [bun, --version]
+    install:
+      version: "1.4.3"
+      url: "https://github.com/oven-sh/bun/releases/download/bun-v{version}/bun-{target}.zip"
+      layout: "bun-{target}/bun"
+      targets:
+        linux-x86_64: {target: linux-x64, sha256: 3e730528d89775f03f87f05c06787c4df4099d0a37f3f252e7b829cb23816e18}
+        linux-arm64: {target: linux-aarch64, sha256: efa9813da5ed72423bf847f916e8d2c47c0d776add972354026a75e10da9aa21}
+        linux-musl-x86_64: {target: linux-x64-musl, sha256: 6e9ea98554ea0d05efda5840ae292618aaa3adefd66b0853520c5c86a37eac9c}
+        linux-musl-arm64: {target: linux-aarch64-musl, sha256: 8de8a0003cc2707bb555887e3d450e24e1edf3f605f491393e89ed61a8853420}
+        darwin-x86_64: {target: darwin-x64, sha256: 62660e6438eb872278877acca77e1152d5d031324df368d4a81b428211489d2d}
+        darwin-arm64: {target: darwin-aarch64, sha256: 80afd4c069b46a6fa8f3ec520bebc750a7843e4a8d5b9583d29ad436c00a3403}
+
+  node:
+    binaries: [node]
+    version_cmd: [node, --version]
+    install:
+      version: "22.23.4"
+      url: "https://nodejs.org/dist/v{version}/node-v{version}-{target}.tar.xz"
+      layout: "node-v{version}-{target}/bin/node"
+      targets:
+        linux-x86_64: {target: linux-x64, sha256: 1805bcd35e6815559bd2eb97db438d3fdb0eb3a5e6a977b7c1badca76337e9ce}
+        linux-arm64: {target: linux-arm64, sha256: 6287aa46b6c375d816e63ae66d024fbbfd70404825aabdfdf898a970871d2f4b}
+        darwin-x86_64: {target: darwin-x64, sha256: f42abca7aaac61efc57d49fb42ea84fc53bbeba9a749cb03a291ce6e4e7a69c1}
+        darwin-arm64: {target: darwin-arm64, sha256: 037650d0839f457747396f052073fb48333d31bf5abd3c98b74da20d89ebb1ad}
+
+  npm:
+    binaries: [npm]
+    version_cmd: [npm, --version]
+    provided_by: node
+
+  rustup:
+    binaries: [rustup]
+    version_cmd: [rustup, --version]
+    install:
+      version: "1.29.2"
+      url: "https://static.rust-lang.org/rustup/archive/{version}/{target}/rustup-init"
+      layout: "rustup-init"
+      targets:
+        linux-x86_64: {target: x86_64-unknown-linux-gnu, sha256: 5be191e8c70a5007074254cb74d78dbfdd25cd5a61c27de7b8e5410122ec24f4}
+        linux-arm64: {target: aarch64-unknown-linux-gnu, sha256: a9c168dbea81a84671c6b7a5c1795cb0eb699020110d107ddfca427bd797e697}
+        linux-musl-x86_64: {target: x86_64-unknown-linux-musl, sha256: 2ba97d668c06dc4b1884f2a3fa6f4cf14b9bd0c1db379af7e4f87a705ff19edd}
+        linux-musl-arm64: {target: aarch64-unknown-linux-musl, sha256: 7fdbb23acf6495efee2e371580c52b365917551b4835090a225c44ac30915235}
+        darwin-x86_64: {target: x86_64-apple-darwin, sha256: b9610730ddeef52765723847866fd1e3540b2bf7d5ab0c324aa143a5edf25ba0}
+        darwin-arm64: {target: aarch64-apple-darwin, sha256: f7c7e11eb2e07f006e532a8aaac77b32f4527d305ac386c0c633ca6133d35ca9}
+
+  python3:
+    binaries: [python3]
+    version_cmd: [python3, --version]
+    window_binaries: [python3.13, python3.12, python3.11, python3.10]
+    via_uv: {version: "3.12", z0int_prefer: "3.11"}
+
+  git:
+    binaries: [git]
+    version_cmd: [git, --version]
+    system_pkg: {pacman: git, apt: git, dnf: git, apk: git, brew: git}
+
+  ffmpeg:
+    binaries: [ffmpeg]
+    version_cmd: [ffmpeg, -version]
+    system_pkg: {pacman: ffmpeg, apt: ffmpeg, dnf: ffmpeg-free, apk: ffmpeg, brew: ffmpeg}
+
+  tailscale:
+    binaries: [tailscale]
+    system_pkg: {pacman: tailscale, apt: tailscale, dnf: tailscale, apk: tailscale, brew: tailscale}
+
+  curl:
+    binaries: [curl]
+    system_pkg: {pacman: curl, apt: curl, dnf: curl, apk: curl, brew: curl}
+
+system_pkg_commands:
+  pacman: "sudo pacman -S --needed {pkg}"
+  apt: "sudo apt-get install -y {pkg}"
+  dnf: "sudo dnf install -y {pkg}"
+  apk: "sudo apk add {pkg}"
+  brew: "brew install {pkg}"
+  none: "install {pkg} with your system package manager"

@@ -94,6 +94,17 @@ for sid, meta in suite.items():
         assert target in suite, f"suite repository {sid} references unknown suite repository {target}"
         assert target != sid, f"suite repository {sid} cannot depend on itself"
 
+from pathlib import Path
+from z0.onboard import matrix, regcheck, regsnap
+
+snap = regsnap.load()
+raw_texts, template_texts = regcheck.load_texts()
+errors = regcheck.check(snap, raw_texts, template_texts)
+generated = Path(regsnap.ROOT) / "generated" / "onboarding-matrix.md"
+if not generated.is_file() or generated.read_text(encoding="utf-8") != matrix.onboarding_matrix(snap):
+    errors.append("generated/onboarding-matrix.md is stale: run scripts/docs-generate")
+assert not errors, "onboarding rules:\n  " + "\n  ".join(errors)
+
 print(
     f"ok: {len(comps)} components, {len(profs)} profiles, "
     f"{len(harnesses)} harnesses, {len(mechanisms)} mechanisms, "

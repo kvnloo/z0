@@ -11,7 +11,52 @@
     "kind": { "type": "string" },
     "status": { "type": "string" },
     "execution": { "type": "string" },
-    "summary": { "type": "string" }
+    "summary": { "type": "string" },
+    "onboard": {
+      "type": "object",
+      "description": "Onboarding block (design §2.1). Steps follow onboard-step.schema.json without `component` (the planner fills it in); scripts/registry-check enforces the step rules.",
+      "properties": {
+        "gate": { "enum": ["generic", "dash", "z0int"] },
+        "revs": {
+          "type": "object",
+          "properties": {
+            "app": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+            "bridge": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+          },
+          "additionalProperties": false
+        },
+        "requires": {
+          "type": "object",
+          "properties": {
+            "tools": { "type": "array", "items": { "type": "string" } },
+            "optional": { "type": "array", "items": { "type": "string" } }
+          },
+          "additionalProperties": false
+        },
+        "hardware": { "type": "object" },
+        "python": { "type": "object" },
+        "public_ready": { "type": "array", "items": { "enum": ["revs_on_origin", "no_private_on_auto_path"] } },
+        "steps": { "type": "array", "items": { "type": "object", "required": ["id", "kind", "consent"] } },
+        "services": { "type": "array" },
+        "secrets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "kind"],
+            "properties": {
+              "name": { "type": "string" },
+              "kind": { "enum": ["env", "file"] },
+              "required": { "type": "boolean" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "harness_integrations": { "type": "array", "items": { "type": "string" } },
+        "acceptance": { "type": "object", "properties": { "tiers": { "type": "array" } } },
+        "remediations": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    }
   },
   "additionalProperties": true
 }
