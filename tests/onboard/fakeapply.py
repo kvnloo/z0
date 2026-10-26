@@ -55,7 +55,7 @@ printf "%s\\n" "npm $*" >> "$FAKE_LOG"
 case "$*" in
   "ci --no-audit --no-fund --prefix web") mkdir -p web/node_modules ;;
   "--prefix web run typecheck") test -d web/node_modules ;;
-  "--prefix web exec -- next build") test "$Z0_BASE_PATH" = /z0evals && mkdir -p web/out && echo '<html>' > web/out/index.html ;;
+  "--prefix web run build") test "$Z0_BASE_PATH" = /z0evals && mkdir -p web/out && echo '<html>' > web/out/index.html ;;
   *) exit 9 ;;
 esac
 """

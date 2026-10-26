@@ -710,7 +710,7 @@ components:
         - {id: z0evals.web.typecheck, kind: check, consent: {class: C0}, where: build, needs: [z0evals.web.deps],
            argv: [npm, --prefix, web, run, typecheck]}
         - {id: z0evals.web.build, kind: run, consent: {class: C0}, network: true, where: build,
-           needs: [z0evals.web.typecheck], argv: [npm, --prefix, web, exec, --, next, build],
+           needs: [z0evals.web.typecheck], argv: [npm, --prefix, web, run, build],
            env: {Z0_BASE_PATH: /z0evals}, creates: ["{tree}/web/out/index.html"], timeout_s: 1800}
         - {id: z0evals.web.audit, kind: check, consent: {class: C0}, where: build, needs: [z0evals.web.build],
            argv: [.venv/bin/python, scripts/audit_web_export.py, --root, web/out]}

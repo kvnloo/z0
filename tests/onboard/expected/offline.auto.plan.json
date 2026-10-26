@@ -52,14 +52,14 @@
   "llm": "local",
   "mode": "auto",
   "pin_policy": "pinned",
-  "plan_hash": "b9e88078dd1e7e1b12c6ce384f2a1cd9001f35b01b345350bbd5791cc33f9b1f",
+  "plan_hash": "306776ddae70e0d948002e130a50486cb87bcffbbcc1d6d56815432bd9851fdb",
   "prepared_path": [
     "/usr/bin",
     "/bin"
   ],
   "profile": "personal",
   "registry": {
-    "registry/components.yaml": "92bc79136d902cd3bd54ef2679747b4f9b7ec31cef8f658e3408058386827067",
+    "registry/components.yaml": "197817366d3b52169cddff78d94819664a68b03f3eac68ea4a8c2ca45aaff6ed",
     "registry/harnesses.yaml": "1c2b9ba37ca974e4aa1ed1f6990561ea303fc7e1f73c0fb4c6cc4802d5b4a7b8",
     "registry/onboarding.yaml": "b0c3e2b4c8e7a17bde8a5cb2378c90f6009b4464879a76406f6ae3cdc7e9b9ce",
     "registry/profiles.yaml": "1078cbeef86e532c77478eb5025ec08f6f3f8156a1c77707774416e79d51f819",
@@ -2272,9 +2272,7 @@
           "npm",
           "--prefix",
           "web",
-          "exec",
-          "--",
-          "next",
+          "run",
           "build"
         ],
         "component": "z0evals",
