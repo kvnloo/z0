@@ -74,7 +74,9 @@ def findings_in_text(text: str, denylist=()):
     for lit in denylist:
         pos = text.find(lit)
         while pos != -1:
-            found.append((pos, "denylist"))
+            # An absolute path literal must start a path: "/srv/x" is not found in "~/srv/x".
+            if not (lit.startswith("/") and pos and (text[pos - 1].isalnum() or text[pos - 1] in "~._-")):
+                found.append((pos, "denylist"))
             pos = text.find(lit, pos + 1)
     for pos, rule in sorted(found):
         yield text.count("\n", 0, pos) + 1, rule

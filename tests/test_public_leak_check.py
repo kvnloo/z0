@@ -74,6 +74,10 @@ class Patterns(unittest.TestCase):
     def test_line_numbers_are_exact(self):
         self.assertEqual(list(plc.findings_in_text(f"a\nb\nhost {TS_IP}\n")), [(3, "tailnet-ipv4")])
 
+    def test_absolute_denylist_path_needs_a_path_start(self):
+        self.assertEqual(rules("~/srvx/a ./srvx b/srvx", ["/srvx"]), [])
+        self.assertEqual(rules("cd /srvx/a; x=/srvx", ["/srvx"]), ["denylist", "denylist"])
+
     def test_clean_text(self):
         self.assertEqual(rules("port = 4747  # default\npath = ~/.config/z0-hosts"), [])
 
