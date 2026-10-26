@@ -1,0 +1,44 @@
+name: onboard-e2e
+
+# Design §10 layer 3 (work package Z2): `./z0 onboard` on clean machines.
+# - containers: scripts/onboard-e2e builds a throwaway image (git, curl, CA
+#   certificates; no python) and runs scenarios 5a, 1, 3, 4, 5b as a non-root user,
+#   then scenario 6 in a second container with --network none on the same HOME.
+# - inside: the same scenarios inside a job container (offline simulated).
+# Nothing runs against the runner's own home; network is used to clone z0evals and
+# download the pinned uv, CPython and node.
+
+on:
+  schedule:
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "lib/z0/onboard/**"
+      - "registry/**"
+      - "scripts/onboard-e2e"
+      - ".github/workflows/onboard-e2e.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  containers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ["ubuntu:24.04", "debian:12"]
+    steps:
+      - uses: actions/checkout@v4
+      - run: scripts/onboard-e2e --engine docker --image "${{ matrix.image }}"
+
+  inside:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    container: ubuntu:24.04
+    steps:
+      - run: apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends git curl ca-certificates tar
+      - uses: actions/checkout@v4
+      - run: scripts/onboard-e2e --inside --offline-sim
