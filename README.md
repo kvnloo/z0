@@ -87,6 +87,7 @@ without guessing repository structure from filenames alone.
 | `./z0 graph` | Text dependency tree |
 | `./z0 graph --mermaid` | Mermaid for docs |
 | `./z0 docs generate` | Regenerate `generated/` from registry |
+| `./z0 laws check/prove/init` | Shared pinned formal-laws tooling ([guide](docs/laws/README.md)) |
 
 ## Rule
 
