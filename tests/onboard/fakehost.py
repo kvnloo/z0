@@ -81,6 +81,8 @@ def build(root: Path) -> dict:
     os.symlink(sys.executable, sysbin / "python3")
     for rel, body in HOME_BINS.items():
         _stub(home / rel, body, root)
+    # A registry well-known dir (/usr/local/bin): detect must look for it in the sysroot.
+    _stub(sysroot / "usr/local/bin/rustup", 'echo "rustup 1.29.2 (fake)"', root)
     # Never-open paths, each holding the canary.
     for rel in (".hermes/config.yaml", ".ssh/id_ed25519", ".dash/token", ".z0int/shadow/x.json",
                 ".claude/.credentials.json", ".codex/auth.json"):

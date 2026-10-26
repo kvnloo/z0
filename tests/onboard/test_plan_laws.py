@@ -198,12 +198,28 @@ class PlanLaws(unittest.TestCase):
 
     # --- D1 / D2 -------------------------------------------------------------------
     def test_D1_dash_rev_not_on_origin_is_unavailable_and_rest_continues(self):
-        plan_obj = self.p.plan(support.fixture("mbp-cpu-15g"), self.snap)
+        host = support.fixture("mbp-cpu-15g")
+        for fact in host["revs"].values():
+            if fact["repo"] == "kvnloo/dash":
+                fact.update(on_origin="no", evidence="mirror")
+        plan_obj = self.p.plan(host, self.snap)
         self.assertEqual(plan_obj["components"]["dash"]["reason"], "rev_not_on_origin")
         dash = [e for e in plan_obj["steps"] if e["step"]["component"] == "dash"]
         self.assertEqual({e["state"]["status"] for e in dash}, {"unavailable"})
         self.assertTrue([e for e in plan_obj["steps"] if e["step"]["component"] == "z0evals"
                          and e["state"]["status"] in ("todo", "already_satisfied")])
+        entry = next(u for u in plan_obj["unavailable"] if u["id"] == "dash")
+        self.assertIn("maintainer must push", entry["detail"])
+
+    def test_D1_unchecked_dash_rev_is_unverified_not_unpushed(self):
+        """No mirror and no checkout: say so, never claim the maintainer must push."""
+        for fixture in ("mbp-cpu-15g", "fresh-stranger"):
+            plan_obj = self.p.plan(support.fixture(fixture), self.snap)
+            self.assertEqual(plan_obj["components"]["dash"]["reason"], "rev_unverified", fixture)
+            entry = next(u for u in plan_obj["unavailable"] if u["id"] == "dash")
+            self.assertIn("re-run `./z0 onboard plan` with network", entry["detail"])
+            text = json.dumps(plan_obj)
+            self.assertNotIn("maintainer must push", text, fixture)
 
     def test_D2_legacy_dash_is_refused(self):
         host = support.fixture("groot-nvidia-32g")
@@ -224,7 +240,7 @@ class PlanLaws(unittest.TestCase):
         state = {e["step"]["id"]: e["state"] for e in plan_obj["steps"]}
         self.assertEqual(state["dash.bridge.unit"], {"status": "unavailable", "reason": "no_tailnet"})
         ask = [a for a in plan_obj["asks"] if a["id"] == "dash.bridge.unit"]
-        self.assertEqual(ask[0]["command"], "tailscale up, then ./z0 onboard accept dash.bridge.unit")
+        self.assertEqual(ask[0]["command"], "tailscale up, then re-run ./z0 onboard")
         self.assertEqual(state["dash.selftest.loopback"]["status"], "todo")
 
     def test_S1_S2_red_open_bind_and_checkout_root_are_refused(self):
@@ -243,6 +259,135 @@ class PlanLaws(unittest.TestCase):
         state = {e["step"]["id"]: e["state"] for e in
                  self.p.plan(host, snap, grants=ALL_BUNDLES)["steps"]}
         self.assertEqual(state["dash.bridge.unit"], {"status": "refused", "reason": "through_checkout"})
+
+    def test_S1_harness_plugins_never_link_a_checkout_or_build_tree(self):
+        """§11 S1 covers plugin paths: a harness_plugin step where: build is refused."""
+        snap = support.snapshot()
+        steps = snap["components"]["components"]["oh-my-pi"]["onboard"]["steps"]
+        setup = next(s for s in steps if s["id"] == "oh-my-pi.setup")
+        host = support.fixture("groot-nvidia-32g")
+        state = {e["step"]["id"]: e["state"] for e in
+                 self.p.plan(host, snap, grants=ALL_BUNDLES)["steps"]}
+        self.assertEqual(state["oh-my-pi.setup"]["status"], "todo")
+        for where, reason in (("build", "through_checkout"), ("mirror", "through_checkout"),
+                              ("home", "outside_roots")):
+            setup["where"] = where
+            state = {e["step"]["id"]: e["state"] for e in
+                     self.p.plan(host, snap, grants=ALL_BUNDLES)["steps"]}
+            self.assertEqual(state["oh-my-pi.setup"], {"status": "refused", "reason": reason}, where)
+
+    def test_S1_shim_and_env_files_point_only_at_releases_or_venvs(self):
+        for name, _, _, plan_obj in self.plans():
+            for entry in plan_obj["steps"]:
+                step = entry["step"]
+                if step["kind"] in ("service_unit", "harness_plugin") or step.get("target_where"):
+                    if entry["state"]["status"] in ("todo", "already_satisfied"):
+                        with self.subTest(case=name, step=step["id"]):
+                            self.assertIn(step.get("target_where", step.get("where")),
+                                          ("release", "venv"))
+        snap = support.snapshot()
+        steps = snap["components"]["components"]["z0intelligence"]["onboard"]["steps"]
+        next(s for s in steps if s["id"] == "z0intelligence.shim")["target_where"] = "build"
+        state = {e["step"]["id"]: e["state"] for e in
+                 self.p.plan(support.fixture("groot-nvidia-32g"), snap, grants=ALL_BUNDLES)["steps"]}
+        self.assertEqual(state["z0intelligence.shim"], {"status": "refused", "reason": "through_checkout"})
+
+    # --- §3 / §6.1 blocked(dep) over depends_on --------------------------------------
+    def test_depends_on_failure_blocks_dependents(self):
+        plan_obj = self.p.plan(support.fixture("tiny-4g-vps"), self.snap, profile="full")
+        state = {e["step"]["id"]: e["state"] for e in plan_obj["steps"]}
+        by_comp: dict = {}
+        for entry in plan_obj["steps"]:
+            by_comp.setdefault(entry["step"]["component"], []).append(entry["state"]["status"])
+        self.assertNotIn("todo", by_comp["tokenomics"])
+        self.assertNotIn("already_satisfied", by_comp["tokenomics"])
+        for dependent in ("kerdoios", "z0intelligence"):
+            with self.subTest(dependent=dependent):
+                self.assertNotIn("todo", by_comp[dependent])
+        self.assertEqual(state["kerdoios.source"]["status"], "blocked")
+        self.assertTrue(state["kerdoios.source"]["blocked_by"].startswith("tokenomics."))
+        self.assertEqual(plan_obj["components"]["kerdoios"]["blocked_by"], "tokenomics")
+        # Red: with the dependency's tools granted, the dependent is planned again.
+        granted = self.p.plan(support.fixture("tiny-4g-vps"), self.snap, profile="full",
+                              grants=ALL_BUNDLES)
+        state = {e["step"]["id"]: e["state"] for e in granted["steps"]}
+        self.assertEqual(state["kerdoios.source"]["status"], "todo")
+
+    # --- P1 on the prepared PATH (§4) ------------------------------------------------
+    def test_P1_prepared_path_holds_no_never_harness_dir(self):
+        never = {hid for hid, row in self.snap["harnesses"]["harnesses"].items()
+                 if (row.get("policy") or {}).get("configure") == "never"}
+        system = set(self.snap["toolchains"]["detect"]["system_dirs"])
+        checked = 0
+        for name, host, _, plan_obj in self.plans():
+            for hid in never:
+                bin_dir = ((host.get("harnesses") or {}).get(hid) or {}).get("bin_dir")
+                if bin_dir and bin_dir not in system:
+                    checked += 1
+                    with self.subTest(case=name, harness=hid):
+                        self.assertNotIn(bin_dir, plan_obj["prepared_path"])
+                        self.assertIn("$Z0_HOME/bin/links", plan_obj["prepared_path"])
+        self.assertGreater(checked, 0, "no fixture exercises a shared never-harness dir")
+        groot = self.p.plan(support.fixture("groot-nvidia-32g"), self.snap)
+        self.assertEqual(groot["prepared_path"],
+                         ["$Z0_HOME/bin/links", "~/.bun/bin", "/usr/bin", "/bin"])
+        links = {link["link"].rsplit("/", 1)[1]: link["target"] for link in groot["path_links"]}
+        self.assertEqual(links["claude"], "~/.local/bin/claude")
+        self.assertEqual(links["uv"], "~/.local/bin/uv")
+        self.assertNotIn("grok", links)
+        self.assertEqual(groot["steps"][0]["step"]["id"], "z0.path_links")
+
+    def test_P1_red_without_bin_dir_the_shared_dir_stays(self):
+        host = support.fixture("groot-nvidia-32g")
+        del host["harnesses"]["grok"]["bin_dir"]
+        self.assertIn("~/.local/bin", self.p.plan(host, self.snap)["prepared_path"])
+
+    # --- §4/§8.1 hub checks run with the z0 venv -------------------------------------
+    def test_hub_checks_resolve_python3_to_the_z0_venv(self):
+        """On a host whose system python3 lacks PyYAML (why stage 0 exists), the hub
+        checks still find it: the z0 venv bin leads their PATH."""
+        for name, _, _, plan_obj in self.plans():
+            for entry in plan_obj["steps"]:
+                step = entry["step"]
+                if step["component"] == "z0" and step["kind"] == "check":
+                    with self.subTest(case=name, step=step["id"]):
+                        path = step.get("env", {}).get("PATH", "")
+                        self.assertEqual(path, ":".join(["$Z0_HOME/venv/bin", *plan_obj["prepared_path"]]))
+
+    # --- §1.2 asks a stranger can act on ----------------------------------------------
+    def test_every_ask_is_actionable_today(self):
+        for name, _, _, plan_obj in self.plans():
+            for ask in plan_obj["asks"]:
+                with self.subTest(case=name, ask=ask["id"]):
+                    self.assertNotIn("onboard accept", ask["command"], "accept arrives in Z2")
+                    self.assertNotRegex(ask["reason"], r"^[a-z0-9_]+$", "raw reason code")
+                    if ask["consent"] == "C1":
+                        self.assertRegex(ask["command"], r"^\./z0 onboard --accept [a-z]+")
+                        self.assertIn("needs consent", ask["reason"])
+
+    def test_no_toolchain_ask_when_every_user_is_unavailable(self):
+        plan_obj = self.p.plan(support.fixture("fresh-stranger"), self.snap)
+        self.assertEqual(plan_obj["profile"], "core")
+        dead = {u["id"] for u in plan_obj["unavailable"]}
+        self.assertTrue({"oh-my-pi", "dash"} <= dead)
+        ids = [a["id"] for a in plan_obj["asks"]]
+        self.assertNotIn("toolchain.bun", ids)
+        self.assertIn("toolchain.node", ids)  # tokenomics and the z0evals web tier need it
+        node = next(a for a in plan_obj["asks"] if a["id"] == "toolchain.node")
+        self.assertEqual(node["command"], "./z0 onboard --accept toolchains   (or --yes for every bundle)")
+        self.assertIn("node 22.23.4", node["reason"])
+
+    def test_unavailable_components_say_why(self):
+        plan_obj = self.p.plan(support.fixture("fresh-stranger"), self.snap)
+        entry = next(u for u in plan_obj["unavailable"] if u["id"] == "oh-my-pi")
+        self.assertEqual(entry["reason"], "hardware:disk<5GiB")
+        self.assertEqual(entry["detail"], "disk < 5 GiB free at ~; free space or set Z0_HOME on a "
+                                          "larger volume")
+        from z0.onboard.cli import summary_text
+        text = summary_text(plan_obj, None)
+        self.assertIn("Unavailable:\n", text)
+        self.assertIn("  oh-my-pi: unavailable (disk < 5 GiB free at ~;", text)
+        self.assertIn("  dash: unavailable (could not check the pinned revs on origin;", text)
 
     def test_S3_adopted_unit_same_sha_kept_other_sha_is_C2(self):
         plan_obj = self.p.plan(support.fixture("groot-nvidia-32g"), self.snap, grants=ALL_BUNDLES)
@@ -269,8 +414,15 @@ class PlanLaws(unittest.TestCase):
 
     # --- T1 ------------------------------------------------------------------------
     def test_T1_plan_carries_the_prepared_path(self):
+        """The plan's PATH is detect's, with only a never-harness dir swapped (P1)."""
         for name, host, _, plan_obj in self.plans():
-            self.assertEqual(plan_obj["prepared_path"], host.get("prepared_path", []), name)
+            swapped = {e.get("bin_dir") for e in (host.get("harnesses") or {}).values()}
+            want = []
+            for d in host.get("prepared_path", []):
+                d = "$Z0_HOME/bin/links" if d in swapped and d not in ("/usr/bin", "/bin") else d
+                if d not in want:
+                    want.append(d)
+            self.assertEqual(plan_obj["prepared_path"], want, name)
 
     def test_T1_red_tool_off_the_prepared_path_is_not_satisfied(self):
         host = support.fixture("mbp-cpu-15g")

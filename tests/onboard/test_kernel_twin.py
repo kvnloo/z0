@@ -26,6 +26,7 @@ TYPE_MAP = {
     "Mode": k.Mode, "ConsentClass": k.ConsentClass, "Source": k.Source,
     "HostMatch": k.HostMatch, "BindClass": k.BindClass, "IpSource": k.IpSource,
     "RootKind": k.RootKind, "Provider": k.Provider, "Gate": k.Gate, "Flavour": k.Flavour,
+    "RevOrigin": k.RevOrigin,
     "Maturity": k.Maturity, "HwClass": k.HwClass, "PyWindow": k.PyWindow,
     "RamTier": k.RamTier, "DiskTier": k.DiskTier, "Reason": k.Reason, "Verdict": k.Kind,
     "Profile": k.Profile, "TorchIndex": k.TorchIndex, "Replan": k.Replan,

@@ -55,7 +55,9 @@ class KernelTotality(unittest.TestCase):
             k.Verdict(k.Kind.REFUSE, None)
 
     def test_largest_domain_matches_design(self):
-        self.assertEqual(len(list(itertools.product(*k.DOMAINS["decide_component"]))), 2160)
+        # §11 sized it at 2,160 rows with a boolean rev; the rev axis is now
+        # yes/no/unknown (rev_unverified), so 3·3·2·3·5·3·4 = 3,240.
+        self.assertEqual(len(list(itertools.product(*k.DOMAINS["decide_component"]))), 3240)
 
 
 class KernelIsOnlyDecider(unittest.TestCase):

@@ -103,7 +103,7 @@ law remote_provider_needs_consent:
 # M1: memento-class (idea) components are never planned.
 law idea_never_planned:
   for g: M.Gate
-  for r: Bool
+  for r: M.RevOrigin
   for f: M.Flavour
   for h: M.HwClass
   for p: M.PyWindow
@@ -113,7 +113,7 @@ law idea_never_planned:
 # M2: a shadow component is never applied automatically.
 law shadow_never_allowed:
   for g: M.Gate
-  for r: Bool
+  for r: M.RevOrigin
   for f: M.Flavour
   for h: M.HwClass
   for p: M.PyWindow
@@ -127,41 +127,50 @@ law rev_not_on_origin_unavailable:
   for h: M.HwClass
   for p: M.PyWindow
   for ra: M.RamTier
-  {M.decide_component(g, False{}, f, M.MtStable{}, h, p, ra) == M.VUnavailable{M.RRevNotOnOrigin{}} : M.Verdict}
+  {M.decide_component(g, M.OriginNo{}, f, M.MtStable{}, h, p, ra) == M.VUnavailable{M.RRevNotOnOrigin{}} : M.Verdict}
+
+# D1: a dash rev that was never checked on origin is unavailable (rev_unverified),
+# never deployed and never reported as "not on origin".
+law dash_unverified_rev_unavailable:
+  for f: M.Flavour
+  for h: M.HwClass
+  for p: M.PyWindow
+  for ra: M.RamTier
+  {M.decide_component(M.GDash{}, M.OriginUnknown{}, f, M.MtStable{}, h, p, ra) == M.VUnavailable{M.RRevUnverified{}} : M.Verdict}
 
 # D2: the legacy dash flavour is refused.
 law legacy_dash_refused:
   for h: M.HwClass
   for p: M.PyWindow
   for ra: M.RamTier
-  {M.decide_component(M.GDash{}, True{}, M.FLegacy{}, M.MtStable{}, h, p, ra) == M.VRefuse{M.RLegacyFlavour{}} : M.Verdict}
+  {M.decide_component(M.GDash{}, M.OriginYes{}, M.FLegacy{}, M.MtStable{}, h, p, ra) == M.VRefuse{M.RLegacyFlavour{}} : M.Verdict}
 
 # Z1: z0intelligence on intel_mac is refused.
 law z0int_intel_mac_refused:
   for f: M.Flavour
   for p: M.PyWindow
   for ra: M.RamTier
-  {M.decide_component(M.GZ0int{}, True{}, f, M.MtStable{}, M.HwIntelMac{}, p, ra) == M.VRefuse{M.RIntelMac{}} : M.Verdict}
+  {M.decide_component(M.GZ0int{}, M.OriginYes{}, f, M.MtStable{}, M.HwIntelMac{}, p, ra) == M.VRefuse{M.RIntelMac{}} : M.Verdict}
 
 # Z1: z0intelligence without a python in [3.10, 3.14) is refused.
 law z0int_python_window_refused:
   for f: M.Flavour
   for h: M.HwClass
   for ra: M.RamTier
-  {M.is_refuse(M.decide_component(M.GZ0int{}, True{}, f, M.MtStable{}, h, M.PyImpossible{}, ra)) == True{} : Bool}
+  {M.is_refuse(M.decide_component(M.GZ0int{}, M.OriginYes{}, f, M.MtStable{}, h, M.PyImpossible{}, ra)) == True{} : Bool}
 
 # §5.2: z0intelligence is never applied below 8 GiB RAM.
 law z0int_ram_lt4_not_allowed:
   for f: M.Flavour
   for h: M.HwClass
   for p: M.PyWindow
-  {M.is_allow(M.decide_component(M.GZ0int{}, True{}, f, M.MtStable{}, h, p, M.RamLt4{})) == False{} : Bool}
+  {M.is_allow(M.decide_component(M.GZ0int{}, M.OriginYes{}, f, M.MtStable{}, h, p, M.RamLt4{})) == False{} : Bool}
 
 law z0int_ram_4to8_not_allowed:
   for f: M.Flavour
   for h: M.HwClass
   for p: M.PyWindow
-  {M.is_allow(M.decide_component(M.GZ0int{}, True{}, f, M.MtStable{}, h, p, M.Ram4to8{})) == False{} : Bool}
+  {M.is_allow(M.decide_component(M.GZ0int{}, M.OriginYes{}, f, M.MtStable{}, h, p, M.Ram4to8{})) == False{} : Bool}
 
 # Z2: the cpu class always takes the cpu torch index; so does any disk < 10 GiB.
 law cpu_class_cpu_index:

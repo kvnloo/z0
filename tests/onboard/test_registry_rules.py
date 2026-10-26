@@ -84,6 +84,47 @@ class RegistryRules(unittest.TestCase):
     TAILNET_ID = "tail" + "c0ffee42"
     TAILNET_IP = "100." + "101.2.3"
 
+    def test_red_harness_plugin_or_target_outside_releases(self):
+        """S1 covers plugin paths and the shim/env-file targets, not only units."""
+        snap = support.snapshot()
+        self.step(snap, "oh-my-pi.setup")["where"] = "build"
+        self.assert_red(snap, "harness plugin links a release or an owned venv")
+        snap = support.snapshot()
+        self.step(snap, "z0intelligence.shim")["target_where"] = "home"
+        self.assert_red(snap, "target_where is for write_file")
+        snap = support.snapshot()
+        self.step(snap, "z0intelligence.verify")["target_where"] = "venv"
+        self.assert_red(snap, "target_where is for write_file")
+
+    def test_red_unknown_when_fact(self):
+        snap = support.snapshot()
+        self.step(snap, "z0evals.web.gate")["when"] = [
+            {"fact": "network.npm_registry", "op": "eq", "value": True}]
+        self.assert_red(snap, "network has no key 'npm_registry'")
+        snap = support.snapshot()
+        self.step(snap, "dash.gate.test")["when"] = [
+            {"fact": "toolchains.ffmpeg.status", "op": "eq", "value": "present"}]
+        self.assert_red(snap, "toolchains.ffmpeg has no field 'status'")
+        snap = support.snapshot()
+        self.step(snap, "flow.source")["when"] = [{"fact": "sesion.desktop", "op": "ne", "value": "none"}]
+        self.assert_red(snap, "unknown fact root 'sesion'")
+
+    def test_repo_setup_block(self):
+        """§2.6: a repo step that repeats a registry step under another id would be
+        planned twice; a misspelt `when` fact silently disables its tier."""
+        snap = support.snapshot()
+        good = {"steps": [
+            {"id": "z0evals.t1.validate", "kind": "check", "consent": {"class": "C0"},
+             "where": "build", "argv": [".venv/bin/python", "scripts/validate.py"]}],
+            "tiers": [{"id": "web", "when": [{"fact": "network.npmjs", "op": "eq", "value": True}]}]}
+        self.assertEqual(self.rc.check_repo_setup(snap, "z0evals", good), [])
+        bad = json.loads(json.dumps(good))
+        bad["steps"][0]["id"] = "z0evals.validate"
+        bad["tiers"][0]["when"][0]["fact"] = "network.npm_registry"
+        errors = self.rc.check_repo_setup(snap, "z0evals", bad)
+        self.assertTrue([e for e in errors if "same argv as registry step z0evals.t1.validate" in e])
+        self.assertTrue([e for e in errors if "npm_registry" in e])
+
     def test_red_denylisted_literal(self):
         for text, needle in ((f"# deploy to {self.MOUNT}/x", "/mnt/"),
                              (f"# host groot.{self.TAILNET_ID}.ts.net", "tail[0-9a-f]"),

@@ -114,6 +114,9 @@ def Laws.shadow_never_allowed(g, r, f, h, p, ra):
 def Laws.rev_not_on_origin_unavailable(g, f, h, p, ra):
   {==}
 
+def Laws.dash_unverified_rev_unavailable(f, h, p, ra):
+  {==}
+
 def Laws.legacy_dash_refused(h, p, ra):
   {==}
 

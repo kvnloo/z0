@@ -52,6 +52,7 @@
       "overrides": {
         "CLAUDE_CONFIG_DIR": "~/.claude-home"
       },
+      "path": "~/.local/bin/claude",
       "sessions_present": true,
       "state": "installed",
       "version": "2.1.310"
@@ -60,6 +61,7 @@
       "config_dirs": [
         "~/.codex"
       ],
+      "path": "~/.local/bin/codex",
       "sessions_present": true,
       "state": "installed",
       "version": "0.162.1"
@@ -84,6 +86,7 @@
       "state": "absent"
     },
     "grok": {
+      "bin_dir": "~/.local/bin",
       "config_dirs": [
         "~/.grok"
       ],
@@ -94,6 +97,7 @@
       "config_dirs": [
         "~/.hermes"
       ],
+      "path": "~/.local/bin/hermes",
       "state": "installed"
     },
     "kimi": {
@@ -103,6 +107,7 @@
       "config_dirs": [
         "~/.omp"
       ],
+      "path": "~/.bun/bin/omp",
       "state": "installed",
       "version": "14.2.0"
     },

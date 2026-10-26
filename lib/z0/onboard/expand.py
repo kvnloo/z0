@@ -7,7 +7,8 @@ form: no absolute home path is ever produced here (law H2).
 
 Placeholders:
   {id} {name} {repo} {pin} {pin8} {rev_app} {rev_bridge} {tree} {profile}
-  {torch_version}, and the argv-only list placeholder "{torch_index_args}".
+  {torch_version} {prepared_path} (the plan's PATH, ':'-joined), and the argv-only
+  list placeholder "{torch_index_args}".
 """
 from __future__ import annotations
 
@@ -21,7 +22,7 @@ from .util import version_ge
 PLACEHOLDER = re.compile(r"\{([a-z_0-9]+)\}")
 LIST_PLACEHOLDERS = ("{torch_index_args}",)
 SCALARS = ("id", "name", "repo", "pin", "pin8", "rev_app", "rev_bridge", "tree", "profile",
-           "torch_version")
+           "torch_version", "prepared_path")
 
 
 def select_tree(comp: dict, host: dict) -> dict:

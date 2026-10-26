@@ -1,7 +1,8 @@
 """`./z0 onboard ...` (design §1.2). Work package Z1 ships `detect` and `plan`.
 
-Dry-run purity (law P0): `detect` writes nothing; `plan` writes only its run dir
-under $Z0_HOME/onboard/runs/, and with `--stdout` it writes nothing at all.
+Dry-run purity (law P0): `detect` writes nothing; `plan` writes only the origin
+mirrors under $Z0_HOME/cache/git/ (§6.2) and its run dir under $Z0_HOME/onboard/runs/;
+with `--stdout` (or `--host`) it writes nothing at all.
 """
 from __future__ import annotations
 
@@ -69,12 +70,23 @@ def _tty() -> bool:
     return sys.stdin.isatty() and sys.stdout.isatty()
 
 
-def run_detect():
+def run_detect(fetch: bool = False):
+    """Detect this host. `fetch`: first bring every registry pin into its origin
+    mirror (§6.2), so pin evidence does not depend on having a checkout. Skipped when
+    the host is declared offline (Z0_DETECT_OFFLINE=1)."""
     from . import regsnap
     from .detect import Ctx, detect
 
     snap = regsnap.load()
-    return detect(Ctx(registry=snap, **sandbox_from_env(os.environ))), snap
+    outcomes = {}
+    if fetch and os.environ.get("Z0_DETECT_OFFLINE") != "1":
+        from . import mirror
+        outcomes = mirror.ensure(snap, str(_z0_home()))
+    host = detect(Ctx(registry=snap, **sandbox_from_env(os.environ)))
+    if outcomes:
+        from . import mirror
+        mirror.merge(host, outcomes, snap)
+    return host, snap
 
 
 def sandbox_from_env(env) -> dict:
@@ -163,6 +175,10 @@ def summary_text(plan_obj: dict, run: Optional[Path]) -> str:
         for ask in plan_obj["asks"]:
             out.append(f"  [{ask.get('consent', '')}] {ask['id']}: {ask['reason']}\n"
                        f"        {ask['command']}")
+    if plan_obj.get("unavailable"):
+        out.append("Unavailable:")
+        for entry in plan_obj["unavailable"]:
+            out.append(f"  {entry['id']}: {entry['status']} ({entry['detail']})")
     for warning in plan_obj["warnings"]:
         out.append(f"warning: {warning}")
     if run is not None:
@@ -188,7 +204,7 @@ def cmd_plan(args, bare: bool = False) -> int:
         if host.get("host_id") != current:
             host.setdefault("workspace", {})["host_match"] = "other"
     else:
-        host, snap = run_detect()
+        host, snap = run_detect(fetch=not getattr(args, "stdout", False))
     profile = _choose_profile(args, snap)
     try:
         plan_obj = _make_plan(host, snap, args, profile)

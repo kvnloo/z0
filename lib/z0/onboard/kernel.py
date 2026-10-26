@@ -83,6 +83,13 @@ class Flavour(Enum):
     LEGACY = "FLegacy"
 
 
+class RevOrigin(Enum):
+    """Evidence that a pinned rev is on origin: proven, disproven, or not checked."""
+    YES = "OriginYes"
+    NO = "OriginNo"
+    UNKNOWN = "OriginUnknown"
+
+
 class Maturity(Enum):
     STABLE = "MtStable"  # stable or canary
     SHADOW = "MtShadow"
@@ -138,6 +145,7 @@ class Reason(Enum):
     PYTHON_WINDOW = "RPythonWindow"
     RAM_LOW = "RRamLow"
     SHADOW = "RShadow"
+    REV_UNVERIFIED = "RRevUnverified"
 
 
 class Kind(Enum):
@@ -295,9 +303,11 @@ def decide_provider(provider: Provider) -> Verdict:
 
 # --- components (M1, M2, D1, D2, Z1) -------------------------------------------
 
-def _component_gates(gate, rev_on_origin, flavour, hw, py, ram) -> Verdict:
-    if not rev_on_origin:
+def _component_gates(gate, rev, flavour, hw, py, ram) -> Verdict:
+    if rev is RevOrigin.NO:
         return unavailable(Reason.REV_NOT_ON_ORIGIN)
+    if rev is RevOrigin.UNKNOWN and gate is Gate.DASH:
+        return unavailable(Reason.REV_UNVERIFIED)
     if gate is Gate.DASH and flavour is Flavour.LEGACY:
         return refuse(Reason.LEGACY_FLAVOUR)
     if gate is Gate.Z0INT:
@@ -310,11 +320,13 @@ def _component_gates(gate, rev_on_origin, flavour, hw, py, ram) -> Verdict:
     return ALLOW
 
 
-def decide_component(gate: Gate, rev_on_origin: bool, flavour: Flavour, maturity: Maturity,
+def decide_component(gate: Gate, rev: RevOrigin, flavour: Flavour, maturity: Maturity,
                      hw: HwClass, py: PyWindow, ram: RamTier) -> Verdict:
+    """rev: is every pin on origin? A dash rev that was never checked is unavailable
+    with its own reason (rev_unverified); other gates proceed and the plan warns."""
     if maturity is Maturity.IDEA:
         return refuse(Reason.IDEA)
-    verdict = _component_gates(gate, rev_on_origin, flavour, hw, py, ram)
+    verdict = _component_gates(gate, rev, flavour, hw, py, ram)
     if maturity is Maturity.SHADOW and verdict == ALLOW:
         return ask(Reason.SHADOW)
     return verdict
@@ -381,11 +393,11 @@ DOMAINS = {
     "decide_bind": (BindClass, IpSource),
     "decide_exec_root": (RootKind,),
     "decide_provider": (Provider,),
-    "decide_component": (Gate, BOOL, Flavour, Maturity, HwClass, PyWindow, RamTier),
+    "decide_component": (Gate, RevOrigin, Flavour, Maturity, HwClass, PyWindow, RamTier),
     "decide_profile": (RamTier, DiskTier, HwClass, PyWindow),
     "decide_torch_index": (HwClass, BOOL, BOOL, BOOL),
 }
-DOMAIN_ROWS = 3 + 36 + 8 + 12 + 6 + 8 + 2160 + 240 + 40
+DOMAIN_ROWS = 3 + 36 + 8 + 12 + 6 + 8 + 3240 + 240 + 40
 
 _KIND_CODE = {kind: index for index, kind in enumerate(Kind)}
 _REASON_CODE = {reason: index + 1 for index, reason in enumerate(Reason)}

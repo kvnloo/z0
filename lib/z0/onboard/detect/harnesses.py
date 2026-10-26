@@ -3,8 +3,9 @@
 - installed: the binary resolves; config_only: a config dir exists but no binary.
 - Config and session dirs: existence only, never opened.
 - `version_cmd` runs only when `policy.exec_probe: allowed` (grok, cursor: never).
-- Allowed harness bin dirs join the prepared PATH; `configure: never` ones do not, and a
-  shared dir that also exposes one is reported as a warning (P1).
+- Allowed harness bin dirs join the prepared PATH; `configure: never` ones do not. Each
+  installed allowed harness records its `path`; each policy-excluded binary records its
+  `bin_dir`, so the plan can keep a shared dir that holds it off the PATH (P1).
 """
 from __future__ import annotations
 
@@ -67,6 +68,9 @@ def detect(ctx, dirs_by_source: dict) -> dict:
                 break
         dirs, overrides = _config_dirs(ctx, det.get("config_dirs"))
         entry: dict = {"state": "installed" if binary else ("config_only" if dirs else "absent")}
+        if binary:
+            entry["bin_dir" if never else "path"] = ctx.tilde(os.path.dirname(binary) if never
+                                                              else binary)
         if dirs:
             entry["config_dirs"] = [ctx.tilde(d) for d in dirs]
         if overrides:
@@ -92,6 +96,6 @@ def detect(ctx, dirs_by_source: dict) -> dict:
         result[hid] = entry
     for name in forbidden_bins:
         if ctx.which(name, ctx.prepared_path):
-            ctx.warn(f"prepared PATH dir also holds policy-excluded `{name}`; "
-                     "units and env files get a link dir without it (P1)")
+            ctx.warn(f"prepared PATH dir also holds policy-excluded `{name}`; the plan "
+                     "replaces that dir with $Z0_HOME/bin/links (P1)")
     return result

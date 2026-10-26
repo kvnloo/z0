@@ -52,8 +52,36 @@
     },
     "prepared_path": {
       "type": "array",
-      "items": { "type": "string", "pattern": "^(~(/|$)|/(?!home/|Users/))" },
-      "description": "Law T1: the PATH every run, unit, env file and check receives."
+      "items": { "type": "string", "pattern": "^(~(/|$)|\\$Z0_HOME(/|$)|/(?!home/|Users/))" },
+      "description": "Law T1: the PATH every run, unit, env file and check receives. A non-system dir that also holds a `configure: never` harness is replaced by $Z0_HOME/bin/links (P1)."
+    },
+    "path_links": {
+      "type": "array",
+      "description": "P1: links in $Z0_HOME/bin/links to the allowed tools of a dropped PATH dir.",
+      "items": {
+        "type": "object",
+        "required": ["link", "target"],
+        "properties": {
+          "link": { "type": "string", "pattern": "^\\$Z0_HOME/bin/links/[^/]+$" },
+          "target": { "type": "string", "pattern": "^(~(/|$)|/(?!home/|Users/))" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "unavailable": {
+      "type": "array",
+      "description": "§1.2 'What is unavailable, and why': targets none of whose steps can run, for a reason no ask fixes.",
+      "items": {
+        "type": "object",
+        "required": ["id", "status", "reason", "detail"],
+        "properties": {
+          "id": { "type": "string" },
+          "status": { "enum": ["unavailable", "refused", "blocked"] },
+          "reason": { "type": "string" },
+          "detail": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
     },
     "steps": {
       "type": "array",
@@ -98,7 +126,7 @@
       "properties": {
         "id": { "type": "string" },
         "reason": { "type": "string" },
-        "command": { "type": "string", "description": "The exact command that finishes it, e.g. `./z0 onboard accept <id>`." },
+        "command": { "type": "string", "description": "What finishes it today: a command that works now (e.g. `./z0 onboard --accept toolchains`), a printed system-package command, or `manual: <action>` for C2 steps that are never automatic." },
         "consent": { "enum": ["C1", "C2"] },
         "impact": { "type": "integer", "minimum": 0 }
       },

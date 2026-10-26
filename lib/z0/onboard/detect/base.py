@@ -3,7 +3,10 @@
 Read-only by construction: it offers stat, bounded reads that honour the read
 denylist, and `run` (argv only, minimal allowlisted env, stdin closed, timeout, never
 raises). Tests swap `sysroot`, `system_dirs`, `uname`, `hostname` and `http_head` so no
-detector touches the real host's configs or services.
+detector touches the real host's configs or services. With a `sysroot` other than `/`,
+every absolute path outside $HOME and $Z0_HOME (the registry's well-known dirs such as
+/usr/local/bin and /opt/homebrew/bin) is read under the sysroot too: a sealed fake host
+never sees, or runs, the real host's binaries.
 """
 from __future__ import annotations
 
@@ -89,12 +92,24 @@ class Ctx:
 
     # --- paths ------------------------------------------------------------------
     def expand(self, text: str) -> str:
-        """`~` and `$Z0_HOME` to absolute paths (for local stat/glob only)."""
+        """`~` and `$Z0_HOME` to absolute paths (for local stat/glob only). Under a test
+        sysroot, any other absolute path is mapped into it."""
         if text == "~" or text.startswith("~/"):
             text = self.home + text[1:]
         if text == "$Z0_HOME" or text.startswith("$Z0_HOME/"):
             text = self.z0_home + text[len("$Z0_HOME"):]
+        if self.sealed() and os.path.isabs(text) and not self._under(text, self.home) \
+                and not self._under(text, self.z0_home) and not self._under(text, self.sysroot):
+            text = self.sys(text)
         return text
+
+    def sealed(self) -> bool:
+        return os.path.normpath(self.sysroot or "/") != "/"
+
+    @staticmethod
+    def _under(path: str, root: str) -> bool:
+        root = root.rstrip("/") or "/"
+        return path == root or path.startswith(root + "/")
 
     def tilde(self, path: str) -> str:
         return tilde(str(path), self.home)

@@ -7,7 +7,10 @@ Rules:
 - Every step has a closed shape; every `run` has `creates|probe` and a `where`;
   every effectful step declares what it creates or probes (law I1).
 - No step names a `configure: never` harness (P1).
-- No service has a non-closed bind or a `where` inside a checkout (S1, S2).
+- No service has a non-closed bind or a `where` inside a checkout (S1, S2). Harness
+  plugins run from a release or an owned venv; a write_file `target_where` (shim, env
+  file) points into one (S1).
+- Every `when` fact is a fact the host profile can carry (a typo is always false).
 - No denylisted literal appears in the registry or in templates (H2).
 - Every component in the auto target set has `acceptance`.
 - `generated/onboarding-matrix.md` is up to date (checked by the script).
@@ -25,8 +28,12 @@ from .expand import LIST_PLACEHOLDERS, SCALARS, expand_step, leftover_placeholde
 
 ROOT = Path(__file__).resolve().parents[3]
 STEP_KEYS = set(json.loads((ROOT / "schemas/onboard-step.schema.json").read_text())["properties"])
+HOST_SCHEMA = json.loads((ROOT / "schemas/host-profile.schema.json").read_text())
 KINDS = json.loads((ROOT / "schemas/onboard-step.schema.json").read_text())["$defs"]["kind"]["enum"]
 WHERE = ("mirror", "build", "release", "venv", "home")
+LIVE_ROOTS = ("release", "venv")  # S1: where live code may resolve (decide_exec_root allows)
+# Plan facts that are not host.json keys (plan.facts_of).
+PLAN_FACTS = {"mode": None, "profile": None, "derived": {"acp_harness": None}}
 BINDS = ("loopback", "tailnet_ipv4")
 BUNDLES = ("toolchains", "harness", "services", "models")
 EFFECTFUL = set(KINDS) - {"check", "ask"}
@@ -62,7 +69,57 @@ def scan_literals(text: str, literals: Iterable[str]) -> list:
     return sorted({lit for lit in literals if literal_pattern(lit).search(text)})
 
 
-def check_step(cid: str, step: dict, never: set, templates: dict) -> list:
+def _schema_keys(node: dict):
+    """The keys a host-profile object may carry: a set, or None when any key goes."""
+    if "properties" in node:
+        return node["properties"]
+    return None
+
+
+def fact_error(fact: str, snap: dict) -> str:
+    """'' when `fact` names something the host profile (or the plan) can carry."""
+    from .util import norm_key
+    parts = str(fact).split(".")
+    head, rest = parts[0], parts[1:]
+    if head in PLAN_FACTS:
+        node = PLAN_FACTS[head]
+        for part in rest:
+            if not isinstance(node, dict) or part not in node:
+                return f"unknown plan fact {fact!r}"
+            node = node[part]
+        return ""
+    props = HOST_SCHEMA["properties"]
+    if head not in props:
+        return f"unknown fact root {head!r}"
+    names = {
+        "network": set((regsnap.onboarding(snap).get("network_probes") or {})),
+        "toolchains": {norm_key(t) for t in regsnap.toolchains(snap).get("tools") or {}},
+        "harnesses": {norm_key(h) for h in regsnap.harnesses(snap)},
+    }
+    if head in names:
+        if not rest or rest[0] not in names[head]:
+            return f"{head} has no key {rest[0] if rest else ''!r} (known: {sorted(names[head])})"
+        entry = props[head].get("additionalProperties")
+        if len(rest) > 1 and isinstance(entry, dict):
+            keys = _schema_keys(entry)
+            if keys is not None and rest[1] not in keys:
+                return f"{head}.{rest[0]} has no field {rest[1]!r}"
+        return ""
+    node = props[head]
+    for part in rest:
+        keys = _schema_keys(node) if isinstance(node, dict) else None
+        if keys is None:
+            return ""
+        if part not in keys:
+            return f"{head} has no field {part!r}"
+        node = keys[part]
+    return ""
+
+
+def check_step(cid: str, step: dict, never: set, templates: dict, snap: dict = None,
+               repo: bool = False) -> list:
+    """Rules for one step. `repo`: a zer0.repo.yaml step, whose argv probe also counts
+    as its idempotence probe (the registry's own steps must declare a path, law I1)."""
     errors = []
     sid = step.get("id", "?")
     where = f"component {cid} step {sid}"
@@ -91,13 +148,15 @@ def check_step(cid: str, step: dict, never: set, templates: dict) -> list:
             errors.append(f"{where}: run needs argv and where")
         if not step.get("creates") and not step.get("probe"):
             errors.append(f"{where}: run needs creates or probe")
-    if kind in EFFECTFUL and not step.get("creates") and not (step.get("probe") or {}).get("exists"):
+    probe = step.get("probe") or {}
+    if kind in EFFECTFUL and not step.get("creates") and not probe.get("exists") \
+            and not (repo and probe.get("argv")):
         errors.append(f"{where}: an effectful step declares creates or probe.exists (I1)")
     if kind == "service_unit":
         service = step.get("service") or {}
         if service.get("bind") not in BINDS:
             errors.append(f"{where}: bind {service.get('bind')!r} is not closed (S2)")
-        if step.get("where") not in ("release", "venv"):
+        if step.get("where") not in LIVE_ROOTS:
             errors.append(f"{where}: a service runs from a release or an owned venv (S1)")
         template = templates.get(service.get("template"))
         if template is None:
@@ -108,11 +167,18 @@ def check_step(cid: str, step: dict, never: set, templates: dict) -> list:
         errors.append(f"{where}: ensure_toolchain needs toolchain")
     if kind == "harness_plugin" and not step.get("harness"):
         errors.append(f"{where}: harness_plugin needs harness")
+    if kind == "harness_plugin" and step.get("where") not in LIVE_ROOTS:
+        errors.append(f"{where}: a harness plugin links a release or an owned venv, "
+                      f"not {step.get('where')!r} (S1)")
+    if "target_where" in step and (kind != "write_file" or step["target_where"] not in LIVE_ROOTS):
+        errors.append(f"{where}: target_where is for write_file and must be release or venv (S1)")
     if step.get("harness") in never:
         errors.append(f"{where}: names `configure: never` harness {step['harness']} (P1)")
     for cond in step.get("when") or []:
         if not re.fullmatch(r"[a-z0-9_]+(\.[a-z0-9_]+)*", str(cond.get("fact", ""))):
             errors.append(f"{where}: when fact {cond.get('fact')!r} is not a fact path")
+        elif snap is not None and fact_error(cond["fact"], snap):
+            errors.append(f"{where}: when fact {cond['fact']!r}: {fact_error(cond['fact'], snap)}")
     leftovers = [p for p in leftover_placeholders(expand_step(step, _dummy_context(cid)))
                  if "{" + p + "}" not in LIST_PLACEHOLDERS]
     if leftovers:
@@ -152,7 +218,7 @@ def check(snap: dict, raw_texts: dict, template_texts: dict) -> list:
         steps = block.get("steps") or []
         seen = set()
         for step in steps:
-            errors.extend(check_step(cid, step, never, templates))
+            errors.extend(check_step(cid, step, never, templates, snap))
             if step.get("id") in seen:
                 errors.append(f"component {cid}: duplicate step id {step.get('id')}")
             seen.add(step.get("id"))
@@ -216,6 +282,41 @@ def check(snap: dict, raw_texts: dict, template_texts: dict) -> list:
     for name, text in sorted(template_texts.items()):
         for lit in scan_literals(text, literals):
             errors.append(f"{name}: denylisted literal {lit!r} (H2)")
+    return errors
+
+
+def check_repo_setup(snap: dict, cid: str, setup: dict) -> list:
+    """A repo's `zer0.repo.yaml setup:` block (§2.6) against the registry.
+
+    The registry wins on a duplicate step id, so a repo step that repeats a registry
+    step under another id would run twice: same argv, different id is an error. Every
+    step passes the registry step rules, and every `when` fact must exist.
+    """
+    errors = []
+    comps = regsnap.components(snap)
+    if cid not in comps:
+        return [f"setup: {cid!r} is not a registry component"]
+    onboarding = regsnap.onboarding(snap)
+    never = {hid for hid, row in regsnap.harnesses(snap).items()
+             if (row.get("policy") or {}).get("configure") == "never"}
+    registry_steps = (comps[cid].get("onboard") or {}).get("steps") or []
+    by_argv = {tuple(s["argv"]): s["id"] for s in registry_steps if s.get("argv")}
+    for step in (setup or {}).get("steps") or []:
+        sid = step.get("id", "?")
+        body = {key: value for key, value in step.items() if key != "component"}
+        if step.get("component", cid) != cid:
+            errors.append(f"setup step {sid}: component must be {cid}")
+        errors.extend(check_step(cid, body, never, onboarding.get("templates") or {}, snap,
+                                 repo=True))
+        twin = by_argv.get(tuple(step.get("argv") or ()))
+        if twin and twin != sid:
+            errors.append(f"setup step {sid}: same argv as registry step {twin}; use the "
+                          "registry id (a different id would run it twice)")
+    for tier in (setup or {}).get("tiers") or []:
+        for cond in tier.get("when") or []:
+            if fact_error(cond.get("fact", ""), snap):
+                errors.append(f"setup tier {tier.get('id')}: when fact {cond.get('fact')!r}: "
+                              f"{fact_error(cond.get('fact', ''), snap)}")
     return errors
 
 

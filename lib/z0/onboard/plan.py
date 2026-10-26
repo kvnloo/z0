@@ -28,7 +28,13 @@ WHERE_ROOT = {"release": k.RootKind.RELEASE, "venv": k.RootKind.OWNED_VENV,
               "home": k.RootKind.OTHER}
 EFFECTFUL = ("ensure_toolchain", "adopt_or_clone", "build_tree", "stage_release", "swap_current",
              "venv", "pip_install", "run", "write_file", "service_unit", "harness_plugin", "delegate")
+# S1: what these kinds point live code at must be a release, an owned venv or a toolchain.
+EXEC_ROOT_KINDS = ("service_unit", "harness_plugin")
+OK = ("todo", "already_satisfied")
 PYTHON_TOOLS = ("python", "python3")
+# P1: a shared bin dir that also holds a `configure: never` harness is replaced on the
+# prepared PATH by this z0-owned dir of links to the allowed tools that resolved there.
+LINK_DIR = "$Z0_HOME/bin/links"
 
 
 class PlanError(Exception):
@@ -89,22 +95,52 @@ def pins(comp: dict) -> list:
 
 
 def rev_evidence(comp: dict, host: dict, warnings: list, cid: str) -> tuple:
-    """(rev_on_origin, flavour) for the kernel. A component whose public_ready lists
-    revs_on_origin with gate dash needs positive evidence (D1); others warn."""
+    """(kernel.RevOrigin, flavour). Any pin disproven on origin -> NO; else any pin not
+    checked -> UNKNOWN; else YES. The kernel decides what UNKNOWN means per gate (D1)."""
     revs = host.get("revs") or {}
-    strict = gate(comp) is k.Gate.DASH
-    on_origin, flavour = True, k.Flavour.CURRENT
+    states, flavour = [], k.Flavour.CURRENT
     for pin in pins(comp):
         fact = revs.get(pin) or {}
-        state = fact.get("on_origin", "unknown")
-        if state == "no" or (state == "unknown" and strict):
-            on_origin = False
-        elif state == "unknown":
+        states.append(fact.get("on_origin", "unknown"))
+        if fact.get("on_origin", "unknown") == "unknown" and gate(comp) is not k.Gate.DASH:
             warnings.append(f"{cid}: pin {pin[:12]} not verified on origin (no mirror or "
                             "checkout evidence)")
         if fact.get("flavour") == "legacy":
             flavour = k.Flavour.LEGACY
-    return on_origin, flavour
+    if "no" in states:
+        return k.RevOrigin.NO, flavour
+    if "unknown" in states:
+        return k.RevOrigin.UNKNOWN, flavour
+    return k.RevOrigin.YES, flavour
+
+
+def prepared_path(host: dict, snap: dict) -> tuple:
+    """(prepared PATH, links) for the plan (§4, P1).
+
+    A non-system bin dir that also holds a `configure: never` harness binary is dropped;
+    LINK_DIR takes its place, with one link per allowed registry tool or harness that
+    resolved there. A system dir cannot be dropped: that case stays a warning.
+    """
+    rows = regsnap.harnesses(snap)
+    never = {hid for hid, row in rows.items() if (row.get("policy") or {}).get("configure") == "never"}
+    system = set((regsnap.toolchains(snap).get("detect") or {}).get("system_dirs") or ["/usr/bin", "/bin"])
+    harnesses = host.get("harnesses") or {}
+    shared = {entry["bin_dir"] for hid, entry in harnesses.items()
+              if hid in never and entry.get("bin_dir")} - system
+    out, links = [], []
+    for directory in host.get("prepared_path") or []:
+        if directory not in shared:
+            out.append(directory)
+            continue
+        if LINK_DIR not in out:
+            out.append(LINK_DIR)
+        found = [entry.get("path") for entry in (host.get("toolchains") or {}).values()
+                 if entry.get("state") == "present"]
+        found += [entry.get("path") for hid, entry in harnesses.items()
+                  if hid not in never and entry.get("state") == "installed"]
+        for path in sorted({p for p in found if p and p.rsplit("/", 1)[0] == directory}):
+            links.append({"link": f"{LINK_DIR}/{path.rsplit('/', 1)[1]}", "target": path})
+    return out, links
 
 
 # --- registry -> step list ---------------------------------------------------------
@@ -282,6 +318,79 @@ def _adopted_unit(step: dict, host: dict) -> Optional[dict]:
     return None
 
 
+def _z0_mount(host: dict) -> str:
+    disks = (host.get("hardware") or {}).get("disks") or []
+    for disk in disks:
+        if "z0_home" in (disk.get("role") or []):
+            return str(disk.get("mount", "$Z0_HOME"))
+    return str(disks[0].get("mount", "$Z0_HOME")) if disks else "$Z0_HOME"
+
+
+# What the plan tells a zero-context reader for each unavailable reason (§1.2).
+REASON_TEXT = {
+    "rev_not_on_origin": "the pinned revs are not on origin yet (maintainer must push them)",
+    "rev_unverified": "could not check the pinned revs on origin; re-run `./z0 onboard plan` "
+                      "with network so z0 can fetch them into its mirror",
+    "legacy_flavour": "the pinned rev is the legacy flavour (0.0.0.0 bind, Expo Go); never deployed",
+    "intel_mac": "no torch 2.10 wheel for Intel macOS",
+    "python_window": "no python in [3.10, 3.14) is present or can be made",
+    "ram_low": "needs at least 8 GiB RAM",
+    "idea": "status idea; never installed",
+    "no_tailnet": "no tailnet IPv4 on this host",
+    "host_mismatch": "host.json was recorded on another host",
+    "through_checkout": "would run live code from a checkout or build tree (S1)",
+    "outside_roots": "would point live code outside releases, owned venvs and toolchains (S1)",
+    "open_bind": "bind outside loopback and the current tailnet IPv4 (S2)",
+    "forbidden_provider": "grok and cursor are never configured (P1)",
+    "c2_never_auto": "never automatic in --auto",
+    "c2_confirm": "needs your per-step confirmation",
+    "shadow": "shadow component",
+}
+
+
+def explain(reason: str, host: dict) -> str:
+    """One line for a state reason (kernel codes, hardware gaps, conditions)."""
+    if reason.startswith("hardware:disk<"):
+        need = reason.split("<", 1)[1].replace("GiB", "")
+        return (f"disk < {need} GiB free at {_z0_mount(host)}; free space or set Z0_HOME "
+                "on a larger volume")
+    if reason.startswith("hardware:ram<"):
+        return f"needs at least {reason.split('<', 1)[1].replace('GiB', '')} GiB RAM"
+    if reason.startswith("hardware:"):
+        return f"not supported on this {reason[len('hardware:'):]}"
+    if reason.startswith("condition:"):
+        return f"condition not met: {reason[len('condition:'):]}"
+    if reason.startswith("missing_tool:"):
+        return f"{reason.split(':', 1)[1]} is not installed"
+    return REASON_TEXT.get(reason, reason)
+
+
+def _c1_reason(step: dict) -> str:
+    """One line for an ungranted C1 step: what it writes and that it needs consent."""
+    kind, bundle = step["kind"], step["consent"].get("bundle", "")
+    if kind == "ensure_toolchain":
+        tool, version = step["toolchain"]["tool"], step["toolchain"]["version"]
+        if tool == "python":
+            what = f"user-local CPython {version} (via uv) under $Z0_HOME/toolchains"
+        else:
+            what = f"user-local download of {tool} {version} into $Z0_HOME/toolchains"
+    elif kind == "harness_plugin":
+        what = (f"{step.get('harness')} integration for {step['component']} "
+                "(the harness config is backed up first)")
+    elif kind == "service_unit":
+        service = step.get("service") or {}
+        what = f"user service {service.get('unit', step['id'])} on {service.get('bind')}:{service.get('port')}"
+    elif kind == "write_file":
+        what = f"writes {(step.get('creates') or [step['id']])[0]}"
+    elif kind == "swap_current":
+        what = f"points {(step.get('creates') or [step['id']])[0]} at the new release"
+    elif kind == "pip_install":
+        what = f"installs {' '.join((step.get('argv') or [])[2:])} into the {step['component']} venv"
+    else:
+        what = f"runs {' '.join(step.get('argv') or [kind])} for {step['component']}"
+    return f"{what} (needs consent: {bundle} bundle)"
+
+
 def _hardware_gap(comp: dict, host: dict) -> Optional[str]:
     hw = (comp.get("onboard") or {}).get("hardware") or {}
     osinfo = host.get("os") or {}
@@ -327,15 +436,18 @@ def plan(host: dict, snap: dict, *, mode: str = "auto", profile: Optional[str] =
 
     # component verdicts (kernel) and per-component contexts
     verdicts, trees, contexts, summary = {}, {}, {}, {}
+    path_dirs, path_links = prepared_path(host, snap)
+    path_text = ":".join(path_dirs)
     for cid in targets:
         comp = comps[cid]
-        on_origin, flavour = rev_evidence(comp, host, warnings, cid)
-        verdict = k.decide_component(gate(comp), on_origin, flavour, maturity(comp),
+        rev, flavour = rev_evidence(comp, host, warnings, cid)
+        verdict = k.decide_component(gate(comp), rev, flavour, maturity(comp),
                                      hw_class(host), py_window(host), ram_tier(host))
         dep_bad = [d for d in comp.get("depends_on") or [] if d in verdicts
                    and verdicts[d].kind in (k.Kind.REFUSE, k.Kind.UNAVAILABLE)]
         verdicts[cid] = verdict
         contexts[cid] = component_context(cid, comp, host, onboarding, profile)
+        contexts[cid]["prepared_path"] = path_text
         trees[cid] = select_tree(comp, host)
         entry = {"verdict": verdict.kind.name.lower()}
         if verdict.reason is not None:
@@ -346,11 +458,6 @@ def plan(host: dict, snap: dict, *, mode: str = "auto", profile: Optional[str] =
             entry["tree"] = trees[cid]["tree"]
             entry["adopted"] = trees[cid]["adopted"]
         summary[cid] = entry
-        if verdict.kind in (k.Kind.REFUSE, k.Kind.UNAVAILABLE):
-            hint = ""
-            if verdict.reason is k.Reason.REV_NOT_ON_ORIGIN:
-                hint = ": the pinned revs are not on origin yet (maintainer must push them)"
-            warnings.append(f"{cid}: {verdict.kind.name.lower()} ({reason_name(verdict.reason)}){hint}")
         if trees[cid]["dirty_candidates"] and not trees[cid]["adopted"]:
             warnings.append(f"{cid}: {trees[cid]['dirty_candidates']} existing checkout(s) are "
                             "dirty or off-origin; a separate z0 clone is planned instead")
@@ -359,8 +466,16 @@ def plan(host: dict, snap: dict, *, mode: str = "auto", profile: Optional[str] =
     steps, minimums, owner = [], {}, {}
     edges: dict = {}
     hub = ((onboarding.get("hub") or {}).get("steps") or [])
+    if path_links:
+        steps.append({"id": "z0.path_links", "component": "z0", "kind": "write_file",
+                      "consent": {"class": "C0"}, "where": "home", "creates": [LINK_DIR],
+                      "effects": [{"path": link["link"], "kind": "symlink"} for link in path_links],
+                      "undo": {"kind": "remove_owned"}})
+        owner["z0.path_links"] = None
+        warnings.append(f"prepared PATH: {', '.join(sorted({l['target'].rsplit('/', 1)[0] for l in path_links}))} "
+                        f"also holds a policy-excluded harness; {LINK_DIR} replaces it (P1)")
     for raw in hub:
-        step = expand_step(raw, {"profile": profile or ""})
+        step = expand_step(raw, {"profile": profile or "", "prepared_path": path_text})
         step["component"] = "z0"
         steps.append(step)
         owner[step["id"]] = None
@@ -405,6 +520,32 @@ def plan(host: dict, snap: dict, *, mode: str = "auto", profile: Optional[str] =
     notes: dict = {}
     grant_source = {"tty": k.Source.TTY, "flag": k.Source.FLAG}.get(grants.get("source"),
                                                                     k.Source.FLAG)
+    kinds = {s["id"]: s["kind"] for s in steps}
+    dep_blocker: dict = {}
+
+    def dependency_blocker(cid: str) -> Optional[str]:
+        """§3/§6.1 blocked(dep) over depends_on: a dependency whose acceptance checks
+        cannot run (or, without acceptance, none of whose effectful steps can) blocks
+        its dependents. Its steps all precede the dependent's in `ordered`."""
+        if cid not in dep_blocker:
+            dep_blocker[cid] = None
+            for dep in comps[cid].get("depends_on") or []:
+                own = comp_steps.get(dep) or []
+                checks = [sid for tier in ((comps[dep].get("onboard") or {}).get("acceptance")
+                                           or {}).get("tiers") or []
+                          for sid in tier.get("checks") or [] if sid in own]
+                if checks:
+                    bad = [sid for sid in checks if states[sid]["status"] not in OK]
+                    if bad:
+                        dep_blocker[cid] = bad[0]
+                        break
+                    continue
+                effectful = [sid for sid in own if kinds[sid] in EFFECTFUL]
+                if effectful and not any(states[sid]["status"] in OK for sid in effectful):
+                    dep_blocker[cid] = effectful[0]
+                    break
+        return dep_blocker[cid]
+
     for step in ordered:
         sid, cid = step["id"], owner[step["id"]]
         comp = comps.get(cid) if cid else None
@@ -419,16 +560,26 @@ def plan(host: dict, snap: dict, *, mode: str = "auto", profile: Optional[str] =
                      first_of.get(summary[cid]["blocked_by"], summary[cid]["blocked_by"])}
         elif comp is not None and _hardware_gap(comp, host):
             state = {"status": "unavailable", "reason": _hardware_gap(comp, host)}
-        if state is None and step["kind"] == "service_unit":
+        elif comp is not None and dependency_blocker(cid):
+            state = {"status": "blocked", "reason": "dependency", "blocked_by": dependency_blocker(cid)}
+        # S1: units, plugins and the env/shim files that point at live code resolve only
+        # into releases, owned venvs or toolchains (decide_exec_root), never a checkout.
+        roots = []
+        if step["kind"] in EXEC_ROOT_KINDS:
+            roots.append(step.get("where"))
+        if step["kind"] == "write_file" and step.get("target_where"):
+            roots.append(step["target_where"])
+        checks = [k.decide_exec_root(WHERE_ROOT.get(root, k.RootKind.OTHER)) for root in roots]
+        if step["kind"] == "service_unit":
             service = step.get("service") or {}
             bind = {"loopback": k.BindClass.LOOPBACK,
                     "tailnet_ipv4": k.BindClass.TAILNET_IPV4}.get(service.get("bind"),
                                                                  k.BindClass.WILDCARD)
-            for verdict in (k.decide_exec_root(WHERE_ROOT.get(step.get("where"), k.RootKind.OTHER)),
-                            k.decide_bind(bind, _bind_ip(host))):
-                if verdict.kind is not k.Kind.ALLOW:
-                    state = _state(verdict)
-                    break
+            checks.append(k.decide_bind(bind, _bind_ip(host)))
+        for verdict in checks if state is None else ():
+            if verdict.kind is not k.Kind.ALLOW:
+                state = _state(verdict)
+                break
         if state is None and step.get("harness"):
             provider = k.provider_from_id(step["harness"])
             if provider in k.FORBIDDEN_PROVIDERS:
@@ -461,8 +612,8 @@ def plan(host: dict, snap: dict, *, mode: str = "auto", profile: Optional[str] =
                     notes[sid] = (f"adopted {unit.get('name')} runs "
                                   f"{str(unit.get('deployed_sha') or 'an unknown SHA')[:12]}; "
                                   "redeploying it is C2")
-        if state is None and step["kind"] in EFFECTFUL and comp is not None \
-                and _satisfied(step, host, owned, trees[cid]):
+        if state is None and step["kind"] in EFFECTFUL \
+                and _satisfied(step, host, owned, trees.get(cid) or {}):
             state = {"status": "already_satisfied"}
         if state is None and step["kind"] == "ask":
             state = {"status": "ask", "reason": "manual"}
@@ -474,6 +625,10 @@ def plan(host: dict, snap: dict, *, mode: str = "auto", profile: Optional[str] =
                 state = _state(verdict)
         states[sid] = state or {"status": "todo"}
         effective_class[sid] = cls.value
+
+    for cid, blocker in dep_blocker.items():
+        if blocker:
+            summary[cid].setdefault("blocked_by", owner[blocker])
 
     # asks, ranked by impact (how many steps wait on them)
     dependents: dict = {sid: set() for sid in states}
@@ -491,40 +646,98 @@ def plan(host: dict, snap: dict, *, mode: str = "auto", profile: Optional[str] =
                     stack.append(child)
         return len(seen) + 1
 
+    def root_of(sid: str) -> str:
+        """Follow blocked_by to the step that is not itself blocked."""
+        seen = set()
+        while states[sid]["status"] == "blocked" and states[sid].get("blocked_by") in states \
+                and sid not in seen:
+            seen.add(sid)
+            sid = states[sid]["blocked_by"]
+        return sid
+
+    def askable(sid: str) -> bool:
+        """An ask resolves it: consent, a system package, or `tailscale up`."""
+        state = states[sid]
+        return state["status"] == "ask" or (state["status"] == "unavailable" and (
+            state["reason"].startswith("missing_tool:") or state["reason"] == "no_tailnet"))
+
+    # A component none of whose steps can run, for a reason no ask would fix (§1.2
+    # "What is unavailable, and why"). Waiting on an ask is not unavailable.
+    unavailable = []
+    dead = set()
+    for cid in targets:
+        own = comp_steps.get(cid) or []
+        if not own or any(states[sid]["status"] in OK or states[sid]["status"] == "ask"
+                          for sid in own):
+            continue
+        roots = [root_of(sid) for sid in own]
+        if any(askable(root) for root in roots):
+            continue
+        dead.add(cid)
+        # The first step's root cause is why nothing of the component can run.
+        state = states[own[0]]
+        if state["status"] == "blocked":
+            root = roots[0]
+            detail = (f"blocked: needs {root} ({states[root]['status']}: "
+                      f"{explain(states[root].get('reason', ''), host)})")
+            reason = "dependency"
+        else:
+            reason = state["reason"]
+            detail = explain(reason, host)
+        unavailable.append({"id": cid, "status": state["status"], "reason": reason,
+                            "detail": detail})
+
     pkg_cmds = regsnap.toolchains(snap).get("system_pkg_commands") or {}
     pkg_mgr = (host.get("os") or {}).get("pkg_manager", "none")
+    users: dict = {}
+    for sid, deps in edges.items():
+        for dep in deps:
+            if dep.startswith("toolchain.") and owner.get(sid):
+                users.setdefault(dep, set()).add(owner[sid])
     asks, seen_component = [], set()
     by_id = {s["id"]: s for s in ordered}
     for sid, state in states.items():
         step, cid = by_id[sid], owner[sid]
+        if sid.startswith("toolchain.") and users.get(sid) and users[sid] <= dead:
+            continue  # every user of this tool is unavailable anyway: no ask
         if state["status"] == "ask":
             if cid is not None and verdicts[cid].kind is k.Kind.ASK:
                 if cid in seen_component:
                     continue
                 seen_component.add(cid)
-                asks.append({"id": cid, "reason": state["reason"], "consent": "C2",
-                             "command": f"./z0 onboard accept {cid}",
+                asks.append({"id": cid, "consent": "C2",
+                             "reason": f"{reason_name(verdicts[cid].reason)}: never installed "
+                                       "automatically (C2)",
+                             "command": f"manual: review https://github.com/{comps[cid].get('repo')} "
+                                        "and install it yourself if you need it",
                              "impact": len(comp_steps.get(cid, []))})
                 continue
-            entry = {"id": sid, "reason": state["reason"],
-                     "consent": "C2" if effective_class[sid] == "C2" else "C1",
-                     "command": f"./z0 onboard accept {sid}", "impact": impact(sid)}
+            consent = "C2" if effective_class[sid] == "C2" else "C1"
+            entry = {"id": sid, "consent": consent, "impact": impact(sid)}
             if step["kind"] == "ask":
-                text = " ".join(step.get("argv", [])[1:]) if step.get("argv") else ""
-                if text:
-                    entry["reason"] = f"manual: {text}"
-            if sid in notes:
-                entry["reason"] = f"{entry['reason']}: {notes[sid]}"
+                text = " ".join(step.get("argv", [])[1:]) if step.get("argv") else sid
+                entry.update(reason="manual step, never automatic (C2)", command=f"manual: {text}")
+            elif consent == "C1":
+                bundle = step["consent"].get("bundle", "")
+                entry.update(reason=_c1_reason(step),
+                             command=f"./z0 onboard --accept {bundle}   (or --yes for every bundle)")
+            elif sid in notes:
+                entry.update(reason=f"{notes[sid]} (C2)",
+                             command="manual: keep the running unit, or redeploy it yourself "
+                                     "at the pinned SHA")
+            else:
+                entry.update(reason=f"{explain(state['reason'], host)} (C2)",
+                             command=f"manual: {sid} is never automatic; do it yourself if you want it")
             asks.append(entry)
         elif state["status"] == "unavailable" and state["reason"].startswith("missing_tool:"):
             tool = state["reason"].split(":", 1)[1]
             pkg = ((_tool_specs(snap).get(tool) or {}).get("system_pkg") or {}).get(pkg_mgr, tool)
             command = str(pkg_cmds.get(pkg_mgr, pkg_cmds.get("none", "install {pkg}"))).format(pkg=pkg)
-            asks.append({"id": sid, "reason": state["reason"], "consent": "C2",
-                         "command": command, "impact": impact(sid)})
+            asks.append({"id": sid, "reason": f"{tool} is not installed (system package, C2)",
+                         "consent": "C2", "command": command, "impact": impact(sid)})
         elif state["status"] == "unavailable" and state["reason"] == "no_tailnet":
-            asks.append({"id": sid, "reason": "no_tailnet", "consent": "C2",
-                         "command": f"tailscale up, then ./z0 onboard accept {sid}",
+            asks.append({"id": sid, "reason": "no tailnet IPv4 on this host (C2)", "consent": "C2",
+                         "command": "tailscale up, then re-run ./z0 onboard",
                          "impact": impact(sid)})
     asks.sort(key=lambda a: (-a["impact"], a["id"]))
 
@@ -540,11 +753,14 @@ def plan(host: dict, snap: dict, *, mode: str = "auto", profile: Optional[str] =
         "registry": dict(sorted((snap.get("files") or {}).items())),
         "targets": targets,
         "components": summary,
-        "prepared_path": list(host.get("prepared_path") or []),
+        "prepared_path": path_dirs,
         "steps": [{"step": step, "state": states[step["id"]]} for step in ordered],
         "asks": asks,
+        "unavailable": unavailable,
         "warnings": sorted(set(warnings)),
     }
+    if path_links:
+        result["path_links"] = path_links
     if answers:
         result["answers_sha256"] = sha256_text(canonical_json(answers))
     result["plan_hash"] = plan_hash(result)

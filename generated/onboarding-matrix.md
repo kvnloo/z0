@@ -10,7 +10,7 @@
 | `frontier-kb` | generic |  | git | 2 | - | - | - |
 | `kerdoios` | generic |  | git, python>=3.10 | 4 | - | - | - |
 | `memento` | generic |  | - | 0 | - | - | - |
-| `oh-my-pi` | generic | yes | bun>=1.4.3, git | 5 | harness | - | - |
+| `oh-my-pi` | generic | yes | bun>=1.4.3, git | 9 | harness | - | - |
 | `tokenomics` | generic | yes | git, python>=3.10, node>=20, npm | 5 | - | - | - |
 | `z0evals` | generic | yes | git, python>=3.10 | 26 | - | 3 | - |
 | `z0intelligence` | z0int | yes | git, python-window | 18 | harness, models, services | 2 | z0intelligence.service (loopback:11501) |

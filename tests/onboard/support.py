@@ -72,6 +72,8 @@ GOLDEN_CASES = [
     ("tiny-4g-vps.auto", "tiny-4g-vps", {}),
     ("offline.auto", "offline", {}),
     ("host-mismatch.auto", "host-mismatch", {}),
+    # A stranger's fresh clone: no mirror, no checkouts, 4 GiB free (§1.2, §6.2).
+    ("fresh-stranger.auto", "fresh-stranger", {}),
 ]
 
 

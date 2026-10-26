@@ -27,6 +27,7 @@
       "config_dirs": [
         "~/.claude"
       ],
+      "path": "/opt/homebrew/bin/claude",
       "sessions_present": true,
       "state": "installed",
       "version": "2.1.310"

@@ -13,12 +13,14 @@ import unittest
 from tests.onboard import fakehost, support
 from tests.onboard.support import require_yaml
 
-_AUDIT = {"on": False, "opens": []}
+_AUDIT = {"on": False, "opens": [], "execs": []}
 
 
 def _hook(event, args):
     if _AUDIT["on"] and event == "open" and args and isinstance(args[0], (str, bytes)):
         _AUDIT["opens"].append((str(args[0]), args[1] if len(args) > 1 else "r"))
+    if _AUDIT["on"] and event == "subprocess.Popen" and args:
+        _AUDIT["execs"].append(str(args[0]))
 
 
 sys.addaudithook(_hook)
@@ -34,12 +36,14 @@ class DetectFakeHost(unittest.TestCase):
         cls.Ctx, cls.detect_fn = Ctx, staticmethod(detect)
         before = fakehost.tree_state(cls.fake["home"])
         _AUDIT["opens"].clear()
+        _AUDIT["execs"].clear()
         _AUDIT["on"] = True
         try:
             cls.host = detect(cls.ctx())
         finally:
             _AUDIT["on"] = False
         cls.opens = list(_AUDIT["opens"])
+        cls.execs = list(_AUDIT["execs"])
         cls.after_diff = (before, fakehost.tree_state(cls.fake["home"]))
         cls.text = json.dumps(cls.host, sort_keys=True)
 
@@ -114,6 +118,38 @@ class DetectFakeHost(unittest.TestCase):
         out = subprocess.run(["/bin/sh", "-c", "command -v bun"], env={"PATH": prepared},
                              capture_output=True, text=True)
         self.assertNotEqual(out.returncode, 0)
+
+    def test_sealed_every_probe_and_path_stays_in_the_fake_host(self):
+        """No real host binary runs and no real host dir is reported: the registry's
+        absolute well-known dirs (/usr/local/bin, /opt/homebrew/bin) are read under the
+        fake sysroot, so a real brew tailscale or npm-global claude is never seen."""
+        root = str(self.fake["root"])
+        self.assertTrue(self.execs, "audit hook saw no subprocess")
+        for exe in self.execs:
+            self.assertTrue(exe.startswith(root + "/"), f"ran a binary outside the fake host: {exe}")
+        for tool, entry in self.host["toolchains"].items():
+            if entry.get("path"):
+                self.assertTrue(entry["path"].startswith("~/") or entry["path"].startswith(root + "/"),
+                                f"{tool}: {entry['path']}")
+        for directory in self.host["prepared_path"]:
+            self.assertTrue(directory.startswith("~/") or directory.startswith(root + "/"), directory)
+        rustup = self.host["toolchains"]["rustup"]
+        self.assertEqual(rustup["path"], str(self.fake["sysroot"] / "usr/local/bin/rustup"))
+        self.assertEqual(rustup["source"], "well_known_dir")
+
+    def test_sealed_expand_maps_absolute_paths_into_the_sysroot(self):
+        ctx = self.ctx()
+        sysroot = str(self.fake["sysroot"])
+        self.assertEqual(ctx.expand("/opt/homebrew/bin"), sysroot + "/opt/homebrew/bin")
+        self.assertEqual(ctx.expand("~/.bun/bin"), str(self.fake["home"] / ".bun/bin"))
+        self.assertEqual(ctx.expand(sysroot + "/proc/meminfo"), sysroot + "/proc/meminfo")
+        self.assertEqual(self.Ctx(registry={}, sysroot="/", env={"HOME": "/h"}).expand("/opt/x"), "/opt/x")
+
+    def test_P1_policy_excluded_binary_records_its_dir(self):
+        harnesses = self.host["harnesses"]
+        self.assertEqual(harnesses["grok"]["bin_dir"], "~/.local/bin")
+        self.assertNotIn("path", harnesses["grok"])
+        self.assertEqual(harnesses["claude-code"]["path"], "~/.local/bin/claude")
 
     def test_checkouts_only_registry_repos(self):
         paths = [c["path"] for c in self.host["checkouts"]]

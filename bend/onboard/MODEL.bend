@@ -66,6 +66,13 @@ type Flavour is Data:
   FCurrent{}
   FLegacy{}
 
+# Evidence that a pinned rev is on origin: proven, disproven, or not checked
+# (no origin mirror and no checkout that holds it).
+type RevOrigin is Data:
+  OriginYes{}
+  OriginNo{}
+  OriginUnknown{}
+
 type Maturity is Data:
   MtStable{}
   MtShadow{}
@@ -116,6 +123,7 @@ type Reason is Data:
   RPythonWindow{}
   RRamLow{}
   RShadow{}
+  RRevUnverified{}
 
 type Verdict is Data:
   VAllow{}
@@ -294,13 +302,26 @@ def component_gate(gate: Gate, flavour: Flavour, hw: HwClass, py: PyWindow, ram:
     case GZ0int{}:
       z0int_hw(hw, py, ram)
 
+# D1: a dash rev that could not be checked on origin is unavailable with its own
+# reason (not "maintainer must push"); other gates proceed and the plan warns.
+def unverified_rev(gate: Gate, flavour: Flavour, hw: HwClass, py: PyWindow, ram: RamTier) -> Verdict:
+  match gate:
+    case GGeneric{}:
+      VAllow{}
+    case GDash{}:
+      VUnavailable{RRevUnverified{}}
+    case GZ0int{}:
+      z0int_hw(hw, py, ram)
+
 # D1/public-ready: a pinned rev missing from origin makes the component unavailable.
-def component_gates(gate: Gate, rev: Bool, flavour: Flavour, hw: HwClass, py: PyWindow, ram: RamTier) -> Verdict:
+def component_gates(gate: Gate, rev: RevOrigin, flavour: Flavour, hw: HwClass, py: PyWindow, ram: RamTier) -> Verdict:
   match rev:
-    case False{}:
+    case OriginNo{}:
       VUnavailable{RRevNotOnOrigin{}}
-    case True{}:
+    case OriginYes{}:
       component_gate(gate, flavour, hw, py, ram)
+    case OriginUnknown{}:
+      unverified_rev(gate, flavour, hw, py, ram)
 
 # M2: a shadow component that passes every gate is still only asked (C2).
 def shadow_of(v: Verdict) -> Verdict:
@@ -315,7 +336,7 @@ def shadow_of(v: Verdict) -> Verdict:
       VRefuse{reason}
 
 # M1: an idea (memento) is never planned.
-def decide_component(gate: Gate, rev: Bool, flavour: Flavour, maturity: Maturity, hw: HwClass, py: PyWindow, ram: RamTier) -> Verdict:
+def decide_component(gate: Gate, rev: RevOrigin, flavour: Flavour, maturity: Maturity, hw: HwClass, py: PyWindow, ram: RamTier) -> Verdict:
   match maturity:
     case MtStable{}:
       component_gates(gate, rev, flavour, hw, py, ram)
@@ -472,6 +493,8 @@ def reason_code(r: Reason) -> Nat:
       18n
     case RShadow{}:
       19n
+    case RRevUnverified{}:
+      20n
 
 def code_verdict(v: Verdict) -> Nat:
   match v:

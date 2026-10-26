@@ -1,46 +1,46 @@
 {
   "asks": [
     {
-      "command": "./z0 onboard accept toolchain.bun",
+      "command": "./z0 onboard --accept toolchains   (or --yes for every bundle)",
       "consent": "C1",
       "id": "toolchain.bun",
-      "impact": 25,
-      "reason": "c1_ungranted"
+      "impact": 29,
+      "reason": "user-local download of bun 1.4.3 into $Z0_HOME/toolchains (needs consent: toolchains bundle)"
     },
     {
-      "command": "./z0 onboard accept z0intelligence.torch",
+      "command": "./z0 onboard --accept models   (or --yes for every bundle)",
       "consent": "C1",
       "id": "z0intelligence.torch",
       "impact": 13,
-      "reason": "c1_ungranted"
+      "reason": "installs torch==2.10.0 into the z0intelligence venv (needs consent: models bundle)"
     },
     {
-      "command": "./z0 onboard accept z0evals.ask.claude_md",
+      "command": "manual: CLAUDE.md pointer to AGENTS.md (the repo discourages duplicate instruction files)",
       "consent": "C2",
       "id": "z0evals.ask.claude_md",
       "impact": 1,
-      "reason": "manual: CLAUDE.md pointer to AGENTS.md (the repo discourages duplicate instruction files)"
+      "reason": "manual step, never automatic (C2)"
     },
     {
-      "command": "./z0 onboard accept z0evals.ask.kit_skills",
+      "command": "manual: link .verified-oss-loop/skills into your harness skill dir",
       "consent": "C2",
       "id": "z0evals.ask.kit_skills",
       "impact": 1,
-      "reason": "manual: link .verified-oss-loop/skills into your harness skill dir"
+      "reason": "manual step, never automatic (C2)"
     },
     {
-      "command": "./z0 onboard accept z0evals.ask.visual_probes",
+      "command": "manual: visual-parity probes (web/docs/probes) need a Chromium path and websockets",
       "consent": "C2",
       "id": "z0evals.ask.visual_probes",
       "impact": 1,
-      "reason": "manual: visual-parity probes (web/docs/probes) need a Chromium path and websockets"
+      "reason": "manual step, never automatic (C2)"
     },
     {
-      "command": "./z0 onboard accept z0intelligence.plugin.hermes",
+      "command": "manual: Hermes: choose the profile and edit its config.yaml yourself (always an ask)",
       "consent": "C2",
       "id": "z0intelligence.plugin.hermes",
       "impact": 1,
-      "reason": "manual: Hermes: choose the profile and edit its config.yaml yourself (always an ask)"
+      "reason": "manual step, never automatic (C2)"
     }
   ],
   "components": {
@@ -77,23 +77,79 @@
   "host_id": "1f2e3d4c5b6a7980",
   "llm": "local",
   "mode": "auto",
+  "path_links": [
+    {
+      "link": "$Z0_HOME/bin/links/claude",
+      "target": "~/.local/bin/claude"
+    },
+    {
+      "link": "$Z0_HOME/bin/links/codex",
+      "target": "~/.local/bin/codex"
+    },
+    {
+      "link": "$Z0_HOME/bin/links/hermes",
+      "target": "~/.local/bin/hermes"
+    },
+    {
+      "link": "$Z0_HOME/bin/links/uv",
+      "target": "~/.local/bin/uv"
+    }
+  ],
   "pin_policy": "pinned",
-  "plan_hash": "a6a69d3d7ab6b4594798b77ae1abf8c363839a5e145be467de930660c18b4dc9",
+  "plan_hash": "d096028f853410a60d8a354aa35c6313fab60bf908aca6f595f0314f8c993be0",
   "prepared_path": [
-    "~/.local/bin",
+    "$Z0_HOME/bin/links",
     "~/.bun/bin",
     "/usr/bin",
     "/bin"
   ],
   "profile": "personal",
   "registry": {
-    "registry/components.yaml": "5caec597755d691ce5a0e8d14d17fb505a16c6fd77034e89acb28206ad098b89",
+    "registry/components.yaml": "5094764350ddcc1504a2861e279a57336abca3435b6549c3016e7c344b7fbece",
     "registry/harnesses.yaml": "1c2b9ba37ca974e4aa1ed1f6990561ea303fc7e1f73c0fb4c6cc4802d5b4a7b8",
-    "registry/onboarding.yaml": "6cd38059ea9bd301a90357776d6143431516adc5d908ee49a52428bb344d1ec7",
+    "registry/onboarding.yaml": "b0c3e2b4c8e7a17bde8a5cb2378c90f6009b4464879a76406f6ae3cdc7e9b9ce",
     "registry/profiles.yaml": "1078cbeef86e532c77478eb5025ec08f6f3f8156a1c77707774416e79d51f819",
     "registry/toolchains.yaml": "10255da4b970f08ef57b4e9fd68b7dedfbc5f43bde284a35caecac4bcd0213b1"
   },
   "steps": [
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "component": "z0",
+        "consent": {
+          "class": "C0"
+        },
+        "creates": [
+          "$Z0_HOME/bin/links"
+        ],
+        "effects": [
+          {
+            "kind": "symlink",
+            "path": "$Z0_HOME/bin/links/claude"
+          },
+          {
+            "kind": "symlink",
+            "path": "$Z0_HOME/bin/links/codex"
+          },
+          {
+            "kind": "symlink",
+            "path": "$Z0_HOME/bin/links/hermes"
+          },
+          {
+            "kind": "symlink",
+            "path": "$Z0_HOME/bin/links/uv"
+          }
+        ],
+        "id": "z0.path_links",
+        "kind": "write_file",
+        "undo": {
+          "kind": "remove_owned"
+        },
+        "where": "home"
+      }
+    },
     {
       "state": {
         "status": "todo"
@@ -105,6 +161,9 @@
         "component": "z0",
         "consent": {
           "class": "C0"
+        },
+        "env": {
+          "PATH": "$Z0_HOME/venv/bin:$Z0_HOME/bin/links:~/.bun/bin:/usr/bin:/bin"
         },
         "id": "z0.registry_check",
         "kind": "check"
@@ -126,6 +185,9 @@
         "consent": {
           "class": "C0"
         },
+        "env": {
+          "PATH": "$Z0_HOME/venv/bin:$Z0_HOME/bin/links:~/.bun/bin:/usr/bin:/bin"
+        },
         "id": "z0.plan_deterministic",
         "kind": "check"
       }
@@ -145,6 +207,9 @@
         "component": "z0",
         "consent": {
           "class": "C0"
+        },
+        "env": {
+          "PATH": "$Z0_HOME/venv/bin:$Z0_HOME/bin/links:~/.bun/bin:/usr/bin:/bin"
         },
         "id": "z0.init_dry_run",
         "kind": "check"
@@ -589,6 +654,7 @@
         "needs": [
           "z0intelligence.install"
         ],
+        "target_where": "venv",
         "undo": {
           "kind": "remove_owned"
         },
@@ -615,6 +681,7 @@
         "needs": [
           "z0intelligence.shim"
         ],
+        "target_where": "venv",
         "undo": {
           "kind": "restore_backup"
         },
@@ -990,7 +1057,139 @@
     },
     {
       "state": {
-        "blocked_by": "oh-my-pi.build",
+        "blocked_by": "toolchain.bun",
+        "reason": "dependency",
+        "status": "blocked"
+      },
+      "step": {
+        "component": "oh-my-pi",
+        "consent": {
+          "class": "C0"
+        },
+        "creates": [
+          "$Z0_HOME/build/oh-my-pi/d707478d4c5c72784c058a0163b616988f559230"
+        ],
+        "id": "oh-my-pi.build_tree",
+        "kind": "build_tree",
+        "network": true,
+        "undo": {
+          "kind": "remove_owned"
+        },
+        "when": [
+          {
+            "fact": "harnesses.omp.state",
+            "op": "eq",
+            "value": "installed"
+          }
+        ],
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "blocked_by": "oh-my-pi.build_tree",
+        "reason": "dependency",
+        "status": "blocked"
+      },
+      "step": {
+        "component": "oh-my-pi",
+        "consent": {
+          "class": "C0"
+        },
+        "creates": [
+          "~/.local/lib/oh-my-pi/releases/d707478d4c5c72784c058a0163b616988f559230"
+        ],
+        "id": "oh-my-pi.release",
+        "kind": "stage_release",
+        "needs": [
+          "oh-my-pi.build_tree"
+        ],
+        "undo": {
+          "kind": "remove_owned"
+        },
+        "when": [
+          {
+            "fact": "harnesses.omp.state",
+            "op": "eq",
+            "value": "installed"
+          }
+        ],
+        "where": "release"
+      }
+    },
+    {
+      "state": {
+        "blocked_by": "oh-my-pi.release",
+        "reason": "dependency",
+        "status": "blocked"
+      },
+      "step": {
+        "argv": [
+          "bun",
+          "install"
+        ],
+        "component": "oh-my-pi",
+        "consent": {
+          "class": "C0"
+        },
+        "creates": [
+          "~/.local/lib/oh-my-pi/releases/d707478d4c5c72784c058a0163b616988f559230/node_modules"
+        ],
+        "id": "oh-my-pi.release.deps",
+        "kind": "run",
+        "needs": [
+          "oh-my-pi.release"
+        ],
+        "network": true,
+        "timeout_s": 1800,
+        "when": [
+          {
+            "fact": "harnesses.omp.state",
+            "op": "eq",
+            "value": "installed"
+          }
+        ],
+        "where": "release"
+      }
+    },
+    {
+      "state": {
+        "blocked_by": "oh-my-pi.release.deps",
+        "reason": "dependency",
+        "status": "blocked"
+      },
+      "step": {
+        "argv": [
+          "bun",
+          "run",
+          "build"
+        ],
+        "component": "oh-my-pi",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "oh-my-pi.release.build",
+        "kind": "run",
+        "needs": [
+          "oh-my-pi.release.deps"
+        ],
+        "probe": {
+          "exists": "~/.local/lib/oh-my-pi/releases/d707478d4c5c72784c058a0163b616988f559230/packages/coding-agent/dist"
+        },
+        "timeout_s": 1800,
+        "when": [
+          {
+            "fact": "harnesses.omp.state",
+            "op": "eq",
+            "value": "installed"
+          }
+        ],
+        "where": "release"
+      }
+    },
+    {
+      "state": {
+        "blocked_by": "oh-my-pi.release.build",
         "reason": "dependency",
         "status": "blocked"
       },
@@ -1008,7 +1207,7 @@
         "id": "oh-my-pi.setup",
         "kind": "harness_plugin",
         "needs": [
-          "oh-my-pi.build"
+          "oh-my-pi.release.build"
         ],
         "probe": {
           "exists": "$Z0_HOME/onboard/stamps/oh-my-pi.setup"
@@ -1023,7 +1222,7 @@
             "value": "installed"
           }
         ],
-        "where": "build"
+        "where": "release"
       }
     },
     {
@@ -1448,6 +1647,7 @@
         "needs": [
           "dash.release.deps"
         ],
+        "target_where": "release",
         "undo": {
           "kind": "restore_backup"
         },
@@ -2249,8 +2449,10 @@
     "dash",
     "z0evals"
   ],
+  "unavailable": [],
   "version": 1,
   "warnings": [
+    "prepared PATH: ~/.local/bin also holds a policy-excluded harness; $Z0_HOME/bin/links replaces it (P1)",
     "z0intelligence: 1 existing checkout(s) are dirty or off-origin; a separate z0 clone is planned instead"
   ]
 }

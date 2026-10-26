@@ -113,7 +113,8 @@ def law_p1_forbidden_provider(k):
 
 
 def _component_domain(k):
-    return itertools.product(k.Gate, BOOLS, k.Flavour, k.Maturity, k.HwClass, k.PyWindow, k.RamTier)
+    return itertools.product(k.Gate, k.RevOrigin, k.Flavour, k.Maturity, k.HwClass, k.PyWindow,
+                             k.RamTier)
 
 
 def law_m1_m2_maturity(k):
@@ -130,9 +131,12 @@ def law_d1_d2_dash_gates(k):
         if maturity is k.Maturity.IDEA:
             continue
         verdict = k.decide_component(gate, rev, flavour, maturity, hw, py, ram)
-        if not rev:
+        if rev is k.RevOrigin.NO:
             _check(verdict == k.unavailable(k.Reason.REV_NOT_ON_ORIGIN),
                    "D1: rev not on origin must be unavailable")
+        elif rev is k.RevOrigin.UNKNOWN and gate is k.Gate.DASH:
+            _check(verdict == k.unavailable(k.Reason.REV_UNVERIFIED),
+                   "D1: an unverified dash rev must be unavailable (rev_unverified)")
         elif gate is k.Gate.DASH and flavour is k.Flavour.LEGACY:
             _check(verdict == k.refuse(k.Reason.LEGACY_FLAVOUR), "D2: legacy dash must refuse")
 
@@ -141,7 +145,7 @@ def law_z1_z0int(k):
     for _gate, _rev, flavour, maturity, hw, py, ram in _component_domain(k):
         if maturity is k.Maturity.IDEA:
             continue
-        verdict = k.decide_component(k.Gate.Z0INT, True, flavour, maturity, hw, py, ram)
+        verdict = k.decide_component(k.Gate.Z0INT, k.RevOrigin.YES, flavour, maturity, hw, py, ram)
         if hw is k.HwClass.INTEL_MAC:
             _check(verdict == k.refuse(k.Reason.INTEL_MAC), "Z1: intel_mac must refuse")
         elif py is k.PyWindow.IMPOSSIBLE:
@@ -154,7 +158,8 @@ def law_component_allow_exact(k):
     """Allow happens exactly when no gate fires (the table is not silently permissive)."""
     for gate, rev, flavour, maturity, hw, py, ram in _component_domain(k):
         verdict = k.decide_component(gate, rev, flavour, maturity, hw, py, ram)
-        blocked = (maturity is not k.Maturity.STABLE or not rev
+        blocked = (maturity is not k.Maturity.STABLE or rev is k.RevOrigin.NO
+                   or (rev is k.RevOrigin.UNKNOWN and gate is k.Gate.DASH)
                    or (gate is k.Gate.DASH and flavour is k.Flavour.LEGACY)
                    or (gate is k.Gate.Z0INT and (hw is k.HwClass.INTEL_MAC
                                                   or py is k.PyWindow.IMPOSSIBLE

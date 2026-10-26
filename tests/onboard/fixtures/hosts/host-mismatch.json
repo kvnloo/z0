@@ -65,6 +65,7 @@
       "config_dirs": [
         "~/.claude"
       ],
+      "path": "~/.local/bin/claude",
       "sessions_present": true,
       "state": "installed",
       "version": "2.1.310"
@@ -73,11 +74,13 @@
       "config_dirs": [
         "~/.codex"
       ],
+      "path": "~/.local/bin/codex",
       "sessions_present": true,
       "state": "installed",
       "version": "0.162.1"
     },
     "codexbar": {
+      "path": "~/.local/bin/codexbar",
       "state": "installed"
     },
     "cursor-agent": {
@@ -91,12 +94,14 @@
       "state": "absent"
     },
     "fx": {
+      "path": "~/.local/bin/fx",
       "state": "installed"
     },
     "gemini": {
       "state": "absent"
     },
     "grok": {
+      "bin_dir": "~/.local/bin",
       "config_dirs": [
         "~/.grok"
       ],
@@ -107,6 +112,7 @@
       "config_dirs": [
         "~/.hermes"
       ],
+      "path": "~/.local/bin/hermes",
       "state": "installed"
     },
     "kimi": {
@@ -116,6 +122,7 @@
       "config_dirs": [
         "~/.omp"
       ],
+      "path": "~/.bun/bin/omp",
       "state": "installed"
     },
     "opencode": {

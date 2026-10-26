@@ -4,21 +4,21 @@
       "command": "sudo dnf install -y git",
       "consent": "C2",
       "id": "toolchain.git",
-      "impact": 74,
-      "reason": "missing_tool:git"
+      "impact": 78,
+      "reason": "git is not installed (system package, C2)"
     },
     {
-      "command": "./z0 onboard accept toolchain.bun",
+      "command": "./z0 onboard --accept toolchains   (or --yes for every bundle)",
       "consent": "C1",
       "id": "toolchain.bun",
-      "impact": 25,
-      "reason": "c1_ungranted"
+      "impact": 29,
+      "reason": "user-local download of bun 1.4.3 into $Z0_HOME/toolchains (needs consent: toolchains bundle)"
     }
   ],
   "components": {
     "dash": {
       "adopted": false,
-      "reason": "rev_not_on_origin",
+      "reason": "rev_unverified",
       "tree": "$Z0_HOME/repos/dash",
       "verdict": "unavailable"
     },
@@ -39,6 +39,7 @@
     },
     "z0intelligence": {
       "adopted": false,
+      "blocked_by": "tokenomics",
       "tree": "$Z0_HOME/repos/z0intelligence",
       "verdict": "allow"
     }
@@ -51,16 +52,16 @@
   "llm": "local",
   "mode": "auto",
   "pin_policy": "pinned",
-  "plan_hash": "6825a7051dae766ebffbf1a93347c6a9ba832d1231997ace9e6b3a2bd56a5171",
+  "plan_hash": "41604ee1c1c43960c73b8f393bf4e8c7faa598271afebe350b3696a56d8b2df3",
   "prepared_path": [
     "/usr/bin",
     "/bin"
   ],
   "profile": "personal",
   "registry": {
-    "registry/components.yaml": "5caec597755d691ce5a0e8d14d17fb505a16c6fd77034e89acb28206ad098b89",
+    "registry/components.yaml": "5094764350ddcc1504a2861e279a57336abca3435b6549c3016e7c344b7fbece",
     "registry/harnesses.yaml": "1c2b9ba37ca974e4aa1ed1f6990561ea303fc7e1f73c0fb4c6cc4802d5b4a7b8",
-    "registry/onboarding.yaml": "6cd38059ea9bd301a90357776d6143431516adc5d908ee49a52428bb344d1ec7",
+    "registry/onboarding.yaml": "b0c3e2b4c8e7a17bde8a5cb2378c90f6009b4464879a76406f6ae3cdc7e9b9ce",
     "registry/profiles.yaml": "1078cbeef86e532c77478eb5025ec08f6f3f8156a1c77707774416e79d51f819",
     "registry/toolchains.yaml": "10255da4b970f08ef57b4e9fd68b7dedfbc5f43bde284a35caecac4bcd0213b1"
   },
@@ -76,6 +77,9 @@
         "component": "z0",
         "consent": {
           "class": "C0"
+        },
+        "env": {
+          "PATH": "$Z0_HOME/venv/bin:/usr/bin:/bin"
         },
         "id": "z0.registry_check",
         "kind": "check"
@@ -97,6 +101,9 @@
         "consent": {
           "class": "C0"
         },
+        "env": {
+          "PATH": "$Z0_HOME/venv/bin:/usr/bin:/bin"
+        },
         "id": "z0.plan_deterministic",
         "kind": "check"
       }
@@ -116,6 +123,9 @@
         "component": "z0",
         "consent": {
           "class": "C0"
+        },
+        "env": {
+          "PATH": "$Z0_HOME/venv/bin:/usr/bin:/bin"
         },
         "id": "z0.init_dry_run",
         "kind": "check"
@@ -365,7 +375,7 @@
     },
     {
       "state": {
-        "blocked_by": "toolchain.git",
+        "blocked_by": "tokenomics.verify",
         "reason": "dependency",
         "status": "blocked"
       },
@@ -385,8 +395,9 @@
     },
     {
       "state": {
-        "reason": "condition:mode eq guided",
-        "status": "unavailable"
+        "blocked_by": "tokenomics.verify",
+        "reason": "dependency",
+        "status": "blocked"
       },
       "step": {
         "argv": [
@@ -421,7 +432,7 @@
     },
     {
       "state": {
-        "blocked_by": "toolchain.git",
+        "blocked_by": "tokenomics.verify",
         "reason": "dependency",
         "status": "blocked"
       },
@@ -444,7 +455,7 @@
     },
     {
       "state": {
-        "blocked_by": "z0intelligence.build",
+        "blocked_by": "tokenomics.verify",
         "reason": "dependency",
         "status": "blocked"
       },
@@ -469,7 +480,7 @@
     },
     {
       "state": {
-        "blocked_by": "z0intelligence.release",
+        "blocked_by": "tokenomics.verify",
         "reason": "dependency",
         "status": "blocked"
       },
@@ -498,7 +509,7 @@
     },
     {
       "state": {
-        "blocked_by": "z0intelligence.runtime",
+        "blocked_by": "tokenomics.verify",
         "reason": "dependency",
         "status": "blocked"
       },
@@ -529,8 +540,9 @@
     },
     {
       "state": {
-        "reason": "condition:network.github eq True",
-        "status": "unavailable"
+        "blocked_by": "tokenomics.verify",
+        "reason": "dependency",
+        "status": "blocked"
       },
       "step": {
         "argv": [
@@ -563,7 +575,7 @@
     },
     {
       "state": {
-        "blocked_by": "z0intelligence.install",
+        "blocked_by": "tokenomics.verify",
         "reason": "dependency",
         "status": "blocked"
       },
@@ -581,6 +593,7 @@
         "needs": [
           "z0intelligence.install"
         ],
+        "target_where": "venv",
         "undo": {
           "kind": "remove_owned"
         },
@@ -589,7 +602,7 @@
     },
     {
       "state": {
-        "blocked_by": "z0intelligence.shim",
+        "blocked_by": "tokenomics.verify",
         "reason": "dependency",
         "status": "blocked"
       },
@@ -607,6 +620,7 @@
         "needs": [
           "z0intelligence.shim"
         ],
+        "target_where": "venv",
         "undo": {
           "kind": "restore_backup"
         },
@@ -615,7 +629,7 @@
     },
     {
       "state": {
-        "blocked_by": "z0intelligence.shim",
+        "blocked_by": "tokenomics.verify",
         "reason": "dependency",
         "status": "blocked"
       },
@@ -639,7 +653,7 @@
     },
     {
       "state": {
-        "blocked_by": "z0intelligence.checks.import",
+        "blocked_by": "tokenomics.verify",
         "reason": "dependency",
         "status": "blocked"
       },
@@ -665,7 +679,7 @@
     },
     {
       "state": {
-        "blocked_by": "z0intelligence.install",
+        "blocked_by": "tokenomics.verify",
         "reason": "dependency",
         "status": "blocked"
       },
@@ -691,8 +705,9 @@
     },
     {
       "state": {
-        "reason": "condition:harnesses.claude_code.state eq installed",
-        "status": "unavailable"
+        "blocked_by": "tokenomics.verify",
+        "reason": "dependency",
+        "status": "blocked"
       },
       "step": {
         "argv": [
@@ -730,8 +745,9 @@
     },
     {
       "state": {
-        "reason": "condition:harnesses.codex.state eq installed",
-        "status": "unavailable"
+        "blocked_by": "tokenomics.verify",
+        "reason": "dependency",
+        "status": "blocked"
       },
       "step": {
         "argv": [
@@ -769,8 +785,9 @@
     },
     {
       "state": {
-        "reason": "condition:harnesses.omp.state eq installed",
-        "status": "unavailable"
+        "blocked_by": "tokenomics.verify",
+        "reason": "dependency",
+        "status": "blocked"
       },
       "step": {
         "argv": [
@@ -806,8 +823,9 @@
     },
     {
       "state": {
-        "reason": "condition:harnesses.hermes.state eq installed",
-        "status": "unavailable"
+        "blocked_by": "tokenomics.verify",
+        "reason": "dependency",
+        "status": "blocked"
       },
       "step": {
         "argv": [
@@ -831,7 +849,7 @@
     },
     {
       "state": {
-        "blocked_by": "z0intelligence.shim",
+        "blocked_by": "tokenomics.verify",
         "reason": "dependency",
         "status": "blocked"
       },
@@ -879,7 +897,7 @@
     },
     {
       "state": {
-        "blocked_by": "z0intelligence.shim",
+        "blocked_by": "tokenomics.verify",
         "reason": "dependency",
         "status": "blocked"
       },
@@ -983,6 +1001,134 @@
         "status": "unavailable"
       },
       "step": {
+        "component": "oh-my-pi",
+        "consent": {
+          "class": "C0"
+        },
+        "creates": [
+          "$Z0_HOME/build/oh-my-pi/d707478d4c5c72784c058a0163b616988f559230"
+        ],
+        "id": "oh-my-pi.build_tree",
+        "kind": "build_tree",
+        "network": true,
+        "undo": {
+          "kind": "remove_owned"
+        },
+        "when": [
+          {
+            "fact": "harnesses.omp.state",
+            "op": "eq",
+            "value": "installed"
+          }
+        ],
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "reason": "condition:harnesses.omp.state eq installed",
+        "status": "unavailable"
+      },
+      "step": {
+        "component": "oh-my-pi",
+        "consent": {
+          "class": "C0"
+        },
+        "creates": [
+          "~/.local/lib/oh-my-pi/releases/d707478d4c5c72784c058a0163b616988f559230"
+        ],
+        "id": "oh-my-pi.release",
+        "kind": "stage_release",
+        "needs": [
+          "oh-my-pi.build_tree"
+        ],
+        "undo": {
+          "kind": "remove_owned"
+        },
+        "when": [
+          {
+            "fact": "harnesses.omp.state",
+            "op": "eq",
+            "value": "installed"
+          }
+        ],
+        "where": "release"
+      }
+    },
+    {
+      "state": {
+        "reason": "condition:harnesses.omp.state eq installed",
+        "status": "unavailable"
+      },
+      "step": {
+        "argv": [
+          "bun",
+          "install"
+        ],
+        "component": "oh-my-pi",
+        "consent": {
+          "class": "C0"
+        },
+        "creates": [
+          "~/.local/lib/oh-my-pi/releases/d707478d4c5c72784c058a0163b616988f559230/node_modules"
+        ],
+        "id": "oh-my-pi.release.deps",
+        "kind": "run",
+        "needs": [
+          "oh-my-pi.release"
+        ],
+        "network": true,
+        "timeout_s": 1800,
+        "when": [
+          {
+            "fact": "harnesses.omp.state",
+            "op": "eq",
+            "value": "installed"
+          }
+        ],
+        "where": "release"
+      }
+    },
+    {
+      "state": {
+        "reason": "condition:harnesses.omp.state eq installed",
+        "status": "unavailable"
+      },
+      "step": {
+        "argv": [
+          "bun",
+          "run",
+          "build"
+        ],
+        "component": "oh-my-pi",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "oh-my-pi.release.build",
+        "kind": "run",
+        "needs": [
+          "oh-my-pi.release.deps"
+        ],
+        "probe": {
+          "exists": "~/.local/lib/oh-my-pi/releases/d707478d4c5c72784c058a0163b616988f559230/packages/coding-agent/dist"
+        },
+        "timeout_s": 1800,
+        "when": [
+          {
+            "fact": "harnesses.omp.state",
+            "op": "eq",
+            "value": "installed"
+          }
+        ],
+        "where": "release"
+      }
+    },
+    {
+      "state": {
+        "reason": "condition:harnesses.omp.state eq installed",
+        "status": "unavailable"
+      },
+      "step": {
         "argv": [
           "./omp",
           "setup"
@@ -996,7 +1142,7 @@
         "id": "oh-my-pi.setup",
         "kind": "harness_plugin",
         "needs": [
-          "oh-my-pi.build"
+          "oh-my-pi.release.build"
         ],
         "probe": {
           "exists": "$Z0_HOME/onboard/stamps/oh-my-pi.setup"
@@ -1011,7 +1157,7 @@
             "value": "installed"
           }
         ],
-        "where": "build"
+        "where": "release"
       }
     },
     {
@@ -1043,7 +1189,7 @@
     },
     {
       "state": {
-        "reason": "rev_not_on_origin",
+        "reason": "rev_unverified",
         "status": "unavailable"
       },
       "step": {
@@ -1065,7 +1211,7 @@
     },
     {
       "state": {
-        "reason": "rev_not_on_origin",
+        "reason": "rev_unverified",
         "status": "unavailable"
       },
       "step": {
@@ -1087,7 +1233,7 @@
     },
     {
       "state": {
-        "reason": "rev_not_on_origin",
+        "reason": "rev_unverified",
         "status": "unavailable"
       },
       "step": {
@@ -1117,7 +1263,7 @@
     },
     {
       "state": {
-        "reason": "rev_not_on_origin",
+        "reason": "rev_unverified",
         "status": "unavailable"
       },
       "step": {
@@ -1145,7 +1291,7 @@
     },
     {
       "state": {
-        "reason": "rev_not_on_origin",
+        "reason": "rev_unverified",
         "status": "unavailable"
       },
       "step": {
@@ -1176,7 +1322,7 @@
     },
     {
       "state": {
-        "reason": "rev_not_on_origin",
+        "reason": "rev_unverified",
         "status": "unavailable"
       },
       "step": {
@@ -1201,7 +1347,7 @@
     },
     {
       "state": {
-        "reason": "rev_not_on_origin",
+        "reason": "rev_unverified",
         "status": "unavailable"
       },
       "step": {
@@ -1226,7 +1372,7 @@
     },
     {
       "state": {
-        "reason": "rev_not_on_origin",
+        "reason": "rev_unverified",
         "status": "unavailable"
       },
       "step": {
@@ -1258,7 +1404,7 @@
     },
     {
       "state": {
-        "reason": "rev_not_on_origin",
+        "reason": "rev_unverified",
         "status": "unavailable"
       },
       "step": {
@@ -1284,7 +1430,7 @@
     },
     {
       "state": {
-        "reason": "rev_not_on_origin",
+        "reason": "rev_unverified",
         "status": "unavailable"
       },
       "step": {
@@ -1309,7 +1455,7 @@
     },
     {
       "state": {
-        "reason": "rev_not_on_origin",
+        "reason": "rev_unverified",
         "status": "unavailable"
       },
       "step": {
@@ -1340,7 +1486,7 @@
     },
     {
       "state": {
-        "reason": "rev_not_on_origin",
+        "reason": "rev_unverified",
         "status": "unavailable"
       },
       "step": {
@@ -1377,7 +1523,7 @@
     },
     {
       "state": {
-        "reason": "rev_not_on_origin",
+        "reason": "rev_unverified",
         "status": "unavailable"
       },
       "step": {
@@ -1406,7 +1552,7 @@
     },
     {
       "state": {
-        "reason": "rev_not_on_origin",
+        "reason": "rev_unverified",
         "status": "unavailable"
       },
       "step": {
@@ -1423,6 +1569,7 @@
         "needs": [
           "dash.release.deps"
         ],
+        "target_where": "release",
         "undo": {
           "kind": "restore_backup"
         },
@@ -1437,7 +1584,7 @@
     },
     {
       "state": {
-        "reason": "rev_not_on_origin",
+        "reason": "rev_unverified",
         "status": "unavailable"
       },
       "step": {
@@ -1468,7 +1615,7 @@
     },
     {
       "state": {
-        "reason": "rev_not_on_origin",
+        "reason": "rev_unverified",
         "status": "unavailable"
       },
       "step": {
@@ -1521,7 +1668,7 @@
     },
     {
       "state": {
-        "reason": "rev_not_on_origin",
+        "reason": "rev_unverified",
         "status": "unavailable"
       },
       "step": {
@@ -1546,7 +1693,7 @@
     },
     {
       "state": {
-        "reason": "rev_not_on_origin",
+        "reason": "rev_unverified",
         "status": "unavailable"
       },
       "step": {
@@ -1571,7 +1718,7 @@
     },
     {
       "state": {
-        "reason": "rev_not_on_origin",
+        "reason": "rev_unverified",
         "status": "unavailable"
       },
       "step": {
@@ -2266,9 +2413,16 @@
     "dash",
     "z0evals"
   ],
+  "unavailable": [
+    {
+      "detail": "could not check the pinned revs on origin; re-run `./z0 onboard plan` with network so z0 can fetch them into its mirror",
+      "id": "dash",
+      "reason": "rev_unverified",
+      "status": "unavailable"
+    }
+  ],
   "version": 1,
   "warnings": [
-    "dash: unavailable (rev_not_on_origin): the pinned revs are not on origin yet (maintainer must push them)",
     "oh-my-pi: pin d707478d4c5c not verified on origin (no mirror or checkout evidence)",
     "tokenomics: pin 65e8f2dd9d6c not verified on origin (no mirror or checkout evidence)",
     "z0evals: pin 29a28336e526 not verified on origin (no mirror or checkout evidence)",

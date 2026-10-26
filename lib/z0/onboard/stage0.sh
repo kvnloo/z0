@@ -9,6 +9,13 @@
 # Downloading uv or a CPython is a toolchain write: it needs --yes, or a [y/N] on a
 # TTY that shows URL, version, sha256 and target. Without consent: exit 3 and print
 # the manual commands. Effects are journaled to $Z0_HOME/bootstrap/stage0.jsonl.
+#
+# A python without ensurepip (Debian/Ubuntu without python3-venv) cannot run
+# `python -m venv`; stage 0 then takes the same consented uv path, because
+# `uv venv` needs no ensurepip, and never depends on a sudo package install.
+#
+# Z0_STAGE0_PY_DIRS (test hook): ':'-separated dirs searched for a python after
+# PATH, in place of ~/.local/bin, /opt/homebrew/bin, ~/.pyenv/shims and mise shims.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
@@ -77,9 +84,14 @@ consent() { # $1 = what will be downloaded; return 0 only with --yes or a TTY ye
 py_ok() { "$1" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' > /dev/null 2>&1; }
 
 find_python() {
-  local dirs=() d n
+  local dirs=() extra=() d n
   IFS=: read -r -a dirs <<< "${PATH:-}"
-  dirs+=("$HOME/.local/bin" /opt/homebrew/bin "$HOME/.pyenv/shims" "$HOME/.local/share/mise/shims")
+  if [[ -n "${Z0_STAGE0_PY_DIRS+set}" ]]; then
+    IFS=: read -r -a extra <<< "$Z0_STAGE0_PY_DIRS"
+  else
+    extra=("$HOME/.local/bin" /opt/homebrew/bin "$HOME/.pyenv/shims" "$HOME/.local/share/mise/shims")
+  fi
+  dirs+=(${extra[@]+"${extra[@]}"})
   for d in "${dirs[@]}"; do
     for n in python3 python3.13 python3.12 python3.11 python3.10; do
       [[ -x "$d/$n" ]] || continue
@@ -125,16 +137,74 @@ sha256() {
 }
 
 manual_and_exit() { # no consent: print the commands, exit 3 (design §1.2)
-  local ver="$1" url="$2" sha="$3"
-  say "a python >= 3.10 is needed and none was found; installing one needs consent."
+  local why="$1" ver="$2" url="$3" sha="$4"
+  if [[ "$why" == no-ensurepip ]]; then
+    say "$PY has no ensurepip/venv, so it cannot make the z0 venv; the pinned uv can (needs consent)."
+  else
+    say "a python >= 3.10 is needed and none was found; installing one needs consent."
+  fi
   cat >&2 << EOF
 Re-run with --yes, or do it by hand:
   curl -fsSLo uv.tar.gz '$url'
   echo '$sha  uv.tar.gz' | sha256sum -c -
   mkdir -p '$BOOT/uv/$ver' && tar -xzf uv.tar.gz -C '$BOOT/uv/$ver' --strip-components=1
-  UV_PYTHON_INSTALL_DIR='$BOOT/python' '$BOOT/uv/$ver/uv' python install $PY_VERSION
 EOF
+  if [[ "$why" == no-ensurepip ]]; then
+    cat >&2 << EOF
+  '$BOOT/uv/$ver/uv' venv --python '$PY' '$VENV'
+Or install your distribution's venv package (a system package, needs sudo), e.g.
+  sudo apt install python3-venv
+EOF
+  else
+    printf "  UV_PYTHON_INSTALL_DIR='%s' '%s' python install %s\n" \
+      "$BOOT/python" "$BOOT/uv/$ver/uv" "$PY_VERSION" >&2
+  fi
   exit 3
+}
+
+get_uv() { # $1 = why (no-python | no-ensurepip): consented pinned uv download; sets UV
+  local why="$1" key ver target sum url what tmp got
+  key="$(os_arch)"
+  ver="$(uv_version)"
+  read -r target sum <<< "$(uv_pin "$key")"
+  [[ -n "${target:-}" ]] || { say "no pinned uv for $key"; exit 1; }
+  url="https://github.com/astral-sh/uv/releases/download/$ver/uv-$target.tar.gz"
+  if [[ "$why" == no-ensurepip ]]; then
+    what="Download uv $ver ($url, sha256 $sum) into $BOOT/uv/$ver to make the z0 venv from $PY."
+  else
+    what="Download uv $ver ($url, sha256 $sum) into $BOOT/uv/$ver, then CPython $PY_VERSION into $BOOT/python."
+    [[ -n "$UV" ]] && what="Download CPython $PY_VERSION with $UV into $BOOT/python."
+  fi
+  consent "$what" || manual_and_exit "$why" "$ver" "$url" "$sum"
+  mkdir -p "$BOOT"
+  own "$BOOT"
+  [[ -z "$UV" ]] || return 0
+  tmp="$BOOT/uv-$ver.tar.gz"
+  fetch "$url" "$tmp"
+  got="$(sha256 "$tmp")"
+  if [[ "$got" != "$sum" ]]; then
+    rm -f "$tmp"
+    say "uv checksum mismatch: got $got, want $sum"
+    exit 1
+  fi
+  mkdir -p "$BOOT/uv/$ver"
+  tar -xzf "$tmp" -C "$BOOT/uv/$ver" --strip-components=1
+  rm -f "$tmp"
+  UV="$BOOT/uv/$ver/uv"
+  journal uv "$BOOT/uv/$ver"
+}
+
+venv_ready() { [[ -x "$VENV/bin/python" ]] && "$VENV/bin/python" -c 'import yaml' 2> /dev/null; }
+
+make_venv() { # returns non-zero on any failure (set -e does not apply inside an `if`)
+  if [[ -n "$UV" ]]; then
+    "$UV" venv --quiet --python "$PY" "$VENV" || return 1
+    "$UV" pip install --quiet -p "$VENV/bin/python" --require-hashes -r "$LOCK" || return 1
+  else
+    "$PY" -m venv "$VENV" || return 1
+    "$VENV/bin/python" -m pip install --quiet --no-cache-dir --disable-pip-version-check \
+      --require-hashes -r "$LOCK" || return 1
+  fi
 }
 
 umask 077
@@ -145,47 +215,27 @@ export UV_CACHE_DIR="$BOOT/uv-cache" UV_PYTHON_INSTALL_DIR="$BOOT/python" \
 unset PIP_BREAK_SYSTEM_PACKAGES
 
 if [[ -z "$PY" ]]; then
-  key="$(os_arch)"
-  ver="$(uv_version)"
-  read -r target sum <<< "$(uv_pin "$key")"
-  [[ -n "${target:-}" ]] || { say "no pinned uv for $key"; exit 1; }
-  url="https://github.com/astral-sh/uv/releases/download/$ver/uv-$target.tar.gz"
-  what="Download uv $ver ($url, sha256 $sum) into $BOOT/uv/$ver, then CPython $PY_VERSION into $BOOT/python."
-  [[ -n "$UV" ]] && what="Download CPython $PY_VERSION with $UV into $BOOT/python."
-  consent "$what" || manual_and_exit "$ver" "$url" "$sum"
-  mkdir -p "$BOOT"
-  own "$BOOT"
-  if [[ -z "$UV" ]]; then
-    tmp="$BOOT/uv-$ver.tar.gz"
-    fetch "$url" "$tmp"
-    got="$(sha256 "$tmp")"
-    if [[ "$got" != "$sum" ]]; then
-      rm -f "$tmp"
-      say "uv checksum mismatch: got $got, want $sum"
-      exit 1
-    fi
-    mkdir -p "$BOOT/uv/$ver"
-    tar -xzf "$tmp" -C "$BOOT/uv/$ver" --strip-components=1
-    rm -f "$tmp"
-    UV="$BOOT/uv/$ver/uv"
-    journal uv "$BOOT/uv/$ver"
-  fi
+  get_uv no-python
   "$UV" python install "$PY_VERSION"
   journal python "$BOOT/python"
   PY="$(find_python || true)"
   [[ -n "$PY" ]] || { say "uv did not produce a python >= 3.10"; exit 1; }
 fi
 
-if ! { [[ -x "$VENV/bin/python" ]] && "$VENV/bin/python" -c 'import yaml' 2> /dev/null; }; then
+if ! venv_ready; then
+  # Debian/Ubuntu ship python3 without ensurepip unless python3-venv is installed.
+  if [[ -z "$UV" ]] && ! "$PY" -c 'import ensurepip, venv' > /dev/null 2>&1; then
+    get_uv no-ensurepip
+  fi
   mkdir -p "$BOOT"
   own "$BOOT"
-  if [[ -n "$UV" ]]; then
-    "$UV" venv --quiet --python "$PY" "$VENV"
-    "$UV" pip install --quiet -p "$VENV/bin/python" --require-hashes -r "$LOCK"
-  else
-    "$PY" -m venv "$VENV"
-    "$VENV/bin/python" -m pip install --quiet --no-cache-dir --disable-pip-version-check \
-      --require-hashes -r "$LOCK"
+  created=0
+  [[ -e "$VENV" ]] || created=1
+  if ! make_venv; then
+    # A venv this run created but could not finish is removed: a re-run starts clean.
+    if ((created)); then rm -rf "$VENV"; fi
+    say "could not create the z0 venv at $VENV"
+    exit 1
   fi
   own "$VENV"
   journal venv "$VENV"

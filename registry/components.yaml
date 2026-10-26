@@ -51,8 +51,23 @@ components:
         - {id: oh-my-pi.build, kind: run, consent: {class: C0}, where: build, needs: [oh-my-pi.install],
            argv: [bun, run, build], probe: {exists: "{tree}/packages/coding-agent/dist"},
            legacy_projection: true, timeout_s: 1800}
+        # S1: `./omp setup` links the OMP harness to the tree it runs from, so it runs
+        # only from a stamped release (with its own deps and build), never a checkout.
+        - {id: oh-my-pi.build_tree, kind: build_tree, consent: {class: C0}, network: true, where: build,
+           when: [{fact: harnesses.omp.state, op: eq, value: installed}],
+           creates: ["$Z0_HOME/build/{id}/{pin}"], undo: {kind: remove_owned}}
+        - {id: oh-my-pi.release, kind: stage_release, consent: {class: C0}, where: release,
+           needs: [oh-my-pi.build_tree], when: [{fact: harnesses.omp.state, op: eq, value: installed}],
+           creates: ["~/.local/lib/oh-my-pi/releases/{pin}"], undo: {kind: remove_owned}}
+        - {id: oh-my-pi.release.deps, kind: run, consent: {class: C0}, network: true, where: release,
+           needs: [oh-my-pi.release], when: [{fact: harnesses.omp.state, op: eq, value: installed}],
+           argv: [bun, install], creates: ["~/.local/lib/oh-my-pi/releases/{pin}/node_modules"], timeout_s: 1800}
+        - {id: oh-my-pi.release.build, kind: run, consent: {class: C0}, where: release,
+           needs: [oh-my-pi.release.deps], when: [{fact: harnesses.omp.state, op: eq, value: installed}],
+           argv: [bun, run, build], probe: {exists: "~/.local/lib/oh-my-pi/releases/{pin}/packages/coding-agent/dist"},
+           timeout_s: 1800}
         - {id: oh-my-pi.setup, kind: harness_plugin, harness: omp, consent: {class: C1, bundle: harness},
-           where: build, needs: [oh-my-pi.build], argv: [./omp, setup],
+           where: release, needs: [oh-my-pi.release.build], argv: [./omp, setup],
            when: [{fact: harnesses.omp.state, op: eq, value: installed}],
            probe: {exists: "$Z0_HOME/onboard/stamps/oh-my-pi.setup"}, undo: {kind: restore_backup}}
         - {id: oh-my-pi.verify, kind: check, consent: {class: C0}, where: build,
@@ -231,9 +246,9 @@ components:
            probe: {exists: "~/.local/lib/z0int-runtime/{pin}/bin/z0int"},
            when: [{fact: network.github, op: eq, value: true}]}
         - {id: z0intelligence.shim, kind: write_file, consent: {class: C1, bundle: services}, where: home,
-           needs: [z0intelligence.install], creates: ["~/.z0int/bin/python"], undo: {kind: remove_owned}}
+           target_where: venv, needs: [z0intelligence.install], creates: ["~/.z0int/bin/python"], undo: {kind: remove_owned}}
         - {id: z0intelligence.hermes_json, kind: write_file, consent: {class: C1, bundle: services}, where: home,
-           needs: [z0intelligence.shim], creates: ["~/.z0int/config/hermes.json"], undo: {kind: restore_backup}}
+           target_where: venv, needs: [z0intelligence.shim], creates: ["~/.z0int/config/hermes.json"], undo: {kind: restore_backup}}
         - {id: z0intelligence.checks.import, kind: check, consent: {class: C0}, where: venv,
            needs: [z0intelligence.shim],
            argv: ["~/.z0int/bin/python", -c, "import z0int, mcp, aodl_contract, fff, typesafe_sdk"]}
@@ -591,7 +606,7 @@ components:
            needs: [dash.release.deps], when: [{fact: tailscale.ipv4, op: missing}],
            argv: [bun, run, index.ts]}
         - {id: dash.bridge.env, kind: write_file, consent: {class: C1, bundle: services}, where: home,
-           needs: [dash.release.deps], when: [{fact: tailscale.ipv4, op: exists}],
+           target_where: release, needs: [dash.release.deps], when: [{fact: tailscale.ipv4, op: exists}],
            creates: ["~/.config/dash-services/bridge.env"], undo: {kind: restore_backup}}
         - {id: dash.bridge.wait_tailnet, kind: write_file, consent: {class: C1, bundle: services}, where: home,
            needs: [dash.release.deps], when: [{fact: tailscale.ipv4, op: exists}],

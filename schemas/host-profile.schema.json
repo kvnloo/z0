@@ -143,7 +143,9 @@
             "propertyNames": { "enum": ["CLAUDE_CONFIG_DIR", "CODEX_HOME", "PI_CODING_AGENT_DIR", "HERMES_HOME"] },
             "additionalProperties": { "$ref": "#/$defs/path" }
           },
-          "policy_excluded": { "type": "boolean" }
+          "policy_excluded": { "type": "boolean" },
+          "path": { "$ref": "#/$defs/path", "description": "The resolved binary of an allowed, installed harness." },
+          "bin_dir": { "$ref": "#/$defs/path", "description": "P1: the dir of a policy-excluded (`configure: never`) binary; the plan keeps that dir off the prepared PATH." }
         },
         "additionalProperties": false
       }

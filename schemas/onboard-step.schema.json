@@ -26,6 +26,10 @@
     "consent": { "$ref": "#/$defs/consent" },
     "network": { "type": "boolean", "default": false },
     "where": { "$ref": "#/$defs/where" },
+    "target_where": {
+      "$ref": "#/$defs/where",
+      "description": "write_file only: where the written file points live code (the shim's interpreter, an env file's release). S1 requires release or venv; the plan checks it with kernel.decide_exec_root."
+    },
     "argv": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
     "env": {
       "type": "object",
