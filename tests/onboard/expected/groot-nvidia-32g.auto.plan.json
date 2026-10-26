@@ -96,7 +96,7 @@
     }
   ],
   "pin_policy": "pinned",
-  "plan_hash": "7ab6a8561c644ca18748749c411a9f96cf7462985cc1a1004bcea15267d2946f",
+  "plan_hash": "efe629cdd83d075808749f7f09a3aceb90df93adeb96694d33c1c967956f36c7",
   "prepared_path": [
     "$Z0_HOME/bin/links",
     "~/.bun/bin",
@@ -105,7 +105,7 @@
   ],
   "profile": "personal",
   "registry": {
-    "registry/components.yaml": "cdc4805c03a2474f5a8867bc2f8e5a570c00ffcb64e37daf34d5db0926a18d2e",
+    "registry/components.yaml": "fabc37e4ea615c810218080aaccfe7a38e389d5e97048a8fe4feabd0c47227fd",
     "registry/harnesses.yaml": "1c2b9ba37ca974e4aa1ed1f6990561ea303fc7e1f73c0fb4c6cc4802d5b4a7b8",
     "registry/onboarding.yaml": "b0c3e2b4c8e7a17bde8a5cb2378c90f6009b4464879a76406f6ae3cdc7e9b9ce",
     "registry/profiles.yaml": "8ef0b2b147bf7db252328ee9cfc981a81867bcf6533362621138bee1abd2e6eb",
@@ -721,10 +721,8 @@
       "step": {
         "argv": [
           "~/.z0int/bin/python",
-          "-m",
-          "z0int",
-          "doctor",
-          "--json"
+          "-c",
+          "import json, sys; from z0int.doctor import run_doctor; r = run_doctor().to_dict(); bad = [c['id'] for c in r['checks'] if c.get('required') and not c.get('ok') and c['id'] != 'repo_root']; print(json.dumps({'unresolved': bad, 'checks': len(r['checks'])})); sys.exit(1 if bad else 0)"
         ],
         "component": "z0intelligence",
         "consent": {

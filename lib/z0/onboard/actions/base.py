@@ -214,6 +214,7 @@ class ActionCtx:
         env.update(FIXED_ENV)
         # tool download caches live in z0's own cache dir, never in ~/.bun (rollback R2)
         env["BUN_INSTALL_CACHE_DIR"] = os.path.join(self.z0_home, "cache", "bun")
+        env["BUN_RUNTIME_TRANSPILER_CACHE_PATH"] = os.path.join(self.z0_home, "cache", "bun-transpiler")
         env["PATH"] = os.pathsep.join(self.path_dirs(venv))
         if venv:
             env["VIRTUAL_ENV"] = venv

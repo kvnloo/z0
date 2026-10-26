@@ -253,7 +253,10 @@ components:
            needs: [z0intelligence.shim],
            argv: ["~/.z0int/bin/python", -c, "import z0int, mcp, aodl_contract, fff, typesafe_sdk"]}
         - {id: z0intelligence.checks.doctor, kind: check, consent: {class: C0}, where: venv,
-           needs: [z0intelligence.checks.import], argv: ["~/.z0int/bin/python", -m, z0int, doctor, --json]}
+           needs: [z0intelligence.checks.import],
+           argv: ["~/.z0int/bin/python", -c, "import json, sys; from z0int.doctor import run_doctor; r = run_doctor().to_dict(); bad = [c['id'] for c in r['checks'] if c.get('required') and not c.get('ok') and c['id'] != 'repo_root']; print(json.dumps({'unresolved': bad, 'checks': len(r['checks'])})); sys.exit(1 if bad else 0)"]}
+        # repo_root is excluded: z0int's doctor derives it from __file__, so the non-editable
+        # release runtime (principle 5) always reports it missing (upstream, WP-I series)
         - {id: z0intelligence.verify, kind: check, consent: {class: C0}, where: venv,
            needs: [z0intelligence.install], argv: [python3, -m, z0int, --help], legacy_projection: true}
         - {id: z0intelligence.plugin.claude, kind: harness_plugin, harness: claude-code,
