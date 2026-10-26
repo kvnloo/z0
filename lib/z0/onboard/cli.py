@@ -125,21 +125,6 @@ def sandbox_from_env(env) -> dict:
     return kwargs
 
 
-def _choose_profile(args, snap) -> Optional[str]:
-    if args.profile or args.mode != "guided":
-        return args.profile
-    if not _tty():
-        print("z0 onboard: --guided needs a TTY (or pass --profile)", file=sys.stderr)
-        raise SystemExit(2)
-    from . import regsnap
-    names = list(regsnap.profiles(snap))
-    answer = input(f"profile [{'/'.join(names)}] (enter = hardware default): ").strip()
-    if answer and answer not in names:
-        print(f"z0 onboard: unknown profile {answer}", file=sys.stderr)
-        raise SystemExit(2)
-    return answer or None
-
-
 def _make_plan(host, snap, args, profile):
     from .plan import plan
     return plan(host, snap, mode=args.mode, profile=profile, with_ids=_ids(args.with_ids),
@@ -171,6 +156,8 @@ def write_run_dir(host: dict, plan_obj: dict) -> Path:
         _write_private(run / "plan.diff.txt", diff_text(plan_obj))
     finally:
         os.umask(old)
+    from .launchd import guided_previews
+    guided_previews(run, host, plan_obj)
     return run
 
 
@@ -236,12 +223,12 @@ def cmd_plan(args, bare: bool = False) -> int:
             host.setdefault("workspace", {})["host_match"] = "other"
     else:
         host, snap = run_detect(fetch=not getattr(args, "stdout", False))
-    if args.mode == "guided":
-        from .ui import configure
-        profile = configure(args, host, snap)
-    else:
-        profile = args.profile
     try:
+        if args.mode == "guided":
+            from .ui import configure
+            profile = configure(args, host, snap)
+        else:
+            profile = args.profile
         plan_obj = _make_plan(host, snap, args, profile)
         if getattr(args, "check_deterministic", False):
             again = _make_plan(json.loads(json.dumps(host)), snap, args, profile)

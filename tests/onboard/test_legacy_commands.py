@@ -31,6 +31,21 @@ class LegacyCommands(unittest.TestCase):
         with contextlib.redirect_stderr(io.StringIO()):
             self.assertEqual(commands.cmd_init('not-a-profile', dry_run=True), 1)
 
+    def test_init_real_install_routes_to_onboard_and_propagates_failure(self):
+        from z0 import commands
+        with patch('z0.onboard.cli.main', return_value=1) as onboard, \
+                patch.object(commands, '_run') as legacy, contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(commands.cmd_init('core'), 1)
+        onboard.assert_called_once_with(['--profile', 'core'])
+        legacy.assert_not_called()
+
+    def test_init_without_profile_keeps_onboard_mode_choice(self):
+        from z0 import commands
+        with patch('z0.onboard.cli.main', return_value=3) as onboard, \
+                contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(commands.cmd_init(), 3)
+        onboard.assert_called_once_with([])
+
     def test_doctor_inventory_missing_components_is_read_only(self):
         from z0 import commands
         with tempfile.TemporaryDirectory() as tmp, \

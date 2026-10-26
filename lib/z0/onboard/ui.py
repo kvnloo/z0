@@ -58,6 +58,8 @@ def configure(args, host, snap):
     if not ui.tty:
         raise ValueError('--guided needs a TTY')
     baseline = plan(host, snap, profile=args.profile, mode='guided')
+    if not baseline['profile']:
+        return None  # retain the hardware refusal; there is no safe default to select
     args.profile = ui.choice('Profile', list(regsnap.profiles(snap)),
                              args.profile or baseline['profile'])
     included = set((args.with_ids or '').split(',')) - {''}

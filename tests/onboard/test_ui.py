@@ -4,7 +4,7 @@ import io
 import unittest
 from unittest.mock import Mock, patch
 
-from tests.onboard.support import require_yaml, snapshot, fixture
+from tests.onboard.support import HAVE_YAML, require_yaml, snapshot, fixture
 from z0.onboard.ui import UI, configure, consent
 from z0.onboard import cli
 from z0.onboard.apply import consent_verdict
@@ -76,6 +76,87 @@ class UITests(unittest.TestCase):
         obj = {'mode': 'guided', 'grants': grants}
         self.assertEqual(consent_verdict(obj, entries[0]['step']).kind, k.Kind.ALLOW)
         self.assertEqual(consent_verdict(obj, entries[1]['step']).kind, k.Kind.ASK)
+
+
+class LaunchdTests(unittest.TestCase):
+    def test_xml_roundtrip_and_fcntl_wrapper_executes_real_child(self):
+        import plistlib
+        import subprocess
+        import sys
+        import tempfile
+        from pathlib import Path
+        from z0.onboard.launchd import render_plist
+        with tempfile.TemporaryDirectory() as tmp:
+            lock = str(Path(tmp) / 'locks' / 'service.lock')
+            xml = render_plist('com.z0.example', [sys.executable, '-c', 'print("child-ok")'],
+                               tmp, lock, env={'EXAMPLE': '<xml & escaping>'})
+            data = plistlib.loads(xml)
+            self.assertEqual(data['Label'], 'com.z0.example')
+            self.assertEqual(data['EnvironmentVariables']['EXAMPLE'], '<xml & escaping>')
+            child = subprocess.run(data['ProgramArguments'], capture_output=True, text=True, timeout=10)
+            self.assertEqual(child.returncode, 0, child.stderr)
+            self.assertEqual(child.stdout.strip(), 'child-ok')
+            self.assertTrue(Path(lock).is_file())
+            import fcntl
+            with open(lock, 'a') as held:
+                fcntl.flock(held, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                blocked = subprocess.run(data['ProgramArguments'], capture_output=True, text=True, timeout=10)
+                self.assertNotEqual(blocked.returncode, 0)
+                self.assertNotIn('child-ok', blocked.stdout)
+
+    def test_checkout_execution_and_relative_paths_refused(self):
+        import tempfile
+        from pathlib import Path
+        from z0.onboard.launchd import render_plist
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / '.git').mkdir()
+            with self.assertRaisesRegex(ValueError, 'checkout'):
+                render_plist('com.z0.example', ['/usr/bin/python3'], tmp, tmp + '/lock')
+        with self.assertRaisesRegex(ValueError, 'absolute'):
+            render_plist('com.z0.example', ['python3'], '/opt/example', '/opt/example/lock')
+
+    @unittest.skipUnless(HAVE_YAML, 'PyYAML not installed')
+    def test_guided_apple_real_registry_renders_private_preview_only(self):
+        import json
+        import os
+        import plistlib
+        import tempfile
+        from pathlib import Path
+        from z0.onboard.launchd import guided_previews
+        from z0.onboard.plan import plan
+        host, snap = fixture('apple-m-32g'), snapshot()
+        obj = plan(host, snap, mode='guided', profile='personal')
+        with tempfile.TemporaryDirectory() as tmp:
+            run = Path(tmp) / 'run'
+            run.mkdir()
+            out = TTY()
+            paths = guided_previews(run, host, obj, ui=UI(TTY('yes\n'), out), home=tmp)
+            self.assertEqual(len(paths), 1)
+            data = plistlib.loads(paths[0].read_bytes())
+            self.assertIn('/z0int-runtime/', data['ProgramArguments'][0])
+            self.assertIn('/z0int-shadow/', data['WorkingDirectory'])
+            self.assertIn('fcntl', data['ProgramArguments'][2])
+            self.assertEqual(paths[0].stat().st_mode & 0o777, 0o600)
+            self.assertFalse((Path(tmp) / 'Library').exists())
+            self.assertIn('review before manual installation', out.getvalue())
+
+    @unittest.skipUnless(HAVE_YAML, 'PyYAML not installed')
+    def test_auto_linux_non_tty_and_decline_never_render(self):
+        import tempfile
+        from pathlib import Path
+        from z0.onboard.launchd import guided_previews
+        from z0.onboard.plan import plan
+        host, snap = fixture('apple-m-32g'), snapshot()
+        obj = plan(host, snap, mode='guided', profile='personal')
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            cases = [(host, dict(obj, mode='auto'), UI(TTY('yes\n'), TTY())),
+                     (dict(host, os={'os': 'linux'}), obj, UI(TTY('yes\n'), TTY())),
+                     (host, obj, UI(io.StringIO('yes\n'), io.StringIO())),
+                     (host, obj, UI(TTY('\n'), TTY()))]
+            for h, p, ui in cases:
+                self.assertEqual(guided_previews(root, h, p, ui=ui, home=tmp), [])
+            self.assertEqual(list(root.iterdir()), [])
 
 
 @require_yaml

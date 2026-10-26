@@ -36,7 +36,7 @@ def cmd_status(args) -> int:
     return 0
 
 
-def acceptance_delta(previous, candidate, receipt, bundles):
+def acceptance_delta(previous, candidate, receipt, bundles, probe):
     """No C0, C2, changed step definition, or newly discovered step can run here.
 
     Successful prior results are retained for dependencies and reporting. All other
@@ -59,7 +59,11 @@ def acceptance_delta(previous, candidate, receipt, bundles):
             selected.add(sid)
             prior.pop(sid, None)
         elif done and old and old['step'] == step and state['status'] in ('todo', 'already_satisfied'):
-            entry['state'] = {'status': 'already_satisfied'}
+            if state['status'] == 'todo' and step['kind'] != 'check' and not probe(step):
+                entry['state'] = {'status': 'blocked', 'reason': 'prior_artifact_missing'}
+                prior.pop(sid, None)
+            else:
+                entry['state'] = {'status': 'already_satisfied'}
         elif state['status'] == 'todo':
             entry['state'] = {'status': 'blocked', 'reason': 'not_selected_by_accept'}
     # A selected step must not consume an unexecuted C0/new prerequisite.
@@ -97,23 +101,31 @@ def cmd_accept(args) -> int:
             request = request_from_plan(previous, snap)
             grants = {'bundles': sorted(set(previous['grants']['bundles']) | bundles), 'source': 'flag'}
             # Limit grants before planning as well as limiting execution afterwards.
+            done = {s['id'] for s in receipt.get('steps') or []
+                    if s['status'] in ('passed', 'already_satisfied')}
             grants['steps'] = [e['step']['id'] for e in previous['steps']
                                if e['step']['consent']['class'] == 'C1'
-                               and e['step']['consent'].get('bundle') in bundles]
+                               and (e['step']['consent'].get('bundle') in bundles
+                                    or e['step']['id'] in done)]
             request['grants'] = grants
             candidate = plan(host, snap, **request)
             if candidate['registry'] != previous['registry']:
                 raise ApplyError(4, 'registry changed since the last plan; run ./z0 onboard again')
-            candidate, prior, selected = acceptance_delta(previous, candidate, receipt, bundles)
+            deps = cli.make_deps(snap, detect=False)
+            journal = journal_mod.Journal(run / 'journal.jsonl', run.name)
+            ctx = make_ctx(run, candidate, host, deps, journal)
+            from .apply import satisfied_now
+            candidate, prior, selected = acceptance_delta(
+                previous, candidate, receipt, bundles, lambda step: satisfied_now(ctx, step))
             if not selected:
                 print('No runnable pending steps in those bundles. Run ./z0 onboard status; '
                       'unmet prerequisites need a normal ./z0 onboard rerun.')
-                return 0
+                requested = [e for e in candidate['steps'] if e['step']['consent']['class'] == 'C1'
+                             and e['step']['consent'].get('bundle') in bundles]
+                return 3 if any(e['state']['status'] not in ('already_satisfied',) for e in requested) else 0
             write_private(run / 'plan.replan.json', json.dumps(candidate, indent=2, sort_keys=True) + '\n')
-            journal = journal_mod.Journal(run / 'journal.jsonl', run.name)
             journal.write('accept', bundles=sorted(bundles), steps=sorted(selected),
                           plan_hash=candidate['plan_hash'])
-            deps = cli.make_deps(snap, detect=False)
             ctx = make_ctx(run, candidate, host, deps, journal)
             results = execute_plan(ctx, candidate, deps)
             results.update(prior)
