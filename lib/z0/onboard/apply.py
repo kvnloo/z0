@@ -190,7 +190,8 @@ def consent_verdict(plan_obj: dict, step: dict) -> k.Verdict:
     cls = k.ConsentClass[step["consent"]["class"]]
     grants = plan_obj.get("grants") or {}
     source = {"tty": k.Source.TTY, "llm": k.Source.LLM}.get(grants.get("source"), k.Source.FLAG)
-    granted = cls is k.ConsentClass.C1 and step["consent"].get("bundle") in (grants.get("bundles") or [])
+    granted = (cls is k.ConsentClass.C1 and step["consent"].get("bundle") in (grants.get("bundles") or [])
+               and ("steps" not in grants or step["id"] in grants["steps"]))
     return k.decide_consent(mode, cls, granted, source)
 
 

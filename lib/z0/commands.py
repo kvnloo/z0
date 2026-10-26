@@ -36,6 +36,12 @@ def _git_branch(path: Path) -> str | None:
 
 
 def cmd_init(profile: str | None = None, dry_run: bool = False) -> int:
+    # Keep the profile-only dry-run contract; real installs use the consent engine.
+    if not dry_run:
+        from .onboard.cli import main as onboard
+        print("z0 init now uses ./z0 onboard (journaled installs and explicit consent).")
+        return onboard(["--profile", profile] if profile else [])
+    print("For installation and acceptance checks, use ./z0 onboard.")
     if profile is None:
         print("What are you trying to build?\n")
         names = list(registry.profiles().keys())
@@ -149,6 +155,7 @@ def cmd_doctor() -> int:
     ws = registry.load_workspace()
     comps = registry.components()
     print("Zer0 System\n")
+    print("For journaled setup: ./z0 onboard; last receipt: ./z0 onboard status.\n")
     warnings: list[str] = []
     for cid, meta in sorted(comps.items()):
         dest = registry.repo_dir(cid, ws)

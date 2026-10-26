@@ -658,7 +658,8 @@ def plan(host: dict, snap: dict, *, mode: str = "auto", profile: Optional[str] =
                 # §3: C2 is confirmed per step on a TTY, never by a bundle grant.
                 granted = grants.get("source") == "tty" and sid in confirmed
             else:
-                granted = step["consent"].get("bundle") in (grants.get("bundles") or [])
+                granted = (step["consent"].get("bundle") in (grants.get("bundles") or [])
+                           and ("steps" not in grants or sid in grants["steps"]))
             verdict = k.decide_consent(kmode, cls, granted, grant_source)
             if verdict.kind is not k.Kind.ALLOW:
                 state = _state(verdict)
@@ -788,7 +789,8 @@ def plan(host: dict, snap: dict, *, mode: str = "auto", profile: Optional[str] =
         "pin_policy": pin_policy,
         "llm": llm,
         "grants": {"bundles": sorted(set(grants.get("bundles") or [])),
-                   "source": grants.get("source", "none")},
+                   "source": grants.get("source", "none"),
+                   **({"steps": sorted(set(grants["steps"]))} if "steps" in grants else {})},
         "registry": dict(sorted(provenance.items())),
         "targets": targets,
         "components": summary,
