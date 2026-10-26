@@ -27,7 +27,7 @@ ROOT="$(cd "$(dirname "$SELF")/.." && pwd)"
 HARNESS="" PROFILE="" RUN=1 Z0INT_SHA="" ENGINE="" OUT="" IMAGE="ubuntu:24.04"
 CLAUDE_VERSION="${E2E_CLAUDE_VERSION:-2.1.310}"
 CODEX_VERSION="${E2E_CODEX_VERSION:-0.162.1}"
-AGENT_TIMEOUT="${E2E_AGENT_TIMEOUT:-3000}"
+AGENT_TIMEOUT="${E2E_AGENT_TIMEOUT:-4500}"
 INSIDE=0
 while (($#)); do
   case "$1" in
@@ -107,6 +107,10 @@ if ((INSIDE)); then
   if grep -qF -- "$CANARY" "$T" 2> /dev/null; then echo "canary found in transcript"; rc=1; fi
   cp "$H/.z0/onboard/state" "/out/$CELL.onboard-state.json" 2> /dev/null || true
   cp "$H/.z0int/contribute/suggestion.json" "/out/$CELL.suggestion.json" 2> /dev/null || true
+  # receipts and state for review (no secrets: contribute writes names and hashes only)
+  mkdir -p "/out/$CELL.contribute" && cp -r "$H/.z0int/contribute/receipts" "$H/.z0int/contribute/state.json" \
+    "/out/$CELL.contribute/" 2> /dev/null || true
+  cp "$H/.z0/onboard/current/report.md" "/out/$CELL.onboard-report.md" 2> /dev/null || true
   chmod -R a+r /out
   exit $rc
 fi
