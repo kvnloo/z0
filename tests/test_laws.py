@@ -67,6 +67,31 @@ class FailClosedRegressions(unittest.TestCase):
 
 
 class CacheTests(unittest.TestCase):
+    def test_checker_identity_covers_source_lean_and_clang_version(self):
+        from laws.cache import checker_key
+        with temporary_directory() as folder:
+            root = Path(folder)
+            source, lean = root/'bendtt.lean', root/'lean'
+            source.write_bytes(b'checker source')
+            lean.write_bytes(b'Lean binary')
+            original = checker_key(source, lean, 'clang version one')
+            self.assertEqual(original, checker_key(source, lean, 'clang version one'))
+            self.assertNotEqual(original, checker_key(source, lean, 'clang version two'))
+            source.write_bytes(b'changed checker')
+            self.assertNotEqual(original, checker_key(source, lean, 'clang version one'))
+            source.write_bytes(b'checker source')
+            lean.write_bytes(b'changed Lean')
+            self.assertNotEqual(original, checker_key(source, lean, 'clang version one'))
+
+    def test_init_rejects_system_temp_root_and_symlink_escape(self):
+        from laws.cli import init_domain
+        with temporary_directory() as folder:
+            root = Path(folder)
+            (root/'redirect').symlink_to('/tmp', target_is_directory=True)
+            for target in (Path('/tmp'), root/'redirect'):
+                with self.subTest(root=str(target)), self.assertRaises(RuntimeError):
+                    init_domain(target, 'demo')
+
     def test_cache_rejects_stale_input_hash_and_tampered_artifact(self):
         import laws
         self.assertTrue(hasattr(laws, 'validate_cache'), 'cache acceptance missing')

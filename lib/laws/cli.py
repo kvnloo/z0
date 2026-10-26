@@ -8,13 +8,13 @@ import subprocess
 import sys
 
 from . import TOOLCHAIN, load_manifest, prove
-from .cache import scratch_root
+from .cache import scratch_root, safe_directory
 
 
 def init_domain(root, name):
-    root = Path(root).resolve()
     if not re.fullmatch(r'[a-z][a-z0-9_]*', name):
         raise ValueError('domain must be a lowercase identifier')
+    root = safe_directory(root)
     manifest = root/'laws.toml'
     if manifest.exists():
         data = load_manifest(root)
