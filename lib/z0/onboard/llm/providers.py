@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import json
 import os
-import shlex
 import shutil
 import subprocess
 import tempfile
@@ -53,41 +52,24 @@ def http_json(url, body, timeout, headers=None):
 
 
 def local_endpoints(env):
-    """Observe running server argv only. Never execute an unregistered binary.
+    """Probe public loopback defaults only after observing a server process name.
 
-    Loopback and standard server ports below are public defaults, not host settings.
-    A process must explicitly bind IPv4 loopback; wildcard/default binds are ignored.
+    Read `comm`, not full argv: another process's argv may contain credentials.
+    Never start a model, scan arbitrary ports, or inherit a remote OLLAMA_HOST.
+    Nonstandard endpoints need future typed detection evidence, not an env URL.
     """
     try:
-        result = subprocess.run(["ps", "-axo", "command="], capture_output=True, text=True,
+        result = subprocess.run(["ps", "-axo", "comm="], capture_output=True, text=True,
                                 timeout=2, env={"PATH": os.defpath}, check=False)
     except (OSError, subprocess.TimeoutExpired):
         return []
+    names = {Path(line.strip()).name for line in result.stdout.splitlines()}
     endpoints = []
-    for line in result.stdout.splitlines():
-        try:
-            args = shlex.split(line)
-        except ValueError:
-            continue
-        if not args or Path(args[0]).name not in ("llama-server", "ollama"):
-            continue
-        if Path(args[0]).name == "ollama":
-            # Ollama defaults to loopback. No inherited OLLAMA_HOST assumption:
-            # verify the detected endpoint by GET /api/tags before a send.
-            if args[1:] == ["serve"] and not env.get("OLLAMA_HOST"):
-                endpoints.append(("http://127.0.0.1:11434", "ollama"))
-            continue
-        def flag(name):
-            for index, arg in enumerate(args):
-                if arg.startswith(name + "="):
-                    return arg.split("=", 1)[1]
-                if arg == name and index + 1 < len(args):
-                    return args[index + 1]
-            return ""
-        host, port = flag("--host"), flag("--port") or "8080"
-        if host == "127.0.0.1" and port.isdecimal() and 0 < int(port) < 65536:
-            endpoints.append((f"http://127.0.0.1:{port}", "llama"))
-    return list(dict.fromkeys(endpoints))
+    if "llama-server" in names:
+        endpoints.append(("http://127.0.0.1:8080", "llama"))
+    if "ollama" in names:
+        endpoints.append(("http://127.0.0.1:11434", "ollama"))
+    return endpoints
 
 
 @dataclass
@@ -122,7 +104,7 @@ class Provider:
             return bool(self.executable)
         key_name = self.row.get("key_name")
         # A model must be explicitly the free route; never fall through to a paid one.
-        return (key_name in self.env and bool(self.env.get(key_name))
+        return (key_name in self.env
                 and (self.model == "openrouter/free" or self.model.endswith(":free")))
 
     def send(self, prompt, timeout):
@@ -168,11 +150,23 @@ class Provider:
             if self.id == "claude":
                 argv = [self.executable, "-p", "--output-format", "json", "--model", self.model,
                         "--strict-mcp-config", "--mcp-config", str(config), "--tools", "",
-                        "--max-turns", "1"]
+                        "--max-turns", "1", "--safe-mode", "--setting-sources", "",
+                        "--no-session-persistence", "--disable-slash-commands", "--no-chrome",
+                        "--system-prompt", "Classify the supplied closed question. Return only JSON."]
             else:
                 argv = [self.executable, "exec", "--sandbox", "read-only", "--skip-git-repo-check",
                         "-m", self.model, "--output-schema", str(schema),
-                        "--output-last-message", str(output), "-"]
+                        "--ephemeral", "--ignore-user-config", "--ignore-rules"]
+                # Read-only sandboxing alone still permits commands and host reads.
+                # Disable tool-bearing features as well as hooks/plugins; unsupported
+                # CLI versions fail closed rather than retry with weaker isolation.
+                for feature in ("shell_tool", "unified_exec", "apps", "browser_use", "computer_use",
+                                "multi_agent", "multi_agent_v2", "hooks", "plugins", "remote_plugin",
+                                "image_generation", "view_image", "skill_search", "code_mode_host",
+                                "skill_mcp_dependency_install", "sleep_tool", "realtime_conversation",
+                                "tool_suggest", "goals"):
+                    argv += ["--disable", feature]
+                argv += ["--output-last-message", str(output), "-"]
             try:
                 result = subprocess.run(argv, input=prompt, text=True, capture_output=True,
                                         timeout=timeout, cwd=directory, env=self.env, check=False)

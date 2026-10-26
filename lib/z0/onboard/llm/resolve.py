@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from .. import kernel as k
-from ..redact import Redactor, from_env
+from ..redact import Redactor, from_env, secret_names
 from . import providers
 from .privacy import UnsafePrompt, probe_evidence, prompt_for
 from .questions import Question
@@ -55,13 +55,20 @@ class Context:
         for value in self.env.values():
             if isinstance(value, str) and value not in identity:
                 redactor.register(value)
+        for name in secret_names(self.snap):
+            redactor.register(self.env.get(name), minimum=1)
         return redactor
 
 
 def default_context():
     from .. import regsnap
+    from ..detect import Ctx, osinfo
     env = dict(os.environ)
-    return Context(snap=regsnap.load(), env=env, home=str(Path.home()),
+    snap = regsnap.load()
+    detection = Ctx(registry=snap)
+    os_name, _ = osinfo._os_arch(detection)
+    host_id = osinfo.host_id(osinfo._machine_id(detection, os_name), detection.hostname or "")
+    return Context(snap=snap, env=env, host_id=host_id, home=str(Path.home()),
                    username=env.get("USER", ""), hostnames=(socket.gethostname(), env.get("HOSTNAME", "")))
 
 
@@ -128,6 +135,12 @@ def validate_record(q, record):
         return False
     sha = record["prompt_sha256"]
     if not isinstance(sha, str) or len(sha) != 64 or any(c not in "0123456789abcdef" for c in sha):
+        return False
+    if "provider" in record:
+        if (not isinstance(record.get("provider"), str) or not isinstance(record.get("model"), str)
+                or k.decide_provider(k.provider_from_id(record["provider"])).kind is k.Kind.REFUSE):
+            return False
+    elif "model" in record:
         return False
     if record["source"] == "safe_default":
         return record["answer"] == q.safe_default and not record["accepted"]
@@ -204,6 +217,8 @@ def resolve(questions, mode, grants, llm_flag, answers_path, *, context=None):
     # Crucially: prepare/check ALL prompts before discovery or smoke sends.
     prompts = {}
     for q in questions:
+        if redactor.found_in(q.id.encode()) or any(v and v in q.id for v in ctx.canaries):
+            raise UnsafePrompt("unsafe question identifier")
         try:
             prompts[q.id] = prompt_for(q, redactor, ctx.username, ctx.hostnames, ctx.canaries)
         except UnsafePrompt:

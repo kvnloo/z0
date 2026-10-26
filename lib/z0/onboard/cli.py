@@ -155,6 +155,10 @@ def _resolve_plan(host, snap, args, profile, base, *, pure=False):
     from .llm.resolve import Context, ReplayError, resolve
     from .llm.privacy import UnsafePrompt
     import socket
+    replay = getattr(args, "answers", None)
+    if replay and not Path(replay).is_file():
+        from .plan import PlanError
+        raise PlanError("--answers must name an existing frozen answers file")
     questions = collect_questions(host, snap)
     if not questions and not getattr(args, "answers", None):
         return base
@@ -313,10 +317,23 @@ def replan_from(snap: dict) -> "callable":
     from .plan import plan
 
     def replan(host: dict, request: dict) -> dict:
+        answers = request.get("answers")
+        if answers and request.get("llm", "local") != "none":
+            from .plan import collect_questions
+            from .llm.resolve import validate_record
+            from hashlib import sha256
+            records = {}
+            for q in collect_questions(host, snap):
+                row = (answers.get("llm") or {}).get(q.id)
+                records[q.id] = row if validate_record(q, row) else {
+                    "question_id": q.id, "kind": q.kind, "source": "safe_default",
+                    "answer": q.safe_default, "accepted": False, "reason": "facts_changed",
+                    "prompt_sha256": sha256(b"").hexdigest()}
+            answers = {"llm": records} if records else None
         return plan(host, snap, mode=request.get("mode", "auto"), profile=request.get("profile"),
                     with_ids=request.get("with_ids") or [], without_ids=request.get("without_ids") or [],
                     grants=request.get("grants"), pin_policy=request.get("pin_policy", "pinned"),
-                    llm=request.get("llm", "local"))
+                    llm=request.get("llm", "local"), answers=answers)
     return replan
 
 
@@ -435,7 +452,12 @@ def onboard(args, host, snap, profile, plan_obj) -> int:
 
     plan_obj, consent_code, abort = _consent(args, host, snap, profile, plan_obj)
     if abort is None:
-        plan_obj = _resolve_plan(host, snap, args, profile, plan_obj)
+        from .plan import PlanError
+        try:
+            plan_obj = _resolve_plan(host, snap, args, profile, plan_obj)
+        except PlanError as exc:
+            print(f"z0 onboard: {exc}", file=sys.stderr)
+            return 2
     run = write_run_dir(host, plan_obj, snap)
     sys.stdout.write(summary_text(plan_obj, run))
     if abort is not None:

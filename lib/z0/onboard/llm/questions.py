@@ -98,8 +98,25 @@ def question(raw: dict, snap: dict) -> Question:
     kind = raw["kind"]
     if kind not in KINDS or not isinstance(raw.get("id"), str):
         raise ValueError("unknown question kind or invalid id")
-    facts = {key: copy.deepcopy(raw.get("facts", {})[key]) for key in FACT_KEYS[kind]
-             if key in raw.get("facts", {})}
+    source = raw.get("facts") or {}
+    facts = {}
+    strings = {"name", "dir", "symlink_target", "shebang", "executable", "release_root",
+               "tool", "family", "step_id"}
+    sequences = {"dirs", "driver_classes", "remediations"}
+    for key in FACT_KEYS[kind]:
+        value = source.get(key)
+        if key in strings and type(value) is str:
+            facts[key] = value
+        elif key in sequences and isinstance(value, list) and all(type(v) is str for v in value):
+            facts[key] = list(value)
+        elif key == "pin_present" and type(value) is bool:
+            facts[key] = value
+        elif key == "exit_code" and type(value) is int:
+            facts[key] = value
+    if kind == "failure_triage":
+        holds = source.get("conditions_hold") or {}
+        facts["conditions_hold"] = {name: holds.get(name) is True
+                                    for name in facts.get("remediations", [])}
     rows = (snap.get("harnesses") or {}).get("harnesses") or {}
     supplied = [c for c in raw.get("candidates", []) if type(c) is str]
     if kind == "harness_classify":

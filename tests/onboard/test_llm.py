@@ -319,6 +319,68 @@ class ResolverTests(unittest.TestCase):
                 "release_root": "~/release", "executable": exe}, "candidates": ["adopt", "conflict"]}, SNAP)
             self.assertFalse(q.accepts("adopt"))
 
+    def test_short_registered_secret_is_not_exempt_from_prompt_redaction(self):
+        self.ctx.snap["onboarding"]["llm"]["providers"].append(
+            {"id": "openrouter-free", "order": 2, "key_name": "TEST_API_KEY"})
+        self.ctx.env = {"TEST_API_KEY": "q!9x"}
+        self.provider.answer = '{"answer":"unsupported"}'
+        self.run_question(harness("q!9x"))
+        self.assertNotIn("q!9x", self.provider.calls[0][0])
+
+    def test_environment_values_not_in_registry_are_still_scrubbed(self):
+        self.ctx.env = {"UNREGISTERED_VALUE": CANARY}
+        self.provider.answer = '{"answer":"unsupported"}'
+        self.run_question(harness(CANARY))
+        self.assertNotIn(CANARY, self.provider.calls[0][0])
+
+    def test_escaped_and_unicode_environment_values_are_scrubbed_before_json(self):
+        secret = 'fixture-"quoted"-secret-\\\\-é'
+        self.ctx.env = {"OTHER_VALUE": secret}
+        self.provider.answer = '{"answer":"unsupported"}'
+        q = harness(secret)
+        self.run_question(q)
+        payload = json.loads(self.provider.calls[0][0].split("\n", 1)[1])
+        self.assertNotEqual(payload["facts"]["name"], secret)
+        self.assertEqual(payload["facts"]["name"], "[redacted]")
+
+    def test_unicode_identity_is_redacted_before_serialization(self):
+        self.ctx.home, self.ctx.username, self.ctx.hostnames = "/fixture-é", "usér", ("höst.invalid",)
+        self.ctx.redactor = Redactor(self.ctx.home)
+        self.provider.answer = '{"answer":"unsupported"}'
+        self.run_question(harness("/fixture-é/usér/höst.invalid"))
+        payload = json.loads(self.provider.calls[0][0].split("\n", 1)[1])
+        self.assertNotIn("usér", payload["facts"]["name"])
+        self.assertNotIn("höst.invalid", payload["facts"]["name"])
+        self.assertTrue(payload["facts"]["name"].startswith("~/"))
+
+    def test_projection_rejects_nested_payload_in_a_scalar_fact(self):
+        q = question({"id": "nested", "kind": "harness_classify", "facts": {
+            "name": {"file_contents": CANARY}, "shebang": [CANARY]},
+            "candidates": ["unsupported"]}, SNAP)
+        self.assertNotIn(CANARY, json.dumps(q.payload()))
+
+    def test_provider_fallback_order_skips_unavailable_and_ungranted(self):
+        local, remote = FakeProvider(available=False), FakeProvider(pid="claude")
+        forbidden = FakeProvider(pid="grok")
+        self.ctx.providers = [forbidden, local, remote]
+        row = self.run_question(llm_flag="auto", grants={"source": "flag", "llm_providers": ["claude"]})
+        self.assertEqual(row["provider"], "claude")
+        self.assertEqual(forbidden.probes, 0)
+        self.assertEqual(local.calls, [])
+        self.assertEqual(len(remote.calls), 1)
+
+    def test_replay_rechecks_policy_even_when_attacker_rehashes(self):
+        self.provider.answer = TimeoutError()
+        self.run_question()
+        saved = json.loads(self.path.read_text())
+        row = saved["answers"]["llm"]["fork"]
+        row.update(provider="grok", model="test-model")
+        saved["answers_sha256"] = digest(saved["answers"])
+        self.path.write_text(json.dumps(saved))
+        with self.assertRaises(ReplayError):
+            self.run_question()
+        self.assertEqual(len(self.provider.calls), 1)
+
 
 class ProviderTests(unittest.TestCase):
     def test_registry_order_and_model_defaults(self):
@@ -337,6 +399,9 @@ class ProviderTests(unittest.TestCase):
                                        "--strict-mcp-config"])
             self.assertEqual(argv[argv.index("--tools") + 1], "")
             self.assertEqual(argv[argv.index("--max-turns") + 1], "1")
+            self.assertIn("--safe-mode", argv)
+            self.assertIn("--no-session-persistence", argv)
+            self.assertEqual(argv[argv.index("--setting-sources") + 1], "")
             self.assertEqual(json.loads(Path(argv[argv.index("--mcp-config") + 1]).read_text()), {"mcpServers": {}})
             self.assertEqual(kwargs["input"], "redacted prompt")
             self.assertNotIn("redacted prompt", argv)
@@ -353,6 +418,10 @@ class ProviderTests(unittest.TestCase):
             self.assertEqual(schema, providers.ANSWER_SCHEMA)
             Path(argv[argv.index("--output-last-message") + 1]).write_text('{"answer":"yes"}')
             self.assertEqual(argv[-1], "-")
+            for flag in ("--ephemeral", "--ignore-user-config", "--ignore-rules"):
+                self.assertIn(flag, argv)
+            disabled = {argv[i + 1] for i, arg in enumerate(argv[:-1]) if arg == "--disable"}
+            self.assertTrue({"shell_tool", "unified_exec", "hooks", "plugins", "multi_agent"} <= disabled)
             return subprocess.CompletedProcess(argv, 0, CANARY, CANARY)
         with patch.object(providers.subprocess, "run", side_effect=run):
             self.assertEqual(provider.send("safe", 3), '{"answer":"yes"}')
@@ -372,6 +441,14 @@ class ProviderTests(unittest.TestCase):
         provider.env = {}
         self.assertFalse(provider.available())
         self.assertNotIn(CANARY, repr(provider))
+
+    def test_local_detection_reads_process_names_not_secret_bearing_argv(self):
+        result = subprocess.CompletedProcess([], 0, "llama-server\nollama\n", "")
+        with patch.object(providers.subprocess, "run", return_value=result) as run:
+            endpoints = providers.local_endpoints({})
+        self.assertEqual(run.call_args.args[0], ["ps", "-axo", "comm="])
+        self.assertEqual(len(endpoints), 2)
+        self.assertTrue(all(url.startswith("http://127.0.0.1:") for url, _ in endpoints))
 
     def test_local_not_running_is_not_started(self):
         provider = providers.Provider("local", "", env={})
@@ -466,6 +543,57 @@ class PlanIntegrationTests(unittest.TestCase):
         with patch.object(cli, "_tty", return_value=False), patch.object(cli, "_llm_offers", return_value=["claude"]):
             planned, _, _ = cli._consent(args, self.host, self.snap, None, base)
         self.assertNotIn("llm_providers", planned["grants"])
+
+    def test_missing_cli_replay_path_never_creates_a_file_or_calls(self):
+        from z0.onboard import cli
+        from z0.onboard.plan import PlanError
+        missing = Path(self.tmp.name) / "missing.yaml"
+        args = cli.build_parser().parse_args(["plan", "--stdout", "--answers", str(missing)])
+        args.mode = "auto"
+        base = cli._make_plan(self.host, self.snap, args, None)
+        with self.assertRaises(PlanError):
+            cli._resolve_plan(self.host, self.snap, args, None, base, pure=True)
+        self.assertFalse(missing.exists())
+        self.assertEqual(self.provider.calls, [])
+
+    def test_freshness_replan_reuses_answers_and_defaults_on_new_facts(self):
+        from z0.onboard import cli
+        from z0.onboard.apply import request_from_plan
+        from z0.onboard.plan import collect_questions, plan
+        grants = {"source": "none", "bundles": []}
+        answers = resolve(collect_questions(self.host, self.snap), "auto", grants, "local", None, context=self.ctx)
+        first = plan(self.host, self.snap, answers=answers)
+        request = request_from_plan(first, self.snap)
+        replan = cli.replan_from(self.snap)
+        self.assertEqual(replan(self.host, request), first)
+        changed = copy.deepcopy(self.host)
+        changed["unknowns"][0]["facts"]["pin_present"] = False
+        again = replan(changed, request)
+        self.assertEqual(again["llm_decisions"][0]["answer"], "no")
+        self.assertEqual(again["llm_decisions"][0]["reason"], "facts_changed")
+        self.assertEqual(len(self.provider.calls), 1)
+
+    def test_verify_receipt_and_report_use_actual_plan_decisions(self):
+        from tests.onboard.fakeapply import FakeApply
+        from z0.onboard.apply import apply_run
+        from z0.onboard.plan import collect_questions, plan
+        from z0.onboard.verify import verify_run
+        fake = FakeApply(Path(self.tmp.name))
+        host = fake.detect()
+        host["unknowns"] = self.host["unknowns"]
+        ctx = Context(snap=fake.snap, env={}, providers=[self.provider], host_id=host["host_id"])
+        answers = resolve(collect_questions(host, fake.snap), "auto", {}, "local", None, context=ctx)
+        request = fake.request()
+        request.pop("llm")
+        planned = plan(host, fake.snap, llm="local", answers=answers, **request)
+        run = fake.write_run(host, planned)
+        deps = fake.deps(detect=False)
+        applied = apply_run(run, deps)
+        code, receipt = verify_run(run, deps, prior=applied.results, host=host, apply_code=applied.code)
+        self.assertEqual(receipt["llm_decisions"], planned["llm_decisions"])
+        self.assertIn("fork [fork_match]: yes", (run / "report.md").read_text())
+        self.assertEqual(json.loads((run / "receipt.json").read_text())["llm_decisions"], planned["llm_decisions"])
+        self.assertEqual(code, 0)
 
     def test_report_lists_decisions_and_reasons(self):
         from z0.onboard.plan import collect_questions, plan

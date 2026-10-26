@@ -30,8 +30,8 @@ class Redactor:
         for value in values:
             self.register(value)
 
-    def register(self, value: Optional[str]) -> None:
-        if value and len(value) >= MIN_SECRET:
+    def register(self, value: Optional[str], *, minimum: int = MIN_SECRET) -> None:
+        if value and len(value) >= minimum:
             self._values.add(value)
 
     @property

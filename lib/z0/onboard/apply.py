@@ -127,7 +127,9 @@ def request_from_plan(plan_obj: dict, snap: dict) -> dict:
             "with_ids": [c for c in targets if c not in base],
             "without_ids": [c for c in base if c not in targets],
             "grants": plan_obj.get("grants"), "pin_policy": plan_obj.get("pin_policy", "pinned"),
-            "llm": plan_obj.get("llm", "local")}
+            "llm": plan_obj.get("llm", "local"),
+            **({"answers": {"llm": {r["question_id"]: r for r in plan_obj["llm_decisions"]}}}
+               if plan_obj.get("llm_decisions") else {})}
 
 
 def _todo_c1(plan_obj: dict, before: Optional[dict] = None) -> list:
@@ -166,6 +168,13 @@ def freshen(run: Path, plan_obj: dict, deps: Deps, yes: bool, journal) -> tuple:
             journal.write("replan", plan_hash=new_plan["plan_hash"], decision="reconfirm_declined")
             raise ApplyError(3, "the re-plan would widen what you confirmed; nothing applied. "
                                 "Re-run ./z0 onboard to confirm the new plan.")
+    if new_plan.get("llm_decisions"):
+        from .plan import collect_questions
+        from .llm.resolve import frozen_envelope
+        answers = {"llm": {r["question_id"]: r for r in new_plan["llm_decisions"]}}
+        envelope = frozen_envelope(collect_questions(host, deps.snap), new_plan["mode"],
+                                   new_plan["grants"], new_plan["llm"], new_plan["host_id"], answers)
+        write_private(run / "answers.replan.yaml", json.dumps(envelope, indent=2, sort_keys=True) + "\n")
     write_private(run / "plan.replan.json", json.dumps(new_plan, indent=2, sort_keys=True) + "\n")
     journal.write("replan", plan_hash=new_plan["plan_hash"], decision=decision.name.lower(),
                   drift=changed)
