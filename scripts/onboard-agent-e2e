@@ -24,7 +24,7 @@ set -euo pipefail
 
 SELF="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
 ROOT="$(cd "$(dirname "$SELF")/.." && pwd)"
-HARNESS="" PROFILE="" RUN=1 Z0INT_SHA="" ENGINE="" OUT="" IMAGE="ubuntu:24.04"
+HARNESS="" PROFILE="" RUN=1 Z0INT_SHA="${Z0INT_SHA:-}" ENGINE="" OUT="" IMAGE="ubuntu:24.04"
 CLAUDE_VERSION="${E2E_CLAUDE_VERSION:-2.1.310}"
 CODEX_VERSION="${E2E_CODEX_VERSION:-0.162.1}"
 AGENT_TIMEOUT="${E2E_AGENT_TIMEOUT:-4500}"
@@ -67,8 +67,9 @@ if ((INSIDE)); then
   if [[ "$HARNESS" == claude ]]; then
     as_user "curl -fsSL https://claude.ai/install.sh | bash -s $CLAUDE_VERSION > /dev/null 2>&1; claude --version"
   else
-    as_user "cd \$HOME && curl -fsSL -o codex.tgz https://github.com/openai/codex/releases/download/rust-v$CODEX_VERSION/codex-x86_64-unknown-linux-musl.tar.gz \
-      && tar -xzf codex.tgz && mv codex-x86_64-unknown-linux-musl \$HOME/.local/bin/codex && rm codex.tgz && codex --version"
+    as_user "mkdir -p \$HOME/.local/lib/codex && cd \$HOME/.local/lib/codex \
+      && curl -fsSL https://github.com/openai/codex/releases/download/rust-v$CODEX_VERSION/codex-package-x86_64-unknown-linux-musl.tar.gz | tar -xzf - \
+      && ln -sf \$HOME/.local/lib/codex/bin/codex \$HOME/.local/lib/codex/bin/codex-code-mode-host \$HOME/.local/bin/ && codex --version"
     install -o "$U" -m 600 /e2e-secrets/auth.json "$H/.codex/auth.json"
   fi
   echo "== cloning the candidate z0 ($Z0_SHA)"
@@ -111,7 +112,7 @@ if ((INSIDE)); then
   mkdir -p "/out/$CELL.contribute" && cp -r "$H/.z0int/contribute/receipts" "$H/.z0int/contribute/state.json" \
     "/out/$CELL.contribute/" 2> /dev/null || true
   cp "$H/.z0/onboard/current/report.md" "/out/$CELL.onboard-report.md" 2> /dev/null || true
-  chmod -R a+r /out
+  chmod -R a+rX /out
   exit $rc
 fi
 
