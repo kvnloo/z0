@@ -664,7 +664,7 @@ components:
     install:
       clone: https://github.com/kvnloo/z0evals.git
       branch: main
-      ref: 29a28336e526edfb4c3913c30df6eff12b28b2d6
+      ref: b6e3da7ad9eda4f87f9f8e94c6ab0fc97d44bb10
       command: python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
     verify:
       command: .venv/bin/python scripts/validate.py

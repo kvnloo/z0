@@ -66,7 +66,7 @@
   "llm": "local",
   "mode": "auto",
   "pin_policy": "pinned",
-  "plan_hash": "dcea4a862166729b0f8182b6c86aeccf874412829defd0ea1f2b1d51b3ac4a61",
+  "plan_hash": "7a13d8a522fcbf679af4688689233cc539fa70151c29b8e12d4de269981eccf6",
   "prepared_path": [
     "~/.z0/venv/bin",
     "/usr/bin",
@@ -74,7 +74,7 @@
   ],
   "profile": "core",
   "registry": {
-    "registry/components.yaml": "b9ac713c2aad79c44be198f264b0b740eaf964a2ba0300391b02f0c891728f4b",
+    "registry/components.yaml": "385c871bd4e42d81a6a4d32851bad7d346e0e55305f10a5561f16bc1acc4276a",
     "registry/harnesses.yaml": "1c2b9ba37ca974e4aa1ed1f6990561ea303fc7e1f73c0fb4c6cc4802d5b4a7b8",
     "registry/onboarding.yaml": "81fd5227e9ba0d0c90cb7a99fd21a3891bc50c3e46c210913b8af389db65fa7c",
     "registry/profiles.yaml": "8ef0b2b147bf7db252328ee9cfc981a81867bcf6533362621138bee1abd2e6eb",
@@ -1980,7 +1980,7 @@
         ],
         "network": true,
         "probe": {
-          "exists": "$Z0_HOME/repos/z0evals/.venv/.z0/requirements-29a28336e526edfb4c3913c30df6eff12b28b2d6"
+          "exists": "$Z0_HOME/repos/z0evals/.venv/.z0/requirements-b6e3da7ad9eda4f87f9f8e94c6ab0fc97d44bb10"
         },
         "where": "venv"
       }
@@ -2473,7 +2473,7 @@
   "warnings": [
     "oh-my-pi: pin d707478d4c5c not verified on origin (no mirror or checkout evidence)",
     "tokenomics: pin 65e8f2dd9d6c not verified on origin (no mirror or checkout evidence)",
-    "z0evals: pin 29a28336e526 not verified on origin (no mirror or checkout evidence)",
+    "z0evals: pin b6e3da7ad9ed not verified on origin (no mirror or checkout evidence)",
     "z0intelligence: pin 9c1631683c63 not verified on origin (no mirror or checkout evidence)"
   ]
 }

@@ -505,7 +505,7 @@ class PlanLaws(unittest.TestCase):
                          ["~/workspace/z0evals/web/data/receipts.json"])
         self.assertNotIn("z0evals.t1.warm_cache", by_id)
         self.assertTrue(any("warm_cache" in w and "(I1)" in w for w in plan_obj["warnings"]))
-        source = "kvnloo/z0evals@29a28336e526edfb4c3913c30df6eff12b28b2d6:zer0.repo.yaml"
+        source = "kvnloo/z0evals@b6e3da7ad9eda4f87f9f8e94c6ab0fc97d44bb10:zer0.repo.yaml"
         self.assertIn(source, plan_obj["registry"])
         from z0.onboard.cli import summary_text
         text = summary_text(plan_obj, None)

@@ -3,7 +3,7 @@
     {
       "branch": "main",
       "dirty": 0,
-      "head": "29a28336e526edfb4c3913c30df6eff12b28b2d6",
+      "head": "b6e3da7ad9eda4f87f9f8e94c6ab0fc97d44bb10",
       "origin": "kvnloo/z0evals",
       "path": "~/zer0/oss/z0evals",
       "pin_is_ancestor": true,
@@ -160,7 +160,7 @@
       "on_origin": "yes",
       "repo": "kvnloo/frontier-kb"
     },
-    "29a28336e526edfb4c3913c30df6eff12b28b2d6": {
+    "b6e3da7ad9eda4f87f9f8e94c6ab0fc97d44bb10": {
       "evidence": "mirror",
       "flavour": "unknown",
       "on_origin": "yes",
