@@ -16,6 +16,7 @@
         "os": { "enum": ["linux", "darwin"] },
         "arch": { "enum": ["x86_64", "arm64"] },
         "libc": { "enum": ["glibc", "musl", "darwin", "unknown"] },
+        "libc_version": { "type": "string", "pattern": "^([0-9]+\\.[0-9]+)?$", "description": "glibc version, linux only; empty when unknown." },
         "distro": { "type": "string" },
         "pkg_manager": { "enum": ["pacman", "apt", "dnf", "apk", "brew", "none"] },
         "pep668": { "type": "boolean" }

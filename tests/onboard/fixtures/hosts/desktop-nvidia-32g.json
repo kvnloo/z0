@@ -135,6 +135,7 @@
     "arch": "x86_64",
     "distro": "arch",
     "libc": "glibc",
+    "libc_version": "2.39",
     "os": "linux",
     "pep668": true,
     "pkg_manager": "pacman"
@@ -291,7 +292,7 @@
     "installed": true,
     "ipv4": "100.64.0.2",
     "logged_in": true,
-    "magicdns": "groot.example.ts.net"
+    "magicdns": "desktop.example.ts.net"
   },
   "toolchains": {
     "bun": {

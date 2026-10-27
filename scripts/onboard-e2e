@@ -1,0 +1,299 @@
+#!/usr/bin/env bash
+# Clean-machine end-to-end test of `./z0 onboard` (design §10 layer 3, work package Z2).
+#
+#   scripts/onboard-e2e [--image IMAGE] [--engine docker|podman] [--keep]
+#       Builds a throwaway image FROM IMAGE (default ubuntu:24.04) with git, curl and
+#       CA certificates only (no python), runs the scenarios below as a non-root user
+#       in a fresh container, then scenario 6 in a second container with
+#       `--network none` on the same HOME volume.
+#   scripts/onboard-e2e --inside [--offline-sim]
+#       Runs the scenarios on THIS machine as root (a CI job that already runs in a
+#       fresh container, e.g. `container: ubuntu:24.04`). Scenario 6 then simulates
+#       the offline host with Z0_DETECT_OFFLINE=1.
+#
+# Scenarios (§10): the target set is z0evals plus the hub. oh-my-pi, tokenomics and
+# dash are left out by default (E2E_WITHOUT): dash's units, health and pairing arrive
+# with work package Z4, and the two `core` components only lengthen the run. Set
+# E2E_WITHOUT=dash to include the whole `core` profile.
+#   5a  no python, no TTY, no --yes: stage 0 needs consent -> exit 3, nothing installed
+#   1   --auto --yes --llm none: stage 0 bootstraps python, z0evals cloned, venv,
+#       requirements, tier 0/1 tests, node 22 user-local + web build (tier 2): exit 0
+#   3   idempotent re-run: the plan has no todo step
+#   4   rollback (every run): the HOME tree equals the snapshot from before scenario 1,
+#       outside $Z0_HOME/{onboard,cache,bootstrap,venv} and tool caches (~/.npm, ~/.cache)
+#   5b  python present, no TTY, no --yes: C0 applies (z0evals green), C1 stays an ask, exit 3
+#   6   offline: z0evals python tiers still pass; the web tier is unavailable
+#   --full (work packages Z3/Z4/CW7), a fresh HOME volume:
+#   7   --auto --yes --llm none --profile core --with z0intelligence --without oh-my-pi:
+#       z0int runtime venv (CPU torch), shim, import check; dash built from origin pins,
+#       static gates, staged release, loopback self-test (no tailnet in a container);
+#       onboard/state ok and onboard/profile.json written (0600): exit 0
+#   7b  idempotent re-run: no effectful todo step
+#   7c  rollback restores the tree; onboard/state says rolled_back
+#
+# Exit 0 only when every scenario passed. No host literals; nothing outside the
+# container (or, with --inside, outside the test user's HOME) is written.
+set -euo pipefail
+
+SELF="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
+ROOT="$(cd "$(dirname "$SELF")/.." && pwd)"
+IMAGE="ubuntu:24.04"
+ENGINE=""
+INSIDE=0
+OFFLINE_SIM=0
+KEEP=0
+FULL=0
+PHASE="online"
+E2E_USER="${E2E_USER:-stranger}"
+E2E_WITHOUT="${E2E_WITHOUT:-oh-my-pi,tokenomics,dash,z0intelligence}"
+
+while (($#)); do
+  case "$1" in
+    --image) IMAGE="$2"; shift 2 ;;
+    --engine) ENGINE="$2"; shift 2 ;;
+    --inside) INSIDE=1; shift ;;
+    --offline-sim) OFFLINE_SIM=1; shift ;;
+    --phase) PHASE="$2"; shift 2 ;;
+    --keep) KEEP=1; shift ;;
+    --full) FULL=1; shift ;;
+    -h | --help) sed -n '2,34p' "$SELF"; exit 0 ;;
+    *) echo "onboard-e2e: unknown argument $1" >&2; exit 2 ;;
+  esac
+done
+
+say() { printf '\n== %s\n' "$*"; }
+FAILS=0
+ok() { printf 'PASS %s\n' "$1"; }
+bad() { printf 'FAIL %s\n' "$1"; FAILS=$((FAILS + 1)); }
+
+# --- outside: build an image, run the phases in containers -------------------------
+if ((!INSIDE)); then
+  if [[ -z "$ENGINE" ]]; then
+    for e in podman docker; do command -v "$e" > /dev/null && ENGINE="$e" && break; done
+  fi
+  [[ -n "$ENGINE" ]] || { echo "onboard-e2e: needs docker or podman (or run --inside)" >&2; exit 2; }
+  TAG="z0-onboard-e2e:$$"
+  VOL="z0-onboard-e2e-home-$$"
+  cleanup() {
+    ((KEEP)) && return 0
+    "$ENGINE" volume rm -f "$VOL" > /dev/null 2>&1 || true
+    "$ENGINE" rmi -f "$TAG" > /dev/null 2>&1 || true
+  }
+  trap cleanup EXIT
+  say "building $TAG from $IMAGE (git, curl, CA certificates; no python)"
+  printf '%s\n' "FROM $IMAGE" \
+    'RUN if command -v apt-get >/dev/null; then apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends git curl ca-certificates tar >/dev/null && rm -rf /var/lib/apt/lists/*; \
+     elif command -v dnf >/dev/null; then dnf -y -q install git curl ca-certificates tar findutils; \
+     elif command -v pacman >/dev/null; then pacman -Sy --noconfirm --needed git curl ca-certificates tar; \
+     elif command -v apk >/dev/null; then apk add --no-cache bash git curl ca-certificates tar; fi' \
+    "RUN useradd -m -s /bin/bash $E2E_USER 2>/dev/null || adduser -D -s /bin/bash $E2E_USER" \
+    | "$ENGINE" build -q -t "$TAG" - > /dev/null
+  "$ENGINE" volume create "$VOL" > /dev/null
+  run_phase() { # $1 = phase, rest = extra engine args
+    local phase="$1"
+    shift
+    "$ENGINE" run --rm "$@" --hostname z0-onboard-e2e -v "$ROOT:/src:ro" -v "$VOL:/home/$E2E_USER" \
+      -e E2E_USER="$E2E_USER" -e E2E_WITHOUT="$E2E_WITHOUT" \
+      "$TAG" bash /src/scripts/onboard-e2e --inside --phase "$phase"
+  }
+  rc=0
+  if ((FULL)); then
+    say "phase full (scenarios 7, 7b, 7c) on a fresh HOME"
+    run_phase full || rc=1
+    exit "$rc"
+  fi
+  say "phase online (scenarios 5a, 1, 3, 4, 5b)"
+  run_phase online || rc=1
+  say "phase offline (scenario 6, --network none)"
+  run_phase offline --network none || rc=1
+  exit "$rc"
+fi
+
+# --- inside: the scenarios ---------------------------------------------------------
+[[ "$(id -u)" == 0 ]] || { echo "onboard-e2e --inside runs as root (it creates the test user)" >&2; exit 2; }
+HOMEDIR="/home/$E2E_USER"
+if ! id "$E2E_USER" > /dev/null 2>&1; then
+  useradd -m -s /bin/bash "$E2E_USER" 2> /dev/null || adduser -D -s /bin/bash "$E2E_USER"
+fi
+SRC="${E2E_SRC:-/src}"
+[[ -d "$SRC/registry" ]] || SRC="$ROOT"
+Z0="$HOMEDIR/z0"
+
+as_user() { # run a command line as the test user with a minimal environment
+  runuser -u "$E2E_USER" -- env -i HOME="$HOMEDIR" USER="$E2E_USER" LOGNAME="$E2E_USER" \
+    PATH=/usr/local/bin:/usr/bin:/bin LANG=C.UTF-8 ${E2E_EXTRA_ENV:-} bash -c "cd '$Z0' && $1"
+}
+pyq() { # a JSON query (python expression over `d`) with the z0 venv's python: pyq FILE EXPR
+  "$HOMEDIR/.z0/venv/bin/python" -c 'import json, sys; d = json.load(open(sys.argv[1])); print(eval(sys.argv[2]))' \
+    "$1" "$2" 2> /dev/null || echo error
+}
+last_run() { as_user "ls -1 \$HOME/.z0/onboard/runs | tail -1"; }
+snapshot() { # file tree of HOME outside z0's runs, mirrors, bootstrap and tool caches
+  as_user "cd \$HOME && find . -path ./z0 -prune -o -path ./.z0/onboard -prune -o -path ./.z0/cache -prune \
+    -o -path ./.z0/bootstrap -prune -o -path ./.z0/venv -prune -o -path ./.npm -prune -o -path ./.cache -prune \
+    -o -path . -o -path ./.z0 -o -printf '%p %y %s %m\n' | LC_ALL=C sort"
+}
+ARGS="--auto --llm none --profile core --without $E2E_WITHOUT"
+
+if [[ "$PHASE" == online ]]; then
+  say "copying the checkout to $Z0 (owned by $E2E_USER)"
+  rm -rf "$Z0"
+  mkdir -p "$Z0"
+  tar -C "$SRC" --exclude=.git -cf - . | tar -C "$Z0" -xf -
+  chown -R "$E2E_USER:" "$Z0"
+
+  say "scenario 5a: no python, no TTY, no --yes -> stage 0 asks for consent, exit 3"
+  if as_user "command -v python3" > /dev/null 2>&1; then
+    ok "5a skipped: this image has python3 (stage 0 does not need to bootstrap)"
+  else
+    set +e
+    as_user "./z0 onboard $ARGS < /dev/null" > /tmp/e2e-5a.log 2>&1
+    rc=$?
+    set -e
+    [[ $rc == 3 ]] && ok "5a exit 3" || { bad "5a exit $rc (want 3)"; tail -20 /tmp/e2e-5a.log; }
+    as_user "test ! -e \$HOME/.z0/venv && test ! -e \$HOME/.z0/bootstrap/uv" && ok "5a nothing installed" \
+      || bad "5a wrote the bootstrap without consent"
+  fi
+
+  BEFORE="$(snapshot)"
+
+  say "scenario 1: ./z0 onboard $ARGS --yes"
+  set +e
+  as_user "./z0 onboard $ARGS --yes < /dev/null" 2>&1 | tee /tmp/e2e-1.log | tail -40
+  rc=${PIPESTATUS[0]}
+  set -e
+  [[ $rc == 0 ]] && ok "1 exit 0" || bad "1 exit $rc (want 0)"
+  RUN1="$(last_run)"
+  R1="$HOMEDIR/.z0/onboard/runs/$RUN1/receipt.json"
+  if [[ -f "$R1" ]]; then
+    for tier in tier0 tier1; do
+      [[ "$(pyq "$R1" "d['acceptance']['z0evals']['$tier']")" == passed ]] && ok "1 z0evals $tier passed" \
+        || bad "1 z0evals $tier not passed"
+    done
+    t2="$(pyq "$R1" "d['acceptance']['z0evals'].get('tier2')")"
+    [[ "$t2" == passed ]] && ok "1 z0evals tier2 (web build) passed" || bad "1 z0evals tier2 is $t2 (network and node are available here)"
+    [[ "$(pyq "$R1" "d['acceptance']['z0evals']['tiers']")" == passed ]] && ok "1 checks/z0evals passed" || bad "1 checks/z0evals"
+    [[ "$(pyq "$R1" "all(v == 'passed' for v in d['acceptance']['z0'].values())")" == True ]] \
+      && ok "1 hub checks passed" || bad "1 hub checks: $(pyq "$R1" "d['acceptance']['z0']")"
+    [[ "$(pyq "$R1" "d['secrets_scan']['canary_found']")" == False ]] && ok "1 secrets scan clean" || bad "1 secrets scan"
+    as_user "test -f \$HOME/.z0/repos/z0evals/web/out/index.html" && ok "1 web/out/index.html built" || bad "1 no web export"
+    echo "--- report.md (head)"
+    head -40 "$HOMEDIR/.z0/onboard/runs/$RUN1/report.md" || true
+  else
+    bad "1 no receipt"
+  fi
+
+  say "scenario 3: idempotent re-run plans nothing"
+  as_user "./z0 onboard plan --stdout $ARGS --yes < /dev/null > /tmp/e2e-plan3.json" || true
+  todo="$(pyq /tmp/e2e-plan3.json "len([e for e in d['steps'] if e['state']['status'] == 'todo' and e['step']['kind'] not in ('check', 'ask')])")"
+  [[ "$todo" == 0 ]] && ok "3 no todo step" || bad "3 todo steps: $todo"
+
+  say "scenario 4: rollback restores the tree"
+  for _ in 1 2 3 4 5; do
+    as_user "test -L \$HOME/.z0/onboard/current" || break
+    as_user "./z0 onboard rollback" || bad "4 rollback exit non-zero"
+  done
+  AFTER="$(snapshot)"
+  if [[ "$BEFORE" == "$AFTER" ]]; then
+    ok "4 tree equal outside runs/, cache/, bootstrap and tool caches"
+  else
+    bad "4 tree differs:"
+    diff <(printf '%s\n' "$BEFORE") <(printf '%s\n' "$AFTER") | head -40 || true
+  fi
+  as_user "./z0 onboard rollback $RUN1" | grep -q "nothing to undo" && ok "4 second rollback is a no-op" \
+    || bad "4 second rollback did something"
+
+  say "scenario 5b: python present, no TTY, no --yes -> C0 applies, exit 3"
+  set +e
+  as_user "./z0 onboard $ARGS < /dev/null" > /tmp/e2e-5b.log 2>&1
+  rc=$?
+  set -e
+  [[ $rc == 3 ]] && ok "5b exit 3" || { bad "5b exit $rc (want 3)"; tail -30 /tmp/e2e-5b.log; }
+  RUN5="$(last_run)"
+  R5="$HOMEDIR/.z0/onboard/runs/$RUN5/receipt.json"
+  [[ -f "$R5" && "$(pyq "$R5" "d['acceptance']['z0evals']['tier1']")" == passed ]] && ok "5b z0evals tier1 passed (C0)" \
+    || bad "5b z0evals tier1"
+  as_user "test ! -e \$HOME/.z0/toolchains/node" && ok "5b C1 toolchain not installed" || bad "5b node installed without consent"
+  if ((OFFLINE_SIM)); then PHASE=offline; E2E_EXTRA_ENV="Z0_DETECT_OFFLINE=1"; fi
+fi
+
+if [[ "$PHASE" == full ]]; then
+  say "copying the checkout to $Z0 (owned by $E2E_USER)"
+  rm -rf "$Z0"
+  mkdir -p "$Z0"
+  tar -C "$SRC" --exclude=.git -cf - . | tar -C "$Z0" -xf -
+  chown -R "$E2E_USER:" "$Z0"
+  FARGS="--auto --llm none --profile core --with z0intelligence --without ${E2E_FULL_WITHOUT:-oh-my-pi}"
+  BEFORE="$(snapshot)"
+  say "scenario 7: ./z0 onboard $FARGS --yes"
+  set +e
+  as_user "./z0 onboard $FARGS --yes < /dev/null" 2>&1 | tee /tmp/e2e-7.log | tail -60
+  rc=${PIPESTATUS[0]}
+  set -e
+  [[ $rc == 0 ]] && ok "7 exit 0" || bad "7 exit $rc (want 0)"
+  RUN7="$(last_run)"
+  R7="$HOMEDIR/.z0/onboard/runs/$RUN7/receipt.json"
+  if [[ -f "$R7" ]]; then
+    for check in runtime import; do
+      [[ "$(pyq "$R7" "d['acceptance']['z0intelligence']['$check']")" == passed ]] && ok "7 z0intelligence $check passed" \
+        || bad "7 z0intelligence $check is $(pyq "$R7" "d['acceptance']['z0intelligence'].get('$check')")"
+    done
+    [[ "$(pyq "$R7" "d['acceptance']['dash']['bridge']")" == passed ]] && ok "7 dash bridge loopback self-test passed" \
+      || bad "7 dash bridge is $(pyq "$R7" "d['acceptance'].get('dash')")"
+    gates="$(pyq "$R7" "sorted((s['id'], s['status']) for s in d['steps'] if s['id'] in ('dash.gate.typecheck', 'dash.gate.lint', 'dash.gate.security'))")"
+    [[ "$gates" == "[('dash.gate.lint', 'passed'), ('dash.gate.security', 'passed'), ('dash.gate.typecheck', 'passed')]" ]] \
+      && ok "7 dash typecheck, lint and security gates passed" || bad "7 dash gates: $gates"
+    [[ "$(pyq "$R7" "d['acceptance']['z0evals']['tier1']")" == passed ]] && ok "7 z0evals tier1 passed" || bad "7 z0evals tier1"
+    [[ "$(pyq "$R7" "d['secrets_scan']['canary_found']")" == False ]] && ok "7 secrets scan clean" || bad "7 secrets scan"
+    echo "--- report.md (head)"
+    head -60 "$HOMEDIR/.z0/onboard/runs/$RUN7/report.md" || true
+  else
+    bad "7 no receipt"
+  fi
+  as_user "\$HOME/.z0int/bin/python -c 'import z0int, mcp, aodl_contract'" && ok "7 shim imports z0int" || bad "7 shim import"
+  [[ "$(pyq "$HOMEDIR/.z0/onboard/state" "d['ok']")" == True ]] && ok "7 onboard/state ok" \
+    || bad "7 onboard/state: $(pyq "$HOMEDIR/.z0/onboard/state" "d")"
+  [[ "$(stat -c %a "$HOMEDIR/.z0/onboard/profile.json" 2>/dev/null)" == 600 ]] && ok "7 profile.json written 0600" \
+    || bad "7 profile.json missing or not 0600"
+
+  say "scenario 7b: idempotent re-run plans nothing"
+  as_user "./z0 onboard plan --stdout $FARGS --yes < /dev/null > /tmp/e2e-plan7.json" || true
+  todo="$(pyq /tmp/e2e-plan7.json "[e['step']['id'] for e in d['steps'] if e['state']['status'] == 'todo' and e['step']['kind'] not in ('check', 'ask')]")"
+  [[ "$todo" == "[]" ]] && ok "7b no todo step" || bad "7b todo steps: $todo"
+
+  say "scenario 7c: rollback restores the tree"
+  for _ in 1 2 3 4 5; do
+    as_user "test -L \$HOME/.z0/onboard/current" || break
+    as_user "./z0 onboard rollback" > /dev/null || bad "7c rollback exit non-zero"
+  done
+  AFTER="$(snapshot)"
+  if [[ "$BEFORE" == "$AFTER" ]]; then
+    ok "7c tree equal outside runs/, cache/, bootstrap and tool caches"
+  else
+    bad "7c tree differs:"
+    diff <(printf '%s\n' "$BEFORE") <(printf '%s\n' "$AFTER") | head -40 || true
+  fi
+  [[ "$(pyq "$HOMEDIR/.z0/onboard/state" "d['status']")" == rolled_back ]] && ok "7c onboard/state rolled_back" \
+    || bad "7c onboard/state not marked rolled_back"
+fi
+
+if [[ "$PHASE" == offline ]]; then
+  say "scenario 6: offline -> z0evals python tiers pass, web tier unavailable"
+  set +e
+  as_user "./z0 onboard $ARGS < /dev/null" > /tmp/e2e-6.log 2>&1
+  rc=$?
+  set -e
+  RUN6="$(last_run)"
+  R6="$HOMEDIR/.z0/onboard/runs/$RUN6/receipt.json"
+  [[ $rc == 3 || $rc == 0 ]] && ok "6 exit $rc" || { bad "6 exit $rc"; tail -30 /tmp/e2e-6.log; }
+  if [[ -f "$R6" ]]; then
+    [[ "$(pyq "$R6" "d['acceptance']['z0evals']['tier1']")" == passed ]] && ok "6 tier1 passed offline" || bad "6 tier1"
+    [[ "$(pyq "$R6" "d['acceptance']['z0evals'].get('tier2')")" == unavailable ]] && ok "6 tier2 unavailable offline" \
+      || bad "6 tier2 is $(pyq "$R6" "d['acceptance']['z0evals'].get('tier2')")"
+  else
+    bad "6 no receipt"
+  fi
+fi
+
+say "result: $FAILS failure(s)"
+((FAILS == 0))

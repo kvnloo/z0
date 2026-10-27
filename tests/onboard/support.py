@@ -69,10 +69,10 @@ SETUP_CONFLICT = json.loads((ROOT / "tests/onboard/fixtures/setups/z0evals-confl
 
 # (expected file stem, fixture, plan kwargs)
 GOLDEN_CASES = [
-    ("groot-nvidia-32g.auto", "groot-nvidia-32g", {}),
-    ("groot-nvidia-32g.auto-yes", "groot-nvidia-32g", {"grants": ALL_BUNDLES}),
-    ("mbp-cpu-15g.auto", "mbp-cpu-15g", {}),
-    ("mbp-cpu-15g.guided-personal", "mbp-cpu-15g", {"mode": "guided", "profile": "personal"}),
+    ("desktop-nvidia-32g.auto", "desktop-nvidia-32g", {}),
+    ("desktop-nvidia-32g.auto-yes", "desktop-nvidia-32g", {"grants": ALL_BUNDLES}),
+    ("laptop-cpu-15g.auto", "laptop-cpu-15g", {}),
+    ("laptop-cpu-15g.guided-personal", "laptop-cpu-15g", {"mode": "guided", "profile": "personal"}),
     ("apple-m-32g.auto", "apple-m-32g", {}),
     ("tiny-4g-vps.auto", "tiny-4g-vps", {}),
     ("offline.auto", "offline", {}),
@@ -82,7 +82,7 @@ GOLDEN_CASES = [
     # No python3 on PATH; stage 0's venv python3 leads the prepared PATH (§1.3, T1).
     ("no-python.auto", "no-python", {}),
     # The pinned z0evals carries a `setup:` block that conflicts with the registry (§2.6).
-    ("mbp-cpu-15g.repo-setup", "mbp-cpu-15g", {"repo_setups": SETUP_CONFLICT}),
+    ("laptop-cpu-15g.repo-setup", "laptop-cpu-15g", {"repo_setups": SETUP_CONFLICT}),
 ]
 
 

@@ -5,12 +5,17 @@
 `kvnloo/z0` is the **map, installer, contract registry, and documentation source** for the Zer0 ecosystem. It is deliberately **not** a runtime or orchestrator.
 
 ```bash
-git clone https://github.com/kvnloo/z0
-cd z0
-pip install -r requirements.txt   # PyYAML for the CLI
-./z0 init --profile core
-./z0 doctor
+git clone https://github.com/kvnloo/z0 && cd z0
+./z0 onboard                 # auto or guided on a terminal; auto without one
+# ./z0 onboard --auto --yes   # minimal interaction; grants reversible C1 bundles
+# ./z0 onboard --guided      # full interaction; defaults displayed
+./z0 onboard status
 ```
+
+[Onboarding guide](docs/getting-started/onboard.md): consent, component gates,
+receipts and rollback. Onboarding is experimental; this branch's guided UX builds
+on Z2, with the Z3/Z4 runtime actions and Z5 resolver still to be integrated.
+Unavailable steps and failed actions are reported, not silently counted as installed.
 
 ## I want…
 
@@ -24,7 +29,7 @@ pip install -r requirements.txt   # PyYAML for the CLI
 | Automatic AI research | [Evolution Lab](docs/components/evolution-lab.md) |
 | Typed agent plans | [AODL](docs/components/aodl.md) |
 | Agent observability | [AgentTrace](docs/components/agenttrace.md) |
-| Everything stable | `./z0 init --profile full` |
+| Everything in the registry (including shadow asks) | `./z0 onboard --guided --profile full` |
 
 ## Architecture dimensions
 
@@ -68,7 +73,7 @@ without guessing repository structure from filenames alone.
 | `desktop` | core + Flow | daily Handsfree workflow |
 | `compute` | core + Kerdoios | model/provider optimization |
 | `research` | z0int + Evolution Lab + frontier-kb | AI research |
-| `full` | all stable/canary | power users |
+| `full` | all registered targets (shadow components stay asks) | power users |
 
 ```bash
 ./z0 init --profile core
@@ -80,7 +85,10 @@ without guessing repository structure from filenames alone.
 
 | Command | Purpose |
 |---------|---------|
-| `./z0 init` | Interactive or `--profile` install plan + clone |
+| `./z0 onboard` | Detect, plan, consent, journaled apply and verify |
+| `./z0 onboard status` | Last receipt and open asks (read-only) |
+| `./z0 onboard accept BUNDLES` | Grant deferred C1 bundles for the last applied plan |
+| `./z0 init` | Compatibility entrypoint for `onboard`; profile-only `--dry-run` retained |
 | `./z0 add <id>` | Add one component |
 | `./z0 doctor` | What's installed vs registry pins |
 | `./z0 status` | Dev-state table (branch, HEAD, maturity) |

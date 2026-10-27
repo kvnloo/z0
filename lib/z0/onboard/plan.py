@@ -51,13 +51,27 @@ def _state(verdict: k.Verdict) -> dict:
 
 # --- facts -----------------------------------------------------------------------
 
+def when_mod_version(text: str) -> tuple:
+    try:
+        return tuple(int(p) for p in str(text).split(".")[:2])
+    except ValueError:
+        return ()
+
+
 def facts_of(host: dict, mode: str, profile: Optional[str]) -> dict:
     facts = copy.deepcopy(host)
     facts["harnesses"] = {norm_key(h): v for h, v in (host.get("harnesses") or {}).items()}
     facts["toolchains"] = {norm_key(t): v for t, v in (host.get("toolchains") or {}).items()}
     facts["mode"], facts["profile"] = mode, profile
     installed = {h for h, v in facts["harnesses"].items() if v.get("state") == "installed"}
-    facts["derived"] = {"acp_harness": bool(installed & {"claude_code", "codex"})}
+    osf = host.get("os") or {}
+    glibc = when_mod_version(osf.get("libc_version") or "")
+    facts["derived"] = {
+        "acp_harness": bool(installed & {"claude_code", "codex"}),
+        # binary wheels built as manylinux_2_38 (fff-search, a z0intelligence dependency)
+        # install without a compiler only on glibc >= 2.38, or on macOS
+        "manylinux_2_38": osf.get("os") == "darwin" or (osf.get("libc") == "glibc" and glibc >= (2, 38)),
+    }
     return facts
 
 
@@ -425,6 +439,12 @@ def component_steps(cid: str, comp: dict, setups: dict, pin: str) -> tuple:
     return steps + added, conflicts, warnings + errors
 
 
+def collect_questions(host: dict, snap: dict) -> list:
+    """Unknowns from DETECT, closed against registry evidence; no provider I/O."""
+    from .llm.questions import collect
+    return collect(host, snap)
+
+
 def plan(host: dict, snap: dict, *, mode: str = "auto", profile: Optional[str] = None,
          with_ids: Iterable[str] = (), without_ids: Iterable[str] = (),
          grants: Optional[dict] = None, pin_policy: str = "pinned", llm: str = "local",
@@ -528,7 +548,12 @@ def plan(host: dict, snap: dict, *, mode: str = "auto", profile: Optional[str] =
         cid = owner[step["id"]]
         needs = [n for n in step.get("needs") or [] if n in ids]
         if cid is not None:
-            needs += tool_users.get(cid, [])
+            # fetching a component's source needs only git: an ungranted runtime toolchain
+            # (python window, bun, node) must not stop the C0 clone (degrade, don't fail)
+            tools = tool_users.get(cid, [])
+            if step["kind"] == "adopt_or_clone":
+                tools = [t for t in tools if t == "toolchain.git"]
+            needs += tools
             first_of.setdefault(cid, step["id"])
         edges[step["id"]] = needs
     # depends_on: a dependency's steps all precede the dependent's (ordering only).
@@ -551,7 +576,7 @@ def plan(host: dict, snap: dict, *, mode: str = "auto", profile: Optional[str] =
                                                                     k.Source.FLAG)
     kinds = {s["id"]: s["kind"] for s in steps}
     # Per-step C2 confirmations from a guided TTY run (answers.yaml `confirmed_steps`).
-    confirmed = set((answers or {}).get("confirmed_steps") or [])
+    confirmed = set((answers or {}).get("confirmed_steps") or []) if "llm" not in (answers or {}) else set()
     dep_blocker: dict = {}
 
     def dependency_blocker(cid: str) -> Optional[str]:
@@ -658,7 +683,8 @@ def plan(host: dict, snap: dict, *, mode: str = "auto", profile: Optional[str] =
                 # §3: C2 is confirmed per step on a TTY, never by a bundle grant.
                 granted = grants.get("source") == "tty" and sid in confirmed
             else:
-                granted = step["consent"].get("bundle") in (grants.get("bundles") or [])
+                granted = (step["consent"].get("bundle") in (grants.get("bundles") or [])
+                           and ("steps" not in grants or sid in grants["steps"]))
             verdict = k.decide_consent(kmode, cls, granted, grant_source)
             if verdict.kind is not k.Kind.ALLOW:
                 state = _state(verdict)
@@ -788,7 +814,8 @@ def plan(host: dict, snap: dict, *, mode: str = "auto", profile: Optional[str] =
         "pin_policy": pin_policy,
         "llm": llm,
         "grants": {"bundles": sorted(set(grants.get("bundles") or [])),
-                   "source": grants.get("source", "none")},
+                   "source": grants.get("source", "none"),
+                   **({"steps": sorted(set(grants["steps"]))} if "steps" in grants else {})},
         "registry": dict(sorted(provenance.items())),
         "targets": targets,
         "components": summary,
@@ -802,6 +829,17 @@ def plan(host: dict, snap: dict, *, mode: str = "auto", profile: Optional[str] =
         result["path_links"] = path_links
     if conflicts:
         result["conflicts"] = sorted(conflicts, key=lambda c: (c["component"], c["id"]))
+    if grants.get("llm_providers"):
+        result["grants"]["llm_providers"] = sorted(set(grants["llm_providers"]))
+    if (answers or {}).get("llm"):
+        from .llm.resolve import validate_record
+        questions = {q.id: q for q in collect_questions(host, snap)}
+        records = (answers or {})["llm"]
+        if any(qid not in questions or not validate_record(questions[qid], row)
+               for qid, row in records.items()):
+            raise PlanError("invalid LLM answers")
+        # Advisory only: answers cannot mutate host facts, steps, paths or states.
+        result["llm_decisions"] = [copy.deepcopy(records[qid]) for qid in sorted(records)]
     if answers:
         result["answers_sha256"] = sha256_text(canonical_json(answers))
     result["plan_hash"] = plan_hash(result)

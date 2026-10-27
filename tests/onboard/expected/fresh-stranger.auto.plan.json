@@ -4,7 +4,7 @@
       "command": "./z0 onboard --accept toolchains   (or --yes for every bundle)",
       "consent": "C1",
       "id": "toolchain.node",
-      "impact": 12,
+      "impact": 11,
       "reason": "user-local download of node 22.23.4 into $Z0_HOME/toolchains (needs consent: toolchains bundle)"
     },
     {
@@ -43,6 +43,11 @@
       "adopted": false,
       "tree": "$Z0_HOME/repos/z0evals",
       "verdict": "allow"
+    },
+    "z0intelligence": {
+      "adopted": false,
+      "tree": "$Z0_HOME/repos/z0intelligence",
+      "verdict": "allow"
     }
   },
   "grants": {
@@ -53,17 +58,17 @@
   "llm": "local",
   "mode": "auto",
   "pin_policy": "pinned",
-  "plan_hash": "6fa4299e048d6ff5540dc66292bf6bd09c215d0f245183c246af842ced9d1265",
+  "plan_hash": "63af5a5a70bddff7bb2bf53a8d83ad4343d6c7cb37615649cd62ec8fc83ece6e",
   "prepared_path": [
     "/usr/bin",
     "/bin"
   ],
   "profile": "core",
   "registry": {
-    "registry/components.yaml": "92bc79136d902cd3bd54ef2679747b4f9b7ec31cef8f658e3408058386827067",
+    "registry/components.yaml": "26e859b23b535409d21c3a77b885067580e22f32aa606a4831f972eb34dc8ccf",
     "registry/harnesses.yaml": "1c2b9ba37ca974e4aa1ed1f6990561ea303fc7e1f73c0fb4c6cc4802d5b4a7b8",
     "registry/onboarding.yaml": "b0c3e2b4c8e7a17bde8a5cb2378c90f6009b4464879a76406f6ae3cdc7e9b9ce",
-    "registry/profiles.yaml": "1078cbeef86e532c77478eb5025ec08f6f3f8156a1c77707774416e79d51f819",
+    "registry/profiles.yaml": "8ef0b2b147bf7db252328ee9cfc981a81867bcf6533362621138bee1abd2e6eb",
     "registry/toolchains.yaml": "10255da4b970f08ef57b4e9fd68b7dedfbc5f43bde284a35caecac4bcd0213b1"
   },
   "steps": [
@@ -211,6 +216,25 @@
           "bundle": "toolchains",
           "class": "C1"
         },
+        "id": "toolchain.python-window",
+        "kind": "ensure_toolchain",
+        "network": true,
+        "toolchain": {
+          "tool": "python",
+          "version": "3.11"
+        }
+      }
+    },
+    {
+      "state": {
+        "status": "already_satisfied"
+      },
+      "step": {
+        "component": "z0",
+        "consent": {
+          "bundle": "toolchains",
+          "class": "C1"
+        },
         "id": "toolchain.python3",
         "kind": "ensure_toolchain",
         "network": true,
@@ -222,9 +246,7 @@
     },
     {
       "state": {
-        "blocked_by": "toolchain.node",
-        "reason": "dependency",
-        "status": "blocked"
+        "status": "todo"
       },
       "step": {
         "component": "tokenomics",
@@ -242,7 +264,7 @@
     },
     {
       "state": {
-        "blocked_by": "tokenomics.source",
+        "blocked_by": "toolchain.node",
         "reason": "dependency",
         "status": "blocked"
       },
@@ -279,7 +301,7 @@
           "pip",
           "install",
           "-e",
-          "packages/python"
+          "."
         ],
         "component": "tokenomics",
         "consent": {
@@ -300,7 +322,7 @@
     },
     {
       "state": {
-        "blocked_by": "tokenomics.source",
+        "blocked_by": "toolchain.node",
         "reason": "dependency",
         "status": "blocked"
       },
@@ -353,6 +375,569 @@
           "tokenomics.install.python"
         ],
         "where": "venv"
+      }
+    },
+    {
+      "state": {
+        "reason": "hardware:disk<10GiB",
+        "status": "unavailable"
+      },
+      "step": {
+        "component": "z0intelligence",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0intelligence.source",
+        "kind": "adopt_or_clone",
+        "network": true,
+        "probe": {
+          "exists": "$Z0_HOME/repos/z0intelligence"
+        },
+        "where": "mirror"
+      }
+    },
+    {
+      "state": {
+        "reason": "hardware:disk<10GiB",
+        "status": "unavailable"
+      },
+      "step": {
+        "argv": [
+          "pip",
+          "install",
+          "-e",
+          "."
+        ],
+        "component": "z0intelligence",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0intelligence.dev",
+        "kind": "pip_install",
+        "legacy_projection": true,
+        "needs": [
+          "z0intelligence.source"
+        ],
+        "network": true,
+        "probe": {
+          "exists": "$Z0_HOME/repos/z0intelligence/.venv/bin/z0int"
+        },
+        "when": [
+          {
+            "fact": "mode",
+            "op": "eq",
+            "value": "guided"
+          }
+        ],
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "reason": "hardware:disk<10GiB",
+        "status": "unavailable"
+      },
+      "step": {
+        "component": "z0intelligence",
+        "consent": {
+          "class": "C0"
+        },
+        "creates": [
+          "$Z0_HOME/build/z0intelligence/cfb33e5fabafe198c622f9178af18b4bc56749e7"
+        ],
+        "id": "z0intelligence.build",
+        "kind": "build_tree",
+        "network": true,
+        "undo": {
+          "kind": "remove_owned"
+        },
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "reason": "hardware:disk<10GiB",
+        "status": "unavailable"
+      },
+      "step": {
+        "component": "z0intelligence",
+        "consent": {
+          "class": "C0"
+        },
+        "creates": [
+          "~/.local/lib/z0int-shadow/cfb33e5fabafe198c622f9178af18b4bc56749e7"
+        ],
+        "id": "z0intelligence.release",
+        "kind": "stage_release",
+        "needs": [
+          "z0intelligence.build"
+        ],
+        "undo": {
+          "kind": "remove_owned"
+        },
+        "where": "release"
+      }
+    },
+    {
+      "state": {
+        "reason": "hardware:disk<10GiB",
+        "status": "unavailable"
+      },
+      "step": {
+        "component": "z0intelligence",
+        "consent": {
+          "class": "C0"
+        },
+        "creates": [
+          "~/.local/lib/z0int-runtime/cfb33e5fabafe198c622f9178af18b4bc56749e7"
+        ],
+        "id": "z0intelligence.runtime",
+        "kind": "venv",
+        "needs": [
+          "z0intelligence.release",
+          "toolchain.python-window"
+        ],
+        "probe": {
+          "exists": "~/.local/lib/z0int-runtime/cfb33e5fabafe198c622f9178af18b4bc56749e7/bin/python"
+        },
+        "undo": {
+          "kind": "remove_owned"
+        },
+        "where": "venv"
+      }
+    },
+    {
+      "state": {
+        "reason": "hardware:disk<10GiB",
+        "status": "unavailable"
+      },
+      "step": {
+        "argv": [
+          "pip",
+          "install",
+          "torch==2.10.0",
+          "--index-url",
+          "https://download.pytorch.org/whl/cpu"
+        ],
+        "component": "z0intelligence",
+        "consent": {
+          "bundle": "models",
+          "class": "C1"
+        },
+        "id": "z0intelligence.torch",
+        "kind": "pip_install",
+        "needs": [
+          "z0intelligence.runtime"
+        ],
+        "network": true,
+        "probe": {
+          "exists": "~/.local/lib/z0int-runtime/cfb33e5fabafe198c622f9178af18b4bc56749e7/.z0/torch-2.10.0"
+        },
+        "where": "venv"
+      }
+    },
+    {
+      "state": {
+        "reason": "hardware:disk<10GiB",
+        "status": "unavailable"
+      },
+      "step": {
+        "argv": [
+          "pip",
+          "install",
+          "~/.local/lib/z0int-shadow/cfb33e5fabafe198c622f9178af18b4bc56749e7"
+        ],
+        "component": "z0intelligence",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0intelligence.install",
+        "kind": "pip_install",
+        "needs": [
+          "z0intelligence.torch"
+        ],
+        "network": true,
+        "probe": {
+          "exists": "~/.local/lib/z0int-runtime/cfb33e5fabafe198c622f9178af18b4bc56749e7/bin/z0int"
+        },
+        "when": [
+          {
+            "fact": "network.github",
+            "op": "eq",
+            "value": true
+          },
+          {
+            "fact": "derived.manylinux_2_38",
+            "op": "eq",
+            "value": true
+          }
+        ],
+        "where": "venv"
+      }
+    },
+    {
+      "state": {
+        "reason": "hardware:disk<10GiB",
+        "status": "unavailable"
+      },
+      "step": {
+        "component": "z0intelligence",
+        "consent": {
+          "bundle": "services",
+          "class": "C1"
+        },
+        "creates": [
+          "~/.z0int/bin/python"
+        ],
+        "id": "z0intelligence.shim",
+        "kind": "write_file",
+        "needs": [
+          "z0intelligence.install"
+        ],
+        "target_where": "venv",
+        "undo": {
+          "kind": "remove_owned"
+        },
+        "where": "home"
+      }
+    },
+    {
+      "state": {
+        "reason": "hardware:disk<10GiB",
+        "status": "unavailable"
+      },
+      "step": {
+        "component": "z0intelligence",
+        "consent": {
+          "bundle": "services",
+          "class": "C1"
+        },
+        "creates": [
+          "~/.z0int/config/hermes.json"
+        ],
+        "id": "z0intelligence.hermes_json",
+        "kind": "write_file",
+        "needs": [
+          "z0intelligence.shim"
+        ],
+        "target_where": "venv",
+        "undo": {
+          "kind": "restore_backup"
+        },
+        "where": "home"
+      }
+    },
+    {
+      "state": {
+        "reason": "hardware:disk<10GiB",
+        "status": "unavailable"
+      },
+      "step": {
+        "argv": [
+          "~/.z0int/bin/python",
+          "-c",
+          "import z0int, mcp, aodl_contract, fff, typesafe_sdk"
+        ],
+        "component": "z0intelligence",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0intelligence.checks.import",
+        "kind": "check",
+        "needs": [
+          "z0intelligence.shim"
+        ],
+        "where": "venv"
+      }
+    },
+    {
+      "state": {
+        "reason": "hardware:disk<10GiB",
+        "status": "unavailable"
+      },
+      "step": {
+        "argv": [
+          "~/.z0int/bin/python",
+          "-c",
+          "import json, sys; from z0int.doctor import run_doctor; r = run_doctor().to_dict(); bad = [c['id'] for c in r['checks'] if c.get('required') and not c.get('ok') and c['id'] != 'repo_root']; print(json.dumps({'unresolved': bad, 'checks': len(r['checks'])})); sys.exit(1 if bad else 0)"
+        ],
+        "component": "z0intelligence",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0intelligence.checks.doctor",
+        "kind": "check",
+        "needs": [
+          "z0intelligence.checks.import"
+        ],
+        "where": "venv"
+      }
+    },
+    {
+      "state": {
+        "reason": "hardware:disk<10GiB",
+        "status": "unavailable"
+      },
+      "step": {
+        "argv": [
+          "python3",
+          "-m",
+          "z0int",
+          "--help"
+        ],
+        "component": "z0intelligence",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0intelligence.verify",
+        "kind": "check",
+        "legacy_projection": true,
+        "needs": [
+          "z0intelligence.install"
+        ],
+        "where": "venv"
+      }
+    },
+    {
+      "state": {
+        "reason": "hardware:disk<10GiB",
+        "status": "unavailable"
+      },
+      "step": {
+        "argv": [
+          "claude",
+          "plugin",
+          "install",
+          "z0intelligence@z0intelligence"
+        ],
+        "component": "z0intelligence",
+        "consent": {
+          "bundle": "harness",
+          "class": "C1"
+        },
+        "harness": "claude-code",
+        "id": "z0intelligence.plugin.claude",
+        "kind": "harness_plugin",
+        "needs": [
+          "z0intelligence.checks.import"
+        ],
+        "probe": {
+          "exists": "$Z0_HOME/onboard/stamps/z0intelligence.plugin.claude"
+        },
+        "undo": {
+          "kind": "uninstall"
+        },
+        "when": [
+          {
+            "fact": "harnesses.claude_code.state",
+            "op": "eq",
+            "value": "installed"
+          }
+        ],
+        "where": "release"
+      }
+    },
+    {
+      "state": {
+        "reason": "hardware:disk<10GiB",
+        "status": "unavailable"
+      },
+      "step": {
+        "argv": [
+          "codex",
+          "plugin",
+          "add",
+          "codex-z0intelligence@z0intelligence"
+        ],
+        "component": "z0intelligence",
+        "consent": {
+          "bundle": "harness",
+          "class": "C1"
+        },
+        "harness": "codex",
+        "id": "z0intelligence.plugin.codex",
+        "kind": "harness_plugin",
+        "needs": [
+          "z0intelligence.checks.import"
+        ],
+        "probe": {
+          "exists": "$Z0_HOME/onboard/stamps/z0intelligence.plugin.codex"
+        },
+        "undo": {
+          "kind": "uninstall"
+        },
+        "when": [
+          {
+            "fact": "harnesses.codex.state",
+            "op": "eq",
+            "value": "installed"
+          }
+        ],
+        "where": "release"
+      }
+    },
+    {
+      "state": {
+        "reason": "hardware:disk<10GiB",
+        "status": "unavailable"
+      },
+      "step": {
+        "argv": [
+          "python3",
+          "scripts/omp_bridge_install.py"
+        ],
+        "component": "z0intelligence",
+        "consent": {
+          "bundle": "harness",
+          "class": "C1"
+        },
+        "harness": "omp",
+        "id": "z0intelligence.plugin.omp",
+        "kind": "harness_plugin",
+        "needs": [
+          "z0intelligence.checks.import"
+        ],
+        "probe": {
+          "exists": "$Z0_HOME/onboard/stamps/z0intelligence.plugin.omp"
+        },
+        "undo": {
+          "kind": "restore_backup"
+        },
+        "when": [
+          {
+            "fact": "harnesses.omp.state",
+            "op": "eq",
+            "value": "installed"
+          }
+        ],
+        "where": "release"
+      }
+    },
+    {
+      "state": {
+        "reason": "hardware:disk<10GiB",
+        "status": "unavailable"
+      },
+      "step": {
+        "argv": [
+          "echo",
+          "Hermes: choose the profile and edit its config.yaml yourself (always an ask)"
+        ],
+        "component": "z0intelligence",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0intelligence.plugin.hermes",
+        "kind": "ask",
+        "when": [
+          {
+            "fact": "harnesses.hermes.state",
+            "op": "eq",
+            "value": "installed"
+          }
+        ]
+      }
+    },
+    {
+      "state": {
+        "reason": "hardware:disk<10GiB",
+        "status": "unavailable"
+      },
+      "step": {
+        "component": "z0intelligence",
+        "consent": {
+          "bundle": "services",
+          "class": "C1"
+        },
+        "creates": [
+          "~/.config/z0intelligence/service.env"
+        ],
+        "id": "z0intelligence.service_env",
+        "kind": "write_file",
+        "needs": [
+          "z0intelligence.shim"
+        ],
+        "target_where": "venv",
+        "undo": {
+          "kind": "restore_backup"
+        },
+        "when": [
+          {
+            "fact": "session.systemd_user",
+            "op": "eq",
+            "value": true
+          }
+        ],
+        "where": "home"
+      }
+    },
+    {
+      "state": {
+        "reason": "hardware:disk<10GiB",
+        "status": "unavailable"
+      },
+      "step": {
+        "component": "z0intelligence",
+        "consent": {
+          "bundle": "services",
+          "class": "C1"
+        },
+        "id": "z0intelligence.router.unit",
+        "kind": "service_unit",
+        "needs": [
+          "z0intelligence.shim",
+          "z0intelligence.service_env"
+        ],
+        "probe": {
+          "exists": "~/.config/systemd/user/z0intelligence.service"
+        },
+        "service": {
+          "bind": "loopback",
+          "health": {
+            "http": {
+              "bind": "loopback",
+              "expect_status": 200,
+              "path": "/healthz",
+              "port": 11501
+            }
+          },
+          "port": 11501,
+          "start_order": 3,
+          "template": "z0intelligence",
+          "unit": "z0intelligence.service"
+        },
+        "undo": {
+          "kind": "restore_backup"
+        },
+        "when": [
+          {
+            "fact": "session.systemd_user",
+            "op": "eq",
+            "value": true
+          }
+        ],
+        "where": "venv"
+      }
+    },
+    {
+      "state": {
+        "reason": "hardware:disk<10GiB",
+        "status": "unavailable"
+      },
+      "step": {
+        "argv": [
+          "echo",
+          "z0int onboard (delegate contract z0int-onboard-v1 pending WP-I1)"
+        ],
+        "component": "z0intelligence",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0intelligence.delegate",
+        "kind": "ask",
+        "needs": [
+          "z0intelligence.shim"
+        ]
       }
     },
     {
@@ -847,8 +1432,7 @@
           "test",
           "bridge/src/bridge-security.test.ts",
           "bridge/src/bridge-security-entry.test.ts",
-          "bridge/src/pairing-http.test.ts",
-          "bridge/src/pairing-audio.test.ts"
+          "bridge/src/pairing-http.test.ts"
         ],
         "component": "dash",
         "consent": {
@@ -858,6 +1442,36 @@
         "kind": "check",
         "needs": [
           "dash.build.bridge_deps"
+        ],
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "reason": "rev_unverified",
+        "status": "unavailable"
+      },
+      "step": {
+        "argv": [
+          "bun",
+          "test",
+          "bridge/src/pairing-audio.test.ts"
+        ],
+        "component": "dash",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "dash.gate.audio",
+        "kind": "check",
+        "needs": [
+          "dash.build.bridge_deps"
+        ],
+        "when": [
+          {
+            "fact": "toolchains.ffmpeg.state",
+            "op": "eq",
+            "value": "present"
+          }
         ],
         "where": "build"
       }
@@ -961,11 +1575,6 @@
         "status": "unavailable"
       },
       "step": {
-        "argv": [
-          "bun",
-          "run",
-          "index.ts"
-        ],
         "component": "dash",
         "consent": {
           "class": "C0"
@@ -975,6 +1584,28 @@
         "needs": [
           "dash.release.deps"
         ],
+        "verify": {
+          "serve": {
+            "argv": [
+              "bun",
+              "run",
+              "index.ts"
+            ],
+            "cwd": "bridge",
+            "env": {
+              "DASH_ALLOW_LOOPBACK": "1",
+              "DASH_CREDENTIAL_DIR": "@tmp@/credentials",
+              "DASH_CWD": "@tmp@",
+              "DASH_ENABLE_LEGACY_CLI": "0",
+              "DASH_HOST": "127.0.0.1",
+              "DASH_PORT": "@port@",
+              "DASH_STT_MODEL": "@tmp@/no-model"
+            },
+            "expect_status": 401,
+            "path": "/",
+            "timeout_s": 90
+          }
+        },
         "when": [
           {
             "fact": "tailscale.ipv4",
@@ -1673,9 +2304,7 @@
           "npm",
           "--prefix",
           "web",
-          "exec",
-          "--",
-          "next",
+          "run",
           "build"
         ],
         "component": "z0evals",
@@ -1810,11 +2439,18 @@
   ],
   "targets": [
     "tokenomics",
+    "z0intelligence",
     "oh-my-pi",
     "dash",
     "z0evals"
   ],
   "unavailable": [
+    {
+      "detail": "disk < 10 GiB free at ~; free space or set Z0_HOME on a larger volume",
+      "id": "z0intelligence",
+      "reason": "hardware:disk<10GiB",
+      "status": "unavailable"
+    },
     {
       "detail": "disk < 5 GiB free at ~; free space or set Z0_HOME on a larger volume",
       "id": "oh-my-pi",
@@ -1832,6 +2468,7 @@
   "warnings": [
     "oh-my-pi: pin d707478d4c5c not verified on origin (no mirror or checkout evidence)",
     "tokenomics: pin 65e8f2dd9d6c not verified on origin (no mirror or checkout evidence)",
-    "z0evals: pin 29a28336e526 not verified on origin (no mirror or checkout evidence)"
+    "z0evals: pin 29a28336e526 not verified on origin (no mirror or checkout evidence)",
+    "z0intelligence: pin cfb33e5fabaf not verified on origin (no mirror or checkout evidence)"
   ]
 }

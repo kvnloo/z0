@@ -100,7 +100,7 @@ components:
       clone: https://github.com/kvnloo/tokenomics.git
       branch: master
       ref: 65e8f2dd9d6c5784a2a1c67f5236d69a5ae94021
-      command: pip install -e packages/python && npm install -w packages/typescript
+      command: pip install -e . && npm install -w packages/typescript
     verify:
       command: tokenomics report --range today
     docs:
@@ -122,7 +122,7 @@ components:
            creates: ["$Z0_HOME/venvs/{id}"], probe: {exists: "$Z0_HOME/venvs/{id}/bin/python"},
            undo: {kind: remove_owned}}
         - {id: tokenomics.install.python, kind: pip_install, consent: {class: C0}, network: true, where: venv,
-           needs: [tokenomics.venv], argv: [pip, install, -e, packages/python],
+           needs: [tokenomics.venv], argv: [pip, install, -e, .],
            probe: {exists: "$Z0_HOME/venvs/{id}/bin/tokenomics"}, legacy_projection: true}
         - {id: tokenomics.install.npm, kind: run, consent: {class: C0}, network: true, where: build,
            needs: [tokenomics.source], argv: [npm, install, -w, packages/typescript],
@@ -191,7 +191,7 @@ components:
       bounded decision backends, specialist/routine runtime, and auditable receipts.
     required: false
     profiles: [personal, research, full]
-    depends_on: [tokenomics]
+    depends_on: []
     integrates_with: [oh-my-pi, kerdoios, evolution-lab, tokenomics, aodl]
     provides:
       - z0int.decision_receipt.v1
@@ -244,7 +244,8 @@ components:
         - {id: z0intelligence.install, kind: pip_install, consent: {class: C0}, network: true, where: venv,
            needs: [z0intelligence.torch], argv: [pip, install, "~/.local/lib/z0int-shadow/{pin}"],
            probe: {exists: "~/.local/lib/z0int-runtime/{pin}/bin/z0int"},
-           when: [{fact: network.github, op: eq, value: true}]}
+           when: [{fact: network.github, op: eq, value: true},
+                  {fact: derived.manylinux_2_38, op: eq, value: true}]}
         - {id: z0intelligence.shim, kind: write_file, consent: {class: C1, bundle: services}, where: home,
            target_where: venv, needs: [z0intelligence.install], creates: ["~/.z0int/bin/python"], undo: {kind: remove_owned}}
         - {id: z0intelligence.hermes_json, kind: write_file, consent: {class: C1, bundle: services}, where: home,
@@ -253,7 +254,10 @@ components:
            needs: [z0intelligence.shim],
            argv: ["~/.z0int/bin/python", -c, "import z0int, mcp, aodl_contract, fff, typesafe_sdk"]}
         - {id: z0intelligence.checks.doctor, kind: check, consent: {class: C0}, where: venv,
-           needs: [z0intelligence.checks.import], argv: ["~/.z0int/bin/python", -m, z0int, doctor, --json]}
+           needs: [z0intelligence.checks.import],
+           argv: ["~/.z0int/bin/python", -c, "import json, sys; from z0int.doctor import run_doctor; r = run_doctor().to_dict(); bad = [c['id'] for c in r['checks'] if c.get('required') and not c.get('ok') and c['id'] != 'repo_root']; print(json.dumps({'unresolved': bad, 'checks': len(r['checks'])})); sys.exit(1 if bad else 0)"]}
+        # repo_root is excluded: z0int's doctor derives it from __file__, so the non-editable
+        # release runtime (principle 5) always reports it missing (upstream, WP-I series)
         - {id: z0intelligence.verify, kind: check, consent: {class: C0}, where: venv,
            needs: [z0intelligence.install], argv: [python3, -m, z0int, --help], legacy_projection: true}
         - {id: z0intelligence.plugin.claude, kind: harness_plugin, harness: claude-code,
@@ -274,8 +278,12 @@ components:
         - {id: z0intelligence.plugin.hermes, kind: ask, consent: {class: C0},
            when: [{fact: harnesses.hermes.state, op: eq, value: installed}],
            argv: [echo, "Hermes: choose the profile and edit its config.yaml yourself (always an ask)"]}
+        - {id: z0intelligence.service_env, kind: write_file, consent: {class: C1, bundle: services}, where: home,
+           target_where: venv, needs: [z0intelligence.shim],
+           when: [{fact: session.systemd_user, op: eq, value: true}],
+           creates: ["~/.config/z0intelligence/service.env"], undo: {kind: restore_backup}}
         - {id: z0intelligence.router.unit, kind: service_unit, consent: {class: C1, bundle: services},
-           where: venv, needs: [z0intelligence.shim],
+           where: venv, needs: [z0intelligence.shim, z0intelligence.service_env],
            when: [{fact: session.systemd_user, op: eq, value: true}],
            service: {template: z0intelligence, unit: z0intelligence.service, bind: loopback, port: 11501,
                      health: {http: {bind: loopback, port: 11501, path: /healthz, expect_status: 200}},
@@ -591,7 +599,10 @@ components:
         - {id: dash.gate.security, kind: check, consent: {class: C0}, where: build,
            needs: [dash.build.bridge_deps],
            argv: [bun, test, bridge/src/bridge-security.test.ts, bridge/src/bridge-security-entry.test.ts,
-                  bridge/src/pairing-http.test.ts, bridge/src/pairing-audio.test.ts]}
+                  bridge/src/pairing-http.test.ts]}
+        - {id: dash.gate.audio, kind: check, consent: {class: C0}, where: build,
+           needs: [dash.build.bridge_deps], when: [{fact: toolchains.ffmpeg.state, op: eq, value: present}],
+           argv: [bun, test, bridge/src/pairing-audio.test.ts]}
         - {id: dash.release.bridge, kind: stage_release, consent: {class: C0}, where: release,
            needs: [dash.build.bridge, dash.gate.security], creates: ["~/.local/lib/dash/releases/{rev_bridge}"],
            undo: {kind: remove_owned}}
@@ -604,7 +615,10 @@ components:
            creates: ["~/.local/lib/dash/releases/{rev_bridge}/bridge/acp-adapters/node_modules"], timeout_s: 1800}
         - {id: dash.selftest.loopback, kind: check, consent: {class: C0}, where: release,
            needs: [dash.release.deps], when: [{fact: tailscale.ipv4, op: missing}],
-           argv: [bun, run, index.ts]}
+           verify: {serve: {argv: [bun, run, index.ts], cwd: bridge, path: /, expect_status: 401, timeout_s: 90,
+                            env: {DASH_ALLOW_LOOPBACK: "1", DASH_HOST: 127.0.0.1, DASH_PORT: "@port@",
+                                  DASH_CREDENTIAL_DIR: "@tmp@/credentials", DASH_CWD: "@tmp@",
+                                  DASH_STT_MODEL: "@tmp@/no-model", DASH_ENABLE_LEGACY_CLI: "0"}}}}
         - {id: dash.bridge.env, kind: write_file, consent: {class: C1, bundle: services}, where: home,
            target_where: release, needs: [dash.release.deps], when: [{fact: tailscale.ipv4, op: exists}],
            creates: ["~/.config/dash-services/bridge.env"], undo: {kind: restore_backup}}
@@ -627,7 +641,7 @@ components:
            argv: [echo, "Android dev-client APK build is C2 (scripts/build-native-android.sh)"]}
       acceptance:
         tiers:
-          - {name: static, checks: [dash.gate.typecheck, dash.gate.lint, dash.gate.test, dash.gate.security]}
+          - {name: static, checks: [dash.gate.typecheck, dash.gate.lint, dash.gate.test, dash.gate.security, dash.gate.audio]}
           - {name: live, checks: [dash.health]}
       remediations: [use_public_install, mark_unavailable]
 
@@ -710,7 +724,7 @@ components:
         - {id: z0evals.web.typecheck, kind: check, consent: {class: C0}, where: build, needs: [z0evals.web.deps],
            argv: [npm, --prefix, web, run, typecheck]}
         - {id: z0evals.web.build, kind: run, consent: {class: C0}, network: true, where: build,
-           needs: [z0evals.web.typecheck], argv: [npm, --prefix, web, exec, --, next, build],
+           needs: [z0evals.web.typecheck], argv: [npm, --prefix, web, run, build],
            env: {Z0_BASE_PATH: /z0evals}, creates: ["{tree}/web/out/index.html"], timeout_s: 1800}
         - {id: z0evals.web.audit, kind: check, consent: {class: C0}, where: build, needs: [z0evals.web.build],
            argv: [.venv/bin/python, scripts/audit_web_export.py, --root, web/out]}

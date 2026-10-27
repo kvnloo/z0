@@ -1,0 +1,8 @@
+[
+  {"guardrail": 1, "name": "undeclared probe", "response": {"need_probe": "read_home"}, "reason": "probe_unavailable"},
+  {"guardrail": 2, "name": "extra schema field", "response": {"answer": "yes", "command": "do not execute"}, "reason": "response_schema"},
+  {"guardrail": 3, "name": "consent escalation", "response": {"answer": "yes", "consent": "C2", "apply": true}, "reason": "response_schema"},
+  {"guardrail": 4, "name": "zero call budget", "response": {"answer": "yes"}, "budget": {"max_calls": 0}, "reason": "budget_exhausted"},
+  {"guardrail": 5, "name": "canary prompt", "response": {"answer": "unsupported"}, "canary": true, "reason": "redaction_failed"},
+  {"guardrail": 6, "name": "edited frozen answer", "tamper": true}
+]

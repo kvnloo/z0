@@ -9,7 +9,7 @@ import re
 
 from .. import kernel as k
 from ..expand import component_context, expand_step, step_paths
-from ..plan import component_steps
+from ..plan import LINK_DIR, component_steps
 
 _HOST_ID = re.compile(r"^host_id:\s*['\"]?([0-9a-f]{16})['\"]?\s*$", re.M)
 
@@ -39,6 +39,9 @@ def owned_paths(ctx, host: dict) -> list:
         version = (spec.get("install") or {}).get("version")
         if version and ctx.lexists(ctx.expand(f"$Z0_HOME/toolchains/{tool}/{version}")):
             found.add(f"$Z0_HOME/toolchains/{tool}/{version}")
+    # The plan's own z0 dir of PATH links (P1), so a second plan sees it made (I1).
+    if ctx.lexists(ctx.expand(LINK_DIR)):
+        found.add(LINK_DIR)
     return sorted(found)
 
 

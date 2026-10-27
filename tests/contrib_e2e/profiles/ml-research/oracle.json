@@ -1,0 +1,36 @@
+{
+  "source": "kvnloo/z0intelligence tests/fixtures/contrib_profiles/ml-research.json at the candidate sha",
+  "profile_facts": {
+    "toolchains": [
+      "python",
+      "cuda"
+    ],
+    "harnesses": [
+      "claude",
+      "codex"
+    ],
+    "gpu": {
+      "class": "nvidia",
+      "vram_gib": 12
+    }
+  },
+  "oracle": {
+    "allowed_picks": [
+      "t-231-local-inference-profile",
+      "t-24-rlcd-alignbench",
+      "t-14-observer-eval-receipts",
+      "t-25-alignbench-bakeoff"
+    ],
+    "forbidden_issues": [
+      234,
+      94,
+      95
+    ],
+    "forbidden": {
+      "newcomer_false": true
+    },
+    "reasons": [
+      "skill_match:python"
+    ]
+  }
+}

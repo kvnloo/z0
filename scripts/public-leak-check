@@ -102,12 +102,27 @@ def read_denylist(path: str):
     return [ln.strip() for ln in lines if ln.strip() and not ln.strip().startswith("#")]
 
 
+def _flat_toml(text: str) -> dict:
+    """Python 3.10 fallback: `key = "string"` and `key = ["s", ...]` pairs only (all the
+    overlay schema holds), flattened; anything else is ignored."""
+    out: dict = {}
+    for line in text.splitlines():
+        m = re.match(r'\s*([A-Za-z0-9_.-]+)\s*=\s*(.+?)\s*$', line)
+        if not m:
+            continue
+        strings = re.findall(r'"((?:[^"\\]|\\.)*)"', m.group(2))
+        if strings:
+            out.setdefault(m.group(1), []).extend(strings)
+    return {k: v[0] if len(v) == 1 else v for k, v in out.items()}
+
+
 def overlay_literals(root: Path):
     """Private literals of a z0-hosts instance: absolute paths and device serials."""
     try:
         import tomllib
-    except ModuleNotFoundError:  # Python 3.10
-        return []
+        loads = tomllib.loads
+    except ModuleNotFoundError:  # Python 3.10: a denylist must never silently go empty
+        loads = _flat_toml
     out = set()
 
     def visit(node, key=""):
@@ -122,7 +137,7 @@ def overlay_literals(root: Path):
 
     for f in sorted(root.glob("hosts/*/*.toml")):
         try:
-            visit(tomllib.loads(f.read_text()))
+            visit(loads(f.read_text()))
         except (OSError, ValueError):
             continue
     return sorted(out)

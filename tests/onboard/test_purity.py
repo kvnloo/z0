@@ -94,7 +94,11 @@ class DryRunPurity(unittest.TestCase):
         self.assertEqual(len(run_dirs), 1)
         self.assertEqual(stat.S_IMODE(run_dirs[0].stat().st_mode), 0o700)
         names = sorted(p.name for p in run_dirs[0].iterdir())
-        self.assertEqual(names, ["host.json", "plan.diff.txt", "plan.json"])
+        self.assertEqual(names, ["answers.yaml", "host.json", "plan.diff.txt", "plan.json"])
+        frozen = json.loads((run_dirs[0] / "answers.yaml").read_text())
+        planned = json.loads((run_dirs[0] / "plan.json").read_text())
+        self.assertEqual(frozen["host_id"], planned["host_id"])
+        self.assertEqual(list(frozen["answers"]["llm"].values()), planned["llm_decisions"])
         for path in run_dirs[0].iterdir():
             self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o600, path.name)
         self.assertNotIn(fakehost.CANARY, (run_dirs[0] / "host.json").read_text())
@@ -110,7 +114,7 @@ class DryRunPurity(unittest.TestCase):
 
     def test_H1_recorded_host_json_from_another_host_is_refused(self):
         other = Path(self.tmp.name) / "other-host.json"
-        other.write_text((Path(__file__).parent / "fixtures/hosts/mbp-cpu-15g.json").read_text())
+        other.write_text((Path(__file__).parent / "fixtures/hosts/laptop-cpu-15g.json").read_text())
         out = self.run_z0("plan", "--stdout", "--host", str(other))
         self.assertEqual(out.returncode, 4, out.stderr)
         plan = json.loads(out.stdout)
@@ -118,9 +122,17 @@ class DryRunPurity(unittest.TestCase):
 
     def test_later_subcommands_refuse_cleanly(self):
         before_home = self.home()
-        out = self.run_z0("apply", "x")
+        out = self.run_z0("pair", "dash")
         self.assertEqual(out.returncode, 2)
-        self.assertIn("Z2", out.stderr)
+        self.assertIn("Z4", out.stderr)
+        self.assertEqual(self.home(), before_home)
+
+    def test_apply_of_an_unknown_run_is_a_usage_error_and_writes_nothing(self):
+        before_home = self.home()
+        for args in (("apply", "x"), ("apply", "../x"), ("verify", "x"), ("rollback", "x")):
+            out = self.run_z0(*args)
+            self.assertEqual(out.returncode, 2, (args, out.stderr))
+            self.assertIn("run", out.stderr)
         self.assertEqual(self.home(), before_home)
 
 
