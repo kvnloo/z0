@@ -103,7 +103,7 @@ def deadline(seconds):
         signal.signal(signal.SIGALRM, old_handler)
 
 
-def response(raw):
+def response(raw, kind=None):
     """Exact validation of providers.ANSWER_SCHEMA, without a schema dependency."""
     def unique(pairs):
         result = {}
@@ -115,6 +115,12 @@ def response(raw):
     if not isinstance(raw, str) or len(raw.encode()) > providers.MAX_BYTES:
         raise ValueError("response_schema")
     data = json.loads(raw, object_pairs_hook=unique)
+    if kind == "first_task_pick":
+        if (type(data) is not dict or set(data) != {"pick", "reason_codes"}
+                or type(data["pick"]) is not str or type(data["reason_codes"]) is not list
+                or any(type(code) is not str for code in data["reason_codes"])):
+            raise ValueError("response_schema")
+        return {"answer": data}
     if type(data) is not dict or set(data) not in ({"answer"}, {"need_probe"}):
         raise ValueError("response_schema")
     if type(next(iter(data.values()))) is not str:
@@ -253,7 +259,7 @@ def resolve(questions, mode, grants, llm_flag, answers_path, *, context=None):
                   "answer": q.safe_default, "accepted": False,
                   "reason": "redaction_failed" if prompt is None else selection_reason}
         probes = {}
-        for round_number in range(rounds + 1):
+        for round_number in range(1 if q.kind == "first_task_pick" else rounds + 1):
             if prompt is None or selected is None:
                 break
             remaining = total - (ctx.clock() - start)
@@ -269,7 +275,7 @@ def resolve(questions, mode, grants, llm_flag, answers_path, *, context=None):
                 if ctx.clock() - start > total:
                     record["reason"] = "budget_exhausted"
                     break
-                data = response(raw)
+                data = response(raw, q.kind)
                 if "need_probe" in data:
                     evidence = probe_evidence(data["need_probe"], ctx.snap.get("onboarding", {}).get("probes", {}), q)
                     if round_number >= rounds or evidence is None:
@@ -279,11 +285,13 @@ def resolve(questions, mode, grants, llm_flag, answers_path, *, context=None):
                     prompt = prompt_for(q, redactor, ctx.username, ctx.hostnames, ctx.canaries, probes)
                     continue
                 answer = data["answer"]
-                if answer not in q.candidates:
+                pick = answer.get("pick") if type(answer) is dict else answer
+                encoded_answer = json.dumps(answer) if type(answer) is dict else answer
+                if pick not in q.candidates:
                     record["reason"] = "out_of_set"
                 elif not q.accepts(answer):
                     record["reason"] = "verifier_failed"
-                elif redactor.found_in(answer.encode()) or any(v and v in answer for v in ctx.canaries):
+                elif redactor.found_in(encoded_answer.encode()) or any(v and v in encoded_answer for v in ctx.canaries):
                     record["reason"] = "redaction_failed"
                 else:
                     record.update(source="llm", answer=answer, accepted=True, reason="verified")

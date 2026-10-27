@@ -25,6 +25,15 @@ ANSWER_SCHEMA = {
 }
 
 
+def answer_schema(prompt):
+    """Use the closed question's schema for structured contributor answers."""
+    try:
+        payload = json.loads(prompt.rsplit("\n", 1)[-1])
+    except ValueError:
+        return ANSWER_SCHEMA
+    return payload.get("answer_schema", ANSWER_SCHEMA) if isinstance(payload, dict) else ANSWER_SCHEMA
+
+
 class ProviderError(Exception):
     """Only fixed reason codes cross the transport boundary."""
 
@@ -127,10 +136,10 @@ class Provider:
             headers["Authorization"] = "Bearer " + self.env[self.row["key_name"]]
         body = {"model": self.model, "messages": [{"role": "user", "content": prompt}], "stream": False}
         if self.id == "local" and self.protocol == "ollama":
-            body["format"] = ANSWER_SCHEMA
+            body["format"] = answer_schema(prompt)
         else:
             body["response_format"] = {"type": "json_schema", "json_schema": {
-                "name": "onboard_answer", "strict": True, "schema": ANSWER_SCHEMA}}
+                "name": "onboard_answer", "strict": True, "schema": answer_schema(prompt)}}
             body["max_tokens"] = 256
         data = http_json(url, body, timeout, headers)
         try:
@@ -147,7 +156,7 @@ class Provider:
             config = root / "mcp.json"
             config.write_text('{"mcpServers": {}}', encoding="utf-8")
             schema = root / "answer.schema.json"
-            schema.write_text(json.dumps(ANSWER_SCHEMA), encoding="utf-8")
+            schema.write_text(json.dumps(answer_schema(prompt)), encoding="utf-8")
             output = root / "answer.json"
             if self.id == "claude":
                 argv = [self.executable, "-p", "--output-format", "json", "--model", self.model,
