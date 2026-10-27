@@ -32,6 +32,8 @@ class Harness:
                         Z0_KEEPWORKING_STATE=str(self.dir / "state"))
         self.env.pop("CLAUDE_CODE_CHILD_SESSION", None)
         self.env.pop("Z0_KEEPWORKING", None)
+        self.env.pop("Z0_KEEPWORKING_MAX", None)
+        self.env["CLAUDE_CODE_ENTRYPOINT"] = "cli"
 
     def write_ledger(self, asks, **cfg):
         cfg.setdefault("scope_cwd_prefixes", [str(self.dir)])
@@ -42,8 +44,9 @@ class Harness:
             fh.write(json.dumps({"type": "assistant", "message": {"content": [
                 {"type": "tool_use", "name": "Bash", "input": {}}]}}, separators=(",", ":")) + "\n")
 
-    def run(self, active=False, bg=(), crons=(), env=None, cwd=None):
+    def run(self, active=False, bg=(), crons=(), env=None, cwd=None, prompt="p1"):
         event = {"session_id": "s1", "transcript_path": str(self.transcript),
+                 "prompt_id": prompt,
                  "cwd": str(cwd or self.dir),
                  "hook_event_name": "Stop", "stop_hook_active": active,
                  "last_assistant_message": "done", "background_tasks": list(bg),
@@ -100,12 +103,34 @@ class HookE2E(unittest.TestCase):
             self.h.write_ledger([dict(OPEN, status=status)])
             self.assertEqual(self.h.run()["decision"], "block", status)
 
-    def test_missing_and_invalid_ledger_block(self):
-        # missing ledger: the default scope is ~/workspace
-        self.h.run(cwd=self.h.dir / "workspace")
-        self.assertIn("unusable", json.loads(self.h.last.stdout)["reason"])
+    def test_missing_ledger_allows_invalid_blocks(self):
+        # no ledger = no registered approved work: never trap the session
+        self.assertIsNone(self.h.run(cwd=self.h.dir / "workspace"))
         self.h.ledger.write_text("asks: [this is yaml not json")
         self.assertIn("unusable", self.h.run(cwd=self.h.dir / "workspace")["reason"])
+
+    def test_continuation_cap_releases(self):
+        self.h.write_ledger([OPEN], max_continuations=3)
+        for i in range(3):
+            self.h.tool_call()
+            out = self.h.run(active=i > 0)
+            self.assertEqual(out["decision"], "block", i)
+            self.assertIn(f"continuation {i + 1} of at most 3", out["reason"])
+        self.h.tool_call()  # still making tool calls, but the cap is reached
+        self.assertIsNone(self.h.run(active=True))
+        # a new user prompt gets a fresh budget
+        self.h.tool_call()
+        self.assertEqual(self.h.run(prompt="p2")["decision"], "block")
+
+    def test_print_sessions_unbound_unless_forced(self):
+        self.h.write_ledger([OPEN])
+        self.assertIsNone(self.h.run(env={"CLAUDE_CODE_ENTRYPOINT": "sdk-cli"}))
+        self.assertEqual(self.h.run(env={"CLAUDE_CODE_ENTRYPOINT": "sdk-cli",
+                                         "Z0_KEEPWORKING": "on"})["decision"], "block")
+        self.h.write_ledger([OPEN], include_print_sessions=True)
+        self.h.tool_call()
+        self.assertEqual(self.h.run(env={"CLAUDE_CODE_ENTRYPOINT": "sdk-cli"},
+                                    prompt="p9")["decision"], "block")
 
     def test_loop_guard(self):
         self.h.write_ledger([OPEN])
