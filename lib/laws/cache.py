@@ -50,7 +50,6 @@ def seal(directory, key, paths):
         elif path.is_file():
             files[name] = file_sha256(path)
     (directory/'cache.json').write_text(json.dumps(dict(input_sha256=key, files=files, links=links), sort_keys=True)+'\n')
-    freeze(directory)
 
 
 def freeze(directory):
@@ -80,7 +79,9 @@ def ensure_toolchain():
                     raise RuntimeError('official Bend package hash mismatch')
             paths = list(stage.rglob('*'))
             seal(stage, key, paths)
+            # freeze after the move: renaming a directory to a new parent needs write on it
             stage.rename(target)
+            freeze(target)
     return target
 
 
@@ -120,4 +121,5 @@ def ensure_checker(package, lean_bin, env):
             (stage/'bendtt.lean').unlink()
             seal(stage, key, [stage/'bendtt'])
             stage.rename(target)
+            freeze(target)
     return target/'bendtt'
