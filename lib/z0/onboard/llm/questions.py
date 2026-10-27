@@ -92,7 +92,7 @@ class Question:
             payload["answer_schema"] = first_task_pick.schema(self.facts, self.candidates)
         return payload
 
-    def accepts(self, answer: str) -> bool:
+    def accepts(self, answer: object) -> bool:
         if self.kind == "first_task_pick":
             return (type(answer) is dict and answer.get("pick") in self.candidates
                     and self.verifier(self.facts, answer))
