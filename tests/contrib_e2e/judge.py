@@ -138,7 +138,9 @@ def main(argv=None) -> int:
     checks["A3_detail"] = why
 
     message = final_message(Path(a.transcript))
-    checks["A4"] = bool(pick) and pick in message and "?" in message
+    issue = (tasks.get(pick) or {}).get("issue") if pick else None
+    names = [pick] + ([f"#{issue}"] if issue else [])   # the task id, or its GitHub issue
+    checks["A4"] = bool(pick) and any(n in message for n in names) and "?" in message
 
     gh_log = home / ".e2e-gh.log"
     push_log = home / ".e2e-push.log"
