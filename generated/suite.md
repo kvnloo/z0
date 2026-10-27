@@ -6,6 +6,7 @@
 | `agent-orchestrator` | Agent Orchestrator | orchestration_runtime | implementation | experimental | `kvnloo/agent-orchestrator` |
 | `agentweb` | AgentWeb | agent_marketplace_harness | downstream_integration | experimental | `kvnloo/agentweb` |
 | `bend` | Bend | verified_compilation_substrate | external_substrate | experimental | `kvnloo/bend` |
+| `bend-native` | Bend Native | hermes_verifier_plugin | downstream_integration | experimental | `kvnloo/bend-native` |
 | `codex-router` | Codex Router | provider_router | implementation | experimental | `kvnloo/codex-router` |
 | `company-os` | Company OS | operational_projection | read_only_projection | experimental | `kvnloo/company-os` |
 | `deepseek-harness` | DeepSeek Harness | execution_runtime | implementation | developer_preview | `kvnloo/deepseek-harness` |
