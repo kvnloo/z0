@@ -155,6 +155,7 @@
     "arch": "x86_64",
     "distro": "arch",
     "libc": "glibc",
+    "libc_version": "2.39",
     "os": "linux",
     "pep668": true,
     "pkg_manager": "pacman"

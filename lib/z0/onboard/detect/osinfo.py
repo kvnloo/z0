@@ -29,6 +29,16 @@ def _libc(ctx, os_name: str) -> str:
     return "unknown"
 
 
+def _libc_version(ctx, os_name: str) -> str:
+    """glibc version from `ldd --version` (first line ends with it), else ""."""
+    if os_name != "linux":
+        return ""
+    result = ctx.run(["ldd", "--version"])
+    first = ((result.out or result.err or "").splitlines() or [""])[0]
+    match = re.search(r"(\d+\.\d+)\s*$", first.strip())
+    return match.group(1) if match else ""
+
+
 def _distro(ctx, os_name: str) -> str:
     if os_name == "darwin":
         result = ctx.run(["sw_vers", "-productVersion"])
@@ -71,5 +81,6 @@ def detect(ctx) -> dict:
     return {
         "host_id": host_id(_machine_id(ctx, os_name), ctx.hostname or ""),
         "os": {"os": os_name, "arch": arch, "libc": _libc(ctx, os_name),
+               "libc_version": _libc_version(ctx, os_name),
                "distro": _distro(ctx, os_name), "pkg_manager": pkg, "pep668": _pep668(ctx)},
     }

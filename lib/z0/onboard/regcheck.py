@@ -33,7 +33,7 @@ KINDS = json.loads((ROOT / "schemas/onboard-step.schema.json").read_text())["$de
 WHERE = ("mirror", "build", "release", "venv", "home")
 LIVE_ROOTS = ("release", "venv")  # S1: where live code may resolve (decide_exec_root allows)
 # Plan facts that are not host.json keys (plan.facts_of).
-PLAN_FACTS = {"mode": None, "profile": None, "derived": {"acp_harness": None}}
+PLAN_FACTS = {"mode": None, "profile": None, "derived": {"acp_harness": None, "manylinux_2_38": None}}
 BINDS = ("loopback", "tailnet_ipv4")
 BUNDLES = ("toolchains", "harness", "services", "models")
 EFFECTFUL = set(KINDS) - {"check", "ask"}

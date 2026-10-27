@@ -51,13 +51,27 @@ def _state(verdict: k.Verdict) -> dict:
 
 # --- facts -----------------------------------------------------------------------
 
+def when_mod_version(text: str) -> tuple:
+    try:
+        return tuple(int(p) for p in str(text).split(".")[:2])
+    except ValueError:
+        return ()
+
+
 def facts_of(host: dict, mode: str, profile: Optional[str]) -> dict:
     facts = copy.deepcopy(host)
     facts["harnesses"] = {norm_key(h): v for h, v in (host.get("harnesses") or {}).items()}
     facts["toolchains"] = {norm_key(t): v for t, v in (host.get("toolchains") or {}).items()}
     facts["mode"], facts["profile"] = mode, profile
     installed = {h for h, v in facts["harnesses"].items() if v.get("state") == "installed"}
-    facts["derived"] = {"acp_harness": bool(installed & {"claude_code", "codex"})}
+    osf = host.get("os") or {}
+    glibc = when_mod_version(osf.get("libc_version") or "")
+    facts["derived"] = {
+        "acp_harness": bool(installed & {"claude_code", "codex"}),
+        # binary wheels built as manylinux_2_38 (fff-search, a z0intelligence dependency)
+        # install without a compiler only on glibc >= 2.38, or on macOS
+        "manylinux_2_38": osf.get("os") == "darwin" or (osf.get("libc") == "glibc" and glibc >= (2, 38)),
+    }
     return facts
 
 

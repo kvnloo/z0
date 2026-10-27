@@ -82,6 +82,7 @@
     "arch": "x86_64",
     "distro": "debian",
     "libc": "glibc",
+    "libc_version": "2.36",
     "os": "linux",
     "pep668": true,
     "pkg_manager": "apt"

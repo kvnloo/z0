@@ -244,7 +244,8 @@ components:
         - {id: z0intelligence.install, kind: pip_install, consent: {class: C0}, network: true, where: venv,
            needs: [z0intelligence.torch], argv: [pip, install, "~/.local/lib/z0int-shadow/{pin}"],
            probe: {exists: "~/.local/lib/z0int-runtime/{pin}/bin/z0int"},
-           when: [{fact: network.github, op: eq, value: true}]}
+           when: [{fact: network.github, op: eq, value: true},
+                  {fact: derived.manylinux_2_38, op: eq, value: true}]}
         - {id: z0intelligence.shim, kind: write_file, consent: {class: C1, bundle: services}, where: home,
            target_where: venv, needs: [z0intelligence.install], creates: ["~/.z0int/bin/python"], undo: {kind: remove_owned}}
         - {id: z0intelligence.hermes_json, kind: write_file, consent: {class: C1, bundle: services}, where: home,

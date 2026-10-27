@@ -45,7 +45,7 @@ KEEP=0
 FULL=0
 PHASE="online"
 E2E_USER="${E2E_USER:-stranger}"
-E2E_WITHOUT="${E2E_WITHOUT:-oh-my-pi,tokenomics,dash}"
+E2E_WITHOUT="${E2E_WITHOUT:-oh-my-pi,tokenomics,dash,z0intelligence}"
 
 while (($#)); do
   case "$1" in

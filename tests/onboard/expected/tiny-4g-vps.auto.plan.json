@@ -72,14 +72,14 @@
   "llm": "local",
   "mode": "auto",
   "pin_policy": "pinned",
-  "plan_hash": "59c9a182bc33ab202c692785694fb56e1ce8cc8f15bcf7f68918a6920a177720",
+  "plan_hash": "0499ad473c662781d5c156146c01fb9b6e4c469e4cb15fea0481667bcfa0e2b2",
   "prepared_path": [
     "/usr/bin",
     "/bin"
   ],
   "profile": "core",
   "registry": {
-    "registry/components.yaml": "9427475c26e47e94bac37aa5bde23ea7b27455633d7b1cd1273b097c62936572",
+    "registry/components.yaml": "26e859b23b535409d21c3a77b885067580e22f32aa606a4831f972eb34dc8ccf",
     "registry/harnesses.yaml": "1c2b9ba37ca974e4aa1ed1f6990561ea303fc7e1f73c0fb4c6cc4802d5b4a7b8",
     "registry/onboarding.yaml": "b0c3e2b4c8e7a17bde8a5cb2378c90f6009b4464879a76406f6ae3cdc7e9b9ce",
     "registry/profiles.yaml": "8ef0b2b147bf7db252328ee9cfc981a81867bcf6533362621138bee1abd2e6eb",
@@ -577,6 +577,11 @@
         "when": [
           {
             "fact": "network.github",
+            "op": "eq",
+            "value": true
+          },
+          {
+            "fact": "derived.manylinux_2_38",
             "op": "eq",
             "value": true
           }
