@@ -28,8 +28,10 @@ If the user asks for general help with this repo, or you have no task, onboard t
    `./scripts/bootstrap.sh` (repo-local `.venv` only; it can take 10+ minutes, so run it detached
    with its log in `~/.z0/logs/` and poll like step 1); then run `.venv/bin/z0int --json contribute`
    and follow its `next_action` until `kind` is `ask_human`.
-   Finish by showing the user the pick (task id), the two alternatives and `needs_human`, and ask
-   which one to claim. Claim, post, push or open a PR only after the user's explicit yes.
+   Finish by showing the user the pick (task id), the two alternatives and `needs_human`, then
+   end your reply with z0int's question, copied verbatim from `next_action.why` of that
+   `ask_human` step (for example "Claim t-139-e2e-trace, choose an alternative (...), or stop?").
+   Claim, post, push or open a PR only after the user's explicit yes.
 4. Keep every log you write under `~/.z0/logs/`; write nothing else in the user's home.
 5. Never push, never post to GitHub (issues, comments, PRs) and never log in to anything
    (gh, tailscale, harnesses) without the user's explicit yes.

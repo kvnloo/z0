@@ -262,6 +262,15 @@ class StateContract(unittest.TestCase):
 class AgentInstructions(unittest.TestCase):
     """The start-here protocol must treat exit 5 as continue-to-step-3."""
 
+    def test_agents_md_ends_with_z0int_question_verbatim(self):
+        # The cell judge's A4 needs the pick named and a question; an imperative
+        # "Needs a decision: claim X, ... or stop." (agent.claude.frontend.run1 on
+        # 92c4067) is not one. z0int's ask_human `next_action.why` always is.
+        text = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+        start = text.split("## Start here", 1)[1].split("\n## ", 1)[0]
+        self.assertIn("next_action.why", start)
+        self.assertIn("verbatim", start)
+
     def test_agents_md_says_exit_5_continues(self):
         text = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
         start = text.split("## Start here", 1)[1].split("\n## ", 1)[0]
