@@ -20,7 +20,13 @@ case "$PROFILE" in
     stub node; stub bun; stub npm ;;
   ml-research)
     repo trainer pyproject.toml train.py notebooks/explore.ipynb requirements.txt
-    repo evals pyproject.toml eval.py data/README.md ;;
+    repo evals pyproject.toml eval.py data/README.md
+    # test hardware facts (spec §4.1: a GPU cannot be real in a container): a 12 GiB NVIDIA
+    # GPU and CUDA, as stub binaries on PATH that answer the probes' queries
+    stub nvcc
+    printf '#!/bin/sh\ncase "$*" in *memory.total*) echo 12288 ;; *name*) echo "NVIDIA test GPU (stub)" ;; *) echo "NVIDIA-SMI stub (12288 MiB)" ;; esac\n' \
+      > "$H/.local/bin/nvidia-smi"
+    chmod 755 "$H/.local/bin/nvidia-smi" ;;
   systems-rust)
     repo fastpath Cargo.toml src/main.rs src/lib.rs
     repo proxy go.mod main.go
