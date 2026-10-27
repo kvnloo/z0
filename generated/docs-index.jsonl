@@ -16,6 +16,7 @@
 {"id": "getting-started.five-minute-start", "path": "docs/getting-started/five-minute-start.md", "title": "Five Minute Start", "components": ["oh-my-pi", "tokenomics"]}
 {"id": "getting-started.onboard", "path": "docs/getting-started/onboard.md", "title": "Onboard", "components": ["z0intelligence", "dash", "z0evals"]}
 {"id": "getting-started.what-is-zer0", "path": "docs/getting-started/what-is-zer0.md", "title": "What Is Zer0", "components": ["tokenomics", "flow", "z0intelligence", "kerdoios"]}
+{"id": "guides.add-a-tool", "path": "docs/guides/add-a-tool.md", "title": "Add A Tool", "components": ["oh-my-pi", "z0intelligence", "kerdoios", "frontier-kb", "aodl", "memento"]}
 {"id": "guides.build-handsfree-desktop", "path": "docs/guides/build-handsfree-desktop.md", "title": "Build Handsfree Desktop", "components": ["oh-my-pi", "flow", "z0intelligence", "memento"]}
 {"id": "guides.optimize-tokens", "path": "docs/guides/optimize-tokens.md", "title": "Optimize Tokens", "components": ["oh-my-pi", "tokenomics"]}
 {"id": "laws.BENCH-2026-10-26", "path": "docs/laws/BENCH-2026-10-26.md", "title": "Bench 2026 10 26", "components": ["memento", "dash"]}
