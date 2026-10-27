@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import Optional
 
 BUNDLES = ("toolchains", "harness", "services", "models")
-LATER = {"accept": "Z6", "status": "Z6", "pair": "Z4"}
+LATER = {"pair": "Z4"}
 
 
 def _ids(text: Optional[str]) -> list:
@@ -67,6 +67,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_back.add_argument("--purge-bootstrap", action="store_true",
                         help="also remove stage 0's $Z0_HOME/{bootstrap,venv}")
     p_back.add_argument("--purge", action="store_true", help="also remove the cache/git mirrors")
+    sub.add_parser("status", help="last receipt and open asks (read-only)")
+    p_accept = sub.add_parser("accept", help="grant C1 bundles and apply only their pending steps")
+    p_accept.add_argument("bundles", nargs="+", help="bundle names, comma or space separated")
     for name in LATER:
         later = sub.add_parser(name, help=f"arrives in work package {LATER[name]}")
         later.add_argument("rest", nargs="*")
@@ -123,21 +126,6 @@ def sandbox_from_env(env) -> dict:
     if env.get("Z0_DETECT_OFFLINE") == "1":
         kwargs["http_head"] = lambda url, timeout: False
     return kwargs
-
-
-def _choose_profile(args, snap) -> Optional[str]:
-    if args.profile or args.mode != "guided":
-        return args.profile
-    if not _tty():
-        print("z0 onboard: --guided needs a TTY (or pass --profile)", file=sys.stderr)
-        raise SystemExit(2)
-    from . import regsnap
-    names = list(regsnap.profiles(snap))
-    answer = input(f"profile [{'/'.join(names)}] (enter = hardware default): ").strip()
-    if answer and answer not in names:
-        print(f"z0 onboard: unknown profile {answer}", file=sys.stderr)
-        raise SystemExit(2)
-    return answer or None
 
 
 def _make_plan(host, snap, args, profile):
@@ -218,6 +206,8 @@ def write_run_dir(host: dict, plan_obj: dict, snap: Optional[dict] = None) -> Pa
                 freeze(path, envelope)
     finally:
         os.umask(old)
+    from .launchd import guided_previews
+    guided_previews(run, host, plan_obj)
     return run
 
 
@@ -266,10 +256,11 @@ def cmd_plan(args, bare: bool = False) -> int:
     from .plan import PlanError, exit_code
 
     if args.mode is None:
-        args.mode = "auto"  # no TTY: same as --auto (§1.1)
-        if bare and _tty():
-            answer = input("auto or guided? [auto]: ").strip().lower()
-            args.mode = "guided" if answer in ("g", "guided") else "auto"
+        from .ui import UI
+        args.mode = UI().choice("auto or guided?", ["auto", "guided"], "auto") if bare else "auto"
+    if args.mode == "guided" and not _tty():
+        print("z0 onboard: --guided needs a TTY", file=sys.stderr)
+        return 2
     if getattr(args, "host", None):
         from . import mirror, regsnap
         snap = regsnap.load()
@@ -282,8 +273,12 @@ def cmd_plan(args, bare: bool = False) -> int:
             host.setdefault("workspace", {})["host_match"] = "other"
     else:
         host, snap = run_detect(fetch=not getattr(args, "stdout", False))
-    profile = _choose_profile(args, snap)
     try:
+        if args.mode == "guided":
+            from .ui import configure
+            profile = configure(args, host, snap)
+        else:
+            profile = args.profile
         plan_obj = _make_plan(host, snap, args, profile)
         if not bare or args.plan_only:
             plan_obj = _resolve_plan(host, snap, args, profile, plan_obj,
@@ -404,7 +399,7 @@ def _llm_offers(args, host, snap):
 
 def _consent(args, host, snap, profile, plan_obj) -> tuple:
     """Returns (plan to apply, consent exit code, abort code or None)."""
-    if args.yes or plan_obj["grants"]["source"] != "none":
+    if args.mode != "guided" and (args.yes or plan_obj["grants"]["source"] != "none"):
         return plan_obj, 0, None
     from .plan import plan
 
@@ -423,11 +418,15 @@ def _consent(args, host, snap, profile, plan_obj) -> tuple:
                   "they stay asks (re-run with --yes, or --accept "
                   f"{','.join(bundles)}). C0 steps still apply.", file=sys.stderr)
         return plan_obj, 3 if new_c1 else 0, None
-    granted = list(bundles)
     if args.mode == "guided":
-        granted = [b for b in bundles if _confirm([f"Grant the {b} bundle?"] +
-                                                  [l for l in lines if l.startswith("    ")])]
-    elif not _confirm(lines):
+        from .ui import consent
+        grants = consent(candidate, plan_obj["grants"]["bundles"])
+        guided = plan(host, snap, mode=args.mode, profile=profile, with_ids=_ids(args.with_ids),
+                      without_ids=_ids(args.without_ids), grants=grants,
+                      pin_policy=args.pin_policy, llm=args.llm)
+        return guided, 3 if any(a.get("consent") == "C1" for a in guided["asks"]) else 0, None
+    granted = list(bundles)
+    if not _confirm(lines):
         print("z0 onboard: nothing applied (declined). `--accept BUNDLES` grants a subset.")
         return plan_obj, 3, 3
     if args.mode == "guided" and llm_offers:
@@ -599,6 +598,9 @@ def main(argv: Optional[list] = None) -> int:
         return cmd_verify(args)
     if args.cmd == "rollback":
         return cmd_rollback(args)
+    if args.cmd in ("status", "accept"):
+        from .status import cmd_status, cmd_accept
+        return cmd_status(args) if args.cmd == "status" else cmd_accept(args)
     if args.cmd in LATER:
         print(f"z0 onboard {args.cmd}: arrives in work package {LATER[args.cmd]}", file=sys.stderr)
         return 2

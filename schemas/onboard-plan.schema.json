@@ -23,6 +23,8 @@
           "uniqueItems": true
         },
         "llm_providers": { "type": "array", "items": { "enum": ["claude", "codex", "openrouter-free", "vercel-free"] }, "uniqueItems": true },
+        "steps": {"type": "array", "items": {"type": "string"}, "uniqueItems": true,
+                  "description": "Optional per-step restriction for guided C1 consent; bundles remain required."},
         "source": { "enum": ["tty", "flag", "none"], "description": "An LLM is never a grant source (L-LLM)." }
       },
       "additionalProperties": false
