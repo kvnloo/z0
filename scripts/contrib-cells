@@ -87,7 +87,7 @@ if want laws_ci; then
   TOOL="$WORK/bend-toolchain"
   laws() {
     set -e
-    eval "$(bash "$CAND/bend/onboard/bootstrap.sh" "$TOOL" | sed 's/^/export /')"
+    eval "$(bash "$CAND/lib/laws/bootstrap.sh" "$TOOL" | sed 's/^/export /')"
     for d in onboard contrib_ready; do
       (cd "$CAND/bend/$d" && PATH="/usr/bin:$PATH:$LEAN_BIN" "$BEND" PROOF.bend --verdict | tee /dev/stderr | grep -qx "ALL PROOFS CHECK")
     done

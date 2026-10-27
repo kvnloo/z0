@@ -7,3 +7,11 @@ twin = "lib/z0/onboard/kernel.py"
 parity = "tests/onboard/test_kernel_twin.py"
 mutation = "tests/onboard/test_kernel_mutation.py"
 gate = []
+
+[[domain]]
+name = "contrib_ready"
+dir = "bend/contrib_ready"
+twin = "scripts/contrib_ready.py"
+parity = "tests/contrib_ready/test_twin.py"
+mutation = "tests/contrib_ready/test_mutation.py"
+gate = []
