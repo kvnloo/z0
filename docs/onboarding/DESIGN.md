@@ -348,6 +348,13 @@ Adopted checkouts are never written to, and no `git worktree add` touches their 
 | `gpu_vendor_resolve` | hw classes | driver probe | cpu |
 | `pkg_hint` | package names from the toolchains.yaml families | — (print-only) | generic hint |
 | `failure_triage` | that step's `remediations:` | the remediation's own `when:` holds | `mark_unavailable` |
+| `first_task_pick` | at most 5 already-filtered task ids within the alignment tie epsilon | exact `{pick, reason_codes}`; closed codes must agree with the selected task and redacted profile aggregates; T3 fields refuse before send | deterministic top with no reason codes |
+
+`first_task_pick` uses at most one call (no probes), inside the shared eight-call
+budget. Its reasons are `tier:P0..P3`, `skill_match:<tag>`, `interest:<tag>`,
+`first_task_size:S|M|L` or `size:S|M|L`; skill/interest tags must match both the
+profile and the selected task, and size/tier must match the selected task.
+It uses the same privacy, freeze and zero-call replay path as the other kinds.
 
 There is no Hermes profile pick; Hermes is always an ask.
 

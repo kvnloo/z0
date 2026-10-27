@@ -307,7 +307,8 @@ class ResolverTests(unittest.TestCase):
             ("failure_triage", {"remediations": ["retry", "wrong"], "conditions_hold": {"retry": True}},
              ["retry", "wrong"], "retry", "wrong"),
         ]
-        self.assertEqual({c[0] for c in cases}, set(KINDS))
+        # CW6's structured answer contract has its own exhaustive test module.
+        self.assertEqual({c[0] for c in cases} | {"first_task_pick"}, set(KINDS))
         for kind, facts, candidates, good, bad in cases:
             q = question({"id": kind, "kind": kind, "facts": facts, "candidates": candidates}, SNAP)
             self.assertTrue(q.accepts(good), kind)

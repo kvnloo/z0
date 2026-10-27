@@ -1,4 +1,4 @@
-"""Seven closed questions (§7). Verifiers inspect detected facts, never the host.
+"""Closed questions (§7). Verifiers inspect detected facts, never the host.
 
 Answers are hints, not new facts, grants, steps, paths, or executable commands.
 The conservative default need not be a candidate (e.g. the generic package hint).
@@ -11,9 +11,10 @@ from dataclasses import dataclass
 from typing import Callable
 
 from .. import kernel as k
+from . import first_task_pick
 
 KINDS = ("harness_classify", "config_dir_pick", "fork_match", "port_owner",
-         "gpu_vendor_resolve", "pkg_hint", "failure_triage")
+         "gpu_vendor_resolve", "pkg_hint", "failure_triage", "first_task_pick")
 # Explicit projections: never send an entire host, environment, file or error log.
 FACT_KEYS = {
     "harness_classify": ("name", "dir", "symlink_target", "shebang", "policies"),
@@ -72,7 +73,7 @@ def verify_failure(facts: dict, answer: str) -> bool:
 
 
 VERIFIERS = dict(zip(KINDS, (verify_harness, verify_config, verify_fork, verify_port,
-                             verify_gpu, verify_pkg, verify_failure)))
+                             verify_gpu, verify_pkg, verify_failure, first_task_pick.verify)))
 
 
 @dataclass(frozen=True)
@@ -81,14 +82,20 @@ class Question:
     kind: str
     facts: dict
     candidates: tuple
-    safe_default: str
-    verifier: Callable[[dict, str], bool]
+    safe_default: str | dict
+    verifier: Callable[[dict, object], bool]
 
     def payload(self) -> dict:
-        return {"id": self.id, "kind": self.kind, "facts": self.facts,
+        payload = {"id": self.id, "kind": self.kind, "facts": self.facts,
                 "candidates": list(self.candidates), "safe_default": self.safe_default}
+        if self.kind == "first_task_pick":
+            payload["answer_schema"] = first_task_pick.schema(self.facts, self.candidates)
+        return payload
 
-    def accepts(self, answer: str) -> bool:
+    def accepts(self, answer: object) -> bool:
+        if self.kind == "first_task_pick":
+            return (type(answer) is dict and answer.get("pick") in self.candidates
+                    and self.verifier(self.facts, answer))
         return (type(answer) is str and answer in self.candidates
                 and self.verifier(self.facts, answer))
 
@@ -98,6 +105,11 @@ def question(raw: dict, snap: dict) -> Question:
     kind = raw["kind"]
     if kind not in KINDS or not isinstance(raw.get("id"), str):
         raise ValueError("unknown question kind or invalid id")
+    if kind == "first_task_pick":
+        candidates = tuple(raw.get("candidates") or ())
+        facts = first_task_pick.close_facts(raw.get("facts"), candidates)
+        return Question(raw["id"], kind, facts, candidates,
+                        {"pick": candidates[0], "reason_codes": []}, first_task_pick.verify)
     source = raw.get("facts") or {}
     facts = {}
     strings = {"name", "dir", "symlink_target", "shebang", "executable", "release_root",
