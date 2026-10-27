@@ -37,6 +37,44 @@ components:
     boundaries:
       owns: [coding agent runtime, voice/stage/CU, RLM spill, Jev hotpath]
       not_here: [token measurement, routing policy store, research KB]
+    onboard:
+      gate: generic
+      requires: {tools: ["bun>=1.4.3", "git"], optional: ["rustup"]}
+      hardware: {os: [linux, darwin], arch: [x86_64, arm64], min_ram_gib: 2, min_disk_gib: 5, gpu: none}
+      public_ready: [revs_on_origin, no_private_on_auto_path]
+      steps:
+        - {id: oh-my-pi.source, kind: adopt_or_clone, consent: {class: C0}, network: true, where: mirror,
+           probe: {exists: "$Z0_HOME/repos/{name}"}}
+        - {id: oh-my-pi.install, kind: run, consent: {class: C0}, network: true, where: build,
+           needs: [oh-my-pi.source], argv: [bun, install], creates: ["{tree}/node_modules"],
+           legacy_projection: true, timeout_s: 1800}
+        - {id: oh-my-pi.build, kind: run, consent: {class: C0}, where: build, needs: [oh-my-pi.install],
+           argv: [bun, run, build], probe: {exists: "{tree}/packages/coding-agent/dist"},
+           legacy_projection: true, timeout_s: 1800}
+        # S1: `./omp setup` links the OMP harness to the tree it runs from, so it runs
+        # only from a stamped release (with its own deps and build), never a checkout.
+        - {id: oh-my-pi.build_tree, kind: build_tree, consent: {class: C0}, network: true, where: build,
+           when: [{fact: harnesses.omp.state, op: eq, value: installed}],
+           creates: ["$Z0_HOME/build/{id}/{pin}"], undo: {kind: remove_owned}}
+        - {id: oh-my-pi.release, kind: stage_release, consent: {class: C0}, where: release,
+           needs: [oh-my-pi.build_tree], when: [{fact: harnesses.omp.state, op: eq, value: installed}],
+           creates: ["~/.local/lib/oh-my-pi/releases/{pin}"], undo: {kind: remove_owned}}
+        - {id: oh-my-pi.release.deps, kind: run, consent: {class: C0}, network: true, where: release,
+           needs: [oh-my-pi.release], when: [{fact: harnesses.omp.state, op: eq, value: installed}],
+           argv: [bun, install], creates: ["~/.local/lib/oh-my-pi/releases/{pin}/node_modules"], timeout_s: 1800}
+        - {id: oh-my-pi.release.build, kind: run, consent: {class: C0}, where: release,
+           needs: [oh-my-pi.release.deps], when: [{fact: harnesses.omp.state, op: eq, value: installed}],
+           argv: [bun, run, build], probe: {exists: "~/.local/lib/oh-my-pi/releases/{pin}/packages/coding-agent/dist"},
+           timeout_s: 1800}
+        - {id: oh-my-pi.setup, kind: harness_plugin, harness: omp, consent: {class: C1, bundle: harness},
+           where: release, needs: [oh-my-pi.release.build], argv: [./omp, setup],
+           when: [{fact: harnesses.omp.state, op: eq, value: installed}],
+           probe: {exists: "$Z0_HOME/onboard/stamps/oh-my-pi.setup"}, undo: {kind: restore_backup}}
+        - {id: oh-my-pi.verify, kind: check, consent: {class: C0}, where: build,
+           needs: [oh-my-pi.build, tokenomics.install.python, z0intelligence.checks.import],
+           argv: [bun, test, packages/coding-agent/test/rlm-tokenomics-bridge.test.ts], legacy_projection: true}
+      acceptance: {tiers: [{name: verify, checks: [oh-my-pi.verify]}]}
+      remediations: [mark_unavailable]
 
   tokenomics:
     name: Tokenomics
@@ -62,7 +100,7 @@ components:
       clone: https://github.com/kvnloo/tokenomics.git
       branch: master
       ref: 65e8f2dd9d6c5784a2a1c67f5236d69a5ae94021
-      command: pip install -e packages/python && npm install -w packages/typescript
+      command: pip install -e . && npm install -w packages/typescript
     verify:
       command: tokenomics report --range today
     docs:
@@ -71,6 +109,28 @@ components:
     boundaries:
       owns: [usage attribution, savings reports, reconciliation]
       not_here: [routing policy, provider execution, agent runtime]
+    onboard:
+      gate: generic
+      requires: {tools: ["git", "python>=3.10", "node>=20", "npm"]}
+      hardware: {os: [linux, darwin], arch: [x86_64, arm64], min_ram_gib: 2, min_disk_gib: 1, gpu: none}
+      python: {window: ">=3.10", prefer: "3.12", venv: own}
+      public_ready: [revs_on_origin]
+      steps:
+        - {id: tokenomics.source, kind: adopt_or_clone, consent: {class: C0}, network: true, where: mirror,
+           probe: {exists: "$Z0_HOME/repos/{name}"}}
+        - {id: tokenomics.venv, kind: venv, consent: {class: C0}, where: venv, needs: [tokenomics.source],
+           creates: ["$Z0_HOME/venvs/{id}"], probe: {exists: "$Z0_HOME/venvs/{id}/bin/python"},
+           undo: {kind: remove_owned}}
+        - {id: tokenomics.install.python, kind: pip_install, consent: {class: C0}, network: true, where: venv,
+           needs: [tokenomics.venv], argv: [pip, install, -e, .],
+           probe: {exists: "$Z0_HOME/venvs/{id}/bin/tokenomics"}, legacy_projection: true}
+        - {id: tokenomics.install.npm, kind: run, consent: {class: C0}, network: true, where: build,
+           needs: [tokenomics.source], argv: [npm, install, -w, packages/typescript],
+           creates: ["{tree}/node_modules"], legacy_projection: true, timeout_s: 1800}
+        - {id: tokenomics.verify, kind: check, consent: {class: C0}, where: venv,
+           needs: [tokenomics.install.python], argv: [tokenomics, report, --range, today], legacy_projection: true}
+      acceptance: {tiers: [{name: verify, checks: [tokenomics.verify]}]}
+      remediations: [mark_unavailable]
 
   flow:
     name: Flow
@@ -104,6 +164,20 @@ components:
     boundaries:
       owns: [OS prediction, prepare, routine mining]
       not_here: [agent runtime, token accounting, training loops]
+    onboard:
+      gate: generic
+      requires: {tools: ["git", "python>=3.10"]}
+      hardware: {os: [linux], arch: [x86_64, arm64], min_ram_gib: 2, min_disk_gib: 1, gpu: none}
+      public_ready: [revs_on_origin]
+      steps:
+        - {id: flow.source, kind: adopt_or_clone, consent: {class: C0}, network: true, where: mirror,
+           when: [{fact: os.os, op: eq, value: linux}, {fact: session.desktop, op: ne, value: none}],
+           probe: {exists: "$Z0_HOME/repos/{name}"}}
+        - {id: flow.link, kind: ask, consent: {class: C0}, needs: [flow.source],
+           argv: [echo, "dotfiles link or apply is never automatic (C2); see the repo README"]}
+        - {id: flow.verify, kind: check, consent: {class: C0}, where: build, needs: [flow.source],
+           argv: [python3, scripts/workspace_flow.py, --help], legacy_projection: true}
+      acceptance: {tiers: [{name: verify, checks: [flow.verify]}]}
 
   z0intelligence:
     name: z0intelligence
@@ -117,7 +191,7 @@ components:
       bounded decision backends, specialist/routine runtime, and auditable receipts.
     required: false
     profiles: [personal, research, full]
-    depends_on: [tokenomics]
+    depends_on: []
     integrates_with: [oh-my-pi, kerdoios, evolution-lab, tokenomics, aodl]
     provides:
       - z0int.decision_receipt.v1
@@ -129,13 +203,100 @@ components:
     install:
       clone: https://github.com/kvnloo/z0intelligence.git
       branch: master
-      ref: 0563ed7a52071cca63ccc91b8c9040207ad23e5d
+      ref: 9c1631683c63f6eb48bea70962fd54f0ece312fb
       command: pip install -e .
     verify:
       command: python3 -m z0int --help
     boundaries:
       owns: [personal policy, provenance-backed context resolution, bounded decision backends, routine promotion, specialist runtime]
       not_here: [source memory databases, harness execution, experiment promotion, OS prediction, measurement kernel]
+    onboard:
+      gate: z0int
+      requires: {tools: ["git", "python-window"], optional: ["llama-server", "agentsview"]}
+      hardware: {os: [linux, darwin], arch: [x86_64, arm64], min_ram_gib: 8, min_disk_gib: 10, gpu: any}
+      python: {window: ">=3.10,<3.14", prefer: "3.11", venv: own}
+      public_ready: [revs_on_origin, no_private_on_auto_path]
+      secrets:
+        - {name: CEREBRAS_API_KEY, kind: env, required: false}
+        - {name: GROQ_API_KEY, kind: env, required: false}
+        - {name: OPENROUTER_API_KEY, kind: env, required: false}
+        - {name: NVIDIA_API_KEY, kind: env, required: false}
+        - {name: DEEPSEEK_API_KEY, kind: env, required: false}
+        - {name: AI_GATEWAY_API_KEY, kind: env, required: false}
+      steps:
+        - {id: z0intelligence.source, kind: adopt_or_clone, consent: {class: C0}, network: true, where: mirror,
+           probe: {exists: "$Z0_HOME/repos/{name}"}}
+        - {id: z0intelligence.dev, kind: pip_install, consent: {class: C0}, network: true, where: build,
+           needs: [z0intelligence.source], when: [{fact: mode, op: eq, value: guided}],
+           argv: [pip, install, -e, .], probe: {exists: "{tree}/.venv/bin/z0int"}, legacy_projection: true}
+        - {id: z0intelligence.build, kind: build_tree, consent: {class: C0}, network: true, where: build,
+           creates: ["$Z0_HOME/build/{id}/{pin}"], undo: {kind: remove_owned}}
+        - {id: z0intelligence.release, kind: stage_release, consent: {class: C0}, where: release,
+           needs: [z0intelligence.build], creates: ["~/.local/lib/z0int-shadow/{pin}"], undo: {kind: remove_owned}}
+        - {id: z0intelligence.runtime, kind: venv, consent: {class: C0}, where: venv,
+           needs: [z0intelligence.release, toolchain.python-window],
+           creates: ["~/.local/lib/z0int-runtime/{pin}"],
+           probe: {exists: "~/.local/lib/z0int-runtime/{pin}/bin/python"}, undo: {kind: remove_owned}}
+        - {id: z0intelligence.torch, kind: pip_install, consent: {class: C1, bundle: models}, network: true,
+           where: venv, needs: [z0intelligence.runtime],
+           argv: [pip, install, "torch=={torch_version}", "{torch_index_args}"],
+           probe: {exists: "~/.local/lib/z0int-runtime/{pin}/.z0/torch-{torch_version}"}}
+        - {id: z0intelligence.install, kind: pip_install, consent: {class: C0}, network: true, where: venv,
+           needs: [z0intelligence.torch], argv: [pip, install, "~/.local/lib/z0int-shadow/{pin}"],
+           probe: {exists: "~/.local/lib/z0int-runtime/{pin}/bin/z0int"},
+           when: [{fact: network.github, op: eq, value: true},
+                  {fact: derived.manylinux_2_38, op: eq, value: true}]}
+        - {id: z0intelligence.shim, kind: write_file, consent: {class: C1, bundle: services}, where: home,
+           target_where: venv, needs: [z0intelligence.install], creates: ["~/.z0int/bin/python"], undo: {kind: remove_owned}}
+        - {id: z0intelligence.hermes_json, kind: write_file, consent: {class: C1, bundle: services}, where: home,
+           target_where: venv, needs: [z0intelligence.shim], creates: ["~/.z0int/config/hermes.json"], undo: {kind: restore_backup}}
+        - {id: z0intelligence.checks.import, kind: check, consent: {class: C0}, where: venv,
+           needs: [z0intelligence.shim],
+           argv: ["~/.z0int/bin/python", -c, "import z0int, mcp, aodl_contract, fff, typesafe_sdk"]}
+        - {id: z0intelligence.checks.doctor, kind: check, consent: {class: C0}, where: venv,
+           needs: [z0intelligence.checks.import],
+           argv: ["~/.z0int/bin/python", -c, "import json, sys; from z0int.doctor import run_doctor; r = run_doctor().to_dict(); bad = [c['id'] for c in r['checks'] if c.get('required') and not c.get('ok') and c['id'] != 'repo_root']; print(json.dumps({'unresolved': bad, 'checks': len(r['checks'])})); sys.exit(1 if bad else 0)"]}
+        # repo_root is excluded: z0int's doctor derives it from __file__, so the non-editable
+        # release runtime (principle 5) always reports it missing (upstream, WP-I series)
+        - {id: z0intelligence.verify, kind: check, consent: {class: C0}, where: venv,
+           needs: [z0intelligence.install], argv: [python3, -m, z0int, --help], legacy_projection: true}
+        - {id: z0intelligence.plugin.claude, kind: harness_plugin, harness: claude-code,
+           consent: {class: C1, bundle: harness}, where: release, needs: [z0intelligence.checks.import],
+           when: [{fact: harnesses.claude_code.state, op: eq, value: installed}],
+           argv: [claude, plugin, install, "z0intelligence@z0intelligence"],
+           probe: {exists: "$Z0_HOME/onboard/stamps/z0intelligence.plugin.claude"}, undo: {kind: uninstall}}
+        - {id: z0intelligence.plugin.codex, kind: harness_plugin, harness: codex,
+           consent: {class: C1, bundle: harness}, where: release, needs: [z0intelligence.checks.import],
+           when: [{fact: harnesses.codex.state, op: eq, value: installed}],
+           argv: [codex, plugin, add, "codex-z0intelligence@z0intelligence"],
+           probe: {exists: "$Z0_HOME/onboard/stamps/z0intelligence.plugin.codex"}, undo: {kind: uninstall}}
+        - {id: z0intelligence.plugin.omp, kind: harness_plugin, harness: omp,
+           consent: {class: C1, bundle: harness}, where: release, needs: [z0intelligence.checks.import],
+           when: [{fact: harnesses.omp.state, op: eq, value: installed}],
+           argv: [python3, scripts/omp_bridge_install.py],
+           probe: {exists: "$Z0_HOME/onboard/stamps/z0intelligence.plugin.omp"}, undo: {kind: restore_backup}}
+        - {id: z0intelligence.plugin.hermes, kind: ask, consent: {class: C0},
+           when: [{fact: harnesses.hermes.state, op: eq, value: installed}],
+           argv: [echo, "Hermes: choose the profile and edit its config.yaml yourself (always an ask)"]}
+        - {id: z0intelligence.service_env, kind: write_file, consent: {class: C1, bundle: services}, where: home,
+           target_where: venv, needs: [z0intelligence.shim],
+           when: [{fact: session.systemd_user, op: eq, value: true}],
+           creates: ["~/.config/z0intelligence/service.env"], undo: {kind: restore_backup}}
+        - {id: z0intelligence.router.unit, kind: service_unit, consent: {class: C1, bundle: services},
+           where: venv, needs: [z0intelligence.shim, z0intelligence.service_env],
+           when: [{fact: session.systemd_user, op: eq, value: true}],
+           service: {template: z0intelligence, unit: z0intelligence.service, bind: loopback, port: 11501,
+                     health: {http: {bind: loopback, port: 11501, path: /healthz, expect_status: 200}},
+                     start_order: 3},
+           probe: {exists: "~/.config/systemd/user/z0intelligence.service"}, undo: {kind: restore_backup}}
+        - {id: z0intelligence.delegate, kind: ask, consent: {class: C0}, needs: [z0intelligence.shim],
+           argv: [echo, "z0int onboard (delegate contract z0int-onboard-v1 pending WP-I1)"]}
+      harness_integrations: [claude-code, codex, omp, hermes]
+      acceptance:
+        tiers:
+          - {name: import, checks: [z0intelligence.checks.import, z0intelligence.verify]}
+          - {name: doctor, checks: [z0intelligence.checks.doctor]}
+      remediations: [retry_with_cpu_index, mark_unavailable]
 
   kerdoios:
     name: Kerdoios
@@ -164,6 +325,24 @@ components:
     boundaries:
       owns: [provider routing, allocation policy]
       not_here: [provider execution, token measurement, agent runtime]
+    onboard:
+      gate: generic
+      requires: {tools: ["git", "python>=3.10"]}
+      hardware: {os: [linux, darwin], arch: [x86_64, arm64], min_ram_gib: 2, min_disk_gib: 1, gpu: none}
+      python: {window: ">=3.10", prefer: "3.12", venv: own}
+      public_ready: [revs_on_origin]
+      steps:
+        - {id: kerdoios.source, kind: adopt_or_clone, consent: {class: C0}, network: true, where: mirror,
+           probe: {exists: "$Z0_HOME/repos/{name}"}}
+        - {id: kerdoios.venv, kind: venv, consent: {class: C0}, where: venv, needs: [kerdoios.source],
+           creates: ["$Z0_HOME/venvs/{id}"], probe: {exists: "$Z0_HOME/venvs/{id}/bin/python"},
+           undo: {kind: remove_owned}}
+        - {id: kerdoios.install, kind: pip_install, consent: {class: C0}, network: true, where: venv,
+           needs: [kerdoios.venv], argv: [pip, install, -e, .],
+           probe: {exists: "$Z0_HOME/venvs/{id}/.z0/installed-{pin}"}, legacy_projection: true}
+        - {id: kerdoios.import, kind: check, consent: {class: C0}, where: venv, needs: [kerdoios.install],
+           argv: ["$Z0_HOME/venvs/{id}/bin/python", -c, "import sys; sys.exit(0)"]}
+      acceptance: {tiers: [{name: install, checks: [kerdoios.import]}]}
 
   evolution-lab:
     name: Evolution Lab
@@ -191,6 +370,24 @@ components:
     boundaries:
       owns: [experiment search, locked corpora and splits, candidate evolution, promotion evidence]
       not_here: [production runtime, source memory truth, personal traces]
+    onboard:
+      gate: generic
+      requires: {tools: ["git", "python>=3.10"]}
+      hardware: {os: [linux, darwin], arch: [x86_64, arm64], min_ram_gib: 2, min_disk_gib: 1, gpu: none}
+      python: {window: ">=3.10", prefer: "3.12", venv: own}
+      public_ready: [revs_on_origin]
+      steps:
+        - {id: evolution-lab.source, kind: adopt_or_clone, consent: {class: C0}, network: true, where: mirror,
+           probe: {exists: "$Z0_HOME/repos/{name}"}}
+        - {id: evolution-lab.venv, kind: venv, consent: {class: C0}, where: venv, needs: [evolution-lab.source],
+           creates: ["$Z0_HOME/venvs/{id}"], probe: {exists: "$Z0_HOME/venvs/{id}/bin/python"},
+           undo: {kind: remove_owned}}
+        - {id: evolution-lab.install, kind: pip_install, consent: {class: C0}, network: true, where: venv,
+           needs: [evolution-lab.venv], argv: [pip, install, -e, .],
+           probe: {exists: "$Z0_HOME/venvs/{id}/.z0/installed-{pin}"}, legacy_projection: true}
+        - {id: evolution-lab.import, kind: check, consent: {class: C0}, where: venv, needs: [evolution-lab.install],
+           argv: ["$Z0_HOME/venvs/{id}/bin/python", -c, "import sys; sys.exit(0)"]}
+      acceptance: {tiers: [{name: install, checks: [evolution-lab.import]}]}
 
   frontier-kb:
     name: frontier-kb
@@ -216,6 +413,17 @@ components:
     boundaries:
       owns: [research evidence, external references]
       not_here: [private user traces, runtime code]
+    onboard:
+      gate: generic
+      requires: {tools: ["git"]}
+      hardware: {os: [linux, darwin], arch: [x86_64, arm64], min_ram_gib: 1, min_disk_gib: 1, gpu: none}
+      public_ready: [revs_on_origin]
+      steps:
+        - {id: frontier-kb.source, kind: adopt_or_clone, consent: {class: C0}, network: true, where: mirror,
+           probe: {exists: "$Z0_HOME/repos/{name}"}}
+        - {id: frontier-kb.readme, kind: check, consent: {class: C0}, where: build, needs: [frontier-kb.source],
+           argv: [test, -f, README.md]}
+      acceptance: {tiers: [{name: source, checks: [frontier-kb.readme]}]}
 
   aodl:
     name: AODL
@@ -241,6 +449,24 @@ components:
     boundaries:
       owns: [typed intent/plan contracts]
       not_here: [runtime implementation, provider execution]
+    onboard:
+      gate: generic
+      requires: {tools: ["git", "python>=3.10"]}
+      hardware: {os: [linux, darwin], arch: [x86_64, arm64], min_ram_gib: 2, min_disk_gib: 1, gpu: none}
+      python: {window: ">=3.10", prefer: "3.12", venv: own}
+      public_ready: [revs_on_origin]
+      steps:
+        - {id: aodl.source, kind: adopt_or_clone, consent: {class: C0}, network: true, where: mirror,
+           probe: {exists: "$Z0_HOME/repos/{name}"}}
+        - {id: aodl.venv, kind: venv, consent: {class: C0}, where: venv, needs: [aodl.source],
+           creates: ["$Z0_HOME/venvs/{id}"], probe: {exists: "$Z0_HOME/venvs/{id}/bin/python"},
+           undo: {kind: remove_owned}}
+        - {id: aodl.install, kind: pip_install, consent: {class: C0}, network: true, where: venv,
+           needs: [aodl.venv], argv: [pip, install, -e, .],
+           probe: {exists: "$Z0_HOME/venvs/{id}/.z0/installed-{pin}"}, legacy_projection: true}
+        - {id: aodl.import, kind: check, consent: {class: C0}, where: venv, needs: [aodl.install],
+           argv: ["$Z0_HOME/venvs/{id}/bin/python", -c, "import sys; sys.exit(0)"]}
+      acceptance: {tiers: [{name: install, checks: [aodl.import]}]}
 
   agenttrace:
     name: AgentTrace
@@ -267,6 +493,24 @@ components:
     boundaries:
       owns: [agent span history, TUI]
       not_here: [live runtime, measurement kernel]
+    onboard:
+      gate: generic
+      requires: {tools: ["git", "python>=3.10"]}
+      hardware: {os: [linux, darwin], arch: [x86_64, arm64], min_ram_gib: 2, min_disk_gib: 1, gpu: none}
+      python: {window: ">=3.10", prefer: "3.12", venv: own}
+      public_ready: [revs_on_origin]
+      steps:
+        - {id: agenttrace.source, kind: adopt_or_clone, consent: {class: C0}, network: true, where: mirror,
+           probe: {exists: "$Z0_HOME/repos/{name}"}}
+        - {id: agenttrace.venv, kind: venv, consent: {class: C0}, where: venv, needs: [agenttrace.source],
+           creates: ["$Z0_HOME/venvs/{id}"], probe: {exists: "$Z0_HOME/venvs/{id}/bin/python"},
+           undo: {kind: remove_owned}}
+        - {id: agenttrace.install, kind: pip_install, consent: {class: C0}, network: true, where: venv,
+           needs: [agenttrace.venv], argv: [pip, install, -e, .],
+           probe: {exists: "$Z0_HOME/venvs/{id}/.z0/installed-{pin}"}, legacy_projection: true}
+        - {id: agenttrace.import, kind: check, consent: {class: C0}, where: venv, needs: [agenttrace.install],
+           argv: ["$Z0_HOME/venvs/{id}/bin/python", -c, "import sys; sys.exit(0)"]}
+      acceptance: {tiers: [{name: install, checks: [agenttrace.import]}]}
 
   memento:
     name: Memento
@@ -291,3 +535,211 @@ components:
     boundaries:
       owns: [visual private history]
       not_here: [research KB, agent runtime]
+    onboard:
+      gate: generic
+      steps: []
+
+  dash:
+    name: Dash
+    repo: kvnloo/dash
+    kind: interface
+    status: canary
+    execution: live
+    owner: Interface
+    summary: >
+      Phone app plus agent bridge: a Bun/Expo client that drives the detected
+      harnesses through an authenticated bridge bound to the tailnet.
+    required: false
+    profiles: []
+    depends_on: []
+    integrates_with: [oh-my-pi, z0intelligence]
+    provides: []
+    consumes: []
+    install:
+      clone: https://github.com/kvnloo/dash.git
+      branch: integrate/dash-v2
+      ref: 5f3ee27f6e431ba83abfe9a4a94b2c0757910ddb
+      command: bun install --frozen-lockfile && bun scripts/install-public-ci.ts && bun install --frozen-lockfile --cwd bridge
+    verify:
+      command: bun run typecheck && bun run lint && bun run test
+    boundaries:
+      owns: [phone client, agent bridge, pairing]
+      not_here: [harness implementation, routing policy, token accounting]
+    onboard:
+      gate: dash
+      revs: {app: cfc08de155aed50c9f6b6f9dd8e1a4a9f25aad72, bridge: 5f3ee27f6e431ba83abfe9a4a94b2c0757910ddb}
+      requires: {tools: ["bun>=1.4.3", "git", "python>=3.10"], optional: ["ffmpeg", "tailscale"]}
+      hardware: {os: [linux, darwin], arch: [x86_64, arm64], min_ram_gib: 2, min_disk_gib: 5, gpu: none}
+      public_ready: [revs_on_origin, no_private_on_auto_path]
+      secrets:
+        - {name: dash_token, kind: file, required: false}
+        - {name: dash_bootstrap_token, kind: file, required: false}
+      steps:
+        - {id: dash.build.app, kind: build_tree, consent: {class: C0}, network: true, where: build,
+           creates: ["$Z0_HOME/build/dash-app/{rev_app}"], undo: {kind: remove_owned}}
+        - {id: dash.build.bridge, kind: build_tree, consent: {class: C0}, network: true, where: build,
+           creates: ["$Z0_HOME/build/dash-bridge/{rev_bridge}"], undo: {kind: remove_owned}}
+        - {id: dash.build.deps, kind: run, consent: {class: C0}, network: true, where: build,
+           needs: [dash.build.app, toolchain.bun], argv: [bun, install, --frozen-lockfile],
+           creates: ["$Z0_HOME/build/dash-app/{rev_app}/node_modules"], legacy_projection: true, timeout_s: 1800}
+        - {id: dash.build.app_public, kind: run, consent: {class: C0}, network: true, where: build,
+           needs: [dash.build.deps], argv: [bun, scripts/install-public-ci.ts],
+           creates: ["$Z0_HOME/build/dash-app/{rev_app}/app/node_modules"], legacy_projection: true, timeout_s: 1800}
+        - {id: dash.build.bridge_deps, kind: run, consent: {class: C0}, network: true, where: build,
+           needs: [dash.build.deps], argv: [bun, install, --frozen-lockfile, --cwd, bridge],
+           creates: ["$Z0_HOME/build/dash-app/{rev_app}/bridge/node_modules"], legacy_projection: true,
+           timeout_s: 1800}
+        - {id: dash.gate.typecheck, kind: check, consent: {class: C0}, where: build,
+           needs: [dash.build.app_public, dash.build.bridge_deps], argv: [bun, run, typecheck], legacy_projection: true}
+        - {id: dash.gate.lint, kind: check, consent: {class: C0}, where: build,
+           needs: [dash.build.app_public, dash.build.bridge_deps], argv: [bun, run, lint], legacy_projection: true}
+        - {id: dash.gate.test, kind: check, consent: {class: C0}, where: build,
+           needs: [dash.build.app_public, dash.build.bridge_deps], argv: [bun, run, test], legacy_projection: true,
+           when: [{fact: toolchains.ffmpeg.state, op: eq, value: present}]}
+        - {id: dash.gate.security, kind: check, consent: {class: C0}, where: build,
+           needs: [dash.build.bridge_deps],
+           argv: [bun, test, bridge/src/bridge-security.test.ts, bridge/src/bridge-security-entry.test.ts,
+                  bridge/src/pairing-http.test.ts]}
+        - {id: dash.gate.audio, kind: check, consent: {class: C0}, where: build,
+           needs: [dash.build.bridge_deps], when: [{fact: toolchains.ffmpeg.state, op: eq, value: present}],
+           argv: [bun, test, bridge/src/pairing-audio.test.ts]}
+        - {id: dash.release.bridge, kind: stage_release, consent: {class: C0}, where: release,
+           needs: [dash.build.bridge, dash.gate.security], creates: ["~/.local/lib/dash/releases/{rev_bridge}"],
+           undo: {kind: remove_owned}}
+        - {id: dash.release.deps, kind: run, consent: {class: C0}, network: true, where: release,
+           needs: [dash.release.bridge, toolchain.bun], argv: [bun, install, --frozen-lockfile, --cwd, bridge],
+           creates: ["~/.local/lib/dash/releases/{rev_bridge}/bridge/node_modules"], timeout_s: 1800}
+        - {id: dash.release.acp, kind: run, consent: {class: C0}, network: true, where: release,
+           needs: [dash.release.deps], when: [{fact: derived.acp_harness, op: eq, value: true}],
+           argv: [bun, install, --frozen-lockfile, --cwd, bridge/acp-adapters],
+           creates: ["~/.local/lib/dash/releases/{rev_bridge}/bridge/acp-adapters/node_modules"], timeout_s: 1800}
+        - {id: dash.selftest.loopback, kind: check, consent: {class: C0}, where: release,
+           needs: [dash.release.deps], when: [{fact: tailscale.ipv4, op: missing}],
+           verify: {serve: {argv: [bun, run, index.ts], cwd: bridge, path: /, expect_status: 401, timeout_s: 90,
+                            env: {DASH_ALLOW_LOOPBACK: "1", DASH_HOST: 127.0.0.1, DASH_PORT: "@port@",
+                                  DASH_CREDENTIAL_DIR: "@tmp@/credentials", DASH_CWD: "@tmp@",
+                                  DASH_STT_MODEL: "@tmp@/no-model", DASH_ENABLE_LEGACY_CLI: "0"}}}}
+        - {id: dash.bridge.env, kind: write_file, consent: {class: C1, bundle: services}, where: home,
+           target_where: release, needs: [dash.release.deps], when: [{fact: tailscale.ipv4, op: exists}],
+           creates: ["~/.config/dash-services/bridge.env"], undo: {kind: restore_backup}}
+        - {id: dash.bridge.wait_tailnet, kind: write_file, consent: {class: C1, bundle: services}, where: home,
+           needs: [dash.release.deps], when: [{fact: tailscale.ipv4, op: exists}],
+           creates: ["~/.local/lib/dash/bin/dash-wait-tailnet"], undo: {kind: remove_owned}}
+        - {id: dash.bridge.unit, kind: service_unit, consent: {class: C1, bundle: services}, where: release,
+           needs: [dash.bridge.env, dash.bridge.wait_tailnet],
+           when: [{fact: session.systemd_user, op: eq, value: true}],
+           service: {template: dash-bridge, unit: dash-bridge.service, bind: tailnet_ipv4, port: 4747,
+                     health: {http: {bind: tailnet_ipv4, port: 4747, path: /, expect_status: 401}},
+                     start_order: 10, limits: {memory_max: 1G, restart_sec: 10, timeout_start_sec: 120}},
+           probe: {exists: "~/.config/systemd/user/dash-bridge.service"}, undo: {kind: restore_backup}}
+        - {id: dash.bridge.current, kind: swap_current, consent: {class: C1, bundle: services}, where: release,
+           needs: [dash.bridge.unit], creates: ["~/.local/lib/dash/bridge-current"],
+           undo: {kind: restore_symlink}}
+        - {id: dash.health, kind: check, consent: {class: C0}, needs: [dash.bridge.current],
+           verify: {http: {bind: tailnet_ipv4, port: 4747, path: /, expect_status: 401}}}
+        - {id: dash.apk, kind: ask, consent: {class: C0},
+           argv: [echo, "Android dev-client APK build is C2 (scripts/build-native-android.sh)"]}
+      acceptance:
+        tiers:
+          - {name: static, checks: [dash.gate.typecheck, dash.gate.lint, dash.gate.test, dash.gate.security, dash.gate.audio]}
+          - {name: live, checks: [dash.health]}
+      remediations: [use_public_install, mark_unavailable]
+
+  z0evals:
+    name: z0evals
+    repo: kvnloo/z0evals
+    kind: research
+    status: stable
+    execution: live
+    owner: Research
+    summary: >
+      Static evaluation and publication repo: Python validators and generators
+      plus a Next.js static-export site. No services and no GPU work.
+    required: false
+    profiles: []
+    depends_on: []
+    integrates_with: [z0intelligence, tokenomics]
+    provides: []
+    consumes: []
+    install:
+      clone: https://github.com/kvnloo/z0evals.git
+      branch: main
+      ref: b6e3da7ad9eda4f87f9f8e94c6ab0fc97d44bb10
+      command: python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+    verify:
+      command: .venv/bin/python scripts/validate.py
+    boundaries:
+      owns: [study artifacts, eval publication site]
+      not_here: [runtime code, model weights, private traces]
+    onboard:
+      gate: generic
+      requires: {tools: ["git", "python>=3.10"], optional: ["node>=20.9", "uv"]}
+      hardware: {os: [linux, darwin], arch: [x86_64, arm64], min_ram_gib: 2, min_disk_gib: 1, gpu: none}
+      python: {window: ">=3.10", prefer: "3.12", venv: own}
+      public_ready: [revs_on_origin]
+      steps:
+        - {id: z0evals.source, kind: adopt_or_clone, consent: {class: C0}, network: true, where: mirror,
+           argv: [git, fetch, origin, main, dev, nightly, preview], probe: {exists: "$Z0_HOME/repos/{name}"}}
+        - {id: z0evals.t0.rollout, kind: check, consent: {class: C0}, where: build, needs: [z0evals.source],
+           argv: [python3, .verified-oss-loop/rollout.py, show]}
+        - {id: z0evals.t0.pages_map, kind: check, consent: {class: C0}, where: build, needs: [z0evals.source],
+           argv: [python3, .verified-oss-loop/pages-url-map.py, check, --root, ., --base, /z0evals]}
+        - {id: z0evals.t0.arm_identity, kind: check, consent: {class: C0}, where: build, needs: [z0evals.source],
+           argv: [python3, tests/test_arm_identity.py]}
+        - {id: z0evals.t0.expire_claims, kind: check, consent: {class: C0}, where: build, needs: [z0evals.source],
+           argv: [python3, tests/expire_claims.py]}
+        - {id: z0evals.venv, kind: venv, consent: {class: C0}, where: venv, needs: [z0evals.source],
+           argv: [python3, -m, venv, .venv], creates: ["{tree}/.venv"],
+           probe: {exists: "{tree}/.venv/bin/python"}, legacy_projection: true}
+        - {id: z0evals.deps, kind: pip_install, consent: {class: C0}, network: true, where: venv,
+           needs: [z0evals.venv], argv: [.venv/bin/pip, install, -r, requirements.txt],
+           probe: {exists: "{tree}/.venv/.z0/requirements-{pin}"}, legacy_projection: true}
+        - {id: z0evals.t1.pages, kind: check, consent: {class: C0}, where: build, needs: [z0evals.deps],
+           argv: [.venv/bin/python, -m, unittest, tests/test_pages_publication.py]}
+        - {id: z0evals.t1.validate, kind: check, consent: {class: C0}, where: build, needs: [z0evals.deps],
+           argv: [.venv/bin/python, scripts/validate.py], legacy_projection: true}
+        - {id: z0evals.t1.expire_claims, kind: check, consent: {class: C0}, where: build, needs: [z0evals.deps],
+           argv: [.venv/bin/python, tests/expire_claims.py]}
+        - {id: z0evals.t1.optchat_validate, kind: check, consent: {class: C0}, where: build, needs: [z0evals.deps],
+           argv: [.venv/bin/python, scripts/validate_optchat_publication.py]}
+        - {id: z0evals.t1.optchat_tests, kind: check, consent: {class: C0}, where: build, needs: [z0evals.deps],
+           argv: [.venv/bin/python, -m, unittest, tests/test_optchat_publication.py]}
+        - {id: z0evals.t1.audit_source, kind: check, consent: {class: C0}, where: build, needs: [z0evals.deps],
+           argv: [.venv/bin/python, scripts/audit_web_source.py]}
+        - {id: z0evals.t1.build_site, kind: run, consent: {class: C0}, where: build, needs: [z0evals.deps],
+           argv: [.venv/bin/python, scripts/build_site.py], creates: ["{tree}/site/index.html"]}
+        - {id: z0evals.t1.site_data, kind: run, consent: {class: C0}, where: build, needs: [z0evals.t1.build_site],
+           argv: [.venv/bin/python, scripts/build_site_data.py],
+           creates: ["{tree}/web/data/optchat-long-horizon-v0.json"]}
+        - {id: z0evals.t1.posts, kind: run, consent: {class: C0}, where: build, needs: [z0evals.t1.site_data],
+           argv: [.venv/bin/python, scripts/build_posts.py], creates: ["{tree}/web/data/posts"]}
+        - {id: z0evals.t1.posts_tests, kind: check, consent: {class: C0}, where: build, needs: [z0evals.t1.posts],
+           argv: [.venv/bin/python, -m, unittest, tests/test_build_posts.py]}
+        - {id: z0evals.web.gate, kind: check, consent: {class: C0}, needs: [z0evals.t1.posts, toolchain.node],
+           when: [{fact: network.fonts_google, op: eq, value: true}, {fact: network.npmjs, op: eq, value: true}],
+           argv: [node, --version]}
+        - {id: z0evals.web.deps, kind: run, consent: {class: C0}, network: true, where: build,
+           needs: [z0evals.web.gate], argv: [npm, ci, --no-audit, --no-fund, --prefix, web],
+           creates: ["{tree}/web/node_modules"], timeout_s: 1800}
+        - {id: z0evals.web.typecheck, kind: check, consent: {class: C0}, where: build, needs: [z0evals.web.deps],
+           argv: [npm, --prefix, web, run, typecheck]}
+        - {id: z0evals.web.build, kind: run, consent: {class: C0}, network: true, where: build,
+           needs: [z0evals.web.typecheck], argv: [npm, --prefix, web, run, build],
+           env: {Z0_BASE_PATH: /z0evals}, creates: ["{tree}/web/out/index.html"], timeout_s: 1800}
+        - {id: z0evals.web.audit, kind: check, consent: {class: C0}, where: build, needs: [z0evals.web.build],
+           argv: [.venv/bin/python, scripts/audit_web_export.py, --root, web/out]}
+        - {id: z0evals.post.status, kind: check, consent: {class: C0}, where: build, needs: [z0evals.t1.posts],
+           argv: [git, --no-optional-locks, status, --porcelain]}
+        - {id: z0evals.ask.claude_md, kind: ask, consent: {class: C0},
+           when: [{fact: harnesses.claude_code.state, op: eq, value: installed}],
+           argv: [echo, "CLAUDE.md pointer to AGENTS.md (the repo discourages duplicate instruction files)"]}
+        - {id: z0evals.ask.kit_skills, kind: ask, consent: {class: C0},
+           argv: [echo, "link .verified-oss-loop/skills into your harness skill dir"]}
+        - {id: z0evals.ask.visual_probes, kind: ask, consent: {class: C0},
+           argv: [echo, "visual-parity probes (web/docs/probes) need a Chromium path and websockets"]}
+      acceptance:
+        tiers:
+          - {name: tier0, checks: [z0evals.t0.rollout, z0evals.t0.pages_map, z0evals.t0.arm_identity, z0evals.t0.expire_claims]}
+          - {name: tier1, checks: [z0evals.t1.pages, z0evals.t1.validate, z0evals.t1.expire_claims, z0evals.t1.optchat_validate, z0evals.t1.optchat_tests, z0evals.t1.audit_source, z0evals.t1.posts_tests]}
+          - {name: tier2, checks: [z0evals.web.typecheck, z0evals.web.audit]}
+      remediations: [skip_web_tier_offline, mark_unavailable]

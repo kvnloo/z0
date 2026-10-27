@@ -2,6 +2,24 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export PYTHONPATH="${ROOT}/lib${PYTHONPATH:+:$PYTHONPATH}"
+export PYTHONDONTWRITEBYTECODE=1
+if [[ "${1:-}" == laws ]]; then
+  exec python3 -m z0 "$@"
+fi
+if [[ "${1:-}" == onboard ]]; then
+  # Design §1.3: onboard runs under the z0 venv, or any python >= 3.10 that already has
+  # PyYAML (then `plan --stdout` writes nothing, law P0); otherwise stage 0 makes one.
+  # No bytecode caches: detect/plan never write into this checkout (P0).
+  export PYTHONDONTWRITEBYTECODE=1
+  Z0_VENV_PY="${Z0_HOME:-$HOME/.z0}/venv/bin/python"
+  if [[ -x "$Z0_VENV_PY" ]] && "$Z0_VENV_PY" -c 'import yaml' 2>/dev/null; then
+    exec "$Z0_VENV_PY" -m z0 "$@"
+  fi
+  if python3 -c 'import sys, yaml; sys.exit(sys.version_info < (3, 10))' 2>/dev/null; then
+    exec python3 -m z0 "$@"
+  fi
+  exec bash "$ROOT/lib/z0/onboard/stage0.sh" "$@"
+fi
 if ! python3 -c 'import yaml' 2>/dev/null; then
   echo "z0: PyYAML required — pip install -r requirements.txt" >&2
   exit 1

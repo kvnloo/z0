@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kvnloo/z0/schemas/onboard-plan.schema.json",
+  "title": "Zer0OnboardPlan",
+  "description": "plan.json: the pure output of plan(host, registry, answers, mode, grants) (design §6.1). APPLY runs only a plan whose canonical-JSON sha256 equals plan_hash. Every step's state comes from lib/z0/onboard/kernel.py.",
+  "type": "object",
+  "required": ["version", "plan_hash", "host_id", "mode", "grants", "registry", "steps"],
+  "properties": {
+    "version": { "const": 1 },
+    "plan_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "host_id": { "type": "string", "pattern": "^[0-9a-f]{16}$" },
+    "mode": { "enum": ["auto", "guided"] },
+    "profile": { "type": "string" },
+    "pin_policy": { "enum": ["pinned", "tip"] },
+    "llm": { "enum": ["none", "local", "auto"] },
+    "grants": {
+      "type": "object",
+      "required": ["bundles", "source"],
+      "properties": {
+        "bundles": {
+          "type": "array",
+          "items": { "enum": ["toolchains", "harness", "services", "models"] },
+          "uniqueItems": true
+        },
+        "llm_providers": { "type": "array", "items": { "enum": ["claude", "codex", "openrouter-free", "vercel-free"] }, "uniqueItems": true },
+        "steps": {"type": "array", "items": {"type": "string"}, "uniqueItems": true,
+                  "description": "Optional per-step restriction for guided C1 consent; bundles remain required."},
+        "source": { "enum": ["tty", "flag", "none"], "description": "An LLM is never a grant source (L-LLM)." }
+      },
+      "additionalProperties": false
+    },
+    "registry": {
+      "type": "object",
+      "description": "sha256 of each registry source file the plan read, and of each zer0.repo.yaml read at a pin from the origin mirror (§2.6).",
+      "propertyNames": { "pattern": "^(registry/[a-z_]+\\.yaml|[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+@[0-9a-f]{40}:zer0\\.repo\\.yaml)$" },
+      "additionalProperties": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+    },
+    "llm_decisions": { "$ref": "onboard-receipt.schema.json#/properties/llm_decisions" },
+    "answers_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "targets": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "components": {
+      "type": "object",
+      "description": "Per-component kernel.decide_component verdict and the chosen work tree.",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["verdict"],
+        "properties": {
+          "verdict": { "enum": ["allow", "ask", "unavailable", "refuse"] },
+          "reason": { "type": "string" },
+          "blocked_by": { "type": "string" },
+          "tree": { "type": "string", "pattern": "^(~(/|$)|\\$Z0_HOME(/|$)|/(?!home/|Users/))" },
+          "adopted": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "prepared_path": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^(~(/|$)|\\$Z0_HOME(/|$)|/(?!home/|Users/))" },
+      "description": "Law T1: the PATH every run, unit, env file and check receives. A non-system dir that also holds a `configure: never` harness is replaced by $Z0_HOME/bin/links (P1)."
+    },
+    "path_links": {
+      "type": "array",
+      "description": "P1: links in $Z0_HOME/bin/links to the allowed tools of a dropped PATH dir.",
+      "items": {
+        "type": "object",
+        "required": ["link", "target"],
+        "properties": {
+          "link": { "type": "string", "pattern": "^\\$Z0_HOME/bin/links/[^/]+$" },
+          "target": { "type": "string", "pattern": "^(~(/|$)|/(?!home/|Users/))" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "unavailable": {
+      "type": "array",
+      "description": "§1.2 'What is unavailable, and why': targets none of whose steps can run, for a reason no ask fixes.",
+      "items": {
+        "type": "object",
+        "required": ["id", "status", "reason", "detail"],
+        "properties": {
+          "id": { "type": "string" },
+          "status": { "enum": ["unavailable", "refused", "blocked"] },
+          "reason": { "type": "string" },
+          "detail": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "steps": {
+      "type": "array",
+      "description": "Topological order over depends_on ∪ needs ∪ implicit edges (O1).",
+      "items": {
+        "type": "object",
+        "required": ["step", "state"],
+        "properties": {
+          "step": { "$ref": "onboard-step.schema.json" },
+          "state": { "$ref": "#/$defs/state" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "asks": { "type": "array", "items": { "$ref": "#/$defs/ask" } },
+    "conflicts": {
+      "type": "array",
+      "description": "§2.6: zer0.repo.yaml setup steps that collide with registry steps (same id, different step; or a new id with a registry step's argv). The registry wins; the report lists them for the maintainer.",
+      "items": {
+        "type": "object",
+        "required": ["component", "id", "fields", "source", "resolution"],
+        "properties": {
+          "component": { "type": "string" },
+          "id": { "type": "string" },
+          "fields": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+          "source": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+@[0-9a-f]{40}:zer0\\.repo\\.yaml$" },
+          "resolution": { "const": "registry" },
+          "registry_id": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "warnings": { "type": "array", "items": { "type": "string" } }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "state": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": { "enum": ["todo", "already_satisfied", "ask", "unavailable", "refused", "blocked"] },
+        "reason": {
+          "description": "kernel.Reason as snake_case, or a dependency id for `blocked`.",
+          "type": "string"
+        },
+        "blocked_by": { "type": "string" }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "enum": ["ask", "unavailable", "refused", "blocked"] } } },
+          "then": { "required": ["reason"] }
+        }
+      ]
+    },
+    "ask": {
+      "type": "object",
+      "required": ["id", "reason", "command"],
+      "properties": {
+        "id": { "type": "string" },
+        "reason": { "type": "string" },
+        "command": { "type": "string", "description": "What finishes it today: a command that works now (e.g. `./z0 onboard --accept toolchains`), a printed system-package command, or `manual: <action>` for C2 steps that are never automatic." },
+        "consent": { "enum": ["C1", "C2"] },
+        "impact": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    }
+  }
+}

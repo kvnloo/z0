@@ -9,6 +9,8 @@ graph TD
   aodl["AODL"]
   agenttrace["AgentTrace"]
   memento["Memento"]
+  dash["Dash"]
+  z0evals["z0evals"]
   oh_my_pi -.-> tokenomics
   oh_my_pi -.-> z0intelligence
   oh_my_pi -.-> aodl
@@ -41,3 +43,7 @@ graph TD
   agenttrace -.-> tokenomics
   z0intelligence --> memento
   memento -.-> flow
+  dash -.-> oh_my_pi
+  dash -.-> z0intelligence
+  z0evals -.-> z0intelligence
+  z0evals -.-> tokenomics

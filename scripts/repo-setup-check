@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Check a repo's zer0.repo.yaml `setup:` block against the z0 registry (design §2.6):
+# step rules, known `when` facts, and no registry step repeated under another id.
+# Usage: scripts/repo-setup-check path/to/zer0.repo.yaml
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+export PYTHONPATH="${ROOT}/lib${PYTHONPATH:+:$PYTHONPATH}"
+python3 - "${1:?usage: scripts/repo-setup-check ZER0_REPO_YAML}" <<'PY'
+import sys
+import yaml
+from z0.onboard import regcheck, regsnap
+
+doc = yaml.safe_load(open(sys.argv[1], encoding="utf-8")) or {}
+cid = doc.get("id")
+errors = regcheck.check_repo_setup(regsnap.load(), cid, doc.get("setup") or {})
+assert not errors, f"{sys.argv[1]} setup:\n  " + "\n  ".join(errors)
+print(f"ok: {cid} setup ({len((doc.get('setup') or {}).get('steps') or [])} steps)")
+PY

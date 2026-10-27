@@ -1,0 +1,134 @@
+{
+  "z0evals": {
+    "errors": [],
+    "ref": "b6e3da7ad9eda4f87f9f8e94c6ab0fc97d44bb10",
+    "repo": "kvnloo/z0evals",
+    "setup": {
+      "steps": [
+        {
+          "argv": [
+            ".venv/bin/python",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_pages_publication.py",
+            "-v"
+          ],
+          "component": "z0evals",
+          "consent": {
+            "class": "C0"
+          },
+          "id": "z0evals.t1.pages",
+          "kind": "check",
+          "needs": [
+            "z0evals.deps"
+          ],
+          "where": "build"
+        },
+        {
+          "argv": [
+            ".venv/bin/python",
+            "scripts/validate.py"
+          ],
+          "component": "z0evals",
+          "consent": {
+            "class": "C0"
+          },
+          "id": "z0evals.t1.validate",
+          "kind": "check",
+          "legacy_projection": true,
+          "needs": [
+            "z0evals.t1.pages"
+          ],
+          "where": "build"
+        },
+        {
+          "argv": [
+            ".venv/bin/python",
+            "scripts/validate.py"
+          ],
+          "component": "z0evals",
+          "consent": {
+            "class": "C0"
+          },
+          "id": "z0evals.t1.validate_again",
+          "kind": "check",
+          "needs": [
+            "z0evals.deps"
+          ],
+          "where": "build"
+        },
+        {
+          "argv": [
+            ".venv/bin/python",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_repo_setup.py",
+            "-v"
+          ],
+          "component": "z0evals",
+          "consent": {
+            "class": "C0"
+          },
+          "id": "z0evals.t1.repo_setup",
+          "kind": "check",
+          "needs": [
+            "z0evals.deps"
+          ],
+          "where": "build"
+        },
+        {
+          "argv": [
+            ".venv/bin/python",
+            "scripts/build_receipt_index.py"
+          ],
+          "component": "z0evals",
+          "consent": {
+            "class": "C0"
+          },
+          "creates": [
+            "{tree}/web/data/receipts.json"
+          ],
+          "id": "z0evals.t1.receipt_index",
+          "kind": "run",
+          "needs": [
+            "z0evals.t1.posts"
+          ],
+          "where": "build"
+        },
+        {
+          "argv": [
+            ".venv/bin/python",
+            "scripts/warm_cache.py"
+          ],
+          "component": "z0evals",
+          "consent": {
+            "class": "C0"
+          },
+          "id": "z0evals.t1.warm_cache",
+          "kind": "run",
+          "needs": [
+            "z0evals.deps"
+          ],
+          "probe": {
+            "argv": [
+              "test",
+              "-d",
+              ".cache"
+            ]
+          },
+          "where": "build"
+        }
+      ],
+      "version": 1
+    },
+    "sha256": "5e642b7ecd24468cbd4f0d28d222393226487c9e07fcebb8f5ba9df0771b56d0"
+  }
+}

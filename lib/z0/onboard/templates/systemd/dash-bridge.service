@@ -1,0 +1,21 @@
+# Written by `z0 onboard` (component dash). Binds the tailnet IPv4 only (DASH_HOST).
+[Unit]
+Description=dash bridge
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+EnvironmentFile=%h/.config/dash-services/bridge.env
+ExecStartPre={python} %h/.local/lib/dash/bin/dash-wait-tailnet
+WorkingDirectory=%h/.local/lib/dash/bridge-current/bridge
+ExecStart={bun} run index.ts
+Restart=on-failure
+RestartSec={restart_sec}
+TimeoutStartSec={timeout_start_sec}
+MemoryMax={memory_max}
+UMask=0077
+
+[Install]
+WantedBy=default.target

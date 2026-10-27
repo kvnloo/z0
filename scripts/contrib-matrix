@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+# Run the agent-in-the-loop acceptance matrix (contributor spec §4.3) and decide the
+# `contrib_ready` completion law on its receipts.
+#
+#   scripts/contrib-matrix --z0int-sha SHA [--parallel N] [--harness claude,codex]
+#                          [--profiles frontend,ml-research,systems-rust] [--runs 3]
+#
+# Every cell (scripts/onboard-agent-e2e) shares one candidate pair: the z0 candidate commit
+# is deterministic (fixed dates), so all receipts name the same z0_sha. Receipts are copied
+# into $E2E_WORK/receipts/, then scripts/contrib_ready.py prints READY / NOT_READY / BLOCKED.
+# Cells already passed for the pair are not re-run.
+set -euo pipefail
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+Z0INT_SHA="" PAR=1 HARNESSES="claude,codex" PROFILES="frontend,ml-research,systems-rust" RUNS=3
+while (($#)); do
+  case "$1" in
+    --z0int-sha) Z0INT_SHA="$2"; shift 2 ;;
+    --parallel) PAR="$2"; shift 2 ;;
+    --harness) HARNESSES="$2"; shift 2 ;;
+    --profiles) PROFILES="$2"; shift 2 ;;
+    --runs) RUNS="$2"; shift 2 ;;
+    *) echo "contrib-matrix: unknown argument $1" >&2; exit 2 ;;
+  esac
+done
+[[ -n "$Z0INT_SHA" ]] || { echo "--z0int-sha is required" >&2; exit 2; }
+WORK="${E2E_WORK:-$ROOT/.e2e-agent}"
+mkdir -p "$WORK/receipts"
+
+# The candidate pair, by the same deterministic recipe as scripts/onboard-agent-e2e and
+# scripts/contrib-cells (HEAD + working tree + the z0int pin, fixed dates). Skipping and
+# the final decision both use it, never a sha read back from some receipt (R5).
+candidate_sha() {
+  local d
+  d="$(mktemp -d "$WORK/cand-sha.XXXXXX")"
+  git clone -q --no-local "$ROOT" "$d/c"
+  git -C "$d/c" checkout -q "$(git -C "$ROOT" rev-parse HEAD)"
+  tar -C "$ROOT" --exclude=.git --exclude=.e2e-agent -cf - . | tar -C "$d/c" -xf -
+  python3 - "$d/c/registry/components.yaml" "$Z0INT_SHA" << 'PY'
+import re, sys
+path, sha = sys.argv[1], sys.argv[2]
+text = open(path, encoding="utf-8").read()
+block = text.index("  z0intelligence:\n")
+head, tail = text[:block], text[block:]
+tail = re.sub(r"(\n      ref: )[0-9a-f]{40}", r"\g<1>" + sha, tail, count=1)
+open(path, "w", encoding="utf-8").write(head + tail)
+PY
+  git -C "$d/c" add -A
+  GIT_AUTHOR_DATE=2026-01-01T00:00:00Z GIT_COMMITTER_DATE=2026-01-01T00:00:00Z \
+    git -C "$d/c" -c user.name=e2e -c user.email=e2e@example.invalid commit -qm "e2e: candidate (pins z0intelligence $Z0INT_SHA)" > /dev/null 2>&1 || true
+  git -C "$d/c" rev-parse HEAD
+  rm -rf "$d"
+}
+Z0_SHA="$(candidate_sha)"
+echo "candidate pair: z0 $Z0_SHA, z0intelligence $Z0INT_SHA"
+passed_for_pair() { # receipt passes AND names this exact candidate pair
+  python3 -c 'import json,sys
+try: d = json.load(open(sys.argv[1]))
+except (OSError, ValueError): sys.exit(1)
+sys.exit(0 if d.get("status") == "pass" and d.get("z0_sha") == sys.argv[2] and d.get("z0int_sha") == sys.argv[3] else 1)' "$1" "$Z0_SHA" "$Z0INT_SHA"
+}
+cells=()
+for h in ${HARNESSES//,/ }; do for p in ${PROFILES//,/ }; do for r in $(seq 1 "$RUNS"); do
+  cells+=("$h $p $r")
+done; done; done
+run_cell() {
+  local h="$1" p="$2" r="$3" cell="agent.$1.$2.run$3"
+  if passed_for_pair "$WORK/receipts/$cell.json"; then
+    echo "$cell: already passed for this pair"; return 0
+  fi
+  local w="$WORK/cells/$cell"
+  mkdir -p "$w"
+  E2E_WORK="$w" "$ROOT/scripts/onboard-agent-e2e" --harness "$h" --profile "$p" --run "$r" \
+    --z0int-sha "$Z0INT_SHA" > "$w/run.log" 2>&1 || true
+  cp "$w/out/$cell.json" "$WORK/receipts/$cell.json" 2> /dev/null || echo "$cell: no receipt"
+  tail -2 "$w/run.log" | head -1
+}
+i=0
+for c in "${cells[@]}"; do
+  run_cell $c &
+  i=$((i + 1))
+  if ((i % PAR == 0)); then wait; fi
+done
+wait
+python3 "$ROOT/scripts/contrib_ready.py" --z0 "$Z0_SHA" --z0int "$Z0INT_SHA" --receipts "$WORK/receipts"

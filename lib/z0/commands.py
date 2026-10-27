@@ -36,6 +36,12 @@ def _git_branch(path: Path) -> str | None:
 
 
 def cmd_init(profile: str | None = None, dry_run: bool = False) -> int:
+    # Keep the profile-only dry-run contract; real installs use the consent engine.
+    if not dry_run:
+        from .onboard.cli import main as onboard
+        print("z0 init now uses ./z0 onboard (journaled installs and explicit consent).")
+        return onboard(["--profile", profile] if profile else [])
+    print("For installation and acceptance checks, use ./z0 onboard.")
     if profile is None:
         print("What are you trying to build?\n")
         names = list(registry.profiles().keys())
@@ -56,9 +62,6 @@ def cmd_init(profile: str | None = None, dry_run: bool = False) -> int:
     ws = registry.load_workspace()
     ws["profile"] = profile
     root = Path(ws.get("root", registry.z0_home() / "repos")).expanduser()
-    if not dry_run:
-        root.mkdir(parents=True, exist_ok=True)
-    ws.setdefault("components", {})
 
     print(f"\nProfile: {profile}")
     print(f"Root:    {root}\n")
@@ -80,36 +83,7 @@ def cmd_init(profile: str | None = None, dry_run: bool = False) -> int:
         if ref:
             print(f"    ref: {ref[:12]}")
         print(f"    path: {dest}")
-        if dry_run:
-            continue
-        if dest.is_dir() and (dest / ".git").is_dir():
-            print("    status: already cloned")
-        elif clone_url:
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            try:
-                _run(["git", "clone", "--filter=blob:none", clone_url, str(dest)])
-                if branch:
-                    _run(["git", "checkout", branch], cwd=dest)
-                if ref:
-                    _run(["git", "checkout", "--detach", ref], cwd=dest)
-                print("    status: cloned")
-            except subprocess.CalledProcessError as exc:
-                print(f"    error: clone failed: {exc.stderr.strip()}", file=sys.stderr)
-        cmd = install.get("command")
-        if cmd and dest.is_dir():
-            print(f"    setup: {cmd}")
-            try:
-                subprocess.run(cmd, shell=True, cwd=dest, check=True)
-            except subprocess.CalledProcessError:
-                print("    warning: setup command failed", file=sys.stderr)
-        ws["components"][cid] = {
-            "path": str(dest),
-            "branch": branch,
-            "ref": ref,
-        }
-    if not dry_run:
-        registry.save_workspace(ws)
-    print("\nDone. Run `z0 doctor` to verify.")
+    print("\nDry run only. Run `./z0 onboard` to install and verify.")
     return 0
 
 
@@ -149,6 +123,7 @@ def cmd_doctor() -> int:
     ws = registry.load_workspace()
     comps = registry.components()
     print("Zer0 System\n")
+    print("For journaled setup: ./z0 onboard; last receipt: ./z0 onboard status.\n")
     warnings: list[str] = []
     for cid, meta in sorted(comps.items()):
         dest = registry.repo_dir(cid, ws)

@@ -1,0 +1,284 @@
+{
+  "checkouts": [],
+  "detected_at": "2026-10-25T00:00:00Z",
+  "hardware": {
+    "cpu": {
+      "logical": 10,
+      "physical": 10
+    },
+    "disks": [
+      {
+        "free_gib": 240.0,
+        "mount": "~",
+        "role": [
+          "z0_home",
+          "home"
+        ],
+        "total_gib": 994.7
+      }
+    ],
+    "gpu": {
+      "class": "apple"
+    },
+    "ram_gib": 32.0
+  },
+  "harnesses": {
+    "claude-code": {
+      "config_dirs": [
+        "~/.claude"
+      ],
+      "path": "/opt/homebrew/bin/claude",
+      "sessions_present": true,
+      "state": "installed",
+      "version": "2.1.310"
+    },
+    "codex": {
+      "state": "absent"
+    },
+    "codexbar": {
+      "state": "absent"
+    },
+    "cursor-agent": {
+      "policy_excluded": true,
+      "state": "absent"
+    },
+    "deepseek": {
+      "state": "absent"
+    },
+    "dsh": {
+      "state": "absent"
+    },
+    "fx": {
+      "state": "absent"
+    },
+    "gemini": {
+      "state": "absent"
+    },
+    "grok": {
+      "policy_excluded": true,
+      "state": "absent"
+    },
+    "hermes": {
+      "state": "absent"
+    },
+    "kimi": {
+      "state": "absent"
+    },
+    "omp": {
+      "state": "absent"
+    },
+    "opencode": {
+      "state": "absent"
+    },
+    "pi": {
+      "state": "absent"
+    }
+  },
+  "host_id": "5e6f708192a3b4c5",
+  "network": {
+    "bun": true,
+    "fonts_google": true,
+    "github": true,
+    "k2_fsa": true,
+    "npmjs": true,
+    "pypi": true,
+    "pytorch": true
+  },
+  "os": {
+    "arch": "arm64",
+    "distro": "macos-15.4",
+    "libc": "darwin",
+    "os": "darwin",
+    "pep668": true,
+    "pkg_manager": "brew"
+  },
+  "prepared_path": [
+    "/opt/homebrew/bin",
+    "/usr/bin",
+    "/bin"
+  ],
+  "python_window": "present",
+  "revs": {
+    "1c9b5235d341f9108d6ea4cc886592be7004ef28": {
+      "evidence": "mirror",
+      "flavour": "unknown",
+      "on_origin": "yes",
+      "repo": "kvnloo/evolution-lab"
+    },
+    "22b4c0f1088abfef6184840cb79a0a6a6aceda44": {
+      "evidence": "mirror",
+      "flavour": "unknown",
+      "on_origin": "yes",
+      "repo": "kvnloo/frontier-kb"
+    },
+    "b6e3da7ad9eda4f87f9f8e94c6ab0fc97d44bb10": {
+      "evidence": "mirror",
+      "flavour": "unknown",
+      "on_origin": "yes",
+      "repo": "kvnloo/z0evals"
+    },
+    "416736c80a727757202bdeedb02579c3c820f7f6": {
+      "evidence": "mirror",
+      "flavour": "unknown",
+      "on_origin": "yes",
+      "repo": "kvnloo/aodl"
+    },
+    "513a80c2ba155115dfcea0bc808b0c41a1fd4380": {
+      "evidence": "mirror",
+      "flavour": "unknown",
+      "on_origin": "yes",
+      "repo": "kvnloo/Memento"
+    },
+    "5259013185d97422022fc225fa70245595b046ea": {
+      "evidence": "mirror",
+      "flavour": "unknown",
+      "on_origin": "yes",
+      "repo": "kvnloo/.files"
+    },
+    "5f3ee27f6e431ba83abfe9a4a94b2c0757910ddb": {
+      "evidence": "mirror",
+      "flavour": "current",
+      "on_origin": "yes",
+      "repo": "kvnloo/dash"
+    },
+    "65e8f2dd9d6c5784a2a1c67f5236d69a5ae94021": {
+      "evidence": "mirror",
+      "flavour": "unknown",
+      "on_origin": "yes",
+      "repo": "kvnloo/tokenomics"
+    },
+    "6848aa10df9dae7034a7bfeaf9f51a7d55424862": {
+      "evidence": "mirror",
+      "flavour": "unknown",
+      "on_origin": "yes",
+      "repo": "kvnloo/agenttrace"
+    },
+    "cdb43b05a328a50649d5120bffcdecea09492219": {
+      "evidence": "mirror",
+      "flavour": "unknown",
+      "on_origin": "yes",
+      "repo": "kvnloo/kerdoios"
+    },
+    "cfb33e5fabafe198c622f9178af18b4bc56749e7": {
+      "evidence": "mirror",
+      "flavour": "unknown",
+      "on_origin": "yes",
+      "repo": "kvnloo/z0intelligence"
+    },
+    "cfc08de155aed50c9f6b6f9dd8e1a4a9f25aad72": {
+      "evidence": "mirror",
+      "flavour": "current",
+      "on_origin": "yes",
+      "repo": "kvnloo/dash"
+    },
+    "d707478d4c5c72784c058a0163b616988f559230": {
+      "evidence": "mirror",
+      "flavour": "unknown",
+      "on_origin": "yes",
+      "repo": "kvnloo/oh-my-pi"
+    }
+  },
+  "secrets": {
+    "AI_GATEWAY_API_KEY": {
+      "present": false
+    },
+    "CEREBRAS_API_KEY": {
+      "present": false
+    },
+    "DEEPSEEK_API_KEY": {
+      "present": false
+    },
+    "GROQ_API_KEY": {
+      "present": false
+    },
+    "NVIDIA_API_KEY": {
+      "present": false
+    },
+    "OPENROUTER_API_KEY": {
+      "present": false
+    },
+    "dash_bootstrap_token": {
+      "present": false
+    },
+    "dash_dir": {
+      "present": false
+    },
+    "dash_token": {
+      "present": false
+    }
+  },
+  "services": {
+    "port_owners": {},
+    "units": []
+  },
+  "session": {
+    "audio_in": false,
+    "desktop": "aqua",
+    "launchd": true,
+    "linger": false,
+    "systemd_user": false
+  },
+  "tailscale": {
+    "installed": false,
+    "logged_in": false
+  },
+  "toolchains": {
+    "bun": {
+      "state": "absent"
+    },
+    "curl": {
+      "path": "/usr/bin/curl",
+      "sh_resolves": true,
+      "source": "path",
+      "state": "present"
+    },
+    "ffmpeg": {
+      "state": "absent"
+    },
+    "git": {
+      "path": "/usr/bin/git",
+      "sh_resolves": true,
+      "source": "path",
+      "state": "present",
+      "version": "2.39.5"
+    },
+    "node": {
+      "path": "/opt/homebrew/bin/node",
+      "sh_resolves": true,
+      "source": "well_known_dir",
+      "state": "present",
+      "version": "22.23.4"
+    },
+    "npm": {
+      "path": "/opt/homebrew/bin/npm",
+      "sh_resolves": true,
+      "source": "well_known_dir",
+      "state": "present",
+      "version": "10.9.4"
+    },
+    "python3": {
+      "path": "/opt/homebrew/bin/python3",
+      "sh_resolves": true,
+      "source": "well_known_dir",
+      "state": "present",
+      "version": "3.13.9"
+    },
+    "rustup": {
+      "state": "absent"
+    },
+    "tailscale": {
+      "state": "absent"
+    },
+    "uv": {
+      "state": "absent"
+    }
+  },
+  "unknowns": [],
+  "version": 1,
+  "warnings": [],
+  "workspace": {
+    "host_match": "fresh",
+    "owned": [],
+    "stamps": []
+  }
+}

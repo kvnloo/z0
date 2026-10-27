@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kvnloo/z0/schemas/onboarding.schema.json",
+  "title": "Zer0OnboardingPolicy",
+  "description": "registry/onboarding.yaml (design §2.4): consent classes and bundles, hardware class table, unit/plist templates, closed bind classes, reserved ports, LLM policy, probe catalog, read and redaction denylists. Data only; lib/z0/onboard/kernel.py decides.",
+  "type": "object",
+  "required": ["version", "consent", "bind_classes", "llm", "denylists"],
+  "properties": {
+    "version": { "const": 1 },
+    "first_task_path": {
+      "type": "array", "items": { "type": "string" }, "uniqueItems": true,
+      "description": "Components a contributor needs to reach a first task. A failure elsewhere degrades the run (exit 5) instead of failing it (exit 1)."
+    },
+    "consent": {
+      "type": "object",
+      "required": ["classes", "bundles"],
+      "properties": {
+        "classes": {
+          "type": "object",
+          "required": ["C0", "C1", "C2"],
+          "propertyNames": { "enum": ["C0", "C1", "C2"] },
+          "additionalProperties": { "type": "string" }
+        },
+        "bundles": {
+          "type": "object",
+          "required": ["toolchains", "harness", "services", "models"],
+          "propertyNames": { "enum": ["toolchains", "harness", "services", "models"] },
+          "additionalProperties": { "type": "string" }
+        },
+        "never_automatic": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "hardware": {
+      "type": "object",
+      "properties": {
+        "hw_classes": { "type": "array", "items": { "enum": ["nvidia", "amd", "apple", "intel_mac", "cpu"] }, "uniqueItems": true },
+        "ram_tiers_gib": { "type": "array", "items": { "type": "number" } },
+        "disk_tiers_gib": { "type": "array", "items": { "type": "number" } },
+        "torch": {
+          "type": "object",
+          "properties": {
+            "version": { "type": "string" },
+            "cpu_index": { "type": "string", "format": "uri" },
+            "rocm_index": { "type": "string", "format": "uri" },
+            "min_cuda": { "type": "string" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "templates": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["manager", "path"],
+        "properties": {
+          "manager": { "enum": ["systemd_user", "launchd"] },
+          "path": { "type": "string", "pattern": "^templates/" },
+          "bind": { "enum": ["loopback", "tailnet_ipv4"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "bind_classes": {
+      "description": "Closed (S2). A wildcard or LAN bind cannot be expressed.",
+      "type": "array",
+      "items": { "enum": ["loopback", "tailnet_ipv4"] },
+      "uniqueItems": true,
+      "minItems": 1
+    },
+    "reserved_ports": {
+      "type": "array",
+      "items": { "type": "integer", "minimum": 1, "maximum": 65535 },
+      "uniqueItems": true
+    },
+    "llm": {
+      "type": "object",
+      "required": ["providers", "budget", "forbidden"],
+      "properties": {
+        "default": { "enum": ["none", "local", "auto"] },
+        "providers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "order"],
+            "properties": {
+              "id": { "enum": ["local", "claude", "codex", "openrouter-free", "vercel-free"] },
+              "order": { "type": "integer", "minimum": 1 },
+              "model": { "type": "string" },
+              "key_name": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$", "description": "Env var NAME only." }
+            },
+            "additionalProperties": false
+          }
+        },
+        "claude_model": { "type": "string", "default": "haiku" },
+        "codex_model": { "type": "string", "default": "gpt-6.1-sol" },
+        "budget": {
+          "type": "object",
+          "required": ["max_calls", "call_timeout_s", "total_s"],
+          "properties": {
+            "max_calls": { "type": "integer", "minimum": 0, "maximum": 8 },
+            "call_timeout_s": { "type": "integer", "minimum": 1, "maximum": 30 },
+            "total_s": { "type": "integer", "minimum": 1, "maximum": 180 },
+            "probe_rounds": { "type": "integer", "minimum": 0, "maximum": 2 }
+          },
+          "additionalProperties": false
+        },
+        "forbidden": {
+          "description": "Must name grok and cursor (P1). The kernel refuses them regardless.",
+          "type": "array",
+          "items": { "type": "string" },
+          "allOf": [
+            { "contains": { "const": "grok" } },
+            { "contains": { "const": "cursor" } }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "probes": {
+      "type": "object",
+      "description": "Read-only probe catalog the LLM may request. Denylisted paths give existence and mode only.",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["kind"],
+        "properties": {
+          "kind": { "enum": ["exists", "stat", "version", "symlink_target", "shebang"] },
+          "target": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "network_probes": {
+      "type": "object",
+      "description": "Fact name -> HTTPS URL that detect/network.py HEADs (3 s timeout).",
+      "propertyNames": { "pattern": "^[a-z0-9_]+$" },
+      "additionalProperties": { "type": "string", "pattern": "^https://" }
+    },
+    "checkout_roots": {
+      "type": "array",
+      "description": "Roots scanned (depth <= 3) for checkouts whose origin is a registry repo.",
+      "items": { "type": "string", "pattern": "^(~(/|$)|\\$Z0_HOME(/|$))" }
+    },
+    "hub": {
+      "type": "object",
+      "description": "Design §8.1 hub steps, planned for every target set.",
+      "properties": {
+        "steps": { "type": "array", "items": { "type": "object", "required": ["id", "kind", "consent"] } }
+      },
+      "additionalProperties": false
+    },
+    "denylists": {
+      "type": "object",
+      "required": ["reads", "redaction"],
+      "properties": {
+        "reads": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "redaction": { "type": "array", "items": { "type": "string" }, "minItems": 1 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

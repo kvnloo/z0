@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kvnloo/z0/schemas/onboard-receipt.schema.json",
+  "title": "Zer0OnboardReceipt",
+  "description": "receipt.json written by VERIFY (design §6.4). Names and hashes only: no secret values, no env values, no user file contents. `z0 doctor`'s exit code is never a gate.",
+  "type": "object",
+  "required": ["version", "run_id", "plan_hash", "host_id", "exit_code", "steps"],
+  "properties": {
+    "version": { "const": 1 },
+    "run_id": { "type": "string", "pattern": "^[0-9]{8}T[0-9]{6}Z-[0-9a-f]{8}$" },
+    "plan_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "host_id": { "type": "string", "pattern": "^[0-9a-f]{16}$" },
+    "started_at": { "type": "string", "format": "date-time" },
+    "finished_at": { "type": "string", "format": "date-time" },
+    "exit_code": {
+      "enum": [0, 1, 2, 3, 4, 5],
+      "description": "0 required steps passed; 1 a required step on the first-task path failed; 2 usage; 3 consent needed but unavailable; 4 refused by a law; 5 degraded: only components off the first-task path failed (listed in `degraded`)."
+    },
+    "degraded": {
+      "type": "array", "items": { "type": "string" }, "uniqueItems": true,
+      "description": "Exit 5 only: components (or toolchains) off the first-task path that failed."
+    },
+    "installed": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["component", "sha"],
+        "properties": {
+          "component": { "type": "string" },
+          "sha": { "type": "string", "pattern": "^[0-9a-f]{7,40}$" },
+          "release": { "type": "string", "pattern": "^(~(/|$)|/(?!home/|Users/))" },
+          "adopted": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "status"],
+        "properties": {
+          "id": { "type": "string" },
+          "status": { "enum": ["passed", "failed", "already_satisfied", "ask", "unavailable", "refused", "blocked", "skipped"] },
+          "reason": { "type": "string" },
+          "remediation": { "type": "string" },
+          "effects": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["path"],
+              "properties": {
+                "path": { "type": "string" },
+                "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+                "target": { "type": "string" }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "acceptance": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": { "enum": ["passed", "failed", "unavailable", "skipped"] }
+      }
+    },
+    "asks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "reason", "command"],
+        "properties": {
+          "id": { "type": "string" },
+          "reason": { "type": "string" },
+          "command": { "type": "string" },
+          "consent": { "enum": ["C1", "C2"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "harnesses": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["state"],
+        "properties": {
+          "state": { "enum": ["installed", "config_only", "absent"] },
+          "integration": { "enum": ["configured", "adopted", "ask", "policy_excluded", "unsupported", "none"] },
+          "reason": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "llm_decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["question_id", "kind", "source", "answer", "accepted"],
+        "properties": {
+          "question_id": { "type": "string" },
+          "kind": { "enum": ["harness_classify", "config_dir_pick", "fork_match", "port_owner", "gpu_vendor_resolve", "pkg_hint", "failure_triage"] },
+          "source": { "enum": ["llm", "replay", "safe_default", "user"] },
+          "provider": { "enum": ["local", "claude", "codex", "openrouter-free", "vercel-free"] },
+          "model": { "type": "string" },
+          "prompt_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "answer": { "type": "string" },
+          "accepted": { "type": "boolean" },
+          "reason": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "laws": {
+      "type": "object",
+      "description": "Proof status per law, stated honestly (§11): I1, R1, X1, H2, T1 rest on tests.",
+      "additionalProperties": { "enum": ["bend", "bend+test", "test", "not_run"] }
+    },
+    "secrets_scan": {
+      "type": "object",
+      "required": ["canary_found"],
+      "properties": {
+        "canary_found": { "type": "boolean" },
+        "scanned": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

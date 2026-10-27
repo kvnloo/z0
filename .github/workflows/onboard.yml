@@ -1,0 +1,54 @@
+name: onboard
+
+# Design §10 layer 1 and §11: pure kernel tests on every PR, and the Bend laws job
+# (PROOF --verdict, exhaustive Bend/Python twin parity, mutants). No host effects:
+# no harness configs, no services, nothing outside the runner's temp dirs.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      # PyYAML from the hashed lock (what stage 0 installs); registry-backed tests
+      # must not skip here (Z0_REQUIRE_YAML). Bend-dependent cases run in `laws`.
+      - run: python -m pip install --require-hashes -r requirements.lock
+      - run: python -m unittest discover -s tests -t . -v
+        env:
+          Z0_REQUIRE_YAML: "1"
+      - run: bash -n lib/z0/onboard/stage0.sh && bash -n z0
+
+  laws:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      Z0_REQUIRE_BEND: "1"
+      TMPDIR: ${{ github.workspace }}/.laws-work
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Cache pinned toolchain and native checker
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/z0
+          key: laws-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lib/laws/toolchain.json', 'lib/laws/cache.py') }}
+      # Local locks are optimization receipts, not CI attestations. Never skip CI proofs.
+      - name: Laws (full pinned Bend verdict)
+        run: ./z0 laws prove --all
+      - name: Twin parity (exhaustive) and mutants
+        run: ./z0 laws check

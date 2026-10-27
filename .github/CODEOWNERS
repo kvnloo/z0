@@ -1,0 +1,4 @@
+# Contributor spec §4.4 R4: the contrib_ready REQUIRED set and laws change only with
+# the owner's review (enforced once branch protection requires code-owner review).
+/bend/contrib_ready/ @kvnloo
+/scripts/contrib_ready.py @kvnloo

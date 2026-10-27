@@ -1,0 +1,2479 @@
+{
+  "asks": [
+    {
+      "command": "manual: Android dev-client APK build is C2 (scripts/build-native-android.sh)",
+      "consent": "C2",
+      "id": "dash.apk",
+      "impact": 1,
+      "reason": "manual step, never automatic (C2)"
+    },
+    {
+      "command": "manual: CLAUDE.md pointer to AGENTS.md (the repo discourages duplicate instruction files)",
+      "consent": "C2",
+      "id": "z0evals.ask.claude_md",
+      "impact": 1,
+      "reason": "manual step, never automatic (C2)"
+    },
+    {
+      "command": "manual: link .verified-oss-loop/skills into your harness skill dir",
+      "consent": "C2",
+      "id": "z0evals.ask.kit_skills",
+      "impact": 1,
+      "reason": "manual step, never automatic (C2)"
+    },
+    {
+      "command": "manual: visual-parity probes (web/docs/probes) need a Chromium path and websockets",
+      "consent": "C2",
+      "id": "z0evals.ask.visual_probes",
+      "impact": 1,
+      "reason": "manual step, never automatic (C2)"
+    },
+    {
+      "command": "manual: z0int onboard (delegate contract z0int-onboard-v1 pending WP-I1)",
+      "consent": "C2",
+      "id": "z0intelligence.delegate",
+      "impact": 1,
+      "reason": "manual step, never automatic (C2)"
+    },
+    {
+      "command": "manual: Hermes: choose the profile and edit its config.yaml yourself (always an ask)",
+      "consent": "C2",
+      "id": "z0intelligence.plugin.hermes",
+      "impact": 1,
+      "reason": "manual step, never automatic (C2)"
+    },
+    {
+      "command": "manual: keep the running unit, or redeploy it yourself at the pinned SHA",
+      "consent": "C2",
+      "id": "z0intelligence.router.unit",
+      "impact": 1,
+      "reason": "adopted z0intelligence.service runs 0563ed7a5207; redeploying it is C2 (C2)"
+    }
+  ],
+  "components": {
+    "dash": {
+      "adopted": false,
+      "tree": "$Z0_HOME/repos/dash",
+      "verdict": "allow"
+    },
+    "oh-my-pi": {
+      "adopted": false,
+      "tree": "$Z0_HOME/repos/oh-my-pi",
+      "verdict": "allow"
+    },
+    "tokenomics": {
+      "adopted": false,
+      "tree": "$Z0_HOME/repos/tokenomics",
+      "verdict": "allow"
+    },
+    "z0evals": {
+      "adopted": true,
+      "tree": "~/zer0/oss/z0evals",
+      "verdict": "allow"
+    },
+    "z0intelligence": {
+      "adopted": false,
+      "tree": "$Z0_HOME/repos/z0intelligence",
+      "verdict": "allow"
+    }
+  },
+  "grants": {
+    "bundles": [
+      "harness",
+      "models",
+      "services",
+      "toolchains"
+    ],
+    "source": "flag"
+  },
+  "host_id": "1f2e3d4c5b6a7980",
+  "llm": "local",
+  "mode": "auto",
+  "path_links": [
+    {
+      "link": "$Z0_HOME/bin/links/claude",
+      "target": "~/.local/bin/claude"
+    },
+    {
+      "link": "$Z0_HOME/bin/links/codex",
+      "target": "~/.local/bin/codex"
+    },
+    {
+      "link": "$Z0_HOME/bin/links/hermes",
+      "target": "~/.local/bin/hermes"
+    },
+    {
+      "link": "$Z0_HOME/bin/links/uv",
+      "target": "~/.local/bin/uv"
+    }
+  ],
+  "pin_policy": "pinned",
+  "plan_hash": "7d8793ae1c8f04647cb752d9fb69dee9602d3c564be7d7274becd3f297999da1",
+  "prepared_path": [
+    "$Z0_HOME/bin/links",
+    "~/.bun/bin",
+    "/usr/bin",
+    "/bin"
+  ],
+  "profile": "personal",
+  "registry": {
+    "registry/components.yaml": "385c871bd4e42d81a6a4d32851bad7d346e0e55305f10a5561f16bc1acc4276a",
+    "registry/harnesses.yaml": "1c2b9ba37ca974e4aa1ed1f6990561ea303fc7e1f73c0fb4c6cc4802d5b4a7b8",
+    "registry/onboarding.yaml": "81fd5227e9ba0d0c90cb7a99fd21a3891bc50c3e46c210913b8af389db65fa7c",
+    "registry/profiles.yaml": "8ef0b2b147bf7db252328ee9cfc981a81867bcf6533362621138bee1abd2e6eb",
+    "registry/toolchains.yaml": "10255da4b970f08ef57b4e9fd68b7dedfbc5f43bde284a35caecac4bcd0213b1"
+  },
+  "steps": [
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "component": "z0",
+        "consent": {
+          "class": "C0"
+        },
+        "creates": [
+          "$Z0_HOME/bin/links"
+        ],
+        "effects": [
+          {
+            "kind": "symlink",
+            "path": "$Z0_HOME/bin/links/claude"
+          },
+          {
+            "kind": "symlink",
+            "path": "$Z0_HOME/bin/links/codex"
+          },
+          {
+            "kind": "symlink",
+            "path": "$Z0_HOME/bin/links/hermes"
+          },
+          {
+            "kind": "symlink",
+            "path": "$Z0_HOME/bin/links/uv"
+          }
+        ],
+        "id": "z0.path_links",
+        "kind": "write_file",
+        "undo": {
+          "kind": "remove_owned"
+        },
+        "where": "home"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "scripts/registry-check"
+        ],
+        "component": "z0",
+        "consent": {
+          "class": "C0"
+        },
+        "env": {
+          "PATH": "$Z0_HOME/venv/bin:$Z0_HOME/bin/links:~/.bun/bin:/usr/bin:/bin"
+        },
+        "id": "z0.registry_check",
+        "kind": "check"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "./z0",
+          "onboard",
+          "plan",
+          "--stdout",
+          "--check-deterministic"
+        ],
+        "component": "z0",
+        "consent": {
+          "class": "C0"
+        },
+        "env": {
+          "PATH": "$Z0_HOME/venv/bin:$Z0_HOME/bin/links:~/.bun/bin:/usr/bin:/bin"
+        },
+        "id": "z0.plan_deterministic",
+        "kind": "check"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "./z0",
+          "init",
+          "--profile",
+          "personal",
+          "--dry-run"
+        ],
+        "component": "z0",
+        "consent": {
+          "class": "C0"
+        },
+        "env": {
+          "PATH": "$Z0_HOME/venv/bin:$Z0_HOME/bin/links:~/.bun/bin:/usr/bin:/bin"
+        },
+        "id": "z0.init_dry_run",
+        "kind": "check"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "component": "z0",
+        "consent": {
+          "bundle": "toolchains",
+          "class": "C1"
+        },
+        "creates": [
+          "$Z0_HOME/toolchains/bun/1.4.3"
+        ],
+        "id": "toolchain.bun",
+        "kind": "ensure_toolchain",
+        "network": true,
+        "toolchain": {
+          "tool": "bun",
+          "version": "1.4.3"
+        },
+        "undo": {
+          "kind": "remove_owned"
+        }
+      }
+    },
+    {
+      "state": {
+        "status": "already_satisfied"
+      },
+      "step": {
+        "component": "z0",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "toolchain.git",
+        "kind": "ensure_toolchain",
+        "toolchain": {
+          "tool": "git",
+          "version": "system"
+        }
+      }
+    },
+    {
+      "state": {
+        "status": "already_satisfied"
+      },
+      "step": {
+        "component": "z0",
+        "consent": {
+          "bundle": "toolchains",
+          "class": "C1"
+        },
+        "creates": [
+          "$Z0_HOME/toolchains/node/22.23.4"
+        ],
+        "id": "toolchain.node",
+        "kind": "ensure_toolchain",
+        "network": true,
+        "toolchain": {
+          "tool": "node",
+          "version": "22.23.4"
+        },
+        "undo": {
+          "kind": "remove_owned"
+        }
+      }
+    },
+    {
+      "state": {
+        "status": "already_satisfied"
+      },
+      "step": {
+        "component": "z0",
+        "consent": {
+          "bundle": "toolchains",
+          "class": "C1"
+        },
+        "id": "toolchain.python-window",
+        "kind": "ensure_toolchain",
+        "network": true,
+        "toolchain": {
+          "tool": "python",
+          "version": "3.11"
+        }
+      }
+    },
+    {
+      "state": {
+        "status": "already_satisfied"
+      },
+      "step": {
+        "component": "z0",
+        "consent": {
+          "bundle": "toolchains",
+          "class": "C1"
+        },
+        "id": "toolchain.python3",
+        "kind": "ensure_toolchain",
+        "network": true,
+        "toolchain": {
+          "tool": "python",
+          "version": "3.12"
+        }
+      }
+    },
+    {
+      "state": {
+        "status": "already_satisfied"
+      },
+      "step": {
+        "component": "tokenomics",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "tokenomics.source",
+        "kind": "adopt_or_clone",
+        "network": true,
+        "probe": {
+          "exists": "$Z0_HOME/repos/tokenomics"
+        },
+        "where": "mirror"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "component": "tokenomics",
+        "consent": {
+          "class": "C0"
+        },
+        "creates": [
+          "$Z0_HOME/venvs/tokenomics"
+        ],
+        "id": "tokenomics.venv",
+        "kind": "venv",
+        "needs": [
+          "tokenomics.source"
+        ],
+        "probe": {
+          "exists": "$Z0_HOME/venvs/tokenomics/bin/python"
+        },
+        "undo": {
+          "kind": "remove_owned"
+        },
+        "where": "venv"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "pip",
+          "install",
+          "-e",
+          "."
+        ],
+        "component": "tokenomics",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "tokenomics.install.python",
+        "kind": "pip_install",
+        "legacy_projection": true,
+        "needs": [
+          "tokenomics.venv"
+        ],
+        "network": true,
+        "probe": {
+          "exists": "$Z0_HOME/venvs/tokenomics/bin/tokenomics"
+        },
+        "where": "venv"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "npm",
+          "install",
+          "-w",
+          "packages/typescript"
+        ],
+        "component": "tokenomics",
+        "consent": {
+          "class": "C0"
+        },
+        "creates": [
+          "$Z0_HOME/repos/tokenomics/node_modules"
+        ],
+        "id": "tokenomics.install.npm",
+        "kind": "run",
+        "legacy_projection": true,
+        "needs": [
+          "tokenomics.source"
+        ],
+        "network": true,
+        "timeout_s": 1800,
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "tokenomics",
+          "report",
+          "--range",
+          "today"
+        ],
+        "component": "tokenomics",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "tokenomics.verify",
+        "kind": "check",
+        "legacy_projection": true,
+        "needs": [
+          "tokenomics.install.python"
+        ],
+        "where": "venv"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "component": "z0intelligence",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0intelligence.source",
+        "kind": "adopt_or_clone",
+        "network": true,
+        "probe": {
+          "exists": "$Z0_HOME/repos/z0intelligence"
+        },
+        "where": "mirror"
+      }
+    },
+    {
+      "state": {
+        "reason": "condition:mode eq guided",
+        "status": "unavailable"
+      },
+      "step": {
+        "argv": [
+          "pip",
+          "install",
+          "-e",
+          "."
+        ],
+        "component": "z0intelligence",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0intelligence.dev",
+        "kind": "pip_install",
+        "legacy_projection": true,
+        "needs": [
+          "z0intelligence.source"
+        ],
+        "network": true,
+        "probe": {
+          "exists": "$Z0_HOME/repos/z0intelligence/.venv/bin/z0int"
+        },
+        "when": [
+          {
+            "fact": "mode",
+            "op": "eq",
+            "value": "guided"
+          }
+        ],
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "component": "z0intelligence",
+        "consent": {
+          "class": "C0"
+        },
+        "creates": [
+          "$Z0_HOME/build/z0intelligence/9c1631683c63f6eb48bea70962fd54f0ece312fb"
+        ],
+        "id": "z0intelligence.build",
+        "kind": "build_tree",
+        "network": true,
+        "undo": {
+          "kind": "remove_owned"
+        },
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "component": "z0intelligence",
+        "consent": {
+          "class": "C0"
+        },
+        "creates": [
+          "~/.local/lib/z0int-shadow/9c1631683c63f6eb48bea70962fd54f0ece312fb"
+        ],
+        "id": "z0intelligence.release",
+        "kind": "stage_release",
+        "needs": [
+          "z0intelligence.build"
+        ],
+        "undo": {
+          "kind": "remove_owned"
+        },
+        "where": "release"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "component": "z0intelligence",
+        "consent": {
+          "class": "C0"
+        },
+        "creates": [
+          "~/.local/lib/z0int-runtime/9c1631683c63f6eb48bea70962fd54f0ece312fb"
+        ],
+        "id": "z0intelligence.runtime",
+        "kind": "venv",
+        "needs": [
+          "z0intelligence.release",
+          "toolchain.python-window"
+        ],
+        "probe": {
+          "exists": "~/.local/lib/z0int-runtime/9c1631683c63f6eb48bea70962fd54f0ece312fb/bin/python"
+        },
+        "undo": {
+          "kind": "remove_owned"
+        },
+        "where": "venv"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "pip",
+          "install",
+          "torch==2.10.0"
+        ],
+        "component": "z0intelligence",
+        "consent": {
+          "bundle": "models",
+          "class": "C1"
+        },
+        "id": "z0intelligence.torch",
+        "kind": "pip_install",
+        "needs": [
+          "z0intelligence.runtime"
+        ],
+        "network": true,
+        "probe": {
+          "exists": "~/.local/lib/z0int-runtime/9c1631683c63f6eb48bea70962fd54f0ece312fb/.z0/torch-2.10.0"
+        },
+        "where": "venv"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "pip",
+          "install",
+          "~/.local/lib/z0int-shadow/9c1631683c63f6eb48bea70962fd54f0ece312fb"
+        ],
+        "component": "z0intelligence",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0intelligence.install",
+        "kind": "pip_install",
+        "needs": [
+          "z0intelligence.torch"
+        ],
+        "network": true,
+        "probe": {
+          "exists": "~/.local/lib/z0int-runtime/9c1631683c63f6eb48bea70962fd54f0ece312fb/bin/z0int"
+        },
+        "when": [
+          {
+            "fact": "network.github",
+            "op": "eq",
+            "value": true
+          },
+          {
+            "fact": "derived.manylinux_2_38",
+            "op": "eq",
+            "value": true
+          }
+        ],
+        "where": "venv"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "component": "z0intelligence",
+        "consent": {
+          "bundle": "services",
+          "class": "C1"
+        },
+        "creates": [
+          "~/.z0int/bin/python"
+        ],
+        "id": "z0intelligence.shim",
+        "kind": "write_file",
+        "needs": [
+          "z0intelligence.install"
+        ],
+        "target_where": "venv",
+        "undo": {
+          "kind": "remove_owned"
+        },
+        "where": "home"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "component": "z0intelligence",
+        "consent": {
+          "bundle": "services",
+          "class": "C1"
+        },
+        "creates": [
+          "~/.z0int/config/hermes.json"
+        ],
+        "id": "z0intelligence.hermes_json",
+        "kind": "write_file",
+        "needs": [
+          "z0intelligence.shim"
+        ],
+        "target_where": "venv",
+        "undo": {
+          "kind": "restore_backup"
+        },
+        "where": "home"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "~/.z0int/bin/python",
+          "-c",
+          "import z0int, mcp, aodl_contract, fff, typesafe_sdk"
+        ],
+        "component": "z0intelligence",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0intelligence.checks.import",
+        "kind": "check",
+        "needs": [
+          "z0intelligence.shim"
+        ],
+        "where": "venv"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "~/.z0int/bin/python",
+          "-c",
+          "import json, sys; from z0int.doctor import run_doctor; r = run_doctor().to_dict(); bad = [c['id'] for c in r['checks'] if c.get('required') and not c.get('ok') and c['id'] != 'repo_root']; print(json.dumps({'unresolved': bad, 'checks': len(r['checks'])})); sys.exit(1 if bad else 0)"
+        ],
+        "component": "z0intelligence",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0intelligence.checks.doctor",
+        "kind": "check",
+        "needs": [
+          "z0intelligence.checks.import"
+        ],
+        "where": "venv"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "python3",
+          "-m",
+          "z0int",
+          "--help"
+        ],
+        "component": "z0intelligence",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0intelligence.verify",
+        "kind": "check",
+        "legacy_projection": true,
+        "needs": [
+          "z0intelligence.install"
+        ],
+        "where": "venv"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "claude",
+          "plugin",
+          "install",
+          "z0intelligence@z0intelligence"
+        ],
+        "component": "z0intelligence",
+        "consent": {
+          "bundle": "harness",
+          "class": "C1"
+        },
+        "harness": "claude-code",
+        "id": "z0intelligence.plugin.claude",
+        "kind": "harness_plugin",
+        "needs": [
+          "z0intelligence.checks.import"
+        ],
+        "probe": {
+          "exists": "$Z0_HOME/onboard/stamps/z0intelligence.plugin.claude"
+        },
+        "undo": {
+          "kind": "uninstall"
+        },
+        "when": [
+          {
+            "fact": "harnesses.claude_code.state",
+            "op": "eq",
+            "value": "installed"
+          }
+        ],
+        "where": "release"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "codex",
+          "plugin",
+          "add",
+          "codex-z0intelligence@z0intelligence"
+        ],
+        "component": "z0intelligence",
+        "consent": {
+          "bundle": "harness",
+          "class": "C1"
+        },
+        "harness": "codex",
+        "id": "z0intelligence.plugin.codex",
+        "kind": "harness_plugin",
+        "needs": [
+          "z0intelligence.checks.import"
+        ],
+        "probe": {
+          "exists": "$Z0_HOME/onboard/stamps/z0intelligence.plugin.codex"
+        },
+        "undo": {
+          "kind": "uninstall"
+        },
+        "when": [
+          {
+            "fact": "harnesses.codex.state",
+            "op": "eq",
+            "value": "installed"
+          }
+        ],
+        "where": "release"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "python3",
+          "scripts/omp_bridge_install.py"
+        ],
+        "component": "z0intelligence",
+        "consent": {
+          "bundle": "harness",
+          "class": "C1"
+        },
+        "harness": "omp",
+        "id": "z0intelligence.plugin.omp",
+        "kind": "harness_plugin",
+        "needs": [
+          "z0intelligence.checks.import"
+        ],
+        "probe": {
+          "exists": "$Z0_HOME/onboard/stamps/z0intelligence.plugin.omp"
+        },
+        "undo": {
+          "kind": "restore_backup"
+        },
+        "when": [
+          {
+            "fact": "harnesses.omp.state",
+            "op": "eq",
+            "value": "installed"
+          }
+        ],
+        "where": "release"
+      }
+    },
+    {
+      "state": {
+        "reason": "manual",
+        "status": "ask"
+      },
+      "step": {
+        "argv": [
+          "echo",
+          "Hermes: choose the profile and edit its config.yaml yourself (always an ask)"
+        ],
+        "component": "z0intelligence",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0intelligence.plugin.hermes",
+        "kind": "ask",
+        "when": [
+          {
+            "fact": "harnesses.hermes.state",
+            "op": "eq",
+            "value": "installed"
+          }
+        ]
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "component": "z0intelligence",
+        "consent": {
+          "bundle": "services",
+          "class": "C1"
+        },
+        "creates": [
+          "~/.config/z0intelligence/service.env"
+        ],
+        "id": "z0intelligence.service_env",
+        "kind": "write_file",
+        "needs": [
+          "z0intelligence.shim"
+        ],
+        "target_where": "venv",
+        "undo": {
+          "kind": "restore_backup"
+        },
+        "when": [
+          {
+            "fact": "session.systemd_user",
+            "op": "eq",
+            "value": true
+          }
+        ],
+        "where": "home"
+      }
+    },
+    {
+      "state": {
+        "reason": "c2_never_auto",
+        "status": "ask"
+      },
+      "step": {
+        "component": "z0intelligence",
+        "consent": {
+          "class": "C2"
+        },
+        "id": "z0intelligence.router.unit",
+        "kind": "service_unit",
+        "needs": [
+          "z0intelligence.shim",
+          "z0intelligence.service_env"
+        ],
+        "probe": {
+          "exists": "~/.config/systemd/user/z0intelligence.service"
+        },
+        "service": {
+          "bind": "loopback",
+          "health": {
+            "http": {
+              "bind": "loopback",
+              "expect_status": 200,
+              "path": "/healthz",
+              "port": 11501
+            }
+          },
+          "port": 11501,
+          "start_order": 3,
+          "template": "z0intelligence",
+          "unit": "z0intelligence.service"
+        },
+        "undo": {
+          "kind": "restore_backup"
+        },
+        "when": [
+          {
+            "fact": "session.systemd_user",
+            "op": "eq",
+            "value": true
+          }
+        ],
+        "where": "venv"
+      }
+    },
+    {
+      "state": {
+        "reason": "manual",
+        "status": "ask"
+      },
+      "step": {
+        "argv": [
+          "echo",
+          "z0int onboard (delegate contract z0int-onboard-v1 pending WP-I1)"
+        ],
+        "component": "z0intelligence",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0intelligence.delegate",
+        "kind": "ask",
+        "needs": [
+          "z0intelligence.shim"
+        ]
+      }
+    },
+    {
+      "state": {
+        "status": "already_satisfied"
+      },
+      "step": {
+        "component": "oh-my-pi",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "oh-my-pi.source",
+        "kind": "adopt_or_clone",
+        "network": true,
+        "probe": {
+          "exists": "$Z0_HOME/repos/oh-my-pi"
+        },
+        "where": "mirror"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "bun",
+          "install"
+        ],
+        "component": "oh-my-pi",
+        "consent": {
+          "class": "C0"
+        },
+        "creates": [
+          "$Z0_HOME/repos/oh-my-pi/node_modules"
+        ],
+        "id": "oh-my-pi.install",
+        "kind": "run",
+        "legacy_projection": true,
+        "needs": [
+          "oh-my-pi.source"
+        ],
+        "network": true,
+        "timeout_s": 1800,
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "bun",
+          "run",
+          "build"
+        ],
+        "component": "oh-my-pi",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "oh-my-pi.build",
+        "kind": "run",
+        "legacy_projection": true,
+        "needs": [
+          "oh-my-pi.install"
+        ],
+        "probe": {
+          "exists": "$Z0_HOME/repos/oh-my-pi/packages/coding-agent/dist"
+        },
+        "timeout_s": 1800,
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "component": "oh-my-pi",
+        "consent": {
+          "class": "C0"
+        },
+        "creates": [
+          "$Z0_HOME/build/oh-my-pi/d707478d4c5c72784c058a0163b616988f559230"
+        ],
+        "id": "oh-my-pi.build_tree",
+        "kind": "build_tree",
+        "network": true,
+        "undo": {
+          "kind": "remove_owned"
+        },
+        "when": [
+          {
+            "fact": "harnesses.omp.state",
+            "op": "eq",
+            "value": "installed"
+          }
+        ],
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "component": "oh-my-pi",
+        "consent": {
+          "class": "C0"
+        },
+        "creates": [
+          "~/.local/lib/oh-my-pi/releases/d707478d4c5c72784c058a0163b616988f559230"
+        ],
+        "id": "oh-my-pi.release",
+        "kind": "stage_release",
+        "needs": [
+          "oh-my-pi.build_tree"
+        ],
+        "undo": {
+          "kind": "remove_owned"
+        },
+        "when": [
+          {
+            "fact": "harnesses.omp.state",
+            "op": "eq",
+            "value": "installed"
+          }
+        ],
+        "where": "release"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "bun",
+          "install"
+        ],
+        "component": "oh-my-pi",
+        "consent": {
+          "class": "C0"
+        },
+        "creates": [
+          "~/.local/lib/oh-my-pi/releases/d707478d4c5c72784c058a0163b616988f559230/node_modules"
+        ],
+        "id": "oh-my-pi.release.deps",
+        "kind": "run",
+        "needs": [
+          "oh-my-pi.release"
+        ],
+        "network": true,
+        "timeout_s": 1800,
+        "when": [
+          {
+            "fact": "harnesses.omp.state",
+            "op": "eq",
+            "value": "installed"
+          }
+        ],
+        "where": "release"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "bun",
+          "run",
+          "build"
+        ],
+        "component": "oh-my-pi",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "oh-my-pi.release.build",
+        "kind": "run",
+        "needs": [
+          "oh-my-pi.release.deps"
+        ],
+        "probe": {
+          "exists": "~/.local/lib/oh-my-pi/releases/d707478d4c5c72784c058a0163b616988f559230/packages/coding-agent/dist"
+        },
+        "timeout_s": 1800,
+        "when": [
+          {
+            "fact": "harnesses.omp.state",
+            "op": "eq",
+            "value": "installed"
+          }
+        ],
+        "where": "release"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "./omp",
+          "setup"
+        ],
+        "component": "oh-my-pi",
+        "consent": {
+          "bundle": "harness",
+          "class": "C1"
+        },
+        "harness": "omp",
+        "id": "oh-my-pi.setup",
+        "kind": "harness_plugin",
+        "needs": [
+          "oh-my-pi.release.build"
+        ],
+        "probe": {
+          "exists": "$Z0_HOME/onboard/stamps/oh-my-pi.setup"
+        },
+        "undo": {
+          "kind": "restore_backup"
+        },
+        "when": [
+          {
+            "fact": "harnesses.omp.state",
+            "op": "eq",
+            "value": "installed"
+          }
+        ],
+        "where": "release"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "bun",
+          "test",
+          "packages/coding-agent/test/rlm-tokenomics-bridge.test.ts"
+        ],
+        "component": "oh-my-pi",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "oh-my-pi.verify",
+        "kind": "check",
+        "legacy_projection": true,
+        "needs": [
+          "oh-my-pi.build",
+          "tokenomics.install.python",
+          "z0intelligence.checks.import"
+        ],
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "component": "dash",
+        "consent": {
+          "class": "C0"
+        },
+        "creates": [
+          "$Z0_HOME/build/dash-app/cfc08de155aed50c9f6b6f9dd8e1a4a9f25aad72"
+        ],
+        "id": "dash.build.app",
+        "kind": "build_tree",
+        "network": true,
+        "undo": {
+          "kind": "remove_owned"
+        },
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "component": "dash",
+        "consent": {
+          "class": "C0"
+        },
+        "creates": [
+          "$Z0_HOME/build/dash-bridge/5f3ee27f6e431ba83abfe9a4a94b2c0757910ddb"
+        ],
+        "id": "dash.build.bridge",
+        "kind": "build_tree",
+        "network": true,
+        "undo": {
+          "kind": "remove_owned"
+        },
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "bun",
+          "install",
+          "--frozen-lockfile"
+        ],
+        "component": "dash",
+        "consent": {
+          "class": "C0"
+        },
+        "creates": [
+          "$Z0_HOME/build/dash-app/cfc08de155aed50c9f6b6f9dd8e1a4a9f25aad72/node_modules"
+        ],
+        "id": "dash.build.deps",
+        "kind": "run",
+        "legacy_projection": true,
+        "needs": [
+          "dash.build.app",
+          "toolchain.bun"
+        ],
+        "network": true,
+        "timeout_s": 1800,
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "bun",
+          "scripts/install-public-ci.ts"
+        ],
+        "component": "dash",
+        "consent": {
+          "class": "C0"
+        },
+        "creates": [
+          "$Z0_HOME/build/dash-app/cfc08de155aed50c9f6b6f9dd8e1a4a9f25aad72/app/node_modules"
+        ],
+        "id": "dash.build.app_public",
+        "kind": "run",
+        "legacy_projection": true,
+        "needs": [
+          "dash.build.deps"
+        ],
+        "network": true,
+        "timeout_s": 1800,
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "bun",
+          "install",
+          "--frozen-lockfile",
+          "--cwd",
+          "bridge"
+        ],
+        "component": "dash",
+        "consent": {
+          "class": "C0"
+        },
+        "creates": [
+          "$Z0_HOME/build/dash-app/cfc08de155aed50c9f6b6f9dd8e1a4a9f25aad72/bridge/node_modules"
+        ],
+        "id": "dash.build.bridge_deps",
+        "kind": "run",
+        "legacy_projection": true,
+        "needs": [
+          "dash.build.deps"
+        ],
+        "network": true,
+        "timeout_s": 1800,
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "bun",
+          "run",
+          "typecheck"
+        ],
+        "component": "dash",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "dash.gate.typecheck",
+        "kind": "check",
+        "legacy_projection": true,
+        "needs": [
+          "dash.build.app_public",
+          "dash.build.bridge_deps"
+        ],
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "bun",
+          "run",
+          "lint"
+        ],
+        "component": "dash",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "dash.gate.lint",
+        "kind": "check",
+        "legacy_projection": true,
+        "needs": [
+          "dash.build.app_public",
+          "dash.build.bridge_deps"
+        ],
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "bun",
+          "run",
+          "test"
+        ],
+        "component": "dash",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "dash.gate.test",
+        "kind": "check",
+        "legacy_projection": true,
+        "needs": [
+          "dash.build.app_public",
+          "dash.build.bridge_deps"
+        ],
+        "when": [
+          {
+            "fact": "toolchains.ffmpeg.state",
+            "op": "eq",
+            "value": "present"
+          }
+        ],
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "bun",
+          "test",
+          "bridge/src/bridge-security.test.ts",
+          "bridge/src/bridge-security-entry.test.ts",
+          "bridge/src/pairing-http.test.ts"
+        ],
+        "component": "dash",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "dash.gate.security",
+        "kind": "check",
+        "needs": [
+          "dash.build.bridge_deps"
+        ],
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "bun",
+          "test",
+          "bridge/src/pairing-audio.test.ts"
+        ],
+        "component": "dash",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "dash.gate.audio",
+        "kind": "check",
+        "needs": [
+          "dash.build.bridge_deps"
+        ],
+        "when": [
+          {
+            "fact": "toolchains.ffmpeg.state",
+            "op": "eq",
+            "value": "present"
+          }
+        ],
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "already_satisfied"
+      },
+      "step": {
+        "component": "dash",
+        "consent": {
+          "class": "C0"
+        },
+        "creates": [
+          "~/.local/lib/dash/releases/5f3ee27f6e431ba83abfe9a4a94b2c0757910ddb"
+        ],
+        "id": "dash.release.bridge",
+        "kind": "stage_release",
+        "needs": [
+          "dash.build.bridge",
+          "dash.gate.security"
+        ],
+        "undo": {
+          "kind": "remove_owned"
+        },
+        "where": "release"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "bun",
+          "install",
+          "--frozen-lockfile",
+          "--cwd",
+          "bridge"
+        ],
+        "component": "dash",
+        "consent": {
+          "class": "C0"
+        },
+        "creates": [
+          "~/.local/lib/dash/releases/5f3ee27f6e431ba83abfe9a4a94b2c0757910ddb/bridge/node_modules"
+        ],
+        "id": "dash.release.deps",
+        "kind": "run",
+        "needs": [
+          "dash.release.bridge",
+          "toolchain.bun"
+        ],
+        "network": true,
+        "timeout_s": 1800,
+        "where": "release"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "bun",
+          "install",
+          "--frozen-lockfile",
+          "--cwd",
+          "bridge/acp-adapters"
+        ],
+        "component": "dash",
+        "consent": {
+          "class": "C0"
+        },
+        "creates": [
+          "~/.local/lib/dash/releases/5f3ee27f6e431ba83abfe9a4a94b2c0757910ddb/bridge/acp-adapters/node_modules"
+        ],
+        "id": "dash.release.acp",
+        "kind": "run",
+        "needs": [
+          "dash.release.deps"
+        ],
+        "network": true,
+        "timeout_s": 1800,
+        "when": [
+          {
+            "fact": "derived.acp_harness",
+            "op": "eq",
+            "value": true
+          }
+        ],
+        "where": "release"
+      }
+    },
+    {
+      "state": {
+        "reason": "condition:tailscale.ipv4 missing",
+        "status": "unavailable"
+      },
+      "step": {
+        "component": "dash",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "dash.selftest.loopback",
+        "kind": "check",
+        "needs": [
+          "dash.release.deps"
+        ],
+        "verify": {
+          "serve": {
+            "argv": [
+              "bun",
+              "run",
+              "index.ts"
+            ],
+            "cwd": "bridge",
+            "env": {
+              "DASH_ALLOW_LOOPBACK": "1",
+              "DASH_CREDENTIAL_DIR": "@tmp@/credentials",
+              "DASH_CWD": "@tmp@",
+              "DASH_ENABLE_LEGACY_CLI": "0",
+              "DASH_HOST": "127.0.0.1",
+              "DASH_PORT": "@port@",
+              "DASH_STT_MODEL": "@tmp@/no-model"
+            },
+            "expect_status": 401,
+            "path": "/",
+            "timeout_s": 90
+          }
+        },
+        "when": [
+          {
+            "fact": "tailscale.ipv4",
+            "op": "missing"
+          }
+        ],
+        "where": "release"
+      }
+    },
+    {
+      "state": {
+        "status": "already_satisfied"
+      },
+      "step": {
+        "component": "dash",
+        "consent": {
+          "bundle": "services",
+          "class": "C1"
+        },
+        "creates": [
+          "~/.config/dash-services/bridge.env"
+        ],
+        "id": "dash.bridge.env",
+        "kind": "write_file",
+        "needs": [
+          "dash.release.deps"
+        ],
+        "target_where": "release",
+        "undo": {
+          "kind": "restore_backup"
+        },
+        "when": [
+          {
+            "fact": "tailscale.ipv4",
+            "op": "exists"
+          }
+        ],
+        "where": "home"
+      }
+    },
+    {
+      "state": {
+        "status": "already_satisfied"
+      },
+      "step": {
+        "component": "dash",
+        "consent": {
+          "bundle": "services",
+          "class": "C1"
+        },
+        "creates": [
+          "~/.local/lib/dash/bin/dash-wait-tailnet"
+        ],
+        "id": "dash.bridge.wait_tailnet",
+        "kind": "write_file",
+        "needs": [
+          "dash.release.deps"
+        ],
+        "undo": {
+          "kind": "remove_owned"
+        },
+        "when": [
+          {
+            "fact": "tailscale.ipv4",
+            "op": "exists"
+          }
+        ],
+        "where": "home"
+      }
+    },
+    {
+      "state": {
+        "status": "already_satisfied"
+      },
+      "step": {
+        "component": "dash",
+        "consent": {
+          "bundle": "services",
+          "class": "C1"
+        },
+        "id": "dash.bridge.unit",
+        "kind": "service_unit",
+        "needs": [
+          "dash.bridge.env",
+          "dash.bridge.wait_tailnet"
+        ],
+        "probe": {
+          "exists": "~/.config/systemd/user/dash-bridge.service"
+        },
+        "service": {
+          "bind": "tailnet_ipv4",
+          "health": {
+            "http": {
+              "bind": "tailnet_ipv4",
+              "expect_status": 401,
+              "path": "/",
+              "port": 4747
+            }
+          },
+          "limits": {
+            "memory_max": "1G",
+            "restart_sec": 10,
+            "timeout_start_sec": 120
+          },
+          "port": 4747,
+          "start_order": 10,
+          "template": "dash-bridge",
+          "unit": "dash-bridge.service"
+        },
+        "undo": {
+          "kind": "restore_backup"
+        },
+        "when": [
+          {
+            "fact": "session.systemd_user",
+            "op": "eq",
+            "value": true
+          }
+        ],
+        "where": "release"
+      }
+    },
+    {
+      "state": {
+        "status": "already_satisfied"
+      },
+      "step": {
+        "component": "dash",
+        "consent": {
+          "bundle": "services",
+          "class": "C1"
+        },
+        "creates": [
+          "~/.local/lib/dash/bridge-current"
+        ],
+        "id": "dash.bridge.current",
+        "kind": "swap_current",
+        "needs": [
+          "dash.bridge.unit"
+        ],
+        "undo": {
+          "kind": "restore_symlink"
+        },
+        "where": "release"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "component": "dash",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "dash.health",
+        "kind": "check",
+        "needs": [
+          "dash.bridge.current"
+        ],
+        "verify": {
+          "http": {
+            "bind": "tailnet_ipv4",
+            "expect_status": 401,
+            "path": "/",
+            "port": 4747
+          }
+        }
+      }
+    },
+    {
+      "state": {
+        "reason": "manual",
+        "status": "ask"
+      },
+      "step": {
+        "argv": [
+          "echo",
+          "Android dev-client APK build is C2 (scripts/build-native-android.sh)"
+        ],
+        "component": "dash",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "dash.apk",
+        "kind": "ask"
+      }
+    },
+    {
+      "state": {
+        "status": "already_satisfied"
+      },
+      "step": {
+        "argv": [
+          "git",
+          "fetch",
+          "origin",
+          "main",
+          "dev",
+          "nightly",
+          "preview"
+        ],
+        "component": "z0evals",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0evals.source",
+        "kind": "adopt_or_clone",
+        "network": true,
+        "probe": {
+          "exists": "$Z0_HOME/repos/z0evals"
+        },
+        "where": "mirror"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "python3",
+          ".verified-oss-loop/rollout.py",
+          "show"
+        ],
+        "component": "z0evals",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0evals.t0.rollout",
+        "kind": "check",
+        "needs": [
+          "z0evals.source"
+        ],
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "python3",
+          ".verified-oss-loop/pages-url-map.py",
+          "check",
+          "--root",
+          ".",
+          "--base",
+          "/z0evals"
+        ],
+        "component": "z0evals",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0evals.t0.pages_map",
+        "kind": "check",
+        "needs": [
+          "z0evals.source"
+        ],
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "python3",
+          "tests/test_arm_identity.py"
+        ],
+        "component": "z0evals",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0evals.t0.arm_identity",
+        "kind": "check",
+        "needs": [
+          "z0evals.source"
+        ],
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "python3",
+          "tests/expire_claims.py"
+        ],
+        "component": "z0evals",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0evals.t0.expire_claims",
+        "kind": "check",
+        "needs": [
+          "z0evals.source"
+        ],
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "python3",
+          "-m",
+          "venv",
+          ".venv"
+        ],
+        "component": "z0evals",
+        "consent": {
+          "class": "C0"
+        },
+        "creates": [
+          "~/zer0/oss/z0evals/.venv"
+        ],
+        "id": "z0evals.venv",
+        "kind": "venv",
+        "legacy_projection": true,
+        "needs": [
+          "z0evals.source"
+        ],
+        "probe": {
+          "exists": "~/zer0/oss/z0evals/.venv/bin/python"
+        },
+        "where": "venv"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          ".venv/bin/pip",
+          "install",
+          "-r",
+          "requirements.txt"
+        ],
+        "component": "z0evals",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0evals.deps",
+        "kind": "pip_install",
+        "legacy_projection": true,
+        "needs": [
+          "z0evals.venv"
+        ],
+        "network": true,
+        "probe": {
+          "exists": "~/zer0/oss/z0evals/.venv/.z0/requirements-b6e3da7ad9eda4f87f9f8e94c6ab0fc97d44bb10"
+        },
+        "where": "venv"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          ".venv/bin/python",
+          "-m",
+          "unittest",
+          "tests/test_pages_publication.py"
+        ],
+        "component": "z0evals",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0evals.t1.pages",
+        "kind": "check",
+        "needs": [
+          "z0evals.deps"
+        ],
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          ".venv/bin/python",
+          "scripts/validate.py"
+        ],
+        "component": "z0evals",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0evals.t1.validate",
+        "kind": "check",
+        "legacy_projection": true,
+        "needs": [
+          "z0evals.deps"
+        ],
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          ".venv/bin/python",
+          "tests/expire_claims.py"
+        ],
+        "component": "z0evals",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0evals.t1.expire_claims",
+        "kind": "check",
+        "needs": [
+          "z0evals.deps"
+        ],
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          ".venv/bin/python",
+          "scripts/validate_optchat_publication.py"
+        ],
+        "component": "z0evals",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0evals.t1.optchat_validate",
+        "kind": "check",
+        "needs": [
+          "z0evals.deps"
+        ],
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          ".venv/bin/python",
+          "-m",
+          "unittest",
+          "tests/test_optchat_publication.py"
+        ],
+        "component": "z0evals",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0evals.t1.optchat_tests",
+        "kind": "check",
+        "needs": [
+          "z0evals.deps"
+        ],
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          ".venv/bin/python",
+          "scripts/audit_web_source.py"
+        ],
+        "component": "z0evals",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0evals.t1.audit_source",
+        "kind": "check",
+        "needs": [
+          "z0evals.deps"
+        ],
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          ".venv/bin/python",
+          "scripts/build_site.py"
+        ],
+        "component": "z0evals",
+        "consent": {
+          "class": "C0"
+        },
+        "creates": [
+          "~/zer0/oss/z0evals/site/index.html"
+        ],
+        "id": "z0evals.t1.build_site",
+        "kind": "run",
+        "needs": [
+          "z0evals.deps"
+        ],
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          ".venv/bin/python",
+          "scripts/build_site_data.py"
+        ],
+        "component": "z0evals",
+        "consent": {
+          "class": "C0"
+        },
+        "creates": [
+          "~/zer0/oss/z0evals/web/data/optchat-long-horizon-v0.json"
+        ],
+        "id": "z0evals.t1.site_data",
+        "kind": "run",
+        "needs": [
+          "z0evals.t1.build_site"
+        ],
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          ".venv/bin/python",
+          "scripts/build_posts.py"
+        ],
+        "component": "z0evals",
+        "consent": {
+          "class": "C0"
+        },
+        "creates": [
+          "~/zer0/oss/z0evals/web/data/posts"
+        ],
+        "id": "z0evals.t1.posts",
+        "kind": "run",
+        "needs": [
+          "z0evals.t1.site_data"
+        ],
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          ".venv/bin/python",
+          "-m",
+          "unittest",
+          "tests/test_build_posts.py"
+        ],
+        "component": "z0evals",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0evals.t1.posts_tests",
+        "kind": "check",
+        "needs": [
+          "z0evals.t1.posts"
+        ],
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "node",
+          "--version"
+        ],
+        "component": "z0evals",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0evals.web.gate",
+        "kind": "check",
+        "needs": [
+          "z0evals.t1.posts",
+          "toolchain.node"
+        ],
+        "when": [
+          {
+            "fact": "network.fonts_google",
+            "op": "eq",
+            "value": true
+          },
+          {
+            "fact": "network.npmjs",
+            "op": "eq",
+            "value": true
+          }
+        ]
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "npm",
+          "ci",
+          "--no-audit",
+          "--no-fund",
+          "--prefix",
+          "web"
+        ],
+        "component": "z0evals",
+        "consent": {
+          "class": "C0"
+        },
+        "creates": [
+          "~/zer0/oss/z0evals/web/node_modules"
+        ],
+        "id": "z0evals.web.deps",
+        "kind": "run",
+        "needs": [
+          "z0evals.web.gate"
+        ],
+        "network": true,
+        "timeout_s": 1800,
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "npm",
+          "--prefix",
+          "web",
+          "run",
+          "typecheck"
+        ],
+        "component": "z0evals",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0evals.web.typecheck",
+        "kind": "check",
+        "needs": [
+          "z0evals.web.deps"
+        ],
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "npm",
+          "--prefix",
+          "web",
+          "run",
+          "build"
+        ],
+        "component": "z0evals",
+        "consent": {
+          "class": "C0"
+        },
+        "creates": [
+          "~/zer0/oss/z0evals/web/out/index.html"
+        ],
+        "env": {
+          "Z0_BASE_PATH": "/z0evals"
+        },
+        "id": "z0evals.web.build",
+        "kind": "run",
+        "needs": [
+          "z0evals.web.typecheck"
+        ],
+        "network": true,
+        "timeout_s": 1800,
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          ".venv/bin/python",
+          "scripts/audit_web_export.py",
+          "--root",
+          "web/out"
+        ],
+        "component": "z0evals",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0evals.web.audit",
+        "kind": "check",
+        "needs": [
+          "z0evals.web.build"
+        ],
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "status": "todo"
+      },
+      "step": {
+        "argv": [
+          "git",
+          "--no-optional-locks",
+          "status",
+          "--porcelain"
+        ],
+        "component": "z0evals",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0evals.post.status",
+        "kind": "check",
+        "needs": [
+          "z0evals.t1.posts"
+        ],
+        "where": "build"
+      }
+    },
+    {
+      "state": {
+        "reason": "manual",
+        "status": "ask"
+      },
+      "step": {
+        "argv": [
+          "echo",
+          "CLAUDE.md pointer to AGENTS.md (the repo discourages duplicate instruction files)"
+        ],
+        "component": "z0evals",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0evals.ask.claude_md",
+        "kind": "ask",
+        "when": [
+          {
+            "fact": "harnesses.claude_code.state",
+            "op": "eq",
+            "value": "installed"
+          }
+        ]
+      }
+    },
+    {
+      "state": {
+        "reason": "manual",
+        "status": "ask"
+      },
+      "step": {
+        "argv": [
+          "echo",
+          "link .verified-oss-loop/skills into your harness skill dir"
+        ],
+        "component": "z0evals",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0evals.ask.kit_skills",
+        "kind": "ask"
+      }
+    },
+    {
+      "state": {
+        "reason": "manual",
+        "status": "ask"
+      },
+      "step": {
+        "argv": [
+          "echo",
+          "visual-parity probes (web/docs/probes) need a Chromium path and websockets"
+        ],
+        "component": "z0evals",
+        "consent": {
+          "class": "C0"
+        },
+        "id": "z0evals.ask.visual_probes",
+        "kind": "ask"
+      }
+    }
+  ],
+  "targets": [
+    "tokenomics",
+    "z0intelligence",
+    "oh-my-pi",
+    "dash",
+    "z0evals"
+  ],
+  "unavailable": [],
+  "version": 1,
+  "warnings": [
+    "prepared PATH: ~/.local/bin also holds a policy-excluded harness; $Z0_HOME/bin/links replaces it (P1)",
+    "z0intelligence: 1 existing checkout(s) are dirty or off-origin; a separate z0 clone is planned instead",
+    "z0intelligence: pin 9c1631683c63 not verified on origin (no mirror or checkout evidence)"
+  ]
+}

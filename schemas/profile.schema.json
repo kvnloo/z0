@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kvnloo/z0/schemas/profile.schema.json",
+  "title": "Zer0ContributorProfile",
+  "description": "profile.json written by lib/z0/onboard/detect/profile.py (contributor spec §3.2, §3.7). Closed: names, tags, buckets and booleans only. No secret value, no transcript, no file content outside `t3.instruction_text` (T3, per-item consent), and $HOME is never written. Higher-tier fields cannot appear at a lower tier. `t3` stays on the host: it never goes into an LLM prompt, a receipt or a PR body.",
+  "type": "object",
+  "required": ["schema", "tier", "detected_at", "consent", "hw", "toolchains", "harnesses",
+               "instruction_files", "interests", "experience", "warnings"],
+  "properties": {
+    "schema": { "const": "z0.contribute.profile.v1" },
+    "tier": { "$ref": "#/$defs/tier" },
+    "detected_at": { "type": "string", "format": "date-time" },
+    "consent": {
+      "type": "object",
+      "required": ["granted", "source"],
+      "properties": {
+        "granted": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/item" } },
+        "source": { "enum": ["default", "flag", "tty"], "description": "Never an LLM (L-LLM)." }
+      },
+      "additionalProperties": false
+    },
+    "hw": {
+      "type": "object",
+      "required": ["os", "arch", "ram_gib", "gpu"],
+      "properties": {
+        "os": { "enum": ["linux", "darwin", "unknown"] },
+        "arch": { "enum": ["x86_64", "arm64", "unknown"] },
+        "ram_gib": { "type": "number", "minimum": 0 },
+        "gpu": {
+          "type": "object",
+          "required": ["class"],
+          "properties": {
+            "class": { "enum": ["nvidia", "amd", "apple", "intel_mac", "cpu"] },
+            "vram_gib": { "type": "number", "minimum": 0 }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "toolchains": {
+      "type": "array", "uniqueItems": true,
+      "items": { "enum": ["python", "uv", "node", "bun", "deno", "pnpm", "cargo", "rust", "go",
+                          "java", "gcc", "clang", "cmake", "ruby", "zig", "dotnet", "swift",
+                          "ghc", "julia", "r", "cuda"] }
+    },
+    "harnesses": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/tag" } },
+    "instruction_files": {
+      "description": "T0: stat only (exists, size, mtime date). Never the content.",
+      "type": "object",
+      "propertyNames": { "enum": ["claude", "codex", "gemini", "opencode"] },
+      "additionalProperties": {
+        "type": "object",
+        "required": ["exists"],
+        "properties": {
+          "exists": { "type": "boolean" },
+          "size": { "type": "integer", "minimum": 0 },
+          "mtime": { "type": "string", "format": "date" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "harness_config": {
+      "description": "T1: key NAMES and MCP server NAMES only, never a value.",
+      "type": "object",
+      "propertyNames": { "enum": ["claude", "codex"] },
+      "additionalProperties": {
+        "type": "object",
+        "required": ["keys", "mcp_servers"],
+        "properties": {
+          "keys": { "$ref": "#/$defs/names" },
+          "mcp_servers": { "$ref": "#/$defs/names" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "git_identity": {
+      "description": "T1: whether user.name and user.email are set. Never the values.",
+      "type": "object",
+      "required": ["name", "email"],
+      "properties": { "name": { "type": "boolean" }, "email": { "type": "boolean" } },
+      "additionalProperties": false
+    },
+    "languages": { "$ref": "#/$defs/histogram", "description": "T2: normalized over the closed language vocabulary." },
+    "language_sources": {
+      "type": "array", "uniqueItems": true, "items": { "enum": ["local_repos", "github"] }
+    },
+    "recency": { "enum": ["active_30d", "active_180d", "active_1y", "dormant"] },
+    "interests": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/tag" } },
+    "experience": {
+      "type": "object",
+      "required": ["contrib_done"],
+      "properties": {
+        "repos_bucket": { "enum": ["0", "1-4", "5-19", "20-100", "101+"] },
+        "contrib_done": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "t3": {
+      "description": "T3, per-item consent. Identifiers shown to the user only: never sent to an LLM, never in a receipt.",
+      "type": "object",
+      "properties": {
+        "repo_names": { "$ref": "#/$defs/names" },
+        "topics": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/tag" } },
+        "starred_languages": { "$ref": "#/$defs/histogram" },
+        "instruction_text": {
+          "type": "object",
+          "propertyNames": { "enum": ["claude", "codex", "gemini", "opencode"] },
+          "additionalProperties": { "type": "string", "maxLength": 16384 }
+        }
+      },
+      "additionalProperties": false
+    },
+    "warnings": { "type": "array", "items": { "type": "string", "pattern": "^profile: " } }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": { "properties": { "tier": { "const": "T0" } } },
+      "then": { "properties": { "harness_config": false, "git_identity": false } }
+    },
+    {
+      "if": { "properties": { "tier": { "enum": ["T0", "T1"] } } },
+      "then": {
+        "properties": {
+          "languages": false, "language_sources": false, "recency": false,
+          "experience": { "properties": { "repos_bucket": false } }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "tier": { "enum": ["T0", "T1", "T2"] } } },
+      "then": { "properties": { "t3": false } }
+    }
+  ],
+  "$defs": {
+    "tier": { "enum": ["T0", "T1", "T2", "T3"] },
+    "item": { "enum": ["t1.harness_keys", "t1.git_identity", "t2.local_languages",
+                       "t2.github_languages", "t3.repo_names", "t3.topics",
+                       "t3.starred_languages", "t3.instruction_text"] },
+    "tag": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,39}$" },
+    "names": {
+      "type": "array", "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[A-Za-z0-9_.-]{1,64}$" }
+    },
+    "histogram": {
+      "type": "object",
+      "propertyNames": { "enum": ["python", "typescript", "javascript", "rust", "go", "c", "cpp",
+                                  "java", "kotlin", "swift", "ruby", "shell", "lua", "zig",
+                                  "haskell", "ocaml", "elixir", "csharp", "php", "scala", "julia",
+                                  "r", "dart", "nix", "cuda", "html", "css", "sql"] },
+      "additionalProperties": { "type": "number", "minimum": 0, "maximum": 1 }
+    }
+  }
+}

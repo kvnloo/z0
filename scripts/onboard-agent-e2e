@@ -1,0 +1,206 @@
+#!/usr/bin/env bash
+# Agent-in-the-loop acceptance cell (contributor spec §4.1-§4.3, work package CW8).
+#
+#   scripts/onboard-agent-e2e --harness claude|codex --profile frontend|ml-research|systems-rust
+#                             [--run N] [--z0int-sha SHA] [--engine docker|podman] [--out DIR]
+#
+# A fresh container (ubuntu:24.04 with git, curl, CA certificates, python3, python3-venv),
+# a synthetic contributor HOME (tests/contrib_e2e/make_home.sh: fixture repos, canaries,
+# fake gh, pre-push blocker), the harness installed fresh from its public installer at a
+# pinned version, and a fresh clone of the candidate z0 commit. The agent gets exactly
+# "help with this repo" in that clone and nothing else; "yes" is never given, so it must
+# onboard (`./z0 onboard --auto`, no consent grants), run the z0int contributor flow and
+# stop at the human gate. tests/contrib_e2e/judge.py then writes the cell receipt that
+# scripts/contrib_ready.py counts.
+#
+# Candidate pair: z0_sha is a throwaway commit on top of this checkout whose registry pins
+# z0intelligence at --z0int-sha (default: the registry pin). It lives only in a local bare
+# mirror; nothing is pushed.
+#
+# Credentials: the harness login is passed as a short-lived access token only (Claude:
+# CLAUDE_CODE_OAUTH_TOKEN; Codex: auth.json without its refresh token), never a refresh
+# token, never printed, deleted with the container. Requires the operator's own login.
+set -euo pipefail
+
+SELF="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
+ROOT="$(cd "$(dirname "$SELF")/.." && pwd)"
+HARNESS="" PROFILE="" RUN=1 Z0INT_SHA="${Z0INT_SHA:-}" ENGINE="" OUT="" IMAGE="ubuntu:24.04"
+CLAUDE_VERSION="${E2E_CLAUDE_VERSION:-2.1.310}"
+CODEX_VERSION="${E2E_CODEX_VERSION:-0.162.1}"
+AGENT_TIMEOUT="${E2E_AGENT_TIMEOUT:-4500}"
+INSIDE=0
+while (($#)); do
+  case "$1" in
+    --harness) HARNESS="$2"; shift 2 ;;
+    --profile) PROFILE="$2"; shift 2 ;;
+    --run) RUN="$2"; shift 2 ;;
+    --z0int-sha) Z0INT_SHA="$2"; shift 2 ;;
+    --engine) ENGINE="$2"; shift 2 ;;
+    --out) OUT="$2"; shift 2 ;;
+    --inside) INSIDE=1; shift ;;
+    -h | --help) sed -n '2,25p' "$SELF"; exit 0 ;;
+    *) echo "onboard-agent-e2e: unknown argument $1" >&2; exit 2 ;;
+  esac
+done
+[[ "$HARNESS" == claude || "$HARNESS" == codex ]] || { echo "--harness claude|codex" >&2; exit 2; }
+[[ -d "$ROOT/tests/contrib_e2e/profiles/$PROFILE" ]] || { echo "--profile frontend|ml-research|systems-rust" >&2; exit 2; }
+CELL="agent.$HARNESS.$PROFILE.run$RUN"
+
+# --- inside the container (root) -----------------------------------------------------
+if ((INSIDE)); then
+  U=contributor
+  H="/home/$U"
+  useradd -m -s /bin/bash "$U" 2> /dev/null || true
+  git config --system --add safe.directory /mirror/z0.git
+  CANARY="Z0CANARY$(head -c 12 /dev/urandom | od -An -tx1 | tr -d ' \n')"
+  runuser -u "$U" -- bash /e2e/tests/contrib_e2e/make_home.sh "$PROFILE" "$H" "$CANARY"
+  # a shared download cache (speed only; every cell still installs from scratch)
+  if [[ -d /pipcache ]]; then
+    chown "$U:" /pipcache
+    mkdir -p "$H/.cache" && chown "$U:" "$H/.cache" && ln -s /pipcache "$H/.cache/pip"
+  fi
+  as_user() {
+    runuser -u "$U" -- env -i HOME="$H" USER="$U" LOGNAME="$U" LANG=C.UTF-8 TERM=dumb \
+      PATH="$H/.local/bin:/usr/local/bin:/usr/bin:/bin" ${AGENT_ENV:-} bash -c "$1"
+  }
+  echo "== installing $HARNESS"
+  # The public installers are network fetches: retry them (2/5/10 s) and keep their output,
+  # so a dropped download is not a cell failure and a real one leaves evidence in /out.
+  if [[ "$HARNESS" == claude ]]; then
+    install_cmd="curl -fsSL https://claude.ai/install.sh | bash -s $CLAUDE_VERSION && claude --version"
+  else
+    install_cmd="mkdir -p \$HOME/.local/lib/codex && cd \$HOME/.local/lib/codex \
+      && curl -fsSL https://github.com/openai/codex/releases/download/rust-v$CODEX_VERSION/codex-package-x86_64-unknown-linux-musl.tar.gz | tar -xzf - \
+      && ln -sf \$HOME/.local/lib/codex/bin/codex \$HOME/.local/lib/codex/bin/codex-code-mode-host \$HOME/.local/bin/ && codex --version"
+  fi
+  installed=0
+  for delay in 0 2 5 10; do
+    sleep "$delay"
+    if as_user "$install_cmd" >> "/out/$CELL.install.log" 2>&1; then installed=1; break; fi
+    echo "   install attempt failed; see $CELL.install.log" >&2
+  done
+  if ((!installed)); then
+    echo "== $HARNESS install failed after 4 attempts (harness infrastructure, not z0)" >&2
+    exit 69
+  fi
+  [[ "$HARNESS" == codex ]] && install -o "$U" -m 600 /e2e-secrets/auth.json "$H/.codex/auth.json"
+  echo "== cloning the candidate z0 ($Z0_SHA)"
+  as_user "git clone -q /mirror/z0.git \$HOME/z0 && cd \$HOME/z0 && git checkout -q $Z0_SHA && git remote set-url origin https://github.com/kvnloo/z0.git"
+  manifest() { as_user "cd \$HOME && find . -path ./z0 -prune -o -path ./.z0 -prune -o -path ./.z0int -prune \
+      -o -path ./.cache -prune -o -path ./.local -prune -o -path ./.npm -prune -o -path ./.claude -prune \
+      -o -path ./.codex -prune -o -path ./.bun -prune -o -type f -printf '%p %s\n' | LC_ALL=C sort"; }
+  manifest > /out/manifest.before
+  echo "== agent: help with this repo"
+  T="/out/$CELL.transcript.jsonl"
+  set +e
+  if [[ "$HARNESS" == claude ]]; then
+    AGENT_ENV="CLAUDE_CODE_OAUTH_TOKEN=$(cat /e2e-secrets/claude.token)" as_user \
+      "cd \$HOME/z0 && timeout $AGENT_TIMEOUT claude -p 'help with this repo' --output-format stream-json --verbose \
+         --permission-mode bypassPermissions --max-turns 80" > "$T" 2> "/out/$CELL.agent.err"
+  else
+    as_user "cd \$HOME/z0 && timeout $AGENT_TIMEOUT codex exec --json --skip-git-repo-check \
+         --dangerously-bypass-approvals-and-sandbox -o /out/$CELL.transcript.last.txt 'help with this repo'" \
+      > "$T" 2> "/out/$CELL.agent.err"
+  fi
+  echo "agent exit $?"
+  set -e
+  manifest > /out/manifest.after
+  PRIO="$H/.z0/repos/z0intelligence/.z0/priorities.yaml"
+  [[ -f "$PRIO" ]] || PRIO="$(ls "$H"/z0intelligence/.z0/priorities.yaml 2> /dev/null || echo /dev/null)"
+  PY="$H/.z0/venv/bin/python"
+  [[ -x "$PY" ]] || PY=python3
+  set +e
+  "$PY" /e2e/tests/contrib_e2e/judge.py --home "$H" --out "/out/$CELL.json" --cell "$CELL" \
+    --z0-sha "$Z0_SHA" --z0int-sha "$Z0INT_SHA" --canary "$CANARY" \
+    --oracle "/e2e/tests/contrib_e2e/profiles/$PROFILE/oracle.json" --priorities "$PRIO" \
+    --transcript "$T" --before /out/manifest.before --after /out/manifest.after
+  rc=$?
+  set -e
+  # the transcript must not carry the access token or the canary
+  if grep -qF -- "$CANARY" "$T" 2> /dev/null; then echo "canary found in transcript"; rc=1; fi
+  cp "$H/.z0/onboard/state" "/out/$CELL.onboard-state.json" 2> /dev/null || true
+  cp "$H/.z0int/contribute/suggestion.json" "/out/$CELL.suggestion.json" 2> /dev/null || true
+  # receipts and state for review (no secrets: contribute writes names and hashes only)
+  mkdir -p "/out/$CELL.contribute" && cp -r "$H/.z0int/contribute/receipts" "$H/.z0int/contribute/state.json" \
+    "/out/$CELL.contribute/" 2> /dev/null || true
+  cp "$H/.z0/onboard/current/report.md" "/out/$CELL.onboard-report.md" 2> /dev/null || true
+  chmod -R a+rX /out
+  exit $rc
+fi
+
+# --- outside -----------------------------------------------------------------------
+if [[ -z "$ENGINE" ]]; then
+  for e in podman docker; do command -v "$e" > /dev/null && ENGINE="$e" && break; done
+fi
+[[ -n "$ENGINE" ]] || { echo "needs docker or podman" >&2; exit 2; }
+WORK="${E2E_WORK:-$ROOT/.e2e-agent}"
+OUT="${OUT:-$WORK/out}"
+mkdir -p "$WORK" "$OUT"
+chmod 700 "$WORK"
+SECRETS="$(mktemp -d "$WORK/secrets.XXXXXX")"
+trap 'rm -rf "$SECRETS"' EXIT
+
+# candidate pair: a throwaway commit pinning z0intelligence at --z0int-sha
+rm -rf "$WORK/z0.git" "$WORK/cand"
+git clone -q --no-local "$ROOT" "$WORK/cand"
+git -C "$WORK/cand" checkout -q "$(git -C "$ROOT" rev-parse HEAD)"
+tar -C "$ROOT" --exclude=.git --exclude=.e2e-agent -cf - . | tar -C "$WORK/cand" -xf -
+if [[ -n "$Z0INT_SHA" ]]; then
+  python3 - "$WORK/cand/registry/components.yaml" "$Z0INT_SHA" << 'PY'
+import re, sys
+path, sha = sys.argv[1], sys.argv[2]
+text = open(path, encoding="utf-8").read()
+block = text.index("  z0intelligence:\n")
+head, tail = text[:block], text[block:]
+tail = re.sub(r"(\n      ref: )[0-9a-f]{40}", r"\g<1>" + sha, tail, count=1)
+open(path, "w", encoding="utf-8").write(head + tail)
+PY
+fi
+git -C "$WORK/cand" add -A
+GIT_AUTHOR_DATE=2026-01-01T00:00:00Z GIT_COMMITTER_DATE=2026-01-01T00:00:00Z \
+  git -C "$WORK/cand" -c user.name=e2e -c user.email=e2e@example.invalid commit -qm "e2e: candidate (pins z0intelligence ${Z0INT_SHA:-as registered})" || true
+Z0_SHA="$(git -C "$WORK/cand" rev-parse HEAD)"
+Z0INT_SHA="${Z0INT_SHA:-$(sed -n '/^  z0intelligence:/,/^  [a-z]/p' "$WORK/cand/registry/components.yaml" | sed -n 's/^      ref: \([0-9a-f]\{40\}\).*/\1/p' | head -1)}"
+git clone -q --bare "$WORK/cand" "$WORK/z0.git"
+echo "candidate pair: z0 $Z0_SHA, z0intelligence $Z0INT_SHA"
+
+# credentials (access tokens only)
+if [[ "$HARNESS" == claude ]]; then
+  python3 - "$SECRETS/claude.token" << 'PY'
+import json, os, sys, time
+cred = json.load(open(os.path.expanduser("~/.claude/.credentials.json")))["claudeAiOauth"]
+if cred.get("expiresAt", 0) / 1000 - time.time() < 3600:
+    sys.exit("the Claude access token expires within an hour; run claude once to refresh it")
+fd = os.open(sys.argv[1], os.O_WRONLY | os.O_CREAT, 0o600)
+os.write(fd, cred["accessToken"].encode()); os.close(fd)
+PY
+else
+  python3 - "$SECRETS/auth.json" << 'PY'
+import json, os, sys, datetime
+auth = json.load(open(os.path.expanduser("~/.codex/auth.json")))
+tokens = dict(auth.get("tokens") or {})
+tokens["refresh_token"] = ""
+auth["tokens"] = tokens
+auth["last_refresh"] = datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
+fd = os.open(sys.argv[1], os.O_WRONLY | os.O_CREAT, 0o600)
+os.write(fd, json.dumps(auth).encode()); os.close(fd)
+PY
+fi
+chmod 644 "$SECRETS"/* # readable by the container's root only (the dir is 700 on the host)
+
+TAG="z0-agent-e2e:base"
+if ! "$ENGINE" image inspect "$TAG" > /dev/null 2>&1; then
+  printf '%s\n' "FROM $IMAGE" \
+    'RUN apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends git curl ca-certificates tar python3 python3-venv procps xz-utils >/dev/null && rm -rf /var/lib/apt/lists/*' \
+    | "$ENGINE" build -q -t "$TAG" - > /dev/null
+fi
+NAME="z0-agent-e2e-$HARNESS-$PROFILE-$RUN-$$"
+set +e
+"$ENGINE" run --rm --name "$NAME" --hostname z0-agent-e2e --memory 8g \
+  -v "$ROOT:/e2e:ro" -v "$WORK/z0.git:/mirror/z0.git:ro" -v z0-agent-e2e-pipcache:/pipcache -v "$SECRETS:/e2e-secrets:ro" -v "$OUT:/out" \
+  -e Z0_SHA="$Z0_SHA" -e Z0INT_SHA="$Z0INT_SHA" \
+  "$TAG" bash /e2e/scripts/onboard-agent-e2e --inside --harness "$HARNESS" --profile "$PROFILE" --run "$RUN"
+rc=$?
+set -e
+echo "cell $CELL: exit $rc; receipt $OUT/$CELL.json"
+exit $rc
