@@ -13,7 +13,7 @@ from __future__ import annotations
 import os
 import shutil
 
-from .base import ActionCtx, ActionError, Outcome
+from .base import RETRY_DELAYS, ActionCtx, ActionError, Outcome
 
 
 def source_url(ctx: ActionCtx, comp: dict) -> str:
@@ -34,26 +34,30 @@ def checkout_pin(ctx: ActionCtx, step: dict, url: str, dest: str, pin: str) -> N
     """Clone `url` into `dest` and detach at `pin`, with submodules (and LFS objects
     when the tree uses LFS and git-lfs is present)."""
     parent = os.path.dirname(dest)
+    shown = ctx.form(url) if os.path.isabs(url) else url
+    fresh = not os.path.lexists(dest)
     # a blobless partial clone fetches only the pinned tree's blobs (large repos clone in
-    # seconds, not minutes); one retry after a failure (network flake), from scratch
+    # seconds, not minutes); local paths clone fully
     args = ["clone", "--quiet", "--no-checkout"] + ([] if os.path.isabs(url) else ["--filter=blob:none"])
-    ok = git(ctx, step, args + [url, dest], cwd=parent).ok
-    if not ok:
-        shutil.rmtree(dest, ignore_errors=True)
-        ctx.warnings.append(f"{step['id']}: git clone failed once; retried")
-        ok = git(ctx, step, args + [url, dest], cwd=parent).ok
-    if not ok:
-        raise ActionError(f"git clone of {ctx.form(url) if os.path.isabs(url) else url} failed (after one retry)")
+
+    def clone() -> bool:
+        if fresh and os.path.lexists(dest):   # a failed try's partial tree (ours only)
+            shutil.rmtree(dest, ignore_errors=True)
+        return git(ctx, step, args + [url, dest], cwd=parent).ok
+
+    if not ctx.retrying(f"git clone of {shown}", clone):
+        raise ActionError(f"git clone of {shown} failed after {1 + len(RETRY_DELAYS)} attempts")
     if not git(ctx, step, ["-c", "advice.detachedHead=false", "checkout", "--quiet", "--detach", pin],
                cwd=dest).ok:
         raise ActionError(f"pin {pin[:12]} is not in the clone")
     if os.path.isfile(os.path.join(dest, ".gitmodules")):
-        if not git(ctx, step, ["submodule", "update", "--quiet", "--init", "--recursive"], cwd=dest).ok:
+        if not ctx.retrying("git submodule update", lambda: git(
+                ctx, step, ["submodule", "update", "--quiet", "--init", "--recursive"], cwd=dest).ok):
             raise ActionError("git submodule update failed")
     attrs = os.path.join(dest, ".gitattributes")
     if os.path.isfile(attrs) and "filter=lfs" in open(attrs, encoding="utf-8", errors="replace").read():
         if ctx.resolve("git-lfs", dest, ctx.env_for(step)):
-            if not git(ctx, step, ["lfs", "pull"], cwd=dest).ok:
+            if not ctx.retrying("git lfs pull", lambda: git(ctx, step, ["lfs", "pull"], cwd=dest).ok):
                 raise ActionError("git lfs pull failed")
         else:
             ctx.warnings.append(f"{step['id']}: the tree uses Git LFS but git-lfs is not installed")
@@ -88,6 +92,7 @@ def execute(ctx: ActionCtx, step: dict) -> Outcome:
                 shutil.rmtree(staging, ignore_errors=True)
     detail = f"cloned {comp.get('repo')} at {pin[:12]} into {ctx.form(tree)}"
     if step.get("argv"):
-        if not git(ctx, step, list(step["argv"])[1:], cwd=tree, timeout=step.get("timeout_s", 600)).ok:
+        if not ctx.retrying(f"`{' '.join(step['argv'])}`", lambda: git(
+                ctx, step, list(step["argv"])[1:], cwd=tree, timeout=step.get("timeout_s", 600)).ok):
             ctx.warnings.append(f"{step['id']}: `{' '.join(step['argv'])}` failed (the pinned tree is complete)")
     return Outcome(True, detail)

@@ -12,7 +12,9 @@
 #   G1..G5             tests/onboard/test_profile.py privacy cells
 #   E1                 z0int tests/test_contribute_align.py (engine twin + oracles)
 #   E2                 tests/onboard/test_llm.py (Z5 guardrails a-g) AND z0int
-#                      first_task_pick cases (CW6); missing cases fail the cell
+#                      first_task_pick cases (CW6) AND tests/contrib_e2e/test_profile_handoff
+#                      (each fixture HOME through z0int's real T1 probe and ranker meets its
+#                      oracle); missing cases fail the cell
 #   P1, P2             z0int priorities-check tests; P2 adds the oracle newcomer test
 #   C1                 z0int claim race on the fake GitHub
 #   W1                 z0int scripted-yes S4-S7 loop
@@ -87,7 +89,7 @@ if want laws_ci; then
   TOOL="$WORK/bend-toolchain"
   laws() {
     set -e
-    eval "$(bash "$CAND/bend/onboard/bootstrap.sh" "$TOOL" | sed 's/^/export /')"
+    eval "$(bash "$CAND/lib/laws/bootstrap.sh" "$TOOL" | sed 's/^/export /')"
     for d in onboard contrib_ready; do
       (cd "$CAND/bend/$d" && PATH="/usr/bin:$PATH:$LEAN_BIN" "$BEND" PROOF.bend --verdict | tee /dev/stderr | grep -qx "ALL PROOFS CHECK")
     done
@@ -126,9 +128,11 @@ if need_z0int; then
     e2() {
       cd "$CAND" && "$PY" -m unittest tests.onboard.test_llm || return 1
       grep -rqs "first_task_pick" "$ZI/tests" || { echo "z0int has no first_task_pick cases (CW6 not built)"; return 1; }
-      (cd "$ZI" && .venv/bin/python -m pytest -q -p no:cacheprovider -k first_task_pick tests)
+      (cd "$ZI" && .venv/bin/python -m pytest -q -p no:cacheprovider -k first_task_pick tests) || return 1
+      # the agent cells' fixture HOMEs -> z0int's real T1 probe and ranker -> the oracles
+      (cd "$CAND" && Z0INT_ROOT="$ZI" Z0_REQUIRE_Z0INT=1 "$PY" -m unittest tests.contrib_e2e.test_profile_handoff)
     }
-    if (e2) > "$LOG/E2.log" 2>&1; then receipt E2 pass "Z5 guardrails + first_task_pick"; else receipt E2 fail "$(tail -1 "$LOG/E2.log")"; fi
+    if (e2) > "$LOG/E2.log" 2>&1; then receipt E2 pass "Z5 guardrails + first_task_pick + fixture profile handoff"; else receipt E2 fail "$(tail -1 "$LOG/E2.log")"; fi
   fi
 fi
 

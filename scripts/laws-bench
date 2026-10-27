@@ -1,0 +1,116 @@
+#!/usr/bin/env python3
+"""Measure the unmodified onboard suite; no cache optimization is used here.
+
+Compiler subprocess wall time is attributed to checker_compile and subtracted
+from verdict wall time. Peak TMPDIR logical file bytes are sampled every 20 ms
+(and at completion); this is a sampled high-water mark, not cumulative I/O.
+"""
+import argparse
+import hashlib
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+import threading
+import time
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def measure(name, argv, tmp, extra):
+    tmp.mkdir(parents=True, exist_ok=True)
+    env = dict(os.environ, TMPDIR=str(tmp), PYTHONDONTWRITEBYTECODE='1', **extra)
+    peak = 0
+    stop = threading.Event()
+
+    def sample():
+        nonlocal peak
+        while True:
+            size = 0
+            for p in tmp.rglob('*'):
+                try:
+                    if p.is_file() and not p.is_symlink():
+                        size += p.stat().st_size
+                except FileNotFoundError:
+                    pass
+            peak = max(peak, size)
+            if stop.wait(0.02):
+                return
+
+    thread = threading.Thread(target=sample)
+    thread.start()
+    start = time.perf_counter()
+    try:
+        result = subprocess.run(argv, cwd=ROOT, env=env, capture_output=True, text=True)
+    finally:
+        stop.set()
+        thread.join()
+    # Include short-lived processes' surviving output.
+    peak = max(peak, sum(p.stat().st_size for p in tmp.rglob('*') if p.is_file()))
+    return dict(phase=name, seconds=time.perf_counter()-start,
+                returncode=result.returncode, peak_tmp_bytes=peak,
+                stdout=result.stdout, stderr=result.stderr)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--output', type=Path, required=True)
+    args = parser.parse_args()
+    tmp = Path(os.environ['TMPDIR']).expanduser().resolve()
+    if tmp == Path('/tmp') or Path('/tmp') in tmp.parents:
+        parser.error('TMPDIR must not be under /tmp')
+    pins = ROOT / 'lib/laws/toolchain.json'
+    key = hashlib.sha256(pins.read_bytes()).hexdigest()
+    cache = Path(os.environ.get('XDG_CACHE_HOME', Path.home()/'.cache'))/'z0/toolchains'/key
+    bootstrap_env = {'PYTHONPATH': str(ROOT/'lib')}
+    report = dict(schema=1, pin_sha256=key, method='20ms sampled logical TMPDIR bytes; compiler subprocess wall-time attribution; cold/warm checker HOME; toolchain may be cached', runs=[])
+    for label in ('cold', 'warm'):
+        import tempfile
+        scratch = Path(tempfile.mkdtemp(prefix=label+'-', dir=tmp))
+        phases = []
+        bootstrap = measure('toolchain_bootstrap', [sys.executable, '-c',
+            'from laws.cache import ensure_toolchain; print(ensure_toolchain())'], scratch, bootstrap_env)
+        phases.append(bootstrap)
+        if bootstrap['returncode']:
+            report['runs'].append(dict(run=label, phases=phases, unavailable='bootstrap failed; no cached toolchain'))
+            continue
+        bend = cache/'bend/bin/bend'
+        lean = cache/'lean-4.34.0-linux/bin'
+        compiler_log = scratch/'compiler.jsonl'
+        wrappers = scratch/'wrappers'
+        wrappers.mkdir(exist_ok=True)
+        for name, actual in [('lean', str(lean/'lean')), ('leanc', str(lean/'leanc'))]:
+            wrapper = wrappers/name
+            wrapper.write_text('#!'+sys.executable+'\nimport json,subprocess,sys,time\ns=time.perf_counter()\nr=subprocess.run('+repr([actual])+'+sys.argv[1:])\nwith open('+repr(str(compiler_log))+',"a") as f: f.write(json.dumps({"compiler":'+repr(name)+',"seconds":time.perf_counter()-s})+"\\n")\nsys.exit(r.returncode)\n')
+            wrapper.chmod(0o755)
+        home = scratch/'home'
+        home.mkdir(exist_ok=True)
+        # Remove ambient Lean shims. Wrappers invoke the exact pinned binary.
+        path = os.pathsep.join([str(wrappers), '/usr/bin', '/bin', str(lean)])
+        env = dict(HOME=str(home), PATH=path, BEND=str(bend), LEAN_BIN=str(lean),
+                   PYTHONPATH=str(ROOT/'lib'), Z0_LAWS_FRESH_CHECKER='1')
+        verdict = measure('verdict', [str(bend), str(ROOT/'bend/onboard/PROOF.bend'), '--verdict'], scratch,
+                          dict(env, BEND_BENCH_DOMAIN=str(ROOT/'bend/onboard')))
+        # Bend imports are relative to its argument, not this script's cwd.
+        phases.append(verdict)
+        compilers = [json.loads(line) for line in compiler_log.read_text().splitlines()] if compiler_log.exists() else []
+        compile_s = sum(row['seconds'] for row in compilers)
+        phases.insert(1, dict(phase='checker_compile', seconds=compile_s, invocations=compilers, returncode=verdict['returncode'], peak_tmp_bytes=verdict['peak_tmp_bytes']))
+        verdict['seconds'] -= compile_s
+        # Existing tests use the original verifier and therefore fresh HOME per entry.
+        env['PATH'] = os.pathsep.join(['/usr/bin', '/bin', str(lean)])
+        for phase, target in [('twin_parity','tests.onboard.test_kernel_twin'), ('mutation','tests.onboard.test_kernel_mutation')]:
+            phases.append(measure(phase, [sys.executable,'-m','unittest',target,'-v'], scratch, env))
+        report['runs'].append(dict(run=label, phases=phases))
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(json.dumps(report, indent=2)+'\n')
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(json.dumps(report, indent=2)+'\n')
+    print(json.dumps(report, indent=2))
+    return int(any(p['returncode'] for r in report['runs'] for p in r['phases']))
+
+
+if __name__ == '__main__':
+    sys.exit(main())

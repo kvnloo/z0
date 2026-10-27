@@ -12,7 +12,7 @@
 | `memento` | Memento | memory | idea | shadow | `kvnloo/Memento` | `513a80c2ba15` |
 | `oh-my-pi` | OMP (Oh My Pi) | runtime | canary | canary | `kvnloo/oh-my-pi` | `d707478d4c5c` |
 | `tokenomics` | Tokenomics | measurement | experimental | live | `kvnloo/tokenomics` | `65e8f2dd9d6c` |
-| `z0evals` | z0evals | research | stable | live | `kvnloo/z0evals` | `29a28336e526` |
-| `z0intelligence` | z0intelligence | intelligence | experimental | log_only | `kvnloo/z0intelligence` | `cfb33e5fabaf` |
+| `z0evals` | z0evals | research | stable | live | `kvnloo/z0evals` | `b6e3da7ad9ed` |
+| `z0intelligence` | z0intelligence | intelligence | experimental | log_only | `kvnloo/z0intelligence` | `9c1631683c63` |
 
 _Generated from `registry/components.yaml`. Do not edit by hand._

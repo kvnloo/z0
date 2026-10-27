@@ -36,22 +36,19 @@ jobs:
     timeout-minutes: 45
     env:
       Z0_REQUIRE_BEND: "1"
+      TMPDIR: ${{ github.workspace }}/.laws-work
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Cache pinned Bend + Lean archives
+      - name: Cache pinned toolchain and native checker
         uses: actions/cache@v4
         with:
-          path: ${{ runner.temp }}/bend-toolchain/downloads
-          key: bend-2.0.34-lean-4.34.0-${{ hashFiles('bend/onboard/toolchain.json') }}
-      - name: Install pinned verifier (sha256-checked)
-        run: bash bend/onboard/bootstrap.sh "$RUNNER_TEMP/bend-toolchain" >> "$GITHUB_ENV"
-      - name: Laws (bend PROOF.bend --verdict)
-        working-directory: bend/onboard
-        run: |
-          PATH="/usr/bin:$PATH:$LEAN_BIN" "$BEND" PROOF.bend --verdict | tee "$RUNNER_TEMP/verdict.txt"
-          grep -qx "ALL PROOFS CHECK" "$RUNNER_TEMP/verdict.txt"
+          path: ~/.cache/z0
+          key: laws-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lib/laws/toolchain.json', 'lib/laws/cache.py') }}
+      # Local locks are optimization receipts, not CI attestations. Never skip CI proofs.
+      - name: Laws (full pinned Bend verdict)
+        run: ./z0 laws prove --all
       - name: Twin parity (exhaustive) and mutants
-        run: python -m unittest tests.onboard.test_kernel_twin tests.onboard.test_kernel_mutation -v
+        run: ./z0 laws check

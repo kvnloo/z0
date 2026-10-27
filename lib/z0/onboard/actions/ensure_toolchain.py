@@ -30,7 +30,7 @@ def _platform_key(ctx: ActionCtx, targets: dict) -> str:
     return f"{os_name}-{arch}"
 
 
-def _download(ctx: ActionCtx, url: str, dest: str) -> None:
+def _download_once(ctx: ActionCtx, url: str, dest: str) -> None:
     if ctx.fetch is not None:
         ctx.fetch(url, dest)
         return
@@ -39,6 +39,31 @@ def _download(ctx: ActionCtx, url: str, dest: str) -> None:
     request = urllib.request.Request(url, headers={"User-Agent": "z0-onboard"})
     with urllib.request.urlopen(request, timeout=120) as resp, open(dest, "wb") as fh:  # noqa: S310
         shutil.copyfileobj(resp, fh)
+
+
+def _download(ctx: ActionCtx, url: str, dest: str) -> None:
+    """The pinned download, retried on network errors (sha256 is checked after).
+    An HTTP 4xx is permanent (wrong URL or version): it fails at once."""
+    import urllib.error
+
+    errors: list = []
+
+    def attempt() -> bool:
+        try:
+            _download_once(ctx, url, dest)
+            return True
+        except urllib.error.HTTPError as exc:
+            if exc.code < 500:
+                raise
+            errors.append(exc)
+        except OSError as exc:   # URLError, timeouts and resets are OSErrors
+            errors.append(exc)
+        if os.path.lexists(dest):
+            os.unlink(dest)
+        return False
+
+    if not ctx.retrying(f"download of {url}", attempt):
+        raise errors[-1]
 
 
 def _sha256(path: str) -> str:

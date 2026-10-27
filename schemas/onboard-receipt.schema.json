@@ -13,8 +13,12 @@
     "started_at": { "type": "string", "format": "date-time" },
     "finished_at": { "type": "string", "format": "date-time" },
     "exit_code": {
-      "enum": [0, 1, 2, 3, 4],
-      "description": "0 required steps passed; 1 a required step failed; 2 usage; 3 consent needed but unavailable; 4 refused by a law."
+      "enum": [0, 1, 2, 3, 4, 5],
+      "description": "0 required steps passed; 1 a required step on the first-task path failed; 2 usage; 3 consent needed but unavailable; 4 refused by a law; 5 degraded: only components off the first-task path failed (listed in `degraded`)."
+    },
+    "degraded": {
+      "type": "array", "items": { "type": "string" }, "uniqueItems": true,
+      "description": "Exit 5 only: components (or toolchains) off the first-task path that failed."
     },
     "installed": {
       "type": "array",

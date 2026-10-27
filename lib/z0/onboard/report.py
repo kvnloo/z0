@@ -25,6 +25,10 @@ def render(plan_obj: dict, receipt: dict, extra: list, warnings: list) -> str:
         out.append("Nothing.")
     failed = [s for s in receipt["steps"] if s["status"] == "failed"]
     failed_checks = [i for i in extra if i["status"] == "failed"]
+    if receipt.get("degraded"):
+        out += ["", f"Degraded: {', '.join(receipt['degraded'])} failed. The first-task path "
+                    "(z0intelligence, z0evals) is intact: go on to a first task, and fix the "
+                    "items below when you can."]
     if failed or failed_checks:
         out += ["", "Failed (fix, then re-run `./z0 onboard`):"]
         out += [f"- {s['id']}: {s.get('reason', '')}" for s in failed]

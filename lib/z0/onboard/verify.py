@@ -15,9 +15,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
-from . import journal as journal_mod, report as report_mod
+from . import degrade, journal as journal_mod, report as report_mod
 from .actions.base import ActionCtx
-from .apply import Deps, effective_plan, make_ctx, run_step, write_private
+from .apply import Deps, _tool_users, effective_plan, make_ctx, run_step, write_private
 from .checks import CHECKS
 from .plan import exit_code as plan_exit_code
 
@@ -217,10 +217,15 @@ def verify_run(run: Path, deps: Deps, *, prior: Optional[dict] = None, host: Opt
     failed_checks = [f"{i['component']}.{i['name']}" for i in extra
                      if i["status"] == "failed" and i.get("required", True)]
     refused = plan_exit_code(plan_obj)
+    critical, degraded = degrade.classify(
+        plan_obj, results, [i for i in extra if i["status"] == "failed" and i.get("required", True)],
+        deps.snap, _tool_users(deps.snap))
     if refused:
         code = refused
-    elif failed_steps or failed_checks or scan["canary_found"] or apply_code == 1:
+    elif critical or scan["canary_found"] or (apply_code == 1 and not failed_steps):
         code = 1
+    elif degraded:
+        code = degrade.DEGRADED_EXIT   # only off-path components failed: go on (§6.4)
     else:
         code = consent_code
     receipt = {
@@ -237,7 +242,11 @@ def verify_run(run: Path, deps: Deps, *, prior: Optional[dict] = None, host: Opt
         "laws": LAWS,
         "secrets_scan": scan,
     }
-    warnings = list(plan_obj.get("warnings") or []) + ctx.warnings
+    if code == degrade.DEGRADED_EXIT:
+        receipt["degraded"] = degraded
+    applied_warnings = [w for e in entries if e.get("event") == "apply_done"
+                        for w in e.get("warnings") or []]   # APPLY's own (retries, LFS, fetch)
+    warnings = list(plan_obj.get("warnings") or []) + applied_warnings + ctx.warnings
     for item in extra:
         warnings.extend(item.get("warnings") or [])
     write_private(run / "receipt.json", json.dumps(receipt, indent=2, sort_keys=True) + "\n")

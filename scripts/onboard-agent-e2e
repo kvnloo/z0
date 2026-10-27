@@ -64,14 +64,26 @@ if ((INSIDE)); then
       PATH="$H/.local/bin:/usr/local/bin:/usr/bin:/bin" ${AGENT_ENV:-} bash -c "$1"
   }
   echo "== installing $HARNESS"
+  # The public installers are network fetches: retry them (2/5/10 s) and keep their output,
+  # so a dropped download is not a cell failure and a real one leaves evidence in /out.
   if [[ "$HARNESS" == claude ]]; then
-    as_user "curl -fsSL https://claude.ai/install.sh | bash -s $CLAUDE_VERSION > /dev/null 2>&1; claude --version"
+    install_cmd="curl -fsSL https://claude.ai/install.sh | bash -s $CLAUDE_VERSION && claude --version"
   else
-    as_user "mkdir -p \$HOME/.local/lib/codex && cd \$HOME/.local/lib/codex \
+    install_cmd="mkdir -p \$HOME/.local/lib/codex && cd \$HOME/.local/lib/codex \
       && curl -fsSL https://github.com/openai/codex/releases/download/rust-v$CODEX_VERSION/codex-package-x86_64-unknown-linux-musl.tar.gz | tar -xzf - \
       && ln -sf \$HOME/.local/lib/codex/bin/codex \$HOME/.local/lib/codex/bin/codex-code-mode-host \$HOME/.local/bin/ && codex --version"
-    install -o "$U" -m 600 /e2e-secrets/auth.json "$H/.codex/auth.json"
   fi
+  installed=0
+  for delay in 0 2 5 10; do
+    sleep "$delay"
+    if as_user "$install_cmd" >> "/out/$CELL.install.log" 2>&1; then installed=1; break; fi
+    echo "   install attempt failed; see $CELL.install.log" >&2
+  done
+  if ((!installed)); then
+    echo "== $HARNESS install failed after 4 attempts (harness infrastructure, not z0)" >&2
+    exit 69
+  fi
+  [[ "$HARNESS" == codex ]] && install -o "$U" -m 600 /e2e-secrets/auth.json "$H/.codex/auth.json"
   echo "== cloning the candidate z0 ($Z0_SHA)"
   as_user "git clone -q /mirror/z0.git \$HOME/z0 && cd \$HOME/z0 && git checkout -q $Z0_SHA && git remote set-url origin https://github.com/kvnloo/z0.git"
   manifest() { as_user "cd \$HOME && find . -path ./z0 -prune -o -path ./.z0 -prune -o -path ./.z0int -prune \

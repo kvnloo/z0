@@ -121,6 +121,8 @@ class FakeApply:
         no-op, which saves ~25 s of ensurepip per apply. One test class keeps the
         registry's real `python3 -m venv` + `.venv/bin/pip install -r` path."""
         self.root = root
+        self.sleeps: list = []        # retry backoff delays (never really slept in tests)
+        self.runner = None            # optional wrapper around subprocess_runner
         self.fake = fakehost.build(root)
         self.home = self.fake["home"]
         self.z0_home = self.home / ".z0"
@@ -186,11 +188,13 @@ class FakeApply:
         return run
 
     def deps(self, *, detect: bool = True, confirm=None, out=None):
+        from z0.onboard.actions.base import subprocess_runner
         from z0.onboard.apply import Deps
         lines = []
         return Deps(z0_home=str(self.z0_home), home=str(self.home), repo_root=str(ROOT),
                     snap=self.snap, base_env=self.env, detect=self.detect if detect else None,
-                    replan=self.plan, confirm=confirm, out=out or lines.append)
+                    replan=self.plan, confirm=confirm, out=out or lines.append,
+                    runner=self.runner or subprocess_runner, sleep=self.sleeps.append)
 
     def calls(self) -> str:
         return self.log.read_text() if self.log.exists() else ""

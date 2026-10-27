@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Build a synthetic contributor HOME (contributor spec §4.1): fixture repos (marker and
 # empty source files only), git identity, harness configs with CANARY values planted,
-# a canary gh token, and stub toolchains for the profile's facts.
+# a canary gh token, and stub toolchains (and GPU) for the profile's facts; the
+# contract with profiles/<p>/oracle.json is pinned by test_profile_handoff.py.
 #   make_home.sh PROFILE HOME CANARY
 set -euo pipefail
 PROFILE="$1"; H="$2"; CANARY="$3"
@@ -21,10 +22,12 @@ case "$PROFILE" in
   ml-research)
     repo trainer pyproject.toml train.py notebooks/explore.ipynb requirements.txt
     repo evals pyproject.toml eval.py data/README.md
-    # test hardware facts (spec §4.1: a GPU cannot be real in a container): a 12 GiB NVIDIA
-    # GPU and CUDA, as stub binaries on PATH that answer the probes' queries
+    # oracle profile_facts: python + cuda on an nvidia 12 GiB GPU. z0int's probe sees CUDA
+    # through `nvcc` and the GPU through `nvidia-smi` (memory.total in MiB), the same
+    # fakebins as z0intelligence tests/contrib_e2e_repo/cell.sh. Without them the HOME
+    # looked like python on a CPU host and the pick was profile-blind (t-139).
     stub nvcc
-    printf '#!/bin/sh\ncase "$*" in *memory.total*) echo 12288 ;; *name*) echo "NVIDIA test GPU (stub)" ;; *) echo "NVIDIA-SMI stub (12288 MiB)" ;; esac\n' \
+    printf '#!/bin/sh\ncase "$*" in *memory.total*) echo 12288;; *name*) echo "NVIDIA GeForce RTX 3060";; *) echo "NVIDIA-SMI fixture";; esac\n' \
       > "$H/.local/bin/nvidia-smi"
     chmod 755 "$H/.local/bin/nvidia-smi" ;;
   systems-rust)
