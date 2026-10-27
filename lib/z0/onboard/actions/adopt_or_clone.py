@@ -34,8 +34,16 @@ def checkout_pin(ctx: ActionCtx, step: dict, url: str, dest: str, pin: str) -> N
     """Clone `url` into `dest` and detach at `pin`, with submodules (and LFS objects
     when the tree uses LFS and git-lfs is present)."""
     parent = os.path.dirname(dest)
-    if not git(ctx, step, ["clone", "--quiet", "--no-checkout", url, dest], cwd=parent).ok:
-        raise ActionError(f"git clone of {ctx.form(url) if os.path.isabs(url) else url} failed")
+    # a blobless partial clone fetches only the pinned tree's blobs (large repos clone in
+    # seconds, not minutes); one retry after a failure (network flake), from scratch
+    args = ["clone", "--quiet", "--no-checkout"] + ([] if os.path.isabs(url) else ["--filter=blob:none"])
+    ok = git(ctx, step, args + [url, dest], cwd=parent).ok
+    if not ok:
+        shutil.rmtree(dest, ignore_errors=True)
+        ctx.warnings.append(f"{step['id']}: git clone failed once; retried")
+        ok = git(ctx, step, args + [url, dest], cwd=parent).ok
+    if not ok:
+        raise ActionError(f"git clone of {ctx.form(url) if os.path.isabs(url) else url} failed (after one retry)")
     if not git(ctx, step, ["-c", "advice.detachedHead=false", "checkout", "--quiet", "--detach", pin],
                cwd=dest).ok:
         raise ActionError(f"pin {pin[:12]} is not in the clone")
