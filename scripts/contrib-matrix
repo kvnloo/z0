@@ -46,7 +46,7 @@ open(path, "w", encoding="utf-8").write(head + tail)
 PY
   git -C "$d/c" add -A
   GIT_AUTHOR_DATE=2026-01-01T00:00:00Z GIT_COMMITTER_DATE=2026-01-01T00:00:00Z \
-    git -C "$d/c" -c user.name=e2e -c user.email=e2e@example.invalid commit -qm "e2e: candidate (pins z0intelligence $Z0INT_SHA)" || true
+    git -C "$d/c" -c user.name=e2e -c user.email=e2e@example.invalid commit -qm "e2e: candidate (pins z0intelligence $Z0INT_SHA)" > /dev/null 2>&1 || true
   git -C "$d/c" rev-parse HEAD
   rm -rf "$d"
 }
