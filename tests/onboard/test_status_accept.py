@@ -180,12 +180,25 @@ class StatusAccept(unittest.TestCase):
         self.assertFalse((self.zhome / 'files/example.new').exists())
 
     def test_accept_failure_is_reported_and_blocks_dependents(self):
+        # `example` is off the first-task path: its failure degrades the run (exit 5),
+        # and is still reported as FAILED.
+        self.initial_run()
+        from z0.onboard.actions.base import ActionError
+        with patch.dict(RENDERERS, {'example.service': lambda ctx, step: (_ for _ in ()).throw(ActionError('test failure'))}):
+            code, out = self.call('accept', 'services')
+        self.assertEqual(code, 5, out)
+        self.assertIn('FAILED example.service', out)
+        self.assertIn('DEGRADED: example failed', out)
+
+    def test_accept_failure_on_the_first_task_path_fails_the_run(self):
+        self.snap['onboarding']['first_task_path'] = ['example']
         self.initial_run()
         from z0.onboard.actions.base import ActionError
         with patch.dict(RENDERERS, {'example.service': lambda ctx, step: (_ for _ in ()).throw(ActionError('test failure'))}):
             code, out = self.call('accept', 'services')
         self.assertEqual(code, 1, out)
         self.assertIn('FAILED example.service', out)
+        self.assertNotIn('DEGRADED', out)
 
     def test_accept_can_be_rolled_back_with_original_journal(self):
         self.initial_run()

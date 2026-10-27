@@ -96,7 +96,7 @@
     }
   ],
   "pin_policy": "pinned",
-  "plan_hash": "f12bfcd79bfbec7f8c93271e7cc7e9c507669a28b8fe3880831d61572084b52d",
+  "plan_hash": "7810f42a9944476e4b1ff693f2676a4499cdacb4d26c37a8ffb70bf90cde5e30",
   "prepared_path": [
     "$Z0_HOME/bin/links",
     "~/.bun/bin",
@@ -107,7 +107,7 @@
   "registry": {
     "registry/components.yaml": "b9ac713c2aad79c44be198f264b0b740eaf964a2ba0300391b02f0c891728f4b",
     "registry/harnesses.yaml": "1c2b9ba37ca974e4aa1ed1f6990561ea303fc7e1f73c0fb4c6cc4802d5b4a7b8",
-    "registry/onboarding.yaml": "b0c3e2b4c8e7a17bde8a5cb2378c90f6009b4464879a76406f6ae3cdc7e9b9ce",
+    "registry/onboarding.yaml": "81fd5227e9ba0d0c90cb7a99fd21a3891bc50c3e46c210913b8af389db65fa7c",
     "registry/profiles.yaml": "8ef0b2b147bf7db252328ee9cfc981a81867bcf6533362621138bee1abd2e6eb",
     "registry/toolchains.yaml": "10255da4b970f08ef57b4e9fd68b7dedfbc5f43bde284a35caecac4bcd0213b1"
   },

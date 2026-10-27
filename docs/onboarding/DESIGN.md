@@ -52,10 +52,13 @@ git clone https://github.com/kvnloo/z0 && cd z0
 
 Exit codes:
 - 0: every required step passed.
-- 1: a required step failed.
+- 1: a required step on the first-task path failed (a component in `onboarding.first_task_path`, the z0 hub, or a toolchain one of them needs).
 - 2: a usage error, or `--guided` without a TTY.
 - 3: consent is needed but none was available (no TTY and no `--yes`).
 - 4: refused by a law (for example a host mismatch).
+- 5: degraded. Only components off the first-task path failed (`receipt.degraded` names them). The run still finishes, the report lists them under "Failed", and `onboard/state` is `ok` with `status: degraded`, so an agent goes on to a first task.
+
+Network steps that are safe to repeat (`git clone`, submodule and LFS pulls, the post-clone fetch, pinned toolchain downloads) retry with a bounded backoff (2, 5, 10 s) before they count as failed. An HTTP 4xx download is permanent and fails at once. A recovery is listed under warnings in report.md.
 
 **report.md order.** It is written for a zero-context reader:
 1. **"What you need to do"**: the asks, sorted by impact. Each has a one-line reason and a command.
@@ -229,7 +232,7 @@ Common fields: `id`, `component`, `kind`, `when` (a list of `{fact, op, value}`,
 | C2 | asks in report.md; `./z0 onboard accept <id>` | asked per step; sudo commands are shown, then run with the user's sudo |
 | Unknowns | LLM resolver (§7) inside the candidate set, else the safe default | asked; an LLM suggestion is the preselected default |
 | Missing system tool | `unavailable(missing ffmpeg: sudo pacman -S ffmpeg)` plus an ask; dependents skipped | offered |
-| Step failure | `failure_triage` remediation (≤ 1 retry), else block that component's dependents; others continue; exit 1 | retry / skip / abort |
+| Step failure | network steps retry (2/5/10 s); `failure_triage` remediation (≤ 1 retry), else block that component's dependents; others continue; exit 1 on the first-task path, else exit 5 (degraded) | retry / skip / abort |
 | Adopted running service | kept; a SHA change becomes an ask | asked |
 
 **Replay.** `./z0 onboard --auto --answers runs/<id>/answers.yaml` reproduces the same plan hash with no LLM calls. This holds for answers from a guided run or for frozen LLM answers.

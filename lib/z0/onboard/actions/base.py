@@ -20,6 +20,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import tempfile
+import time
 from dataclasses import dataclass, field
 from typing import Callable, Optional
 
@@ -36,6 +37,10 @@ FIXED_ENV = {"LANG": "C.UTF-8", "LC_ALL": "C.UTF-8", "PIP_NO_INPUT": "1",
              "npm_config_update_notifier": "false", "npm_config_fund": "false",
              "npm_config_audit": "false", "PYTHONDONTWRITEBYTECODE": "1"}
 OUTPUT_TAIL = 4000
+# Bounded backoff for network steps that are safe to repeat (clone, fetch, download):
+# one try, then one more try after each delay, so a transient network error does not
+# fail the run.
+RETRY_DELAYS = (2.0, 5.0, 10.0)
 
 
 class ActionError(Exception):
@@ -92,6 +97,7 @@ class ActionCtx:
     extra_path: list = field(default_factory=list)  # toolchain bin dirs made by this run
     warnings: list = field(default_factory=list)
     step_id: str = ""
+    sleep: Callable = time.sleep                   # retry backoff; tests pass a recorder
 
     def __post_init__(self):
         self.home = str(self.home).rstrip("/") or "/"
@@ -252,6 +258,23 @@ class ActionCtx:
         self.log(label or self.step_id, f"$ {' '.join(self.form(a) if os.path.isabs(a) else a for a in argv)}"
                  f"  (cwd {self.form(cwd)}, rc {result.rc})\n{result.out}\n")
         return result
+
+    def retrying(self, what: str, attempt: Callable[[], bool],
+                 delays: tuple = RETRY_DELAYS) -> bool:
+        """Call `attempt` (True = success) once, then once more after each delay.
+
+        Only for idempotent network work: `attempt` cleans up its own partial output
+        before it runs again. A recovery is a warning, so the report shows it."""
+        if attempt():
+            return True
+        for n, delay in enumerate(delays, start=1):
+            self.log(self.step_id, f"retry {n}/{len(delays)} of {what} in {delay:g}s\n")
+            self.sleep(delay)
+            if attempt():
+                self.warnings.append(f"{self.step_id or what}: {what} succeeded after {n} "
+                                     f"retr{'y' if n == 1 else 'ies'} (transient network error)")
+                return True
+        return False
 
     def log(self, name: str, text: str) -> None:
         logs = self.run_dir / "logs"

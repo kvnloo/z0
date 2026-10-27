@@ -15,7 +15,11 @@ If the user asks for general help with this repo, or you have no task, onboard t
    `mkdir -p ~/.z0/logs && nohup sh -c './z0 onboard --auto --llm none < /dev/null > ~/.z0/logs/onboard.log 2>&1; echo "exit=$?" >> ~/.z0/logs/onboard.log' &`,
    then check `tail -5 ~/.z0/logs/onboard.log` every few minutes until it prints `exit=`. If a run was killed,
    just run it again: it resumes (finished steps are skipped). Exit 0 = done; exit 3 = done
-   except steps that need the user's consent. Any other exit = report the `FAILED` lines.
+   except steps that need the user's consent; exit 5 = degraded: a component off the
+   first-task path failed (listed under `FAILED` and in the report), so continue to steps 2
+   and 3 without asking, and list the `FAILED` lines in your summary. Network steps already
+   retry, so do not re-run just for a transient error. Any other exit (1) = the first-task
+   path itself failed: report the `FAILED` lines and stop.
 2. Show the user the "What you need to do" section of the printed report (also in
    `~/.z0/onboard/current/report.md`). Each ask names the exact command. Do not run C1/C2 asks.
 3. Then, unless the user named another task, find them a first task. "Help with this repo" already

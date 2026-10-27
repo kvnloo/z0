@@ -70,9 +70,13 @@ echoed fallback and passes a value only to a supplied owning-store writer; this
 branch does not introduce a generic credential file or prompt for app logins.
 
 Without a terminal and without grants, auto still applies C0, leaves C1 as asks,
-and exits **3**. It does not silently broaden consent. A required failure exits
-**1**; a host/law refusal exits **4**. Exit 0 means required runnable checks passed;
-read the unavailable/ask sections too, rather than treating skipped work as installed.
+and exits **3**. It does not silently broaden consent. A required failure on the
+first-task path (z0intelligence, z0evals, the hub) exits **1**; a failure in any other
+component exits **5** (degraded: the run finishes, the report lists it under "Failed",
+and you can go on to a first task); a host/law refusal exits **4**. Clones and pinned
+downloads retry a transient network error before they fail. Exit 0 means required
+runnable checks passed; read the unavailable/ask sections too, rather than treating
+skipped work as installed.
 
 ## What gets installed
 

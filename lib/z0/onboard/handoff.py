@@ -2,7 +2,9 @@
 
 - `$Z0_HOME/onboard/state` (JSON, 0600): the last verified run. `z0int contribute` reads
   it at S1 (`ok: true` means host onboarding succeeded). `ok` is true when VERIFY
-  exited 0, or 3 with no failed step (only C1/C2 asks left: spec A1).
+  exited 0, or 3 with no failed step (only C1/C2 asks left: spec A1), or 5 (degraded:
+  only components off the first-task path failed; `status: degraded`, `degraded` names
+  them, and `failed` still lists their steps).
 - `$Z0_HOME/onboard/profile.json` (0600): the contributor profile from
   `detect/profile.py` with the default consent (T0 + T1 names only; T2/T3 need an explicit
   TTY yes, never an LLM: law L-LLM). `z0int contribute` merges it for T2/T3 only.
@@ -20,6 +22,7 @@ import tempfile
 from typing import Optional
 
 SCHEMA = "z0.onboard.state.v1"
+DEGRADED_EXIT = 5   # degrade.DEGRADED_EXIT (no import: z0int reads this file)
 
 
 def _z0_sha(repo_root: str) -> Optional[str]:
@@ -51,10 +54,14 @@ def _write_private(path: Path, text: str) -> None:
 def state_record(run: Path, receipt: dict, repo_root: str) -> dict:
     failed = [s["id"] for s in receipt.get("steps") or [] if s.get("status") == "failed"]
     code = int(receipt.get("exit_code", 1))
-    ok = (code == 0 or code == 3) and not failed and not (receipt.get("secrets_scan") or {}).get("canary_found")
+    canary = (receipt.get("secrets_scan") or {}).get("canary_found")
+    degraded = code == DEGRADED_EXIT and not canary
+    ok = ((code == 0 or code == 3) and not failed or degraded) and not canary
+    status = ("degraded" if degraded else "success" if ok and code == 0
+              else "partial" if ok else "failed")
     return {
-        "schema": SCHEMA, "ok": ok,
-        "status": "success" if ok and code == 0 else ("partial" if ok else "failed"),
+        "schema": SCHEMA, "ok": ok, "status": status,
+        "degraded": list(receipt.get("degraded") or []) if degraded else [],
         "exit_code": code, "run_id": run.name, "plan_hash": receipt.get("plan_hash"),
         "z0_sha": _z0_sha(repo_root), "failed": failed,
         "acceptance": receipt.get("acceptance") or {},

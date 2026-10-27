@@ -7,6 +7,10 @@
   "required": ["version", "consent", "bind_classes", "llm", "denylists"],
   "properties": {
     "version": { "const": 1 },
+    "first_task_path": {
+      "type": "array", "items": { "type": "string" }, "uniqueItems": true,
+      "description": "Components a contributor needs to reach a first task. A failure elsewhere degrades the run (exit 5) instead of failing it (exit 1)."
+    },
     "consent": {
       "type": "object",
       "required": ["classes", "bundles"],

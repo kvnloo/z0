@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import json
 import os
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Optional
@@ -53,6 +54,7 @@ class Deps:
     replan: Optional[Callable] = None            # (host, request) -> plan
     confirm: Optional[Callable] = None           # (lines) -> bool; None: no TTY
     out: Callable = print
+    sleep: Callable = time.sleep                 # retry backoff (actions/base.py)
 
 
 @dataclass
@@ -217,7 +219,7 @@ def make_ctx(run: Path, plan_obj: dict, host: dict, deps: Deps, journal) -> Acti
     return ActionCtx(z0_home=deps.z0_home, home=deps.home, run_id=run.name, run_dir=run,
                      journal=journal, plan=plan_obj, snap=deps.snap, host=host,
                      repo_root=deps.repo_root, base_env=deps.base_env, runner=deps.runner,
-                     urls=deps.urls, fetch=deps.fetch,
+                     urls=deps.urls, fetch=deps.fetch, sleep=deps.sleep,
                      redactor=from_env(deps.snap, deps.base_env, deps.home))
 
 
@@ -366,7 +368,8 @@ def apply_run(run: Path, deps: Deps, *, yes: bool = False) -> ApplyResult:
         workspace_update(ctx, plan_obj, results)
         point_current(ctx, run)
         failed = [sid for sid, r in results.items() if r["status"] == "failed"]
-        journal.write("apply_done", failed=failed)
+        journal.write("apply_done", failed=failed,
+                      warnings=[ctx.redactor(w) for w in ctx.warnings])
     code = 1 if failed else 0
     return ApplyResult(code, plan_obj, host, results, ctx)
 

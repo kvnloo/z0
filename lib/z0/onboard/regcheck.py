@@ -255,6 +255,10 @@ def check(snap: dict, raw_texts: dict, template_texts: dict) -> list:
                                                    ("configure", "offload", "exec_probe")):
             errors.append(f"harness {hid}: configure/offload/exec_probe must be never (P1)")
 
+    known = set(((snap.get("components") or {}).get("components") or {}))
+    for cid in onboarding.get("first_task_path") or []:
+        if cid not in known:
+            errors.append(f"onboarding.first_task_path: {cid} is not a registry component")
     llm = onboarding.get("llm") or {}
     forbidden = set(llm.get("forbidden") or [])
     if not {"grok", "cursor"} <= forbidden:
