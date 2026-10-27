@@ -1,8 +1,8 @@
 """Twin parity: kernel.py and bend/onboard/MODEL.bend agree on every domain row (§11).
 
-The Bend run needs BEND and LEAN_BIN (see bend/onboard/bootstrap.sh). Without them the
-execution test is skipped, unless Z0_REQUIRE_BEND=1 (the CI `laws` job), where a skip
-is a failure. The constructor-set check below never needs Bend.
+Run `./z0 laws check` to supply the shared pinned Bend/Lean environment. Direct
+unittest runs skip execution when BEND/LEAN_BIN are absent; Z0_REQUIRE_BEND=1 makes
+that absence a failure. The constructor-set checks never need Bend.
 """
 from __future__ import annotations
 

@@ -5,3 +5,6 @@ venv/
 *.egg-info/
 .DS_Store
 .e2e-agent/
+.z0/laws.lock
+.z0/laws-state.lock
+.z0/laws.receipt.json
