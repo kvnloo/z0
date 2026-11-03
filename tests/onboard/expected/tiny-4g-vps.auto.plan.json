@@ -22,14 +22,14 @@
       "reason": "no tailnet IPv4 on this host (C2)"
     },
     {
-      "command": "manual: link .verified-oss-loop/skills into your harness skill dir",
+      "command": "manual: link the kit skills into your harness, e.g. Claude Code: ln -s ~/.z0/repos/z0evals/.verified-oss-loop/skills/* ~/.claude/skills/",
       "consent": "C2",
       "id": "z0evals.ask.kit_skills",
       "impact": 1,
       "reason": "manual step, never automatic (C2)"
     },
     {
-      "command": "manual: visual-parity probes (web/docs/probes) need a Chromium path and websockets",
+      "command": "manual: visual-parity probes: ~/.z0/repos/z0evals/.venv/bin/pip install websockets, and set CHROME in web/docs/probes/cdp.py (default /usr/sbin/chromium) to your Chromium binary",
       "consent": "C2",
       "id": "z0evals.ask.visual_probes",
       "impact": 1,
@@ -72,16 +72,16 @@
   "llm": "local",
   "mode": "auto",
   "pin_policy": "pinned",
-  "plan_hash": "dd943a9c228dd8f489cf7df596334d072773c72db36578c4c4254691c9ea2a5a",
+  "plan_hash": "4163b8af226b501d5c439bc3b1bb6838a835f89902929505c8fcf9f876731a1d",
   "prepared_path": [
     "/usr/bin",
     "/bin"
   ],
   "profile": "core",
   "registry": {
-    "registry/components.yaml": "385c871bd4e42d81a6a4d32851bad7d346e0e55305f10a5561f16bc1acc4276a",
+    "registry/components.yaml": "9916cacc57f99db5c7d814d21b5d4df96394072c49d3a0e297070162c2c888b1",
     "registry/harnesses.yaml": "1c2b9ba37ca974e4aa1ed1f6990561ea303fc7e1f73c0fb4c6cc4802d5b4a7b8",
-    "registry/onboarding.yaml": "81fd5227e9ba0d0c90cb7a99fd21a3891bc50c3e46c210913b8af389db65fa7c",
+    "registry/onboarding.yaml": "645bc5fc5f04e07ea0d8ec196d5e5d39651c8d92f58b2735f74292f55b50ffce",
     "registry/profiles.yaml": "8ef0b2b147bf7db252328ee9cfc981a81867bcf6533362621138bee1abd2e6eb",
     "registry/toolchains.yaml": "10255da4b970f08ef57b4e9fd68b7dedfbc5f43bde284a35caecac4bcd0213b1"
   },
@@ -2438,7 +2438,7 @@
       "step": {
         "argv": [
           "echo",
-          "link .verified-oss-loop/skills into your harness skill dir"
+          "link the kit skills into your harness, e.g. Claude Code: ln -s ~/.z0/repos/z0evals/.verified-oss-loop/skills/* ~/.claude/skills/"
         ],
         "component": "z0evals",
         "consent": {
@@ -2456,7 +2456,7 @@
       "step": {
         "argv": [
           "echo",
-          "visual-parity probes (web/docs/probes) need a Chromium path and websockets"
+          "visual-parity probes: ~/.z0/repos/z0evals/.venv/bin/pip install websockets, and set CHROME in web/docs/probes/cdp.py (default /usr/sbin/chromium) to your Chromium binary"
         ],
         "component": "z0evals",
         "consent": {
