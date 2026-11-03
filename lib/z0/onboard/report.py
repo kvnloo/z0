@@ -48,10 +48,15 @@ def render(plan_obj: dict, receipt: dict, extra: list, warnings: list) -> str:
     failed_checks = [i for i in extra if i["status"] == "failed"]
     refused = refused_first_task(receipt)
     if receipt.get("degraded"):
-        intact = ", ".join(c for c in FIRST_TASK if c not in refused)
-        out += ["", f"Degraded: {', '.join(receipt['degraded'])} failed. The first-task path "
-                    f"({intact}) is intact: go on to a first task, and fix the "
-                    "items below when you can."]
+        if "z0intelligence" in refused:
+            # No first task on this host: the note below says so; never also say "go on".
+            out += ["", f"Degraded: {', '.join(receipt['degraded'])} failed. Fix the items "
+                        "below when you can."]
+        else:
+            intact = ", ".join(c for c in FIRST_TASK if c not in refused)
+            out += ["", f"Degraded: {', '.join(receipt['degraded'])} failed. The first-task path "
+                        f"({intact}) is intact: go on to a first task, and fix the "
+                        "items below when you can."]
     if first_task_note(receipt):
         out += ["", first_task_note(receipt)]
     if failed or failed_checks:
