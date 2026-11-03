@@ -76,7 +76,7 @@ Without a terminal and without grants, auto still applies C0, leaves C1 as asks,
 and exits **3**. It does not silently broaden consent. A required failure on the
 first-task path (z0intelligence, z0evals, the hub) exits **1**; a failure in any other
 component exits **5** (degraded: the run finishes, the report lists it under "Failed",
-and you can go on to a first task); a host/law refusal exits **4**. A component the
+and you can go on to a first task, unless z0intelligence is refused); a host/law refusal exits **4**. A component the
 host refuses (status `refused`, reported as `unavailable`, e.g. z0intelligence on Intel
 macOS) is not a failure, even on the first-task path: it does not change the exit code, and
 the report says so. Clones and pinned
