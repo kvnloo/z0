@@ -278,5 +278,18 @@ class AgentInstructions(unittest.TestCase):
         self.assertRegex(start, r"exit 5[^.]*(continue|go on)")
 
 
+class RefusedFirstTaskIsNamed(unittest.TestCase):
+    """An Intel Mac refuses z0intelligence: no exit-code change, but the report says so."""
+
+    def test_refusal_is_reported_and_dropped_from_the_intact_path(self):
+        from z0.onboard import report
+        receipt = {"steps": [{"id": "z0intelligence.source", "status": "refused"},
+                             {"id": "z0evals.source", "status": "done"}]}
+        self.assertEqual(report.refused_first_task(receipt), ["z0intelligence"])
+        self.assertIn("no first task", report.first_task_note(receipt))
+        receipt["steps"][0]["status"] = "done"
+        self.assertEqual(report.first_task_note(receipt), "")
+
+
 if __name__ == "__main__":
     unittest.main()

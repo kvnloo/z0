@@ -512,6 +512,9 @@ def receipt_summary(run: Path, receipt: dict) -> str:
     if receipt.get("degraded"):
         lines.append(f"DEGRADED: {', '.join(receipt['degraded'])} failed; the first-task path is "
                      "intact (exit 5: continue, then fix the FAILED lines and re-run)")
+    from .report import first_task_note
+    if first_task_note(receipt):
+        lines.append(first_task_note(receipt))
     lines.append(f"exit {receipt['exit_code']}; report: {run / 'report.md'}")
     return "\n".join(lines)
 

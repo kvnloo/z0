@@ -60,6 +60,9 @@ C1 bundles:
 - `services`: user service definitions, interpreter shims and component config.
 - `models`: bounded model/wheel installation declared in the plan.
 
+Registry `kind: ask` steps are tagged C0 (they only print text), but the report lists them
+as **[C2]** manual asks: z0 never does them for you.
+
 Examples of C2: sudo/system packages, `tailscale up`, linger, dotfiles, private
 clones, native Android builds, large model sync, redeploying an adopted running
 unit at another SHA, and **every Hermes profile/config edit**. Grok and Cursor
@@ -73,14 +76,19 @@ Without a terminal and without grants, auto still applies C0, leaves C1 as asks,
 and exits **3**. It does not silently broaden consent. A required failure on the
 first-task path (z0intelligence, z0evals, the hub) exits **1**; a failure in any other
 component exits **5** (degraded: the run finishes, the report lists it under "Failed",
-and you can go on to a first task); a host/law refusal exits **4**. Clones and pinned
+and you can go on to a first task); a host/law refusal exits **4**. A component the
+host refuses (status `refused`, reported as `unavailable`, e.g. z0intelligence on Intel
+macOS) is not a failure, even on the first-task path: it does not change the exit code, and
+the report says so. Clones and pinned
 downloads retry a transient network error before they fail. Exit 0 means required
 runnable checks passed; read the unavailable/ask sections too, rather than treating
 skipped work as installed.
 
 ## What gets installed
 
-The registry and the actual host gates determine the plan, not this overview:
+The registry and the actual host gates determine the plan, not this overview.
+Besides `~/.z0`, C0 steps stage owned release roots under `~/.local/lib/<component>/`
+(for example `oh-my-pi`, `dash`, `z0int-runtime`); they are journaled and rollback removes them.
 
 - **Dash**: pinned app/bridge releases and dependencies; public/null-renderer
   fallback where necessary. A bridge unit needs a detected current tailnet address
@@ -97,7 +105,21 @@ The registry and the actual host gates determine the plan, not this overview:
 - **z0evals**: source plus a private environment, ordered Python checks and,
   when Node/network gates permit, generated web data and the web build checks.
   Maintainer promotion scripts, visual probes and skill/config linking are not
-  automatic. No z0evals service is installed.
+  automatic. No z0evals service is installed. The site build rewrites the tracked
+  `web/data/study.json`, so the report notes the checkout as modified; that is expected,
+  and `git -C ~/.z0/repos/z0evals checkout web/data/study.json` restores it.
+
+### Re-run the z0evals checks
+
+```bash
+./z0 onboard verify          # every acceptance tier again, for the current run
+cd ~/.z0/repos/z0evals && .venv/bin/python scripts/validate.py   # the core check alone
+```
+
+`verify` re-runs every component's checks for that run, including the z0evals tier0-tier2
+checks listed under `z0evals.onboard.acceptance` in `registry/components.yaml`; they use the
+repo's own `.venv`. Do not `pip install` into another
+Python. There is no Hermes-specific eval step; run these from any shell.
 
 These describe the registered target plans. Missing component actions on this
 branch are reported as failures, not claimed as installed. Inspect `report.md`
@@ -127,7 +149,8 @@ applied run's receipt summary, failed steps, installed SHAs and report location.
 It does not probe drift or run network/process checks; use `onboard plan` for
 fresh detection. Before any applied run, it tells you to run `./z0 onboard`.
 
-`accept` reads that run's last effective plan, re-detects the host, re-checks
+Bundle names may be comma or space separated (`accept toolchains,harness` and
+`accept services models` both work). `accept` reads that run's last effective plan, re-detects the host, re-checks
 kernel gates and grants the named **C1 bundles only**. It executes only pending,
 unchanged C1 steps that were already in that plan. It never replays unrelated C0,
 C2, newly discovered steps or completed steps; missing prerequisites require a
