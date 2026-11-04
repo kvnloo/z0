@@ -16,6 +16,10 @@ def main(argv: list[str] | None = None) -> int:
         from .onboard import cli  # before `commands`, so detect/plan import no registry.py
 
         return cli.main(argv[1:])
+    if argv and argv[0] in ("exp", "experiment"):
+        from . import experiments
+
+        return experiments.cmd(argv[1:])
     from . import commands
 
     parser = argparse.ArgumentParser(prog="z0", description="Zer0 map, installer, and registry CLI")
@@ -36,6 +40,7 @@ def main(argv: list[str] | None = None) -> int:
     p_graph.add_argument("--json", action="store_true")
 
     sub.add_parser("laws", help="Formal laws: check, prove, init (see `z0 laws --help`)")
+    sub.add_parser("exp", help="Experiment map: list, start, post results (see `z0 exp --help`)")
     sub.add_parser("onboard", help="Detect, plan and onboard this host (see `z0 onboard --help`)")
 
     p_docs = sub.add_parser("docs", help="Documentation tools")

@@ -11,6 +11,7 @@
 {"id": "components.oh-my-pi", "path": "docs/components/oh-my-pi.md", "title": "Oh My Pi", "components": ["oh-my-pi"]}
 {"id": "components.tokenomics", "path": "docs/components/tokenomics.md", "title": "Tokenomics", "components": ["tokenomics"]}
 {"id": "components.z0intelligence", "path": "docs/components/z0intelligence.md", "title": "Z0Intelligence", "components": ["z0intelligence"]}
+{"id": "experiments.ENGINE", "path": "docs/experiments/ENGINE.md", "title": "Engine", "components": ["z0intelligence"]}
 {"id": "getting-started.choose-a-profile", "path": "docs/getting-started/choose-a-profile.md", "title": "Choose A Profile", "components": ["tokenomics", "flow", "z0intelligence", "kerdoios", "frontier-kb"]}
 {"id": "getting-started.concepts", "path": "docs/getting-started/concepts.md", "title": "Concepts", "components": ["tokenomics"]}
 {"id": "getting-started.five-minute-start", "path": "docs/getting-started/five-minute-start.md", "title": "Five Minute Start", "components": ["oh-my-pi", "tokenomics"]}
