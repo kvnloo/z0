@@ -7,6 +7,50 @@
 # needed to verify a claim about the architecture.
 
 evidence_dependencies:
+  hermes-bend-proof-evidence:
+    from: harness:hermes
+    to: repo:kvnloo/bend
+    relation: uses_verifier
+    required_evidence:
+      - https://github.com/kvnloo/bend-native/blob/e85e65e5d2e11caba8412d6dbd19aad03fd785ad/README.md
+      - https://github.com/kvnloo/bend-native/blob/e85e65e5d2e11caba8412d6dbd19aad03fd785ad/plugin.yaml
+      - https://github.com/kvnloo/hermes-agent/issues/324
+      - https://github.com/kvnloo/hermes-agent/issues/389
+    invariants:
+      - The standalone native plugin uses the public Hermes API; Hermes retains execution ownership.
+      - Receipts identify captured inputs, cached dependencies, the Bend installation and the private kernel.
+      - A Bend verdict covers the emitted book, not source equivalence, task success or an execution grant.
+      - The standalone plugin lives in kvnloo/bend-native; use the exact evidence SHA.
+    invalidators:
+      - A source, dependency, runtime or kernel identity changes without invalidating the receipt.
+      - A consumer interprets a raw Bend pass as AODL admission or whole-task verified success.
+    retrieval:
+      fastest: pinned-plugin-receipt
+      fallback: pinned-source-revision
+    confidence: declared
+    abstain_if:
+      - The claim requires source semantics and the selected compiler has no corresponding qualification evidence.
+
+  z0int-bend-specification-check:
+    from: component:z0intelligence
+    to: repo:kvnloo/bend
+    relation: checks_specification_with
+    required_evidence:
+      - https://github.com/kvnloo/z0intelligence/issues/48
+      - https://github.com/kvnloo/z0intelligence/blob/a0e95785fe810ae0d1cfbb128096b5deca5c2712/bend/aodl_gate/README.md
+      - https://github.com/kvnloo/bend-native/blob/e85e65e5d2e11caba8412d6dbd19aad03fd785ad/scripts/smoke.py
+    invariants:
+      - AODL owns the contract and canonical Python validation remains the admission authority.
+      - Bend is an experimental specification and CI verifier; measured parity does not prove equivalence.
+      - Verifier artifacts join existing decision and outcome evidence rather than defining another credit protocol.
+    invalidators:
+      - Bend is promoted onto the admission hot path without new equivalence and benefit evidence.
+      - Proof success is treated as evidence for rules absent from the stated laws.
+    retrieval:
+      fastest: pinned-experiment-report
+      fallback: source-search
+    confidence: declared
+
   omp-rlm-context-spill:
     from: component:oh-my-pi
     to: mechanism:rlm-context-spill
@@ -248,3 +292,27 @@ evidence_dependencies:
       fastest: hierarchy-proposal
       fallback: architecture-history
     confidence: declared
+
+  hermes-z0-native-shadow-stack:
+    from: harness:hermes
+    to: component:z0intelligence
+    relation: composes_shadow_evidence
+    required_evidence:
+      - https://github.com/kvnloo/bend-native/blob/e85e65e5d2e11caba8412d6dbd19aad03fd785ad/stack/sources.json
+      - https://github.com/kvnloo/bend-native/blob/e85e65e5d2e11caba8412d6dbd19aad03fd785ad/stack/STACK.md
+      - https://github.com/kvnloo/bend-native/blob/e85e65e5d2e11caba8412d6dbd19aad03fd785ad/tests/test_native_workflow.py
+    invariants:
+      - Bundled downstream reducers retain exact source revisions and file digests.
+      - Shadow hooks return no context or action directives and state is profile scoped.
+      - API-attempt failures and observed behavior do not label whole-task verified success.
+      - Existing z0 service owns execution authority, consent, quota and canonical receipts.
+    invalidators:
+      - Hook side effects change prompts, context engines or action decisions without explicit qualification.
+      - Proof evidence or model confidence widens execution authority.
+      - A transport retry duplicates execution or changes canonical trace identity.
+    retrieval:
+      fastest: pinned-stack-inventory
+      fallback: pinned-downstream-source
+    confidence: declared
+    abstain_if:
+      - A claim requires configured model inference or task benefit without corresponding evidence.
