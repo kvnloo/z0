@@ -37,6 +37,14 @@ If the user asks for general help with this repo, or you have no task, onboard t
    (gh, tailscale, harnesses) without the user's explicit yes.
 6. Undo everything z0 did: `./z0 onboard rollback` (owned files only).
 
+## Start an experiment ("start experiment X")
+
+After onboarding, `./z0 exp list` shows the experiment map (`registry/experiments.yaml`).
+For "start experiment <id>": run `./z0 exp start <id>` and follow its `next_action` (`build`, `run`
+or `done`), as in [docs/experiments/ENGINE.md](docs/experiments/ENGINE.md). Controls run before
+candidates. `./z0 exp post <id> result.json` prints the result comment; add `--yes` only after the
+user approves the post. Never post raw private data.
+
 ## Before modifying code
 
 1. Read `zer0.registry.yaml` (or `registry/components.yaml`).
