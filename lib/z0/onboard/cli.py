@@ -509,9 +509,16 @@ def receipt_summary(run: Path, receipt: dict) -> str:
     for step in receipt["steps"]:
         if step["status"] == "failed":
             lines.append(f"FAILED {step['id']}: {step.get('reason', '')}")
+    from .report import first_task_note, refused_first_task
     if receipt.get("degraded"):
-        lines.append(f"DEGRADED: {', '.join(receipt['degraded'])} failed; the first-task path is "
-                     "intact (exit 5: continue, then fix the FAILED lines and re-run)")
+        if "z0intelligence" in refused_first_task(receipt):
+            lines.append(f"DEGRADED: {', '.join(receipt['degraded'])} failed (exit 5: fix the "
+                         "FAILED lines and re-run)")
+        else:
+            lines.append(f"DEGRADED: {', '.join(receipt['degraded'])} failed; the first-task path is "
+                         "intact (exit 5: continue, then fix the FAILED lines and re-run)")
+    if first_task_note(receipt):
+        lines.append(first_task_note(receipt))
     lines.append(f"exit {receipt['exit_code']}; report: {run / 'report.md'}")
     return "\n".join(lines)
 
