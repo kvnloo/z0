@@ -15,3 +15,11 @@ twin = "scripts/contrib_ready.py"
 parity = "tests/contrib_ready/test_twin.py"
 mutation = "tests/contrib_ready/test_mutation.py"
 gate = []
+
+[[domain]]
+name = "burn_pace"
+dir = "bend/burn_pace"
+twin = "lib/z0/burn_pace.py"
+parity = "tests/burn_pace/test_burn_pace_twin.py"
+mutation = "tests/burn_pace/test_burn_pace_mutation.py"
+gate = []
