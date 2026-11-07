@@ -114,13 +114,6 @@ class Ctx:
     def tilde(self, path: str) -> str:
         return tilde(str(path), self.home)
 
-    def z0_form(self, path: str) -> str:
-        """`$Z0_HOME/...` for paths under Z0_HOME, else `~/...` (the plan's path forms)."""
-        path = str(path)
-        root = self.z0_home.rstrip("/")
-        if path == root or path.startswith(root + "/"):
-            return "$Z0_HOME" + path[len(root):]
-        return self.tilde(path)
 
     def sys(self, path: str) -> str:
         """A system path (/proc, /etc, /sys) under the test sysroot."""

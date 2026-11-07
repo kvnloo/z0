@@ -10,7 +10,6 @@ from typing import Any, Iterable, Optional
 from .util import version_tuple
 
 _MISSING = object()
-OPS = ("eq", "ne", "lt", "le", "gt", "ge", "in", "not_in", "exists", "missing")
 
 
 def lookup(facts: dict, path: str) -> Any:

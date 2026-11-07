@@ -26,7 +26,7 @@ from typing import Callable, Optional
 from . import freshness, journal as journal_mod, kernel as k, lock as lock_mod
 from .actions import ACTIONS, LATER, ActionCtx, ActionError
 from .actions.base import subprocess_runner
-from .plan import EFFECTFUL, plan_hash
+from .plan import plan_hash
 from .redact import from_env
 from .util import parse_requirement
 
@@ -374,6 +374,3 @@ def apply_run(run: Path, deps: Deps, *, yes: bool = False) -> ApplyResult:
     return ApplyResult(code, plan_obj, host, results, ctx)
 
 
-def effectful_todo(plan_obj: dict) -> list:
-    return [e["step"]["id"] for e in plan_obj["steps"]
-            if e["state"]["status"] == "todo" and e["step"]["kind"] in EFFECTFUL]
