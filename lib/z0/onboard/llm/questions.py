@@ -30,9 +30,6 @@ DEFAULTS = {"harness_classify": "unsupported", "config_dir_pick": "all",
             "pkg_hint": "generic hint", "failure_triage": "mark_unavailable"}
 
 
-def provider_allowed(name: str) -> bool:
-    return k.decide_provider(k.provider_from_id(name)).kind is not k.Kind.REFUSE
-
 
 def verify_harness(facts: dict, answer: str) -> bool:
     policy = facts.get("policies", {}).get(answer, {})

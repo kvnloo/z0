@@ -158,7 +158,7 @@ def install_matrix() -> str:
     ]
     for cid in comp_ids:
         row = [f"`{cid}`"]
-        for pname, pspec in profs.items():
+        for pname in profs:
             resolved = set(registry.resolve_profile(pname))
             row.append("yes" if cid in resolved else "")
         lines.append("| " + " | ".join(row) + " |")

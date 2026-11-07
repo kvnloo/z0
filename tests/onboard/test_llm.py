@@ -6,7 +6,6 @@ import dataclasses
 import json
 import os
 from pathlib import Path
-import signal
 import subprocess
 import tempfile
 import time
@@ -15,8 +14,7 @@ from unittest.mock import patch
 
 from tests.onboard import support
 from z0.onboard.llm import providers
-from z0.onboard.llm.privacy import prompt_for
-from z0.onboard.llm.questions import KINDS, collect, question
+from z0.onboard.llm.questions import KINDS, question
 from z0.onboard.llm.resolve import Context, ReplayError, digest, resolve, response
 from z0.onboard.redact import Redactor
 

@@ -117,8 +117,6 @@ class LaunchdTests(unittest.TestCase):
 
     @unittest.skipUnless(HAVE_YAML, 'PyYAML not installed')
     def test_guided_apple_real_registry_renders_private_preview_only(self):
-        import json
-        import os
         import plistlib
         import tempfile
         from pathlib import Path
