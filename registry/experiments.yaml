@@ -475,3 +475,51 @@ experiments:
     hardware: two or more hosts
     prior: ["kvnloo/z0intelligence#131 (federated capacity plane)", "kvnloo/kerdoios"]
     runner: {status: missing, path: iac/experiments/fx-fleet-placement/run.py}
+
+  - id: host-h1-gpu-unlock
+    issue: null
+    kind: experiment
+    repo: kvnloo/.files
+    title: gpu_unlock DKMS pre-driver unlock vs skip-the-cmdline-target boot
+    goal: NS4
+    problem: >-
+      groot ends unclean about 7 times per 14 days; the Nov 7 17:26 instant-death
+      class stops mid-second with 7 GB free, no kernel error, watchdog silent,
+      bootstatus=0. /etc/kernel/cmdline carries gpu_unlock.targets=0000:01:00.0
+      (DKMS gpu_unlock 2.0.0, kernel tainted O/E), the top suspect.
+    hypothesis: >-
+      Booting without the gpu_unlock cmdline target eliminates the instant-death
+      class while leaving nvidia binding on the RTX 3080 Ti functional.
+    data_tier: [owner]
+    arms:
+      - {id: gpu-unlock-on, control: true}
+      - {id: cmdline-target-skipped}
+    metric: {name: unclean_ends_per_14d, direction: down}
+    gates: ["nvidia binds on the 3080 Ti after the arm", "0 new unplanned kills or failed boots"]
+    hardware: groot (ASUS PRIME Z490-A, RTX 3080 Ti, nvidia open 615.71.09)
+    prior: ["operations/host-reliability-engine/H1-gpu_unlock.md"]
+    runner: {status: missing}
+
+  - id: host-h3-scx-flow
+    issue: null
+    kind: experiment
+    repo: kvnloo/.files
+    title: scx_flow sched_ext vs default scheduler
+    goal: NS4
+    problem: >-
+      scx_flow 3.1.2 via scx_loader Auto logs repeated "disabled (runnable task
+      stall), watchdog failed to check in for 5s" and appears in OOM stack traces
+      around groot's failure window; it may read as hangs or inflate tail latency,
+      or be a symptom of memory pressure.
+    hypothesis: >-
+      The default scheduler shows fewer "runnable task stall" disables and lower
+      p99 task latency over a fixed observation window than scx_flow Auto.
+    data_tier: [self]
+    arms:
+      - {id: scx-flow-auto, control: true}
+      - {id: default-scheduler}
+    metric: {name: task_latency_p99_ms, direction: down}
+    gates: ["stall-disable count recorded per window", "0 new unplanned kills or failed boots"]
+    hardware: groot (kernel 7.2.9-1-cachyos)
+    prior: ["operations/host-reliability-engine/H3-scx_flow.md"]
+    runner: {status: missing}
