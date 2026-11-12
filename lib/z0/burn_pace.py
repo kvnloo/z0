@@ -24,7 +24,8 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 STALE_S = 30 * 60
-USED_STOP = 95.0
+USED_STOP = 100.0  # Owner chats may consume the real weekly quota, not an artificial reserve.
+PACE_TARGET = 95.0  # Move background work away before it consumes the owner's headroom.
 RATIO_STOP = 1.5
 _CACHE_S = 60.0
 _cache: dict = {"at": 0.0, "key": None, "val": None}
@@ -112,7 +113,7 @@ def classify(lane: str, reading) -> tuple[str, str, str, str]:
     rate, hours = row.get("observed_pct_per_h"), row.get("hours_to_reset")
     if rate is not None and hours is not None:
         # HOT = at the observed burn rate this row runs out before its weekly reset.
-        pace = HOT if used + rate * hours >= USED_STOP else COOL
+        pace = HOT if used + rate * hours >= PACE_TARGET else COOL
     else:
         pace = UNKNOWN if ratio is None else (HOT if ratio >= RATIO_STOP else COOL)
     return FRESH, u, pace, f"lane {lane} {used}% used (resets in {row.get('hours_to_reset')}h), pace {ratio}"

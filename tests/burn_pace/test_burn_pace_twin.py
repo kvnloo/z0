@@ -58,6 +58,15 @@ class Classify(unittest.TestCase):
         self.assertEqual(g.classify("zz", rd)[0], g.STALE)
         self.assertEqual(g.classify("b", {"at": "2020-01-01T00:00:00+00:00", "lanes": rd["lanes"]})[0], g.STALE)
 
+    def test_owner_keeps_remaining_quota_until_actual_exhaustion(self):
+        for used in (95.0, 96.0, 99.9, 100.0):
+            with self.subTest(used=used):
+                rd = {"at": datetime.now(timezone.utc).isoformat(), "lanes": {
+                    "claude": {"weekly_used_pct": used, "pace_ratio": 3.0,
+                               "observed_pct_per_h": 2.0, "hours_to_reset": 1.8}}}
+                self.assertEqual(g.verdict("claude", rd, g.OWNER)[0], used < 100.0)
+                self.assertFalse(g.verdict("claude", rd, g.BULK)[0])
+
     def test_owner_is_only_opus_in_an_owner_profile(self):
         lanes = {"owner_profiles": ["owner-chat"]}
         self.assertEqual(g.who_for("claude-opus-5-5", lanes, "owner-chat"), g.OWNER)

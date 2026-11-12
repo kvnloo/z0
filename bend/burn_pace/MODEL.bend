@@ -10,7 +10,7 @@ type Fresh is Data:
   FFresh{}
   FStale{}
 
-# Weekly window below USED_STOP (95%) or at/over it.
+# Weekly window below actual exhaustion (100%) or at/over it.
 type Used is Data:
   UUnder{}
   UAtCap{}
