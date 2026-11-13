@@ -1,0 +1,103 @@
+#!/usr/bin/env python3
+"""Bounded tooling evidence, not an all-tools acceptance or repair command."""
+import argparse
+import hashlib
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import time
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--public-hf', action='store_true',
+                        help='Verify only the pinned public GPT-2 config, without credentials')
+    args = parser.parse_args()
+    out = args.output.resolve()
+    out.mkdir(parents=True, exist_ok=True)
+    home = Path.home()
+    repo = Path(__file__).resolve().parent.parent
+    env = {'HOME': str(home), 'PATH': os.environ.get('PATH', '/usr/bin:/bin'),
+           'LANG': 'C.UTF-8', 'NO_COLOR': '1', 'DO_NOT_TRACK': '1',
+           'HF_HOME': str(out / 'hf'), 'HF_HUB_DISABLE_IMPLICIT_TOKEN': '1',
+           'HF_HUB_DISABLE_TELEMETRY': '1', 'PYTHONDONTWRITEBYTECODE': '1'}
+    for key in ('XDG_RUNTIME_DIR', 'DBUS_SESSION_BUS_ADDRESS', 'SSL_CERT_FILE', 'SSL_CERT_DIR'):
+        if key in os.environ:
+            env[key] = os.environ[key]
+    checks = []
+
+    def run(name, argv, seconds=8, accepted=(0,)):
+        started = time.time()
+        try:
+            result = subprocess.run(argv, env=env, capture_output=True, timeout=seconds)
+            code, stdout, stderr = result.returncode, result.stdout, result.stderr
+        except subprocess.TimeoutExpired as exc:
+            code, stdout, stderr = 124, exc.stdout or b'', exc.stderr or b''
+        except OSError as exc:
+            code, stdout, stderr = 127, b'', str(exc).encode()
+        log = out / (name + '.log')
+        log.write_bytes(('$ ' + ' '.join(map(str, argv)) + '\n').encode()
+                        + stdout + b'\nSTDERR\n' + stderr + f'\nexit={code}\n'.encode())
+        checks.append({'check': name, 'argv': list(map(str, argv)), 'exit_code': code,
+                       'passed': code in accepted, 'seconds': time.time() - started,
+                       'log': str(log)})
+        print(f'{name}: exit={code}, passed={code in accepted}', flush=True)
+        return code, stdout
+
+    inventory = {}
+    for name in ('hermes', 't3', 'hf', 'z0', 'rtk', 'ctx', 'fleet-build'):
+        inherited = shutil.which(name, path=env['PATH'])
+        managed = home / '.local/bin' / name
+        path = inherited or (str(managed) if managed.is_file() else None)
+        inventory[name] = {'entrypoint': path, 'inherited_path_match': inherited,
+                           'source': 'inherited-path' if inherited else ('managed-user-bin' if path else 'unavailable'),
+                           'resolved': str(Path(path).resolve()) if path else None}
+    run('t3-doctor', [str(home / '.local/bin/t3'), 'doctor', '--dry-run'])
+    run('z0-doctor', [str(repo / 'z0'), 'doctor'])
+    run('service-state', ['systemctl', '--user', 'show', 't3code.service',
+                         'hermes-gateway.service', '-p', 'ActiveState', '-p', 'SubState', '-p', 'FragmentPath'])
+    rtk = str(home / '.local/bin/rtk')
+    run('rtk-version', [rtk, '--version'])
+    code, text = run('rtk-rewrite', [rtk, 'rewrite', 'git status'], accepted=(0, 3))
+    checks[-1]['passed'] = code in (0, 3) and text.strip() == b'rtk git status'
+    hf = str(home / '.local/bin/hf')
+    run('hf-version', [hf, 'version'])
+    workflow = {'passed': False, 'scope': 'public HF config -> Python JSON -> lossless RTK read',
+                'authenticated': False, 'hermes_t3_included': False}
+    if args.public_hf:
+        revision = '607a30d783dfa663caf39e06633721c8d4cfcd7e'
+        cache = out / 'hf/hub'
+        config = cache / 'models--gpt2/snapshots' / revision / 'config.json'
+        code, _ = run('hf-download', [hf, 'download', 'gpt2', 'config.json', '--revision',
+                                     revision, '--cache-dir', str(cache)], seconds=40)
+        if code == 0:
+            verify, _ = run('hf-verify', [hf, 'cache', 'verify', 'gpt2', '--revision', revision,
+                                         '--cache-dir', str(cache)], seconds=40)
+            raw = config.read_bytes()
+            data = json.loads(raw)
+            read, text = run('rtk-read', [rtk, 'read', str(config)])
+            workflow.update({'revision': revision, 'config': str(config),
+                             'sha256': hashlib.sha256(raw).hexdigest(),
+                             'git_blob_sha1': hashlib.sha1(b'blob ' + str(len(raw)).encode() + b'\0' + raw).hexdigest(),
+                             'model_type': data.get('model_type'), 'rtk_byte_equal': text == raw,
+                             'passed': verify == read == 0 and text == raw and data.get('model_type') == 'gpt2'})
+    gaps = [
+        'Hermes doctor and model/tool workflow not run: managed entrypoint loads vault credentials.',
+        'T3 dry-run is storage diagnosis, not a provider/model/tool round trip.',
+        'z0 doctor exit zero does not assert observed components or healthy interfaces.',
+        'HF intended meaning and intended gated/authenticated use remain unspecified.',
+        'No current web extraction, memory integration, Serena, or all-frequently-used-tools acceptance.',
+        'Existing integration-check.py requires SSH and Kubernetes access; not executed by this credential-free smoke.',
+    ]
+    report = {'schema': 'tool-onboarding-smoke.v1', 'at': time.time(), 'passed': False,
+              'scope': 'Component checks and public artifact smoke only; no Hermes/T3 integration claim',
+              'inventory': inventory, 'checks': checks, 'workflow': workflow, 'remaining': gaps}
+    (out / 'acceptance.json').write_text(json.dumps(report, indent=2) + '\n')
+    return 1
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())
