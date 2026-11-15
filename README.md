@@ -17,6 +17,13 @@ receipts and rollback. Onboarding is experimental; this branch's guided UX build
 on Z2, with the Z3/Z4 runtime actions and Z5 resolver still to be integrated.
 Unavailable steps and failed actions are reported, not silently counted as installed.
 
+## Contribute
+
+Humans and coding agents are welcome. Point your agent at [AGENTS.md](AGENTS.md),
+pick a [`claimable` issue](https://github.com/kvnloo/z0/issues?q=is%3Aopen+label%3Aclaimable)
+and read [CONTRIBUTING.md](CONTRIBUTING.md) for claiming, tests, credit and terms.
+Questions go to [Discussions](https://github.com/kvnloo/z0/discussions).
+
 ## I want…
 
 | Goal | Start here |
