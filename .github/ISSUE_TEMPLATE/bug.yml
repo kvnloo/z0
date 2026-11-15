@@ -1,0 +1,33 @@
+name: Bug
+description: Something in z0 (CLI, registry, onboarding, docs) does not work as described.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Exact commands. Remove usernames, paths, hostnames and tokens.
+      render: shell
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: z0 commit (`git rev-parse --short HEAD`)
+    validations:
+      required: true
+  - type: input
+    id: host
+    attributes:
+      label: OS and CPU/GPU class (e.g. "macOS 15, Intel", "Ubuntu 24.04, CUDA 12")
+  - type: dropdown
+    id: agent
+    attributes:
+      label: Was a coding agent driving?
+      options: ["No", "Claude Code", "Codex", "Hermes", "Other"]
