@@ -38,8 +38,9 @@ Python 3.10+ with PyYAML from the hashed lock:
 
 ```bash
 python3 -m venv ~/.venvs/z0   # outside the checkout: one test refuses an interpreter inside it
-~/.venvs/z0/bin/pip install --require-hashes -r requirements.lock
-~/.venvs/z0/bin/python -m unittest discover -s tests -t .   # about 30 s; Bend/Lean cases skip unless installed
+. ~/.venvs/z0/bin/activate
+pip install --require-hashes -r requirements.lock
+python3 -m unittest discover -s tests -t .   # about 30 s; Bend/Lean cases skip unless installed
 ./scripts/registry-check
 ./scripts/public-leak-check
 ```
