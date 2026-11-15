@@ -21,6 +21,13 @@
 4. Run `./scripts/docs-check` (must be clean git diff).
 5. Open PR.
 
+## Contributor License Agreement
+
+Outside contributions are accepted under the [CLA](CLA.md). On your first pull
+request the `cla` check comments with a link; reply on the PR with exactly
+`I have read the CLA Document and I hereby sign the CLA` to sign. One signature
+covers all your later PRs here. Comment `recheck` if the check does not update.
+
 ## Per-repo manifests (future)
 
 Each component may add `zer0.component.yaml` at its root. CI can diff against central registry. Until then, update `registry/components.yaml` directly.
