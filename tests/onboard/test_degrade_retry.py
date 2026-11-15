@@ -278,5 +278,55 @@ class AgentInstructions(unittest.TestCase):
         self.assertRegex(start, r"exit 5[^.]*(continue|go on)")
 
 
+class MissingFirstTaskIsNamed(unittest.TestCase):
+    """z0intelligence refused (Intel Mac) or unavailable (under 8 GiB RAM): no exit-code
+    change, but the report and summary say there is no first task here."""
+
+    def test_missing_is_reported_and_dropped_from_the_intact_path(self):
+        from z0.onboard import report
+        for status in ("refused", "unavailable"):
+            receipt = {"steps": [{"id": "z0intelligence.source", "status": status},
+                                 {"id": "z0intelligence.build", "status": status},
+                                 {"id": "z0evals.source", "status": "done"}]}
+            self.assertEqual(report.missing_first_task(receipt), ["z0intelligence"])
+            self.assertIn("no first task", report.first_task_note(receipt))
+            receipt["steps"][0]["status"] = "done"   # a condition-gated step alone is not missing
+            self.assertEqual(report.missing_first_task(receipt), [])
+            self.assertEqual(report.first_task_note(receipt), "")
+        self.assertEqual(report.missing_first_task({"steps": []}), [])   # not targeted
+        whole_plan_refused = {"exit_code": 4, "steps": [{"id": "z0intelligence.source", "status": "refused"},
+                                                         {"id": "z0evals.source", "status": "refused"}]}
+        self.assertEqual(report.missing_first_task(whole_plan_refused), [])   # exit 4 says why
+        self.assertEqual(report.first_task_note(whole_plan_refused), "")
+
+    def _receipt(self, z0int_status, exit_code=5):
+        return {"run_id": "r1", "exit_code": exit_code, "degraded": ["dash"] if exit_code == 5 else [],
+                "asks": [], "installed": [], "acceptance": {}, "harnesses": {}, "llm_decisions": [],
+                "secrets_scan": {"canary_found": False, "scanned": []},
+                "steps": [{"id": "z0intelligence.source", "status": z0int_status},
+                          {"id": "z0evals.source", "status": "done"},
+                          {"id": "dash.build", "status": "failed" if exit_code == 5 else "done",
+                           "reason": "boom"}]}
+
+    def test_missing_never_says_go_on(self):
+        from pathlib import Path
+        from z0.onboard import cli, report
+        plan = {"plan_hash": "0" * 64, "mode": "auto", "profile": None, "targets": []}
+        for status in ("refused", "unavailable"):
+            for exit_code in (0, 5):
+                receipt = self._receipt(status, exit_code)
+                for text in (report.render(plan, receipt, [], []),
+                             cli.receipt_summary(Path("/r"), receipt)):
+                    self.assertIn("no first task", text, (status, exit_code))
+                    self.assertNotIn("intact", text)
+                    self.assertNotIn("go on to a first task", text)
+                    self.assertNotIn("continue", text)
+                    if exit_code == 5:
+                        self.assertIn("dash", text)
+        receipt = self._receipt("done")
+        for text in (report.render(plan, receipt, [], []), cli.receipt_summary(Path("/r"), receipt)):
+            self.assertIn("intact", text)
+            self.assertNotIn("no first task", text)
+
 if __name__ == "__main__":
     unittest.main()
