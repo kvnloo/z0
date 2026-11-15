@@ -509,9 +509,9 @@ def receipt_summary(run: Path, receipt: dict) -> str:
     for step in receipt["steps"]:
         if step["status"] == "failed":
             lines.append(f"FAILED {step['id']}: {step.get('reason', '')}")
-    from .report import first_task_note, refused_first_task
+    from .report import first_task_note, missing_first_task
     if receipt.get("degraded"):
-        if "z0intelligence" in refused_first_task(receipt):
+        if "z0intelligence" in missing_first_task(receipt):
             lines.append(f"DEGRADED: {', '.join(receipt['degraded'])} failed (exit 5: fix the "
                          "FAILED lines and re-run)")
         else:

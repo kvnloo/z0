@@ -76,10 +76,11 @@ Without a terminal and without grants, auto still applies C0, leaves C1 as asks,
 and exits **3**. It does not silently broaden consent. A required failure on the
 first-task path (z0intelligence, z0evals, the hub) exits **1**; a failure in any other
 component exits **5** (degraded: the run finishes, the report lists it under "Failed",
-and you can go on to a first task, unless z0intelligence is refused); a host/law refusal exits **4**. A component the
-host refuses (status `refused`, reported as `unavailable`, e.g. z0intelligence on Intel
-macOS) is not a failure, even on the first-task path: it does not change the exit code, and
-the report says so. Clones and pinned
+and you can go on to a first task, unless z0intelligence is refused or unavailable); a
+host/law refusal exits **4**. A component the host refuses or lacks resources for (status
+`refused` or `unavailable`, listed under "Unavailable", e.g. z0intelligence on Intel macOS
+or under 8 GiB RAM) is not a failure, even on the first-task path: it does not change the
+exit code, and the report says so. Clones and pinned
 downloads retry a transient network error before they fail. Exit 0 means required
 runnable checks passed; read the unavailable/ask sections too, rather than treating
 skipped work as installed.
@@ -112,11 +113,11 @@ Besides `~/.z0`, C0 steps stage owned release roots under `~/.local/lib/<compone
 ### Re-run the z0evals checks
 
 ```bash
-./z0 onboard verify          # every acceptance tier again, for the current run
+./z0 onboard verify          # every runnable check again, for the current run
 cd ~/.z0/repos/z0evals && .venv/bin/python scripts/validate.py   # the core check alone
 ```
 
-`verify` re-runs every component's checks for that run, including the z0evals tier0-tier2
+`verify` re-runs every runnable check step for that run (it does not install or rebuild anything), including the z0evals tier0-tier2
 checks listed under `z0evals.onboard.acceptance` in `registry/components.yaml`; they use the
 repo's own `.venv`. Do not `pip install` into another
 Python. There is no Hermes-specific eval step; run these from any shell.

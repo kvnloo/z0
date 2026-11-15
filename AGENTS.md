@@ -22,14 +22,14 @@ If the user asks for general help with this repo, or you have no task, onboard t
    and 3 without asking, and list the `FAILED` lines in your summary. Network steps already
    retry, so do not re-run just for a transient error. Any other exit (1) = the first-task
    path itself failed: report the `FAILED` lines and stop. A component the host refuses (status
-   `refused`/`unavailable`, e.g. z0intelligence on Intel macOS) is not a failure and does not
-   change the exit code.
+   `refused`/`unavailable`, e.g. z0intelligence on Intel macOS or under 8 GiB RAM) is not a
+   failure and does not change the exit code.
 2. Show the user the "What you need to do" section of the printed report (also in
    `~/.z0/onboard/current/report.md`). Each ask names the exact command. Do not run C1/C2 asks.
 3. Then, unless the user named another task, find them a first task. "Help with this repo" already
    authorizes steps 1-3, so do not stop to ask before or during them. If the report says
-   z0intelligence is refused on this host, there is no first task here: tell the user that, list the
-   z0evals re-run command from `docs/getting-started/onboard.md`, and stop. Otherwise:
+   there is no first task here (z0intelligence refused or unavailable), tell the user that, list
+   the z0evals re-run command from `docs/getting-started/onboard.md`, and stop. Otherwise:
    `cd ~/.z0/repos/z0intelligence && export Z0_HOME=~/.z0`; if `.venv/bin/z0int` is missing, run
    `./scripts/bootstrap.sh` (repo-local `.venv` only; it can take 10+ minutes, so run it detached
    with its log in `~/.z0/logs/` and poll like step 1); then run `.venv/bin/z0int --json contribute`
