@@ -56,9 +56,7 @@ CI runs the same suite on every PR (Python 3.10 and 3.12). The required check is
 - Open the PR against `main`. The template asks what changed and how you tested it.
 - Credit: your authorship is kept in the git history; name upstream projects you
   reused in the PR body.
-- Terms: contributions will be accepted under a Contributor License Agreement
-  (owner decision). The CLA check is being set up in
-  [#49](https://github.com/kvnloo/z0/pull/49).
+- Terms: contributions are accepted under the [CLA](CLA.md); see "Contributor License Agreement" below.
 - Be kind: [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Talk
