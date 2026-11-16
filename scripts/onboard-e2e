@@ -89,7 +89,7 @@ if ((!INSIDE)); then
     "$ENGINE" rmi -f "$TAG" > /dev/null 2>&1 || true
   }
   trap cleanup EXIT
-  say "building $TAG from $IMAGE (git, curl, CA certificates; no python)"
+  say "building $TAG from $IMAGE (git, curl, CA certificates$( ((NEWCOMER)) && echo ', python3 + venv' || echo '; no python'))"
   printf '%s\n' "FROM $IMAGE" \
     'RUN if command -v apt-get >/dev/null; then apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends git curl ca-certificates tar >/dev/null && rm -rf /var/lib/apt/lists/*; \
      elif command -v dnf >/dev/null; then dnf -y -q install git curl ca-certificates tar findutils; \
@@ -333,18 +333,24 @@ if [[ "$PHASE" == newcomer ]]; then
     bad "8 contribute stopped at kind=$kind"; head -c 3000 "$C"; tail -20 /tmp/e2e-8-contribute.err
   fi
 
-  say "scenario 8: the user's yes, local only (claim lease, start worktree)"
-  as_user "$ZI && .venv/bin/z0int --json contribute claim '$PICK'" > "$C" 2>&1 || true
-  [[ "$(na "$C" "d['next_action']['kind']")" =~ ^(run|ask_human)$ && "$(na "$C" "d['task']")" == "$PICK" ]] \
-    && ok "8 local lease on $PICK" || { bad "8 claim $PICK"; head -c 3000 "$C"; }
-  as_user "$ZI && .venv/bin/z0int --json contribute start '$PICK'" > "$C" 2>&1 || true
-  branch="$(na "$C" "d['data']['branch']")"
-  [[ "$(na "$C" "d['next_action']['command']")" == "z0int contribute evidence $PICK" && "$branch" == contrib/* ]] \
-    && as_user "git -C \"$(na "$C" "d['data']['worktree']")\" rev-parse --abbrev-ref HEAD" | grep -qx "$branch" \
-    && ok "8 worktree on $branch" || { bad "8 start $PICK"; head -c 3000 "$C"; }
-  leg claim_start
+  if [[ "$PICK" != error ]]; then
+    say "scenario 8: the user's yes, local only (claim lease, start worktree)"
+    as_user "$ZI && .venv/bin/z0int --json contribute claim '$PICK'" > "$C" 2> /tmp/e2e-8-contribute.err || true
+    [[ "$(na "$C" "d['next_action']['kind']")" =~ ^(run|ask_human)$ && "$(na "$C" "d['task']")" == "$PICK" ]] \
+      && ok "8 local lease on $PICK" || { bad "8 claim $PICK"; head -c 3000 "$C"; tail -20 /tmp/e2e-8-contribute.err; }
+    as_user "$ZI && .venv/bin/z0int --json contribute start '$PICK'" > "$C" 2> /tmp/e2e-8-contribute.err || true
+    branch="$(na "$C" "d['data']['branch']")"
+    [[ "$(na "$C" "d['next_action']['command']")" == "z0int contribute evidence $PICK" && "$branch" == contrib/* ]] \
+      && as_user "git -C \"$(na "$C" "d['data']['worktree']")\" rev-parse --abbrev-ref HEAD" | grep -qx "$branch" \
+      && ok "8 worktree on $branch" || { bad "8 start $PICK"; head -c 3000 "$C"; tail -20 /tmp/e2e-8-contribute.err; }
+    leg claim_start
+  fi
   TOTAL=$(($(date +%s) - START))
-  ((TOTAL <= 3600)) && ok "8 first hour: ${TOTAL}s (${LEGS% })" || bad "8 first hour: ${TOTAL}s > 3600s (${LEGS% })"
+  if ((FAILS)); then
+    bad "8 first hour: route did not complete (${LEGS% })"
+  else
+    ((TOTAL <= 3600)) && ok "8 first hour: ${TOTAL}s (${LEGS% })" || bad "8 first hour: ${TOTAL}s > 3600s (${LEGS% })"
+  fi
 fi
 
 if [[ "$PHASE" == offline ]]; then
