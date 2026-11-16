@@ -212,7 +212,7 @@ def next_action(exp: dict[str, Any], ledger: list[dict[str, Any]], tier: str, hw
         return {"kind": "done", "why": "Every arm has a result for this tier and hardware. "
                 "Propose a new arm via PR to registry/experiments.yaml, or run another tier."}
     pick = controls[0] if controls else arms[0]
-    cmd = runner.get("command") or f"python {runner.get('path')} --arm {pick['id']} --tier {tier}"
+    cmd = runner.get("command") or f"python3 {runner.get('path')} --arm {pick['id']} --tier {tier}"
     return {"kind": "run", "arm": pick["id"], "why": (
         "Controls first: measure every control before any candidate." if controls else
         "Controls are measured; run the next untried candidate."),

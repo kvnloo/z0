@@ -51,14 +51,14 @@
   "llm": "local",
   "mode": "auto",
   "pin_policy": "pinned",
-  "plan_hash": "7732fc79facdac1ce4a4d9d0ef626d337824fdf2f09f7c6350537c493e43c59a",
+  "plan_hash": "6a11372c5f87ed677f41c462db11ed51ee08b70b1115520e530b18c38781b25b",
   "prepared_path": [
     "/usr/bin",
     "/bin"
   ],
   "profile": "personal",
   "registry": {
-    "registry/components.yaml": "68ad7a5febc6317361b9dc449000cecf08dc95ddf1465ea7bb51ba15f83fa339",
+    "registry/components.yaml": "18310fd2ff8db06f1e3359e81741e855f8f9e790adb82398843725348d6b3fcf",
     "registry/harnesses.yaml": "1c2b9ba37ca974e4aa1ed1f6990561ea303fc7e1f73c0fb4c6cc4802d5b4a7b8",
     "registry/onboarding.yaml": "81fd5227e9ba0d0c90cb7a99fd21a3891bc50c3e46c210913b8af389db65fa7c",
     "registry/profiles.yaml": "8ef0b2b147bf7db252328ee9cfc981a81867bcf6533362621138bee1abd2e6eb",
@@ -440,7 +440,7 @@
           "class": "C0"
         },
         "creates": [
-          "$Z0_HOME/build/z0intelligence/640e7fcb2bce75a01145270b0780252a48c1243a"
+          "$Z0_HOME/build/z0intelligence/8a673f9ab57c35313e1263e88cfd5f06ff8dcb13"
         ],
         "id": "z0intelligence.build",
         "kind": "build_tree",
@@ -463,7 +463,7 @@
           "class": "C0"
         },
         "creates": [
-          "~/.local/lib/z0int-shadow/640e7fcb2bce75a01145270b0780252a48c1243a"
+          "~/.local/lib/z0int-shadow/8a673f9ab57c35313e1263e88cfd5f06ff8dcb13"
         ],
         "id": "z0intelligence.release",
         "kind": "stage_release",
@@ -488,7 +488,7 @@
           "class": "C0"
         },
         "creates": [
-          "~/.local/lib/z0int-runtime/640e7fcb2bce75a01145270b0780252a48c1243a"
+          "~/.local/lib/z0int-runtime/8a673f9ab57c35313e1263e88cfd5f06ff8dcb13"
         ],
         "id": "z0intelligence.runtime",
         "kind": "venv",
@@ -497,7 +497,7 @@
           "toolchain.python-window"
         ],
         "probe": {
-          "exists": "~/.local/lib/z0int-runtime/640e7fcb2bce75a01145270b0780252a48c1243a/bin/python"
+          "exists": "~/.local/lib/z0int-runtime/8a673f9ab57c35313e1263e88cfd5f06ff8dcb13/bin/python"
         },
         "undo": {
           "kind": "remove_owned"
@@ -531,7 +531,7 @@
         ],
         "network": true,
         "probe": {
-          "exists": "~/.local/lib/z0int-runtime/640e7fcb2bce75a01145270b0780252a48c1243a/.z0/torch-2.10.0"
+          "exists": "~/.local/lib/z0int-runtime/8a673f9ab57c35313e1263e88cfd5f06ff8dcb13/.z0/torch-2.10.0"
         },
         "where": "venv"
       }
@@ -545,7 +545,7 @@
         "argv": [
           "pip",
           "install",
-          "~/.local/lib/z0int-shadow/640e7fcb2bce75a01145270b0780252a48c1243a[ml]"
+          "~/.local/lib/z0int-shadow/8a673f9ab57c35313e1263e88cfd5f06ff8dcb13[ml]"
         ],
         "component": "z0intelligence",
         "consent": {
@@ -558,7 +558,7 @@
         ],
         "network": true,
         "probe": {
-          "exists": "~/.local/lib/z0int-runtime/640e7fcb2bce75a01145270b0780252a48c1243a/bin/z0int"
+          "exists": "~/.local/lib/z0int-runtime/8a673f9ab57c35313e1263e88cfd5f06ff8dcb13/bin/z0int"
         },
         "when": [
           {
@@ -2506,6 +2506,6 @@
     "oh-my-pi: pin d707478d4c5c not verified on origin (no mirror or checkout evidence)",
     "tokenomics: pin 65e8f2dd9d6c not verified on origin (no mirror or checkout evidence)",
     "z0evals: pin b6e3da7ad9ed not verified on origin (no mirror or checkout evidence)",
-    "z0intelligence: pin 640e7fcb2bce not verified on origin (no mirror or checkout evidence)"
+    "z0intelligence: pin 8a673f9ab57c not verified on origin (no mirror or checkout evidence)"
   ]
 }

@@ -13,6 +13,6 @@
 | `oh-my-pi` | OMP (Oh My Pi) | runtime | canary | canary | `kvnloo/oh-my-pi` | `d707478d4c5c` |
 | `tokenomics` | Tokenomics | measurement | experimental | live | `kvnloo/tokenomics` | `65e8f2dd9d6c` |
 | `z0evals` | z0evals | research | stable | live | `kvnloo/z0evals` | `b6e3da7ad9ed` |
-| `z0intelligence` | z0intelligence | intelligence | experimental | log_only | `kvnloo/z0intelligence` | `640e7fcb2bce` |
+| `z0intelligence` | z0intelligence | intelligence | experimental | log_only | `kvnloo/z0intelligence` | `8a673f9ab57c` |
 
 _Generated from `registry/components.yaml`. Do not edit by hand._

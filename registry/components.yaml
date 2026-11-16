@@ -203,7 +203,7 @@ components:
     install:
       clone: https://github.com/kvnloo/z0intelligence.git
       branch: master
-      ref: 640e7fcb2bce75a01145270b0780252a48c1243a
+      ref: 8a673f9ab57c35313e1263e88cfd5f06ff8dcb13
       command: pip install -e .
     verify:
       command: python3 -m z0int --help
