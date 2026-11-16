@@ -1,12 +1,10 @@
 # Zer0 Individual Contributor License Agreement
 
-> **DRAFT — owner review required.** Adapted from the Apache Software Foundation
-> Individual CLA v2.2. Not legal advice; the owner sets the final text and the
-> `[GRANTEE]` placeholder below before this file is relied on.
+> Adapted from the Apache Software Foundation Individual CLA v2.2. It is a license,
+> not a copyright assignment: you keep ownership of your Contributions.
 
 Thank you for contributing to Zer0. This agreement documents the rights you grant
-for your Contributions. "We" or "Us" means `[GRANTEE — owner to fill in: legal name
-of the person or entity receiving contributions]`. It covers every repository whose
+for your Contributions. "We" or "Us" means Kevin Rajan, the maintainer of Zer0, and his successors and assigns. It covers every repository whose
 pull-request check links to this document.
 
 You sign once, by posting the comment shown by the `cla` check on your first pull
@@ -32,7 +30,8 @@ Subject to this agreement, You grant to Us and to recipients of software We
 distribute a perpetual, worldwide, non-exclusive, no-charge, royalty-free,
 irrevocable copyright license to reproduce, prepare derivative works of, publicly
 display, publicly perform, sublicense, and distribute Your Contributions and such
-derivative works.
+derivative works. Except for the licenses granted in this agreement, You reserve all
+right, title, and interest in and to Your Contributions.
 
 ## 3. Patent license
 
