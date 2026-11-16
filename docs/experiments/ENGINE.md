@@ -18,7 +18,8 @@ Master RFC: https://github.com/kvnloo/z0/issues/45 · z0intelligence + Hermes: h
 
 1. `./z0 onboard --auto --llm none` once per host (AGENTS.md).
 2. `./z0 exp start X` prints `z0.exp.start.v1` JSON. Follow `next_action`:
-   - `build`: no runner yet. Build it to the issue's spec in a worktree of the owning repo. Interface: `--arm A --tier public|self --out result.json`, output `z0.exp.result.v1`. Ask the user before pushing or opening a PR.
+   - `build` with an `arm` like `compactor-<name>`: the fixed arms are measured and the next cell is your own arm of that open family. Write it with a test in the worktree from `command`, commit, run the runner with your arm id (so `repo_sha` is your commit), then `then`.
+   - `build` without an `arm`: no runner yet. Build it to the issue's spec in a worktree of the owning repo. Interface: `--arm A --tier public|self --out result.json`, output `z0.exp.result.v1`. Ask the user before pushing or opening a PR.
    - `run`: run `command`, then `then` (`./z0 exp post ...`). Controls are always offered first.
    - `done`: every arm has a result for this tier and hardware. Propose a new arm by PR to the map.
 3. `./z0 exp post X result.json` validates and prints the comment. Post with `--yes` only after the user agrees.

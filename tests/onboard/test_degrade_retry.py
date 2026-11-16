@@ -286,6 +286,10 @@ class AgentInstructions(unittest.TestCase):
                     ".venv/bin/z0int --json contribute", "export Z0_HOME="):
             self.assertIn(cmd, start)
             self.assertIn(cmd, e2e)
+        exp = text.split("## Start an experiment", 1)[1].split("\n## ", 1)[0]
+        for cmd in ("./z0 exp start", "next_action"):
+            self.assertIn(cmd, exp)
+            self.assertIn(cmd, e2e)
 
 
 if __name__ == "__main__":

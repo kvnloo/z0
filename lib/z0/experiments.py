@@ -200,25 +200,35 @@ def next_action(exp: dict[str, Any], ledger: list[dict[str, Any]], tier: str, hw
     runner = exp.get("runner") or {}
     repo = exp["repo"].split("/", 1)[1]
     checkout = f"~/.z0/repos/{repo}"
+    worktree = f"cd {checkout} && git worktree add ../{repo}-{exp['id']} -b exp/{exp['id']}"
+    result = f"~/.z0/experiments/{exp['id']}/result.json"
+    post = f"./z0 exp post {exp['id']} {result}"
     if exp["kind"] == "enabler" or runner.get("status") == "missing":
         return {"kind": "build", "why": (
             "This entry has no runner yet. The task is to build it exactly as the issue's "
             "Deliverable/Runner spec says, in a worktree of " + exp["repo"] + ", with tests, "
             "then open a draft PR after the user says yes. Building it is the contribution."),
-            "command": f"cd {checkout} && git worktree add ../{repo}-{exp['id']} -b exp/{exp['id']}"}
+            "command": worktree}
     arms = untried_arms(exp, ledger, tier, hw, data_sha)
     controls = [a for a in arms if a.get("control")]
     if not arms:
         return {"kind": "done", "why": "Every arm has a result for this tier and hardware. "
                 "Propose a new arm via PR to registry/experiments.yaml, or run another tier."}
     pick = controls[0] if controls else arms[0]
+    if pick.get("status") == "open-family":  # the arm id is a template, not something to run
+        mine = pick["id"].split("<")[0] + "yourname"
+        return {"kind": "build", "arm": pick["id"], "why": (
+            f"Every fixed arm is measured. The next cell is your own `{pick['id']}` arm: write it "
+            f"as the issue's Deliverable says, with a test, in the worktree below, and commit it. "
+            f"Then run the runner there with `--arm {mine}` (your id) and `--out {result}`, "
+            "so the result's repo_sha is your commit, and post it."),
+            "command": worktree, "then": post, "untried": [a["id"] for a in arms]}
     cmd = runner.get("command") or f"python3 {runner.get('path')} --arm {pick['id']} --tier {tier}"
     return {"kind": "run", "arm": pick["id"], "why": (
         "Controls first: measure every control before any candidate." if controls else
         "Controls are measured; run the next untried candidate."),
-        "command": f"cd {checkout} && {cmd} --out ~/.z0/experiments/{exp['id']}/result.json",
-        "then": f"./z0 exp post {exp['id']} ~/.z0/experiments/{exp['id']}/result.json",
-        "untried": [a["id"] for a in arms]}
+        "command": f"cd {checkout} && {cmd} --out {result}",
+        "then": post, "untried": [a["id"] for a in arms]}
 
 
 def render_issue(data: dict[str, Any], exp_id: str, rfc_url: str = "") -> str:

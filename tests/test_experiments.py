@@ -80,6 +80,15 @@ def test_compaction_carryover_runs_with_python3():
                                       "experiments/hz-compaction-carryover/run.py --arm head-tail ")
 
 
+def test_open_arm_family_means_build_your_arm_not_run_a_placeholder():
+    exp = X.get(DATA, "hz-compaction-carryover")
+    ledger = [_row(a, exp_id=exp["id"]) for a in ("head-tail", "pinned-manifest")]
+    act = X.next_action(exp, ledger, "public", "hwA", "fixture")
+    assert act["kind"] == "build" and act["arm"] == "compactor-<name>"
+    assert "<" not in act["command"] and "<" not in act["then"]  # `<name>` is a shell redirect
+    assert "commit" in act["why"] and "compactor-" in act["why"]
+
+
 def test_validate_rejects_keep_without_controls_and_owner_tier():
     exp = _exp()
     assert X.validate_result(_row("llm-program"), exp) == []
