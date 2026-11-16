@@ -415,7 +415,7 @@ experiments:
       - "kvnloo/z0intelligence#316 (retrieve prior decisions before acting)"
       - "kvnloo/hermes-agent#418 (compaction anchor index + recall exam inside Hermes; this entry is harness-neutral and also scores superseded values)"
       - "kvnloo/hermes-agent#499 (overflow -> compaction -> retry recovery)"
-    runner: {status: missing, path: experiments/hz-compaction-carryover/run.py}
+    runner: {status: exists, path: experiments/hz-compaction-carryover/run.py}
     done_when: >-
       Expected first: a `compactor-<name>` that also catches paraphrased revisions posts KEEP
       (beating pinned-manifest is easy on this fixture). The real finish is a next epoch with a

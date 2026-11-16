@@ -73,6 +73,13 @@ def test_missing_runner_means_build():
     assert act["kind"] == "build"
 
 
+def test_compaction_carryover_runs_with_python3():
+    act = X.next_action(X.get(DATA, "hz-compaction-carryover"), [], "public", "hw", "fixture")
+    assert act["kind"] == "run" and act["arm"] == "head-tail"
+    assert act["command"].startswith("cd ~/.z0/repos/z0intelligence && python3 "
+                                      "experiments/hz-compaction-carryover/run.py --arm head-tail ")
+
+
 def test_validate_rejects_keep_without_controls_and_owner_tier():
     exp = _exp()
     assert X.validate_result(_row("llm-program"), exp) == []
@@ -88,3 +95,9 @@ def test_comment_marker_round_trips():
     r = _row("recency", fingerprint="f" * 16)
     rows = X.parse_markers(["noise", X.render_comment(r)])
     assert rows == [json.loads(json.dumps(r, sort_keys=True))]
+
+
+def load_tests(loader, tests, pattern):  # CI runs `unittest discover`, which skips bare functions
+    import unittest
+    return unittest.TestSuite(unittest.FunctionTestCase(f) for n, f in sorted(globals().items())
+                              if n.startswith("test_"))

@@ -126,7 +126,7 @@
     }
   ],
   "pin_policy": "pinned",
-  "plan_hash": "584d6f252d3427101a5851fd4d02bf7d43ae9caa3ffb960434bb3f944801938c",
+  "plan_hash": "17453fcb4142520d432814c7ff1da69c227ff24489bde1a1b1358e680cf4043a",
   "prepared_path": [
     "$Z0_HOME/bin/links",
     "~/.bun/bin",
@@ -137,7 +137,7 @@
   "profile": "personal",
   "registry": {
     "kvnloo/z0evals@b6e3da7ad9eda4f87f9f8e94c6ab0fc97d44bb10:zer0.repo.yaml": "5e642b7ecd24468cbd4f0d28d222393226487c9e07fcebb8f5ba9df0771b56d0",
-    "registry/components.yaml": "68ad7a5febc6317361b9dc449000cecf08dc95ddf1465ea7bb51ba15f83fa339",
+    "registry/components.yaml": "18310fd2ff8db06f1e3359e81741e855f8f9e790adb82398843725348d6b3fcf",
     "registry/harnesses.yaml": "1c2b9ba37ca974e4aa1ed1f6990561ea303fc7e1f73c0fb4c6cc4802d5b4a7b8",
     "registry/onboarding.yaml": "81fd5227e9ba0d0c90cb7a99fd21a3891bc50c3e46c210913b8af389db65fa7c",
     "registry/profiles.yaml": "8ef0b2b147bf7db252328ee9cfc981a81867bcf6533362621138bee1abd2e6eb",
@@ -549,7 +549,7 @@
           "class": "C0"
         },
         "creates": [
-          "$Z0_HOME/build/z0intelligence/640e7fcb2bce75a01145270b0780252a48c1243a"
+          "$Z0_HOME/build/z0intelligence/8a673f9ab57c35313e1263e88cfd5f06ff8dcb13"
         ],
         "id": "z0intelligence.build",
         "kind": "build_tree",
@@ -570,7 +570,7 @@
           "class": "C0"
         },
         "creates": [
-          "~/.local/lib/z0int-shadow/640e7fcb2bce75a01145270b0780252a48c1243a"
+          "~/.local/lib/z0int-shadow/8a673f9ab57c35313e1263e88cfd5f06ff8dcb13"
         ],
         "id": "z0intelligence.release",
         "kind": "stage_release",
@@ -593,7 +593,7 @@
           "class": "C0"
         },
         "creates": [
-          "~/.local/lib/z0int-runtime/640e7fcb2bce75a01145270b0780252a48c1243a"
+          "~/.local/lib/z0int-runtime/8a673f9ab57c35313e1263e88cfd5f06ff8dcb13"
         ],
         "id": "z0intelligence.runtime",
         "kind": "venv",
@@ -602,7 +602,7 @@
           "toolchain.python-window"
         ],
         "probe": {
-          "exists": "~/.local/lib/z0int-runtime/640e7fcb2bce75a01145270b0780252a48c1243a/bin/python"
+          "exists": "~/.local/lib/z0int-runtime/8a673f9ab57c35313e1263e88cfd5f06ff8dcb13/bin/python"
         },
         "undo": {
           "kind": "remove_owned"
@@ -635,7 +635,7 @@
         ],
         "network": true,
         "probe": {
-          "exists": "~/.local/lib/z0int-runtime/640e7fcb2bce75a01145270b0780252a48c1243a/.z0/torch-2.10.0"
+          "exists": "~/.local/lib/z0int-runtime/8a673f9ab57c35313e1263e88cfd5f06ff8dcb13/.z0/torch-2.10.0"
         },
         "where": "venv"
       }
@@ -650,7 +650,7 @@
         "argv": [
           "pip",
           "install",
-          "~/.local/lib/z0int-shadow/640e7fcb2bce75a01145270b0780252a48c1243a[ml]"
+          "~/.local/lib/z0int-shadow/8a673f9ab57c35313e1263e88cfd5f06ff8dcb13[ml]"
         ],
         "component": "z0intelligence",
         "consent": {
@@ -663,7 +663,7 @@
         ],
         "network": true,
         "probe": {
-          "exists": "~/.local/lib/z0int-runtime/640e7fcb2bce75a01145270b0780252a48c1243a/bin/z0int"
+          "exists": "~/.local/lib/z0int-runtime/8a673f9ab57c35313e1263e88cfd5f06ff8dcb13/bin/z0int"
         },
         "when": [
           {
@@ -2609,6 +2609,6 @@
     "prepared PATH: ~/.local/bin also holds a policy-excluded harness; $Z0_HOME/bin/links replaces it (P1)",
     "z0evals: zer0.repo.yaml setup step z0evals.t1.warm_cache declares no creates or probe.exists path, so z0 cannot tell that it already ran (I1); ignored",
     "z0intelligence: 1 existing checkout(s) are dirty or off-origin; a separate z0 clone is planned instead",
-    "z0intelligence: pin 640e7fcb2bce not verified on origin (no mirror or checkout evidence)"
+    "z0intelligence: pin 8a673f9ab57c not verified on origin (no mirror or checkout evidence)"
   ]
 }
