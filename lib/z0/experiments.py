@@ -215,7 +215,7 @@ def next_action(exp: dict[str, Any], ledger: list[dict[str, Any]], tier: str, hw
         return {"kind": "done", "why": "Every arm has a result for this tier and hardware. "
                 "Propose a new arm via PR to registry/experiments.yaml, or run another tier."}
     pick = controls[0] if controls else arms[0]
-    if pick.get("status") == "open-family":  # the arm id is a template, not something to run
+    if pick.get("status") == "open-family" and not runner.get("command"):  # `<...>` is not an arm
         return {"kind": "build", "arm": pick["id"], "why": (
             f"Every fixed arm is measured. The next cell is your own `{pick['id']}` arm: write it "
             f"as the issue's Deliverable says, with a test, in the worktree below, and commit it. "

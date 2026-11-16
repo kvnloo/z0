@@ -87,6 +87,9 @@ def test_open_arm_family_means_build_your_arm_not_run_a_placeholder():
     assert act["kind"] == "build" and act["arm"] == "compactor-<name>"
     assert "<" not in act["command"] and "<" not in act["then"]  # `<name>` is a shell redirect
     assert "commit" in act["why"] and "compactor-" in act["why"]
+    exp = X.get(DATA, "zi-context-superopt")  # its own runner command makes the family member
+    act = X.next_action(exp, [_row("default-policy", exp_id=exp["id"])], "public", "hwA", "fixture")
+    assert act["kind"] == "run" and "<" not in act["command"]
 
 
 def test_launcher_falls_back_to_the_z0_venv_when_python3_lacks_yaml():
