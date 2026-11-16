@@ -386,6 +386,41 @@ experiments:
     prior: ["kvnloo/aodl (intent contracts)"]
     runner: {status: missing, path: experiments/hz-drift-detector/run.py}
 
+  - id: hz-compaction-carryover
+    issue: 354
+    kind: experiment
+    repo: kvnloo/z0intelligence
+    title: "Hermes: keep loaded skills and current decisions through context compaction"
+    goal: NS3
+    problem: >-
+      When a long session is compacted, the agent loses which skills it had loaded and
+      which decisions were made (or keeps a decision's superseded value), so the user
+      has to explain them again. The class recurs across harnesses and compaction styles.
+    hypothesis: >-
+      A compactor that carries a manifest of loaded skills and the latest value of each
+      decision loses fewer items than head+tail truncation under the same word budget.
+    data_tier: [public]
+    arms:
+      - {id: head-tail, control: true, desc: keep the first quarter of the budget and the most recent tail}
+      - {id: pinned-manifest, desc: "reference: pin the latest canonical skill/decision lines, then the tail"}
+      - {id: "compactor-<name>", desc: "yours: any `(turns, budget) -> str` function registered in the runner"}
+    metric: {name: carryover_error_rate, direction: down}
+    gates: ["budget enforced by the runner (output truncated to the budget)", "paired bootstrap vs control on the same seeded split"]
+    hardware: any CPU; no model, no network; one run takes under a second
+    deliverable: >-
+      A reference runner (control + reference candidate) is already built. Your contribution:
+      a `compactor_<name>(turns, budget) -> str` function registered in the runner's `ARMS`
+      as `compactor-<name>`, with a test, plus its posted result.
+    prior:
+      - "kvnloo/z0intelligence#316 (retrieve prior decisions before acting)"
+      - "kvnloo/hermes-agent#418 (compaction anchor index + recall exam inside Hermes; this entry is harness-neutral and also scores superseded values)"
+      - "kvnloo/hermes-agent#499 (overflow -> compaction -> retry recovery)"
+    runner: {status: missing, path: experiments/hz-compaction-carryover/run.py}
+    done_when: >-
+      Expected first: a `compactor-<name>` that also catches paraphrased revisions posts KEEP
+      (beating pinned-manifest is easy on this fixture). The real finish is a next epoch with a
+      harder fixture or a model-in-the-loop tier that checks the carried items change what the agent does.
+
   # ------------------------------------------------------------- .files: NS4
   - id: fx-k3s-runner
     issue: 142
