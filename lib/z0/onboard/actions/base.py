@@ -24,7 +24,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Callable, Optional
 
-from ..journal import MARKER, Journal, marker_owner, sha256_file
+from ..journal import MARKER, Journal, sha256_file
 from ..redact import Redactor
 
 # Environment passed to every step: no secrets, no user aliases (§6.3).
@@ -159,10 +159,6 @@ class ActionCtx:
                 return dep
         return None
 
-    @staticmethod
-    def created_path(step: dict) -> Optional[str]:
-        creates = step.get("creates") or []
-        return creates[0] if creates else None
 
     def venv_dir(self, step: dict) -> Optional[str]:
         """Target dir of a `venv` step: its first `creates`, else the probe's venv root."""
@@ -411,9 +407,6 @@ class ActionCtx:
         """A link target as journaled: plan form when absolute, as is when relative."""
         return self.form(target) if os.path.isabs(target) else target
 
-
-def is_owned_by(path: str, run_id: str) -> bool:
-    return marker_owner(path) == run_id
 
 
 def has_git_ancestor(path: str) -> bool:

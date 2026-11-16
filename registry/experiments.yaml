@@ -1,0 +1,477 @@
+# Experiment map: the canonical list of continuous experiments across the Zer0 repos.
+#
+# One entry per experiment. The GitHub issue for an entry is rendered from it
+# (`./z0 exp render <id>`) and carries discussion and posted results; this file
+# carries the definition. Change an entry's arms, metric, gates or data and you
+# must bump `epoch`: results from an older epoch never count against a newer one.
+#
+# Run one:   ./z0 exp start <id>      (after ./z0 onboard)
+# Post one:  ./z0 exp post <id> result.json      (prints the comment; --yes posts it)
+# Engine:    docs/experiments/ENGINE.md
+schema: z0.experiments.v1
+
+north_star:
+  NS1:
+    title: Compile cognition
+    text: >-
+      Move every repeated decision out of the frontier LLM into the cheapest
+      mechanism that keeps the verified outcome: deterministic program, then
+      retrieval, then a tiny model, then an SLM, then the frontier for the hard
+      tail. Success is frontier calls and tokens removed at equal verified quality.
+  NS2:
+    title: Teacher-to-student flywheel
+    text: >-
+      Frontier models keep getting smarter. Use each generation as a compiler and
+      teacher (programs, labels, kernels, weight edits) so the small local stack
+      gets measurably stronger per parameter and per millisecond, generation
+      after generation.
+  NS3:
+    title: Agents that need no reminding
+    text: >-
+      Harnesses (Hermes first) retrieve prior decisions before acting, stay on
+      the asked scope, prove completion with receipts, and never spend frontier
+      turns waiting.
+  NS4:
+    title: A fleet that runs itself
+    text: >-
+      Declarative IaC (.files) so any host, the owner's or a contributor's, can
+      run experiments 24/7 under resource caps, without OOM kills or thrash, and
+      rebuild from scratch reproducibly.
+  NS5:
+    title: One research engine
+    text: >-
+      A shared experiment map, referee and ledger so many people and agents can
+      hill-climb in parallel, never repeat a measured cell, and turn results
+      into promoted mechanisms.
+
+data_tiers:
+  public: Synthetic or public fixtures shipped in the owning repo. Results are public.
+  self: >-
+    The contributor's own local agent history (Hermes state.db, Claude Code, Codex).
+    Raw data never leaves the machine; only the aggregate result JSON is posted, and only after the contributor says yes.
+  owner: Kevin's private data on his hosts. Run only by the owner's loop; posted results are aggregates he has approved.
+
+# Shared rules every experiment inherits (the referee contract, eng-referee).
+defaults:
+  epoch: 1
+  controls_first: true          # controls are measured before any candidate on the same split
+  sealed_split: true            # the trainer/proposer never sees the sealed split's scores
+  keep_rule: >-
+    KEEP only if the candidate beats the best control on the primary metric with a
+    95% bootstrap CI that excludes zero (or below 1 - max(3%, A/A half-width) for
+    ratio metrics), and passes every gate. Everything else is DISCARD or NULL and is still posted.
+  rounds_per_direction: 3       # then keep, drop or redesign
+  stall_after: 3                # consecutive non-keeps on a track -> council round
+  result_schema: z0.exp.result.v1
+
+experiments:
+  # ---------------------------------------------------------------- engine (z0)
+  - id: eng-map
+    issue: 41
+    kind: enabler
+    repo: kvnloo/z0
+    title: Experiment map + `./z0 exp` CLI (list, show, start, post, fingerprint)
+    goal: NS5
+    problem: >-
+      Experiments live in chat sessions, operations folders and scattered issues, so
+      agents restart the same approach and nobody can see what was already measured.
+    hypothesis: A single registry file plus a CLI that every harness calls is enough for an agent to run "start experiment X" with no other context.
+    deliverable: >-
+      registry/experiments.yaml, lib/z0/experiments.py, tests, AGENTS.md "Start an
+      experiment" section, docs/experiments/ENGINE.md.
+    done_when: "`./z0 exp start <id>` prints a self-contained next_action for every entry, and the fingerprint/dedup logic has tests."
+    runner: {status: exists, command: "./z0 exp list"}
+
+  - id: eng-ledger
+    issue: 42
+    kind: enabler
+    repo: kvnloo/z0
+    title: Results ledger, dedup and auto-posting
+    goal: NS5
+    problem: The same cells get re-run because results are not machine-readable anywhere shared.
+    hypothesis: >-
+      Results posted as issue comments carrying a `z0-exp-result` JSON marker, mirrored
+      into a generated ledger, let every runner skip cells already measured.
+    deliverable: >-
+      (1) `./z0 exp post` validates result JSON against z0.exp.result.v1 and posts
+      after an explicit yes; (2) a scheduled GitHub Action collects markers from all
+      experiment issues into `generated/experiments-ledger.jsonl` and a leaderboard
+      Markdown per experiment; (3) the owner's referee re-run can mark a row `verified`.
+    done_when: Two different machines run the same arm; the second run is told the cell exists and is offered the next untried arm.
+    prior: ["kvnloo/z0intelligence#246 (claim markers + receipts in the contributor layer)", "kvnloo/z0evals#177 (harvest experiments into the research log)"]
+    runner: {status: partial, command: "./z0 exp ledger --refresh"}
+
+  - id: eng-referee
+    issue: 43
+    kind: enabler
+    repo: kvnloo/z0
+    title: Shared referee contract (controls first, sealed split, paired CI, epochs)
+    goal: NS5
+    problem: >-
+      Past loops compared candidates to nothing, re-used the eval set for tuning, and
+      reported worker claims that no artifact backed.
+    hypothesis: >-
+      One small referee library that every runner imports (ABBA interleave, paired
+      bootstrap CI, A/A noise, controls-first, sealed split hash, epoch check) prevents
+      those failure classes by construction.
+    deliverable: >-
+      Reuse, do not rewrite: Evolution Lab `abab_state`/`gpu_abab`, z0intelligence
+      `autoresearch/schema.py` (ExperimentContract, ReplayResult) and z0evals freeze
+      rules. Ship a thin `z0-referee` package (or a pinned module) plus a conformance
+      test every runner must pass.
+    done_when: Two runners (one z0intelligence, one .files) emit z0.exp.result.v1 through it and the conformance test fails when a control is missing.
+    prior: ["kvnloo/evolution-lab#42 / PR #46 (scorecard: candidates vs floors)", "kvnloo/z0evals#92 (frozen replay benchmark + promotion gates)", "kvnloo/z0intelligence#143 (autonomous SFT loop)"]
+    runner: {status: missing}
+
+  - id: eng-hillclimb
+    issue: 44
+    kind: enabler
+    repo: kvnloo/z0
+    title: Hill-climb driver (propose, referee, keep/revert, stall council)
+    goal: NS5
+    problem: >-
+      "Run this as autoresearch" has meant an agent improvising each session. Without a
+      driver loop the search drifts to whatever is cheapest to verify.
+    hypothesis: >-
+      A driver that owns one scored objective per track, asks an LLM proposer for the
+      next candidate from a closed menu plus free-form variants, referees it, and keeps
+      or reverts, will produce monotone incumbents and a complete null-result log.
+    deliverable: >-
+      `./z0 exp climb <id> --track <t> --budget <n>`: proposer on free lanes first, a
+      random-mutation control at equal budget, paid proposer only after the free tier
+      wins on held-out data, council only on stall, append-only ledger, STOP file.
+    done_when: One real experiment (zi-distill-program) shows at least one KEEP or an honest null after 3 directions x 3 rounds, with every cell in the ledger.
+    prior: ["kvnloo/autokernel (keep/revert hill-climb for kernels)", "kvnloo/evolution-lab#31 (training provider protocol)"]
+    runner: {status: missing}
+
+  # ------------------------------------------------------- z0intelligence: NS1/NS2
+  - id: zi-distill-program
+    issue: 309
+    kind: experiment
+    repo: kvnloo/z0intelligence
+    title: LLM writes the decision program (distill episodes into deterministic code)
+    goal: NS1
+    problem: >-
+      Small learned models were trained before anyone checked what a short program does
+      on the same split. Often a trivial rule (repeat the last action family) is the
+      strongest arm, and the learned model only adds noise.
+    hypothesis: >-
+      A frontier LLM given the training episodes (features, candidate set, verified
+      outcome) can write a short, readable decision program that matches or beats every
+      learned arm on the sealed split, and abstains where it cannot.
+    data_tier: [public, self]
+    arms:
+      - {id: majority, control: true}
+      - {id: recency, control: true, desc: same action family as the previous step}
+      - {id: bigram, control: true}
+      - {id: ridge, control: true}
+      - {id: llm-program, desc: "program written by a named LLM from train split only; <=200 lines, no learned weights"}
+      - {id: llm-program+abstain, desc: program that returns ABSTAIN when unsure; scored on coverage and precision}
+    metric: {name: session_macro_top1, direction: up}
+    gates: ["program is deterministic (same input, same output across 3 runs)", "no access to sealed split during writing", "program <= 200 lines"]
+    hardware: CPU only, under 1 h
+    done_when: Leaderboard per LLM generation with CIs on the public fixture plus at least 3 self-tier runs.
+    runner: {status: missing, path: experiments/zi-distill-program/run.py}
+
+  - id: zi-residual-tiny
+    issue: 310
+    kind: experiment
+    repo: kvnloo/z0intelligence
+    title: Tiny model (<=10k params) learns only the residual the program cannot decide
+    goal: NS1
+    problem: >-
+      The fly/mushroom-body specialist was asked to replace a semantic judge outright.
+      On real chronological holdouts it lost to majority and ridge (see the Evolution Lab
+      scorecard). A 10k-parameter network has no language prior; it can only win on a
+      small structured input with a small choice set.
+    hypothesis: >-
+      Trained only on cases where zi-distill-program abstains, with the program's
+      features as input, a <=10k-param model (MB/fly, MLP, logistic) adds coverage at
+      fixed precision over the program alone.
+    data_tier: [public, self]
+    arms:
+      - {id: program-only, control: true}
+      - {id: program+ridge, control: true}
+      - {id: program+mb, desc: Evolution Lab mushroom-body student on the residual}
+      - {id: program+mlp10k}
+    metric: {name: coverage_at_precision_0.95, direction: up}
+    gates: ["params <= 10000", "p50 latency <= 1 ms CPU", "beats program+ridge"]
+    hardware: CPU, under 1 h
+    prior: ["kvnloo/evolution-lab PR #46 docs/SCORECARD.md", "kvnloo/evolution-lab#3 #4 #8"]
+    runner: {status: missing, path: experiments/zi-residual-tiny/run.py}
+
+  - id: zi-capacity-frontier
+    issue: 311
+    kind: experiment
+    repo: kvnloo/z0intelligence
+    title: "Capacity frontier: params x choice-set size at 95% accuracy x latency"
+    goal: NS2
+    problem: >-
+      We keep asking tiny models to do tasks with no map of what size of model can do
+      what. "As powerful as Jev" is not a measurable target.
+    hypothesis: >-
+      For a ladder of synthetic decision tasks of rising difficulty, the largest
+      choice-set a model handles at 95% accuracy grows predictably with parameters and
+      input structure; the curve tells us which decisions to compile to which size.
+    data_tier: [public]
+    arms:
+      - {id: program, control: true}
+      - {id: mlp-1k}
+      - {id: mlp-10k}
+      - {id: mb-10k}
+      - {id: slm-0.6b}
+      - {id: slm-4b}
+    metric: {name: max_choices_at_acc_0.95, direction: up}
+    gates: ["same task generator seed set for every arm", "latency measured on the stated hardware class"]
+    hardware: CPU for <=10k arms; 8 GB GPU for SLM arms
+    done_when: One plot (params, choices@95%, p95 latency, task difficulty) with every cell measured on >=2 hardware classes.
+    runner: {status: missing, path: experiments/zi-capacity-frontier/run.py}
+
+  - id: zi-teacher-generations
+    issue: 312
+    kind: experiment
+    repo: kvnloo/z0intelligence
+    title: Does a smarter teacher make a smarter student? Lift per LLM generation
+    goal: NS2
+    problem: The bet is that each frontier generation makes the small stack stronger. Nobody measures it.
+    hypothesis: >-
+      Holding the student and data fixed, programs and labels written by a newer
+      teacher model produce a measurably better student on the sealed split.
+    data_tier: [public, self]
+    arms:
+      - {id: no-teacher, control: true, desc: student on observed labels only}
+      - {id: teacher-<model>, desc: "one arm per named teacher model and version; the fingerprint includes the model id"}
+    metric: {name: student_session_macro_top1, direction: up}
+    gates: ["teacher sees train split only", "student architecture and seed fixed per epoch"]
+    hardware: CPU student; teacher via the contributor's own API/subscription
+    done_when: A table of teacher model/version vs student lift, refreshed whenever a new model ships.
+    runner: {status: missing, path: experiments/zi-teacher-generations/run.py}
+
+  - id: zi-selective-routing
+    issue: 313
+    kind: experiment
+    repo: kvnloo/z0intelligence
+    title: Frontier calls removed at fixed verified quality (counterfactual replay)
+    goal: NS1
+    problem: Accuracy alone does not show savings. What matters is how many frontier calls a cheap mechanism can safely take.
+    hypothesis: >-
+      A cascade (program, then tiny model, then SLM, then frontier) with calibrated
+      abstention removes a measurable share of frontier calls on replayed episodes
+      with no drop in verified success.
+    data_tier: [public, self]
+    arms:
+      - {id: frontier-always, control: true}
+      - {id: cascade-program}
+      - {id: cascade-program-tiny}
+      - {id: cascade-program-tiny-slm}
+    metric: {name: frontier_calls_removed_share, direction: up}
+    gates: ["verified success not lower than control (CI)", "unnecessary escalation counted", "same candidate set per episode"]
+    hardware: CPU; 8 GB GPU for the SLM arm
+    prior: ["kvnloo/z0evals#92", "kvnloo/z0intelligence#251 (delegation eligibility classifier)", "kvnloo/z0intelligence#296 (turbo router)"]
+    runner: {status: missing, path: experiments/zi-selective-routing/run.py}
+
+  - id: zi-context-superopt
+    issue: 314
+    kind: experiment
+    repo: kvnloo/z0intelligence
+    title: Context superoptimizer on public coding tasks (autoresearch V0)
+    goal: NS1
+    problem: Agents read too much and too little at once; the V0 autoresearch daemon exists but has only run on private trajectories.
+    hypothesis: A mutated context-acquisition policy reaches verified completion faster than the default policy on the public claude_code benchmark tasks.
+    data_tier: [public]
+    arms:
+      - {id: default-policy, control: true}
+      - {id: mutated-policy-<hash>, desc: one arm per treatment_hash from autoresearch/mutations.py}
+    metric: {name: time_to_verified_completion_ms, direction: down}
+    gates: ["hidden tests pass", "same model and harness per block", "A/A noise measured first"]
+    hardware: any; uses the contributor's own model access
+    prior: ["src/z0int/autoresearch/ (ExperimentContract, ReplayResult)", "benchmarks/claude_code/tasks/"]
+    runner: {status: partial, command: "z0int autoresearch run-once"}
+
+  - id: zi-llm-kernels
+    issue: 315
+    kind: experiment
+    repo: kvnloo/z0intelligence
+    title: LLM-written kernels for the local decision path
+    goal: NS2
+    problem: Local specialists and SLMs run on generic kernels; LLMs can now write Triton/CUDA/CPU kernels but we have no exact-output gate for our own hot path.
+    hypothesis: >-
+      An LLM-driven keep/revert loop (autokernel style) finds kernels for the local
+      decision path (specialist inference, SLM attention/matmul on the 8-12 GB class)
+      that are faster with bit-exact or tolerance-gated outputs.
+    data_tier: [public]
+    arms:
+      - {id: reference-kernel, control: true}
+      - {id: llm-kernel-<hash>}
+    metric: {name: p50_latency_ratio, direction: down}
+    gates: ["outputs equal reference within stated tolerance on the frozen input set", "ABBA interleave, A/A noise first"]
+    hardware: one CUDA GPU (record the model)
+    prior: ["kvnloo/autokernel", "kvnloo/z0intelligence#234 (3080 Ti llama.cpp ROI)"]
+    runner: {status: missing, path: experiments/zi-llm-kernels/run.py}
+
+  # ------------------------------------------------- z0intelligence x Hermes: NS3
+  - id: hz-memory-before-act
+    issue: 316
+    kind: experiment
+    repo: kvnloo/z0intelligence
+    title: "Hermes: retrieve prior decisions before acting (restated-ask rate)"
+    goal: NS3
+    problem: >-
+      The owner's most repeated complaint: agents read old info, miss decisions he
+      already made, and he has to remind them. Prior knowledge exists in memory stores
+      but is not retrieved before the agent acts.
+    hypothesis: Injecting a State Packet / memory retrieval before the first tool call lowers the rate at which a replayed session needs a correction.
+    data_tier: [public, self]
+    arms:
+      - {id: no-memory, control: true}
+      - {id: state-packet}
+      - {id: state-packet+ctx-search}
+    metric: {name: correction_needed_rate, direction: down}
+    gates: ["same model per block", "fixture corrections are labeled before arms run"]
+    hardware: any; contributor's own model access
+    prior: ["kvnloo/z0evals#56 (cross-harness memory + State Packet)", "kvnloo/z0intelligence#137"]
+    runner: {status: missing, path: experiments/hz-memory-before-act/run.py}
+
+  - id: hz-wait-compile
+    issue: 317
+    kind: experiment
+    repo: kvnloo/z0intelligence
+    title: "Hermes: compile waits and polls out of frontier turns"
+    goal: NS3
+    problem: Frontier models spend turns on sleep/poll loops and on acknowledging background notifications.
+    hypothesis: A deterministic hook that turns waits into background-plus-notify cuts frontier turns per task with no change in task outcome.
+    data_tier: [self]
+    arms:
+      - {id: no-hook, control: true}
+      - {id: wait-hook}
+    metric: {name: frontier_turns_per_verified_task, direction: down}
+    gates: ["task outcome unchanged (paired)", "measured from the contributor's own state.db, aggregates only"]
+    hardware: any
+    runner: {status: missing, path: experiments/hz-wait-compile/run.py}
+
+  - id: hz-done-proof-gate
+    issue: 318
+    kind: experiment
+    repo: kvnloo/z0intelligence
+    title: "Hermes: no 'done' without a receipt (false-completion rate)"
+    goal: NS3
+    problem: Agents report work as done (deployed, fixed, verified) without end-to-end proof; rework follows.
+    hypothesis: A gate that requires a receipt (command, exit, artifact hash) before a completion claim lowers the false-completion rate on benchmark tasks with hidden tests.
+    data_tier: [public]
+    arms:
+      - {id: no-gate, control: true}
+      - {id: receipt-gate}
+    metric: {name: false_completion_rate, direction: down}
+    gates: ["hidden tests decide truth", "same model per block"]
+    hardware: any
+    prior: ["kvnloo/z0intelligence#246 (contribute evidence receipts)"]
+    runner: {status: missing, path: experiments/hz-done-proof-gate/run.py}
+
+  - id: hz-drift-detector
+    issue: 319
+    kind: experiment
+    repo: kvnloo/z0intelligence
+    title: "Hermes: detect scope drift and substitution before the turn ends"
+    goal: NS3
+    problem: Loops drift to cheap work and agents substitute a smaller deliverable for the one asked.
+    hypothesis: A small program or tiny model comparing the ask (AODL intent contract) with the final diff/summary flags drift with useful precision.
+    data_tier: [public, self]
+    arms:
+      - {id: keyword-rule, control: true}
+      - {id: llm-program}
+      - {id: tiny-classifier}
+    metric: {name: f1_drift, direction: up}
+    gates: ["labels fixed before arms run", "no frontier call inside the detector arm"]
+    hardware: CPU
+    prior: ["kvnloo/aodl (intent contracts)"]
+    runner: {status: missing, path: experiments/hz-drift-detector/run.py}
+
+  # ------------------------------------------------------------- .files: NS4
+  - id: fx-k3s-runner
+    issue: 142
+    kind: enabler
+    repo: kvnloo/.files
+    title: "IaC: run any mapped experiment as a capped K3s Job (or systemd scope)"
+    goal: NS4
+    problem: Experiments ran inside agent shells, got OOM-killed with the agent, and could not run on other hosts.
+    hypothesis: One Job template parameterised by experiment id and arm gives every host the same capped, restartable runner.
+    deliverable: >-
+      iac/experiments/: a K3s Job template and a systemd-run --user --scope fallback,
+      both taking EXP_ID/ARM, with memory/CPU caps from the map's hardware field, output
+      to ~/.z0/experiments/<id>/<fingerprint>/.
+    done_when: zi-distill-program runs to a result JSON on two hosts through this path.
+    prior: ["kvnloo/.files#23 (single-node K3s for jobs)", "kvnloo/.files#16"]
+    runner: {status: missing}
+
+  - id: fx-oom-forecast
+    issue: 143
+    kind: experiment
+    repo: kvnloo/.files
+    title: Forecast OOM kills 60 s ahead (rule vs tiny model)
+    goal: NS4
+    problem: Parallel agents and builds push hosts into memory pressure; the guard kills jobs after the fact.
+    hypothesis: A deterministic rule over PSI and meminfo, or a tiny model on the same features, predicts a kill 60 s ahead well enough to pause admissions instead.
+    data_tier: [self]
+    arms:
+      - {id: threshold-rule, control: true}
+      - {id: psi-slope-rule}
+      - {id: tiny-model}
+    metric: {name: kills_avoided_minus_false_pauses, direction: up}
+    gates: ["replayed on recorded /proc/pressure + meminfo traces", "aggregates only leave the host"]
+    hardware: Linux host with PSI
+    runner: {status: missing, path: iac/experiments/fx-oom-forecast/run.py}
+
+  - id: fx-admission-throughput
+    issue: 144
+    kind: experiment
+    repo: kvnloo/.files
+    title: Job admission policy vs throughput and kill rate
+    goal: NS4
+    problem: Either too many jobs run and get killed, or too few run and hardware idles.
+    hypothesis: A cooperative admission policy (caps + memory floor + queue) finishes more experiment cells per hour than unbounded or one-at-a-time.
+    data_tier: [public]
+    arms:
+      - {id: one-at-a-time, control: true}
+      - {id: unbounded, control: true}
+      - {id: cooperative-admission}
+    metric: {name: cells_completed_per_hour, direction: up}
+    gates: ["zero OOM kills in the KEEP arm", "same synthetic job mix"]
+    hardware: any Linux host
+    runner: {status: missing, path: iac/experiments/fx-admission-throughput/run.py}
+
+  - id: fx-fresh-machine
+    issue: 145
+    kind: experiment
+    repo: kvnloo/.files
+    title: Fresh machine to working fleet node (time and manual steps)
+    goal: NS4
+    problem: The IaC is not yet the source of truth; rebuilding a host needs undocumented manual steps.
+    hypothesis: The P0 disaster-recovery manifest brings a clean VM/container to a passing acceptance test with zero manual steps.
+    data_tier: [public]
+    arms:
+      - {id: current-master, control: true}
+      - {id: candidate-branch}
+    metric: {name: manual_steps, direction: down}
+    gates: ["acceptance test from #15 passes", "no secrets in logs"]
+    hardware: a disposable VM or container
+    prior: ["kvnloo/.files#15", "kvnloo/.files#11", "kvnloo/.files#16"]
+    runner: {status: missing, path: iac/experiments/fx-fresh-machine/run.sh}
+
+  - id: fx-fleet-placement
+    issue: 146
+    kind: experiment
+    repo: kvnloo/.files
+    title: Place CPU-heavy jobs on the best fleet host (makespan)
+    goal: NS4
+    problem: Heavy builds run on whichever host the agent is on, starving the interactive host.
+    hypothesis: Placing CPU jobs by measured host capacity lowers makespan and interactive-host pressure versus local-only.
+    data_tier: [public, self]
+    arms:
+      - {id: local-only, control: true}
+      - {id: fixed-remote}
+      - {id: capacity-placement}
+    metric: {name: makespan_s, direction: down}
+    gates: ["same job set", "interactive host PSI recorded"]
+    hardware: two or more hosts
+    prior: ["kvnloo/z0intelligence#131 (federated capacity plane)", "kvnloo/kerdoios"]
+    runner: {status: missing, path: iac/experiments/fx-fleet-placement/run.py}

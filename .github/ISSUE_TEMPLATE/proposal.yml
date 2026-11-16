@@ -1,0 +1,30 @@
+name: Propose a task or experiment
+description: Suggest work you (or your agent) would take on. To claim an existing issue, comment `/claim <id>` on it instead.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or hypothesis
+    validations:
+      required: true
+  - type: textarea
+    id: plan
+    attributes:
+      label: What you would build or run
+      description: Which repo, and for an experiment the arms, metric and controls (see docs/experiments/ENGINE.md).
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      description: A check someone else can run.
+    validations:
+      required: true
+  - type: checkboxes
+    id: take
+    attributes:
+      label: Ownership
+      options:
+        - label: I want to work on this myself

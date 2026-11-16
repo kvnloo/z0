@@ -1,0 +1,32 @@
+name: Onboarding feedback
+description: Tell us how `./z0 onboard` or the first-task pick went on your machine.
+labels: [onboarding]
+body:
+  - type: dropdown
+    id: outcome
+    attributes:
+      label: Outcome
+      options: ["Worked, got a first task", "Worked with asks (exit 3)", "Degraded (exit 5)", "Failed (exit 1)", "Gave up before it finished"]
+    validations:
+      required: true
+  - type: input
+    id: host
+    attributes:
+      label: OS and CPU/GPU class
+    validations:
+      required: true
+  - type: input
+    id: agent
+    attributes:
+      label: Agent or harness used (or "none")
+  - type: input
+    id: time
+    attributes:
+      label: Wall time from clone to first-task pick
+  - type: textarea
+    id: notes
+    attributes:
+      label: What was confusing, slow or wrong?
+      description: Paste the `FAILED` lines or the "What you need to do" section of the report if useful. Remove usernames, paths and hostnames.
+    validations:
+      required: true
