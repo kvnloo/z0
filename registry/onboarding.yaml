@@ -7,7 +7,7 @@ consent:
   classes:
     C0: z0-private. Writes under $Z0_HOME, release roots, gitignored paths in a clean adopted checkout, and repo venvs. Always applied.
     C1: User-scoped and reversible, in bundles. One enumerated go/no-go confirmation on a TTY, or --yes / --accept BUNDLES.
-    C2: Never automatic. Listed as an ask in report.md with what to do by hand; `./z0 onboard accept <id>` resolves it once work package Z2 ships it.
+    C2: Never automatic. Listed as an ask in report.md with what to do by hand; no command resolves a C2 ask yet (`accept` takes C1 bundles only), so do it by hand.
   bundles:
     toolchains: User-local pinned downloads (uv, bun, node, rustup) into $Z0_HOME/toolchains, sha256-checked.
     harness: Claude/Codex plugin installs, OMP extension links, the DSH patch and dash ACP adapters, each with a backup.

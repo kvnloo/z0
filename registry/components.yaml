@@ -1,5 +1,7 @@
 # Zer0 component registry — canonical cross-system facts.
 # Implementation docs live in each repo; this file is the map.
+# `kind: ask` steps are tagged C0 (the step only prints text); the plan turns each into a
+# manual ask, so report.md lists them as [C2].
 
 components:
   oh-my-pi:
@@ -734,9 +736,9 @@ components:
            when: [{fact: harnesses.claude_code.state, op: eq, value: installed}],
            argv: [echo, "CLAUDE.md pointer to AGENTS.md (the repo discourages duplicate instruction files)"]}
         - {id: z0evals.ask.kit_skills, kind: ask, consent: {class: C0},
-           argv: [echo, "link .verified-oss-loop/skills into your harness skill dir"]}
+           argv: [echo, "link the kit skills into your harness, e.g. Claude Code: ln -s ~/.z0/repos/z0evals/.verified-oss-loop/skills/* ~/.claude/skills/"]}
         - {id: z0evals.ask.visual_probes, kind: ask, consent: {class: C0},
-           argv: [echo, "visual-parity probes (web/docs/probes) need a Chromium path and websockets"]}
+           argv: [echo, "visual-parity probes: ~/.z0/repos/z0evals/.venv/bin/pip install websockets, and set CHROME in web/docs/probes/cdp.py (default /usr/sbin/chromium) to your Chromium binary"]}
       acceptance:
         tiers:
           - {name: tier0, checks: [z0evals.t0.rollout, z0evals.t0.pages_map, z0evals.t0.arm_identity, z0evals.t0.expire_claims]}

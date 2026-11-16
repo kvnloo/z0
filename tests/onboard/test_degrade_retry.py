@@ -278,5 +278,42 @@ class AgentInstructions(unittest.TestCase):
         self.assertRegex(start, r"exit 5[^.]*(continue|go on)")
 
 
+class RefusedFirstTaskIsNamed(unittest.TestCase):
+    """An Intel Mac refuses z0intelligence: no exit-code change, but the report says so."""
+
+    def test_refusal_is_reported_and_dropped_from_the_intact_path(self):
+        from z0.onboard import report
+        receipt = {"steps": [{"id": "z0intelligence.source", "status": "refused"},
+                             {"id": "z0evals.source", "status": "done"}]}
+        self.assertEqual(report.refused_first_task(receipt), ["z0intelligence"])
+        self.assertIn("no first task", report.first_task_note(receipt))
+        receipt["steps"][0]["status"] = "done"
+        self.assertEqual(report.first_task_note(receipt), "")
+
+    def _degraded_receipt(self, z0int_status):
+        return {"run_id": "r1", "exit_code": 5, "degraded": ["dash"], "asks": [],
+                "installed": [], "acceptance": {}, "harnesses": {}, "llm_decisions": [],
+                "secrets_scan": {"canary_found": False, "scanned": []},
+                "steps": [{"id": "z0intelligence.source", "status": z0int_status},
+                          {"id": "z0evals.source", "status": "done"},
+                          {"id": "dash.build", "status": "failed", "reason": "boom"}]}
+
+    def test_refused_and_degraded_never_says_go_on(self):
+        from pathlib import Path
+        from z0.onboard import cli, report
+        plan = {"plan_hash": "0" * 64, "mode": "auto", "profile": None, "targets": []}
+        receipt = self._degraded_receipt("refused")
+        for text in (report.render(plan, receipt, [], []), cli.receipt_summary(Path("/r"), receipt)):
+            self.assertIn("no first task", text)
+            self.assertIn("dash", text)
+            self.assertNotIn("intact", text)
+            self.assertNotIn("go on to a first task", text)
+            self.assertNotIn("continue", text)
+        receipt = self._degraded_receipt("done")
+        for text in (report.render(plan, receipt, [], []), cli.receipt_summary(Path("/r"), receipt)):
+            self.assertIn("intact", text)
+            self.assertNotIn("no first task", text)
+
+
 if __name__ == "__main__":
     unittest.main()
