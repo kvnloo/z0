@@ -4,6 +4,8 @@ name: onboard-e2e
 # - containers: scripts/onboard-e2e builds a throwaway image (git, curl, CA
 #   certificates; no python) and runs scenarios 5a, 1, 3, 4, 5b as a non-root user,
 #   then scenario 6 in a second container with --network none on the same HOME.
+# - newcomer: the AGENTS.md first hour (onboard, bootstrap, first-task pick, local
+#   claim + worktree), timed per leg in the job summary.
 # - inside: the same scenarios inside a job container (offline simulated).
 # Nothing runs against the runner's own home; network is used to clone z0evals and
 # download the pinned uv, CPython and node.
@@ -17,6 +19,7 @@ on:
       - "lib/z0/onboard/**"
       - "registry/**"
       - "scripts/onboard-e2e"
+      - "AGENTS.md"
       - ".github/workflows/onboard-e2e.yml"
 
 permissions:
@@ -41,6 +44,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: scripts/onboard-e2e --engine docker --image ubuntu:24.04 --full
+
+  newcomer:
+    # AGENTS.md "Start here" steps 1 and 3 as a stranger's agent runs them, timed (scenario 8)
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - run: scripts/onboard-e2e --engine docker --image ubuntu:24.04 --newcomer
 
   inside:
     runs-on: ubuntu-latest
