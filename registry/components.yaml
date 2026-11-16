@@ -203,7 +203,7 @@ components:
     install:
       clone: https://github.com/kvnloo/z0intelligence.git
       branch: master
-      ref: 9c1631683c63f6eb48bea70962fd54f0ece312fb
+      ref: 640e7fcb2bce75a01145270b0780252a48c1243a
       command: pip install -e .
     verify:
       command: python3 -m z0int --help
@@ -242,7 +242,7 @@ components:
            argv: [pip, install, "torch=={torch_version}", "{torch_index_args}"],
            probe: {exists: "~/.local/lib/z0int-runtime/{pin}/.z0/torch-{torch_version}"}}
         - {id: z0intelligence.install, kind: pip_install, consent: {class: C0}, network: true, where: venv,
-           needs: [z0intelligence.torch], argv: [pip, install, "~/.local/lib/z0int-shadow/{pin}"],
+           needs: [z0intelligence.torch], argv: [pip, install, "~/.local/lib/z0int-shadow/{pin}[ml]"],
            probe: {exists: "~/.local/lib/z0int-runtime/{pin}/bin/z0int"},
            when: [{fact: network.github, op: eq, value: true},
                   {fact: derived.manylinux_2_38, op: eq, value: true}]}
