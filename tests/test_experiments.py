@@ -89,6 +89,28 @@ def test_open_arm_family_means_build_your_arm_not_run_a_placeholder():
     assert "commit" in act["why"] and "compactor-" in act["why"]
 
 
+def test_launcher_falls_back_to_the_z0_venv_when_python3_lacks_yaml():
+    import os
+    import subprocess
+    import tempfile
+    launcher = str(Path(__file__).resolve().parents[1] / "z0")
+    with tempfile.TemporaryDirectory() as t:
+        t = Path(t)
+        (t / "block").mkdir()
+        (t / "block" / "yaml.py").write_text("raise ImportError('no yaml here')\n")
+        for path, pre in ((t / "bin" / "python3", f"PYTHONPATH={t / 'block'}:$PYTHONPATH "),
+                          (t / ".z0" / "venv" / "bin" / "python", "")):
+            path.parent.mkdir(parents=True)
+            path.write_text(f'#!/bin/sh\n{pre}exec "{sys.executable}" "$@"\n')
+            path.chmod(0o755)
+        env = {"HOME": str(t), "PATH": f"{t / 'bin'}:/usr/bin:/bin"}
+        out = subprocess.run([launcher, "exp", "list"], env=env, capture_output=True, text=True, timeout=60)
+        assert out.returncode == 0 and "hz-compaction-carryover" in out.stdout, out.stderr
+        os.unlink(t / ".z0" / "venv" / "bin" / "python")
+        out = subprocess.run([launcher, "exp", "list"], env=env, capture_output=True, text=True, timeout=60)
+        assert out.returncode == 1 and "PyYAML required" in out.stderr
+
+
 def test_validate_rejects_keep_without_controls_and_owner_tier():
     exp = _exp()
     assert X.validate_result(_row("llm-program"), exp) == []

@@ -353,12 +353,11 @@ if [[ "$PHASE" == newcomer ]]; then
   say "scenario 8: AGENTS.md 'Start an experiment' to a PR-ready arm (nothing posted or pushed)"
   X=hz-compaction-carryover E=/tmp/e2e-8-exp.json XL=/tmp/e2e-8-exp.log kind=""
   absorb() { # a posted comment is what `exp start` reads back: put its marker in the local ledger
-    python3 - "$1" "$HOMEDIR/.z0/experiments/$X.ledger.json" "$Z0/lib" << 'PY'
-import json, os, sys
-sys.path.insert(0, sys.argv[3])
-from z0 import experiments as X
+    python3 - "$1" "$HOMEDIR/.z0/experiments/$X.ledger.json" << 'PY' # stdlib only: no PyYAML here
+import json, os, re, sys
+marker = re.compile(r"<!--\s*z0-exp-result\s+(\{.*?\})\s*-->", re.S)  # = experiments.MARKER_RE
 rows = json.load(open(sys.argv[2])) if os.path.exists(sys.argv[2]) else []
-new = X.parse_markers([open(sys.argv[1]).read()])
+new = [json.loads(m) for m in marker.findall(open(sys.argv[1]).read())]
 os.makedirs(os.path.dirname(sys.argv[2]), exist_ok=True)
 json.dump(rows + new, open(sys.argv[2], "w"))
 print(len(new))
@@ -387,7 +386,7 @@ s = s.replace("\nARMS = {", '\ndef compactor_tail(turns, budget):\n    return " 
 s = s.replace("\nif __name__ ==", '\nARMS["compactor-tail"] = compactor_tail\n\n\nif __name__ ==', 1)
 open(p, "w").write(s)
 PY
-    as_user "$W && cat > tests/test_exp_compactor_tail.py" << 'PY'
+    as_user "$W && cat > tests/test_exp_compactor_tail.py" << 'PY' || bad "8 exp test written"
 import importlib.util
 from pathlib import Path
 
@@ -406,7 +405,7 @@ PY
     R="\$HOME/.z0/experiments/$X/result.json"
     as_user "$W && python3 experiments/$X/run.py --arm compactor-tail --tier public --out $R && cd '$Z0' \
       && $(na "$E" "d['next_action']['then']")" > /tmp/e2e-8-post.md 2>> "$XL" || true
-    head_sha="$(as_user "$W && git rev-parse HEAD")"
+    head_sha="$(as_user "$W && git rev-parse HEAD")" || head_sha=none
     [[ "$(na "$HOMEDIR/.z0/experiments/$X/result.json" "d['repo_sha']")" == "$head_sha" ]] \
       && grep -q -- '-> \*\*DISCARD\*\*' /tmp/e2e-8-post.md && ! grep -q INVALID /tmp/e2e-8-post.md \
       && ok "8 exp result valid at the arm's commit" || { bad "8 exp result"; head -c 2000 /tmp/e2e-8-post.md; }

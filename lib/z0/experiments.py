@@ -216,12 +216,12 @@ def next_action(exp: dict[str, Any], ledger: list[dict[str, Any]], tier: str, hw
                 "Propose a new arm via PR to registry/experiments.yaml, or run another tier."}
     pick = controls[0] if controls else arms[0]
     if pick.get("status") == "open-family":  # the arm id is a template, not something to run
-        mine = pick["id"].split("<")[0] + "yourname"
         return {"kind": "build", "arm": pick["id"], "why": (
             f"Every fixed arm is measured. The next cell is your own `{pick['id']}` arm: write it "
             f"as the issue's Deliverable says, with a test, in the worktree below, and commit it. "
-            f"Then run the runner there with `--arm {mine}` (your id) and `--out {result}`, "
-            "so the result's repo_sha is your commit, and post it."),
+            f"Then run the runner there with `--arm` set to your arm id (`{pick['id'].split('<')[0]}` "
+            f"plus your own value for the `<...>` part) and `--out {result}`, so the result's "
+            "repo_sha is your commit, and post it."),
             "command": worktree, "then": post, "untried": [a["id"] for a in arms]}
     cmd = runner.get("command") or f"python3 {runner.get('path')} --arm {pick['id']} --tier {tier}"
     return {"kind": "run", "arm": pick["id"], "why": (
