@@ -56,9 +56,7 @@ CI runs the same suite on every PR (Python 3.10 and 3.12). The required check is
 - Open the PR against `main`. The template asks what changed and how you tested it.
 - Credit: your authorship is kept in the git history; name upstream projects you
   reused in the PR body.
-- Terms: contributions will be accepted under a Contributor License Agreement
-  (owner decision). The CLA check is being set up in
-  [#49](https://github.com/kvnloo/z0/pull/49).
+- Terms: contributions are accepted under the [CLA](CLA.md); see "Contributor License Agreement" below.
 - Be kind: [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Talk
@@ -86,6 +84,13 @@ issues for bugs, onboarding feedback and proposals.
 3. Run `./z0 docs generate`.
 4. Run `./scripts/docs-check` (must be clean git diff).
 5. Open PR.
+
+## Contributor License Agreement
+
+Outside contributions are accepted under the [CLA](CLA.md). On your first pull
+request the `cla` check comments with a link; reply on the PR with exactly
+`I have read the CLA Document and I hereby sign the CLA` to sign. One signature
+covers all your later PRs here. Comment `recheck` if the check does not update.
 
 ## Per-repo manifests (future)
 
