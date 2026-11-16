@@ -35,8 +35,12 @@
 #       step 1 onboard (exit 0/3/5), step 3 bootstrap + `z0int --json contribute` until
 #       ask_human with a pick from .z0/priorities.yaml, then the user's yes as local-only
 #       commands: `claim` (local lease, nothing posted) and `start` (task worktree on a
-#       contrib/ branch). Prints seconds per leg; fails above 3600 s in total. Not
-#       measured: the fix itself, evidence, the public claim and the push.
+#       contrib/ branch). Then AGENTS.md "Start an experiment" on hz-compaction-carryover:
+#       follow `exp start` through the fixed arms (each printed comment's marker goes into
+#       the local ledger, as a post would), then write, test and commit a plain arm, run it,
+#       validate the result at that commit, and pass the PR body through the receipt check.
+#       Prints seconds per leg; fails above 3600 s in total. Not measured: the task fix and
+#       its evidence, the public claim, the posts and the push.
 #
 # Exit 0 only when every scenario passed. No host literals; nothing outside the
 # container (or, with --inside, outside the test user's HOME) is written.
@@ -65,7 +69,7 @@ while (($#)); do
     --keep) KEEP=1; shift ;;
     --full) FULL=1; shift ;;
     --newcomer) NEWCOMER=1; shift ;;
-    -h | --help) sed -n '2,41p' "$SELF"; exit 0 ;;
+    -h | --help) sed -n '2,46p' "$SELF"; exit 0 ;;
     *) echo "onboard-e2e: unknown argument $1" >&2; exit 2 ;;
   esac
 done
@@ -345,6 +349,76 @@ if [[ "$PHASE" == newcomer ]]; then
       && ok "8 worktree on $branch" || { bad "8 start $PICK"; head -c 3000 "$C"; tail -20 /tmp/e2e-8-contribute.err; }
     leg claim_start
   fi
+
+  say "scenario 8: AGENTS.md 'Start an experiment' to a PR-ready arm (nothing posted or pushed)"
+  X=hz-compaction-carryover E=/tmp/e2e-8-exp.json XL=/tmp/e2e-8-exp.log kind=""
+  absorb() { # a posted comment is what `exp start` reads back: put its marker in the local ledger
+    python3 - "$1" "$HOMEDIR/.z0/experiments/$X.ledger.json" << 'PY' # stdlib only: no PyYAML here
+import json, os, re, sys
+marker = re.compile(r"<!--\s*z0-exp-result\s+(\{.*?\})\s*-->", re.S)  # = experiments.MARKER_RE
+rows = json.load(open(sys.argv[2])) if os.path.exists(sys.argv[2]) else []
+new = [json.loads(m) for m in marker.findall(open(sys.argv[1]).read())]
+os.makedirs(os.path.dirname(sys.argv[2]), exist_ok=True)
+json.dump(rows + new, open(sys.argv[2], "w"))
+print(len(new))
+PY
+    chown -R "$E2E_USER:" "$HOMEDIR/.z0/experiments"
+  }
+  for _ in 1 2 3 4; do # follow next_action through the fixed arms, controls first
+    as_user "./z0 exp start $X --offline" > "$E" 2>> "$XL" || true
+    kind="$(na "$E" "d['next_action']['kind']")"
+    [[ "$kind" == run ]] || break
+    as_user "$(na "$E" "d['next_action']['command']") && cd '$Z0' && $(na "$E" "d['next_action']['then']")" \
+      > /tmp/e2e-8-post.md 2>> "$XL" && [[ "$(absorb /tmp/e2e-8-post.md)" == 1 ]] \
+      || { bad "8 exp arm $(na "$E" "d['next_action']['arm']")"; tail -20 "$XL"; break; }
+  done
+  leg exp_controls
+  if [[ "$kind" == build && "$(na "$E" "d['next_action']['arm']")" == "compactor-<name>" ]]; then
+    ok "8 exp fixed arms measured; next is the user's own arm"
+    W="cd \$HOME/.z0/repos/z0intelligence-$X" G="git -c user.name=e2e -c user.email=e2e@example.invalid"
+    as_user "$(na "$E" "d['next_action']['command']")" >> "$XL" 2>&1 || bad "8 exp worktree"
+    # A deliberately plain arm (tail only), inserted by anchor; it should post DISCARD.
+    as_user "$W && python3 - experiments/$X/run.py" << 'PY' >> "$XL" 2>&1 || bad "8 exp arm inserted"
+import sys
+p = sys.argv[1]; s = open(p).read()
+assert s.count("\nARMS = {") == 1 and s.count("\nif __name__ ==") == 1
+s = s.replace("\nARMS = {", '\ndef compactor_tail(turns, budget):\n    return " ".join(" ".join(turns).split()[-budget:])\n\n\nARMS = {', 1)
+s = s.replace("\nif __name__ ==", '\nARMS["compactor-tail"] = compactor_tail\n\n\nif __name__ ==', 1)
+open(p, "w").write(s)
+PY
+    as_user "$W && cat > tests/test_exp_compactor_tail.py" << 'PY' || bad "8 exp test written"
+import importlib.util
+from pathlib import Path
+
+spec = importlib.util.spec_from_file_location("run", Path(__file__).parents[1] / "experiments/hz-compaction-carryover/run.py")
+run = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(run)
+
+
+def test_tail_arm_is_registered_and_fits_the_budget():
+    assert run.ARMS["compactor-tail"] is run.compactor_tail
+    assert run.compactor_tail(["a b c", "d e"], 3) == "c d e"
+PY
+    as_user "$W && ../z0intelligence/.venv/bin/python -m pytest -q -p no:cacheprovider tests/test_exp_compactor_tail.py \
+      tests/test_exp_compaction_carryover.py && $G add -A && $G commit -qm 'experiments: add compactor-tail arm'" \
+      >> "$XL" 2>&1 && ok "8 exp arm tested and committed" || { bad "8 exp arm test/commit"; tail -20 "$XL"; }
+    R="\$HOME/.z0/experiments/$X/result.json"
+    as_user "$W && python3 experiments/$X/run.py --arm compactor-tail --tier public --out $R && cd '$Z0' \
+      && $(na "$E" "d['next_action']['then']")" > /tmp/e2e-8-post.md 2>> "$XL" || true
+    head_sha="$(as_user "$W && git rev-parse HEAD")" || head_sha=none
+    [[ "$(na "$HOMEDIR/.z0/experiments/$X/result.json" "d['repo_sha']")" == "$head_sha" ]] \
+      && grep -q -- '-> \*\*DISCARD\*\*' /tmp/e2e-8-post.md && ! grep -q INVALID /tmp/e2e-8-post.md \
+      && ok "8 exp result valid at the arm's commit" || { bad "8 exp result"; head -c 2000 /tmp/e2e-8-post.md; }
+    printf '%s\n' 'Refs #354' '```yaml' 'issue: 354' "base_revision: $(as_user "$W && git rev-parse HEAD~1")" \
+      "head_revision: $head_sha" 'tests:' '  red: "test_exp_compactor_tail: KeyError before the arm"' \
+      '  green: "test_exp_compactor_tail + test_exp_compaction_carryover pass"' '```' > /tmp/e2e-8-body.md
+    chmod 644 /tmp/e2e-8-body.md
+    as_user "$W && python3 .github/scripts/check-receipt.py --file /tmp/e2e-8-body.md --head $head_sha" >> "$XL" 2>&1 \
+      && ok "8 exp PR body passes the receipt check" || { bad "8 exp receipt"; tail -5 "$XL"; }
+  else
+    bad "8 exp start stopped at kind=$kind"; head -c 2000 "$E"; tail -20 "$XL"
+  fi
+  leg exp_arm
   TOTAL=$(($(date +%s) - START))
   if ((FAILS)); then
     bad "8 first hour: route did not complete (${LEGS% })"
