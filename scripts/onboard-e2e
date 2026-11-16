@@ -30,6 +30,13 @@
 #       onboard/state ok and onboard/profile.json written (0600): exit 0
 #   7b  idempotent re-run: no effectful todo step
 #   7c  rollback restores the tree; onboard/state says rolled_back
+#   --newcomer, a fresh HOME volume on an image that also has python3 + venv:
+#   8   the first hour of AGENTS.md "Start here" as a stranger's agent runs it (no --yes):
+#       step 1 onboard (exit 0/3/5), step 3 bootstrap + `z0int --json contribute` until
+#       ask_human with a pick from .z0/priorities.yaml, then the user's yes as local-only
+#       commands: `claim` (local lease, nothing posted) and `start` (task worktree on a
+#       contrib/ branch). Prints seconds per leg; fails above 3600 s in total. Not
+#       measured: the fix itself, evidence, the public claim and the push.
 #
 # Exit 0 only when every scenario passed. No host literals; nothing outside the
 # container (or, with --inside, outside the test user's HOME) is written.
@@ -43,6 +50,7 @@ INSIDE=0
 OFFLINE_SIM=0
 KEEP=0
 FULL=0
+NEWCOMER=0
 PHASE="online"
 E2E_USER="${E2E_USER:-stranger}"
 E2E_WITHOUT="${E2E_WITHOUT:-oh-my-pi,tokenomics,dash,z0intelligence}"
@@ -56,7 +64,8 @@ while (($#)); do
     --phase) PHASE="$2"; shift 2 ;;
     --keep) KEEP=1; shift ;;
     --full) FULL=1; shift ;;
-    -h | --help) sed -n '2,34p' "$SELF"; exit 0 ;;
+    --newcomer) NEWCOMER=1; shift ;;
+    -h | --help) sed -n '2,41p' "$SELF"; exit 0 ;;
     *) echo "onboard-e2e: unknown argument $1" >&2; exit 2 ;;
   esac
 done
@@ -86,6 +95,7 @@ if ((!INSIDE)); then
      elif command -v dnf >/dev/null; then dnf -y -q install git curl ca-certificates tar findutils; \
      elif command -v pacman >/dev/null; then pacman -Sy --noconfirm --needed git curl ca-certificates tar; \
      elif command -v apk >/dev/null; then apk add --no-cache bash git curl ca-certificates tar; fi' \
+    "$( ((NEWCOMER)) && echo 'RUN apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends python3 python3-venv >/dev/null && rm -rf /var/lib/apt/lists/*')" \
     "RUN useradd -m -s /bin/bash $E2E_USER 2>/dev/null || adduser -D -s /bin/bash $E2E_USER" \
     | "$ENGINE" build -q -t "$TAG" - > /dev/null
   "$ENGINE" volume create "$VOL" > /dev/null
@@ -100,6 +110,14 @@ if ((!INSIDE)); then
   if ((FULL)); then
     say "phase full (scenarios 7, 7b, 7c) on a fresh HOME"
     run_phase full || rc=1
+    exit "$rc"
+  fi
+  if ((NEWCOMER)); then
+    say "phase newcomer (scenario 8) on a fresh HOME"
+    LOG8="$(mktemp)"
+    run_phase newcomer | tee "$LOG8" || rc=1
+    [[ -z "${GITHUB_STEP_SUMMARY:-}" ]] || grep -h " 8 first hour: " "$LOG8" >> "$GITHUB_STEP_SUMMARY" || true
+    rm -f "$LOG8"
     exit "$rc"
   fi
   say "phase online (scenarios 5a, 1, 3, 4, 5b)"
@@ -275,6 +293,58 @@ if [[ "$PHASE" == full ]]; then
   fi
   [[ "$(pyq "$HOMEDIR/.z0/onboard/state" "d['status']")" == rolled_back ]] && ok "7c onboard/state rolled_back" \
     || bad "7c onboard/state not marked rolled_back"
+fi
+
+if [[ "$PHASE" == newcomer ]]; then
+  say "copying the checkout to $Z0 (owned by $E2E_USER)"
+  rm -rf "$Z0"
+  mkdir -p "$Z0"
+  tar -C "$SRC" --exclude=.git -cf - . | tar -C "$Z0" -xf -
+  chown -R "$E2E_USER:" "$Z0"
+  ZI="cd \$HOME/.z0/repos/z0intelligence && export Z0_HOME=\$HOME/.z0"
+  na() { python3 -c 'import json, sys; d = json.load(open(sys.argv[1])); print(eval(sys.argv[2]))' "$1" "$2" 2> /dev/null || echo error; }
+  START=$(date +%s) T=$START LEGS=""
+  leg() { LEGS+="$1=$(($(date +%s) - T))s "; T=$(date +%s); }
+
+  say "scenario 8: AGENTS.md step 1 (./z0 onboard --auto --llm none < /dev/null)"
+  set +e
+  as_user "./z0 onboard --auto --llm none < /dev/null" > /tmp/e2e-8.log 2>&1
+  rc=$?
+  set -e
+  leg onboard
+  [[ $rc == 0 || $rc == 3 || $rc == 5 ]] && ok "8 onboard exit $rc" || { bad "8 onboard exit $rc (want 0, 3 or 5)"; tail -40 /tmp/e2e-8.log; }
+
+  say "scenario 8: AGENTS.md step 3 (bootstrap, then contribute until ask_human)"
+  as_user "$ZI && { test -x .venv/bin/z0int || ./scripts/bootstrap.sh; }" > /tmp/e2e-8-boot.log 2>&1 && ok "8 bootstrap" \
+    || { bad "8 bootstrap"; tail -40 /tmp/e2e-8-boot.log; }
+  leg bootstrap
+  C=/tmp/e2e-8-contribute.json cmd=".venv/bin/z0int --json contribute" kind=""
+  for _ in 1 2 3 4 5 6; do # follow next_action until ask_human, as the agent does
+    as_user "$ZI && $cmd" > "$C" 2> /tmp/e2e-8-contribute.err || true
+    kind="$(na "$C" "d['next_action']['kind']")"
+    [[ "$kind" == run ]] || break
+    cmd=".venv/bin/$(na "$C" "d['next_action']['command']") --json"
+  done
+  leg contribute
+  PICK="$(na "$C" "d['data']['suggestion']['pick']['task']")"
+  if [[ "$kind" == ask_human && "$(na "$C" "d['state']")" == S3_suggested ]]; then
+    ok "8 contribute asks: $(na "$C" "d['next_action']['why']")"
+  else
+    bad "8 contribute stopped at kind=$kind"; head -c 3000 "$C"; tail -20 /tmp/e2e-8-contribute.err
+  fi
+
+  say "scenario 8: the user's yes, local only (claim lease, start worktree)"
+  as_user "$ZI && .venv/bin/z0int --json contribute claim '$PICK'" > "$C" 2>&1 || true
+  [[ "$(na "$C" "d['next_action']['kind']")" =~ ^(run|ask_human)$ && "$(na "$C" "d['task']")" == "$PICK" ]] \
+    && ok "8 local lease on $PICK" || { bad "8 claim $PICK"; head -c 3000 "$C"; }
+  as_user "$ZI && .venv/bin/z0int --json contribute start '$PICK'" > "$C" 2>&1 || true
+  branch="$(na "$C" "d['data']['branch']")"
+  [[ "$(na "$C" "d['next_action']['command']")" == "z0int contribute evidence $PICK" && "$branch" == contrib/* ]] \
+    && as_user "git -C \"$(na "$C" "d['data']['worktree']")\" rev-parse --abbrev-ref HEAD" | grep -qx "$branch" \
+    && ok "8 worktree on $branch" || { bad "8 start $PICK"; head -c 3000 "$C"; }
+  leg claim_start
+  TOTAL=$(($(date +%s) - START))
+  ((TOTAL <= 3600)) && ok "8 first hour: ${TOTAL}s (${LEGS% })" || bad "8 first hour: ${TOTAL}s > 3600s (${LEGS% })"
 fi
 
 if [[ "$PHASE" == offline ]]; then

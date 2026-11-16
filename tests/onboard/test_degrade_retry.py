@@ -277,6 +277,16 @@ class AgentInstructions(unittest.TestCase):
         self.assertIn("exit 5", start)
         self.assertRegex(start, r"exit 5[^.]*(continue|go on)")
 
+    def test_newcomer_e2e_runs_the_start_here_commands(self):
+        # scripts/onboard-e2e --newcomer (scenario 8) times this route; it must stay the route.
+        text = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+        start = text.split("## Start here", 1)[1].split("\n## ", 1)[0]
+        e2e = (ROOT / "scripts" / "onboard-e2e").read_text(encoding="utf-8")
+        for cmd in ("./z0 onboard --auto --llm none < /dev/null", "./scripts/bootstrap.sh",
+                    ".venv/bin/z0int --json contribute", "export Z0_HOME="):
+            self.assertIn(cmd, start)
+            self.assertIn(cmd, e2e)
+
 
 if __name__ == "__main__":
     unittest.main()
