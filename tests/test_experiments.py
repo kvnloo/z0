@@ -123,6 +123,8 @@ def test_validate_rejects_keep_without_controls_and_owner_tier():
     assert errs
     errs = X.validate_result(_row("not-an-arm"), exp)
     assert any("not in the map" in e for e in errs)
+    errs = X.validate_result(_row("llm-program", repo_sha="a" * 40 + "+dirty"), exp)  # kvnloo/z0intelligence#372
+    assert any("uncommitted" in e for e in errs)
 
 
 def test_comment_marker_round_trips():

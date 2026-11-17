@@ -103,6 +103,8 @@ def validate_result(r: dict[str, Any], exp: dict[str, Any]) -> list[str]:
         errs.append(f"data_tier {r.get('data_tier')!r} not allowed for this experiment")
     if r.get("data_tier") == "owner":
         errs.append("owner-tier results are posted only by the owner's loop")
+    if str(r.get("repo_sha", "")).endswith("+dirty"):
+        errs.append("repo_sha ends in +dirty: the run had uncommitted changes; commit, re-run, then post")
     m = r.get("metric") or {}
     if exp.get("metric") and m.get("name") != exp["metric"]["name"]:
         errs.append(f"metric.name must be {exp['metric']['name']}")
