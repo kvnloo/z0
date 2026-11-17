@@ -1,3 +1,12 @@
 {
-   "signedContributors": []
+  "signedContributors": [
+    {
+      "name": "Vaskrokodile",
+      "id": 260058136,
+      "comment_id": 6947175973,
+      "created_at": "2026-11-17T11:48:48Z",
+      "repoId": 1113441317,
+      "pullRequestNo": 58
+    }
+  ]
 }
