@@ -76,6 +76,7 @@ repositories:
   sol-pi:
     name: SoL-Pi
     repo: kvnloo/SoL-Pi
+    upstream: NVlabs/SoL-Pi
     role: mechanism_bundle
     authority: implementation
     status: experimental
@@ -209,6 +210,7 @@ repositories:
   hermes-agent:
     name: Hermes Agent
     repo: kvnloo/hermes-agent
+    upstream: NousResearch/hermes-agent
     role: execution_runtime
     authority: implementation
     status: active
@@ -220,6 +222,7 @@ repositories:
   deepseek-harness:
     name: DeepSeek Harness
     repo: kvnloo/deepseek-harness
+    upstream: deepseek-ai/deepseek-harness
     role: execution_runtime
     authority: implementation
     status: developer_preview
@@ -232,6 +235,7 @@ repositories:
   hermes-lcm:
     name: Hermes LCM
     repo: kvnloo/hermes-lcm
+    upstream: stephenschoettler/hermes-lcm
     role: context_extension
     authority: implementation
     status: experimental
@@ -244,6 +248,7 @@ repositories:
   hermes-jev-skills:
     name: Hermes Jev Skills
     repo: kvnloo/hermes-jev-skills
+    upstream: kerpopule/hermes-jev-skills
     role: decision_extension
     authority: implementation
     status: experimental
@@ -293,6 +298,7 @@ repositories:
   agent-orchestrator:
     name: Agent Orchestrator
     repo: kvnloo/agent-orchestrator
+    upstream: Untrivial-ai/agent-orchestrator
     role: orchestration_runtime
     authority: implementation
     status: experimental
@@ -304,6 +310,7 @@ repositories:
   optmem:
     name: OptMem
     repo: kvnloo/OptMem
+    upstream: VictorTaelin/OptMem
     role: memory_research
     authority: external_research
     status: experimental
