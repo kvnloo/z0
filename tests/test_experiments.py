@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
+import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lib"))
@@ -131,6 +132,59 @@ def test_comment_marker_round_trips():
     r = _row("recency", fingerprint="f" * 16)
     rows = X.parse_markers(["noise", X.render_comment(r)])
     assert rows == [json.loads(json.dumps(r, sort_keys=True))]
+
+
+def test_verify_marker_marks_only_the_matching_fingerprint():
+    exp = _exp()
+    v = {"schema": X.VERIFY_SCHEMA, "exp_id": "zi-distill-program",
+         "fingerprint": "f" * 16, "by": "kvnloo", "note": "reproduced on hwB"}
+    body = X.verify_comment(exp, v)
+    rows = X.parse_verify_markers(["noise", body, X.render_comment(_row("x", fingerprint="0" * 16))])
+    assert rows == [json.loads(json.dumps(v, sort_keys=True))]
+    marked = X.apply_verify([_row("recency", fingerprint="f" * 16),
+                             _row("bigram", fingerprint="e" * 16)], rows)
+    assert marked[0]["verified"] is True and marked[0]["verified_by"] == "kvnloo"
+    assert marked[0]["verified_note"] == "reproduced on hwB"
+    assert "verified" not in marked[1]
+
+
+def test_ledger_files_carry_issue_and_rank_best_first():
+    exp_id = "zi-distill-program"
+    rows = [
+        _row("majority", fingerprint="1" * 16,
+             metric={"name": "session_macro_top1", "value": 0.5}),
+        _row("recency", fingerprint="2" * 16,
+             metric={"name": "session_macro_top1", "value": 0.7, "ci95": [0.6, 0.8]}),
+        _row("bigram", fingerprint="3" * 16, verdict="INVALID",
+             metric={"name": "session_macro_top1", "value": 0.99}),
+    ]
+    files = X.build_ledger_files(DATA, {exp_id: rows})
+    parsed = [json.loads(line) for line in
+              files["generated/experiments-ledger.jsonl"].splitlines()]
+    assert len(parsed) == 3
+    assert all(r["issue"] == "kvnloo/z0intelligence#309" for r in parsed)
+    md = files[f"generated/experiments/{exp_id}.md"]
+    # 'up' metric: best value first, INVALID last despite the highest value
+    assert md.index("`recency`") < md.index("`majority`") < md.index("`bigram`")
+    assert "0.7" in md and "0.6 to 0.8" in md
+    assert f"generated/experiments/{exp_id}.md" in files
+
+
+def test_fetch_ledger_reads_the_committed_ledger_without_gh():
+    row = _row("majority", fingerprint="a" * 16)
+    row["issue"] = "kvnloo/z0intelligence#309"
+    with tempfile.TemporaryDirectory() as t:
+        p = Path(t) / "ledger.jsonl"
+        p.write_text(json.dumps(row) + "\n")
+        rows = X.fetch_ledger(_exp(), refresh=False, ledger_path=p)
+    assert any(r.get("fingerprint") == "a" * 16 for r in rows)
+
+
+def test_dedupe_keeps_the_verified_enriched_row():
+    row = _row("majority", fingerprint="a" * 16)
+    enriched = dict(row, issue="kvnloo/z0intelligence#309", verified=True)
+    rows = X._dedupe_rows([enriched, row])
+    assert len(rows) == 1 and rows[0]["verified"] is True
 
 
 def load_tests(loader, tests, pattern):  # CI runs `unittest discover`, which skips bare functions

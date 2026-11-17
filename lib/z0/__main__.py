@@ -40,7 +40,7 @@ def main(argv: list[str] | None = None) -> int:
     p_graph.add_argument("--json", action="store_true")
 
     sub.add_parser("laws", help="Formal laws: check, prove, init (see `z0 laws --help`)")
-    sub.add_parser("exp", help="Experiment map: list, start, post results (see `z0 exp --help`)")
+    sub.add_parser("exp", help="Experiment map: list, start, post, ledger, verify (see `z0 exp --help`)")
     sub.add_parser("onboard", help="Detect, plan and onboard this host (see `z0 onboard --help`)")
 
     p_docs = sub.add_parser("docs", help="Documentation tools")

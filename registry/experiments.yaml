@@ -99,7 +99,7 @@ experiments:
       Markdown per experiment; (3) the owner's referee re-run can mark a row `verified`.
     done_when: Two different machines run the same arm; the second run is told the cell exists and is offered the next untried arm.
     prior: ["kvnloo/z0intelligence#246 (claim markers + receipts in the contributor layer)", "kvnloo/z0evals#177 (harvest experiments into the research log)"]
-    runner: {status: partial, command: "./z0 exp ledger --refresh"}
+    runner: {status: exists, command: "./z0 exp ledger --refresh"}
 
   - id: eng-referee
     issue: 43

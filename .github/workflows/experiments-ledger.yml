@@ -1,0 +1,48 @@
+name: experiments-ledger
+
+# eng-ledger (kvnloo/z0#42): harvest z0-exp-result / z0-exp-verify markers from every
+# mapped experiment issue into generated/experiments-ledger.jsonl and one leaderboard
+# per experiment (generated/experiments/<id>.md). Runs daily, on demand, and right
+# after a result or verify marker is posted.
+
+on:
+  schedule:
+    - cron: "41 5 * * *"
+  workflow_dispatch:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: experiments-ledger
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    if: ${{ github.event_name != 'issue_comment' || contains(github.event.comment.body || '', 'z0-exp-') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - name: Collect markers into the ledger
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./z0 exp ledger --refresh
+      - name: Commit generated ledger
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add generated/experiments-ledger.jsonl
+          if [ -d generated/experiments ]; then git add generated/experiments; fi
+          if git diff --cached --quiet; then
+            echo "ledger unchanged"
+            exit 0
+          fi
+          git commit -m "exp: refresh experiments ledger"
+          git push
