@@ -320,9 +320,26 @@ repositories:
     authority: external_substrate
     status: experimental
     supports_components: [z0intelligence, aodl]
-    summary: Parallel proof-oriented language explored as an enforceable compilation target for Zer0 orchestration contracts.
+    summary: Experimental proof substrate consumed by the native Hermes plugin and AODL CI proofs. A verdict covers the emitted BendTT book; source equivalence and runtime admission remain separate.
     evidence:
       - kvnloo/bend:README.md
+      - https://github.com/kvnloo/bend-native/blob/e85e65e5d2e11caba8412d6dbd19aad03fd785ad/README.md
+      - https://github.com/kvnloo/z0intelligence/blob/a0e95785fe810ae0d1cfbb128096b5deca5c2712/bend/aodl_gate/README.md
+
+  bend-native:
+    name: Bend Native
+    repo: kvnloo/bend-native
+    role: hermes_verifier_plugin
+    authority: downstream_integration
+    status: experimental
+    depends_on_repositories: [bend]
+    supports_components: [z0intelligence, aodl]
+    summary: Standalone native Hermes Bend verifier plus bundled z0 observers, State Packets, DecisionOpportunities and shadow evaluation. Connects the canonical local z0 service without duplicating authority, routing or receipts; shadow observation is opt-in. Produces scoped evidence without task-success or execution grants.
+    evidence:
+      - https://github.com/kvnloo/bend-native/blob/e85e65e5d2e11caba8412d6dbd19aad03fd785ad/README.md
+      - https://github.com/kvnloo/bend-native/blob/e85e65e5d2e11caba8412d6dbd19aad03fd785ad/plugin.yaml
+      - https://github.com/kvnloo/bend-native/blob/e85e65e5d2e11caba8412d6dbd19aad03fd785ad/stack/sources.json
+      - https://github.com/kvnloo/bend-native/blob/e85e65e5d2e11caba8412d6dbd19aad03fd785ad/stack/STACK.md
 
   agentweb:
     name: AgentWeb
