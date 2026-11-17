@@ -26,7 +26,7 @@ Master RFC: https://github.com/kvnloo/z0/issues/45 · z0intelligence + Hermes: h
 
 ## Result: `z0.exp.result.v1`
 
-Required: `schema, exp_id, epoch, arm, data_tier, data_manifest_sha256, hardware_class, repo_sha, n, metric{name,value[,ci95]}, verdict (KEEP|DISCARD|NULL|INVALID), command`. Optional: `controls{arm: value}` (required for KEEP), `arm_spec_sha256` (for open arm families like `teacher-<model>`), `artifacts`, `notes`, `model`, `harness`.
+Required: `schema, exp_id, epoch, arm, data_tier, data_manifest_sha256, hardware_class, repo_sha, n, metric{name,value[,ci95]}, verdict (KEEP|DISCARD|NULL|INVALID), command`. A `repo_sha` ending in `+dirty` (run with uncommitted changes) is refused. Optional: `controls{arm: value}` (required for KEEP), `arm_spec_sha256` (for open arm families like `teacher-<model>`), `artifacts`, `notes`, `model`, `harness`.
 
 ## Dedup
 
