@@ -7,8 +7,8 @@ Master RFC: https://github.com/kvnloo/z0/issues/45 · z0intelligence + Hermes: h
 | piece | where | status |
 |---|---|---|
 | Map (definitions, north stars, data tiers, referee defaults) | `registry/experiments.yaml` | shipped |
-| CLI: `list`, `show`, `render`, `start`, `fingerprint`, `post` | `lib/z0/experiments.py` (`./z0 exp ...`) | shipped |
-| Ledger: result markers in issue comments, cached in `~/.z0/experiments/<id>.ledger.json` | `./z0 exp start` reads it | shipped (read); aggregation Action is [eng-ledger](https://github.com/kvnloo/z0/issues/42) |
+| CLI: `list`, `show`, `render`, `start`, `fingerprint`, `post`, `ledger`, `verify` | `lib/z0/experiments.py` (`./z0 exp ...`) | shipped |
+| Ledger: result markers in issue comments -> `generated/experiments-ledger.jsonl` + `generated/experiments/<id>.md` | `./z0 exp ledger --refresh`; scheduled Action `experiments-ledger.yml` commits them | shipped |
 | Referee contract every runner imports | [eng-referee](https://github.com/kvnloo/z0/issues/43) | open |
 | Unattended keep/revert driver | [eng-hillclimb](https://github.com/kvnloo/z0/issues/44) | open |
 | Capped runner on any host | [.files fx-k3s-runner](https://github.com/kvnloo/.files/issues/142) | open |
@@ -28,9 +28,18 @@ Master RFC: https://github.com/kvnloo/z0/issues/45 · z0intelligence + Hermes: h
 
 Required: `schema, exp_id, epoch, arm, data_tier, data_manifest_sha256, hardware_class, repo_sha, n, metric{name,value[,ci95]}, verdict (KEEP|DISCARD|NULL|INVALID), command`. A `repo_sha` ending in `+dirty` (run with uncommitted changes) is refused. Optional: `controls{arm: value}` (required for KEEP), `arm_spec_sha256` (for open arm families like `teacher-<model>`), `artifacts`, `notes`, `model`, `harness`.
 
+## Verify: `z0.exp.verify.v1`
+
+A referee re-run that reproduces a measured cell marks it without posting a new
+measurement: `./z0 exp verify <id> --fingerprint <fp> [--by <login>] [--note <text>]`
+prints a `<!-- z0-exp-verify {...} -->` marker comment (`--yes` posts it after the
+user's explicit yes, like `exp post`). `./z0 exp ledger` merges verify markers into
+the matching ledger row as `verified` (+ `verified_by`, `verified_note`), shown in
+the leaderboard. `exp verify` refuses a fingerprint that no result row carries.
+
 ## Dedup
 
-Fingerprint = sha256 of `(exp, epoch, arm, arm_spec, tier, data manifest, hardware class)`. `start` skips an arm when:
+Fingerprint = sha256 of `(exp, epoch, arm, arm_spec, tier, data manifest, hardware class)`. `start` merges the committed `generated/experiments-ledger.jsonl` with fresh issue markers (or the `~/.z0` cache when gh is unavailable), so a measured cell is skipped even without GitHub auth. `start` skips an arm when:
 - public tier: you already have a result on this hardware class, or 3 hardware classes already do;
 - self tier: a result exists for the same data manifest hash.
 
