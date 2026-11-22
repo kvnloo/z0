@@ -36,6 +36,24 @@
 - **Purpose:** Bound agent execution with explicit capability rules, evidence requirements, staged promotion, adversarial verification, rollback, and non-self-authorizing evolution.
 - **Implemented by:** `kvnloo/hermes-keel`
 
+## `limitless-decision-window-gate` — Decision-window gate
+- **Kind:** interaction
+- **Stage:** experimental
+- **Purpose:** Let a proactive job declare a window class (peak, trough, wind_down, anytime) and return deliver, hold or drop with a one-line reason from the window a pluggable provider reports from events, never from clock times.
+- **Implemented by:** `limitless`
+
+## `limitless-evidence-envelope` — Evidence envelope
+- **Kind:** evidence
+- **Stage:** experimental
+- **Purpose:** Return every tool value as {value, modality, age_h, evidence_tier}, with modality measured, imported, proxy or self_report and a tier label (direct, indirect, stale, none); missing data is a null value with a reason, never a guess.
+- **Implemented by:** `limitless`
+
+## `limitless-send-gate` — Proactive send gate
+- **Kind:** interaction
+- **Stage:** experimental
+- **Purpose:** Pass every proactive push through one policy: drop repeats of the same message within 12 h, enforce a daily cap, hold non-critical sends while asleep, fold repeated pending-asks into one brief line, and strip internal card ids.
+- **Implemented by:** `limitless`
+
 ## `mesh-signed-intent-transport` — Signed Mesh intent transport
 - **Kind:** transport
 - **Stage:** experimental

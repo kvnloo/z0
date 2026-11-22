@@ -20,6 +20,14 @@
 - **Owner:** `kerdoios`
 - **Summary:** Model/provider routing decision with cost estimate.
 
+## `limitless.state_card.v0`
+- **Owner:** `limitless`
+- **Summary:** Hermes pre_llm_call hook adding a state card of at most 6 coarse-label lines (digits masked by default).
+
+## `limitless.tools.v0`
+- **Owner:** `limitless`
+- **Summary:** Hermes plugin tools limitless_status, limitless_state, limitless_window, limitless_habit, limitless_capture and limitless_scorecard, each returning an evidence envelope.
+
 ## `omp.session.aggregate`
 - **Owner:** `oh-my-pi`
 - **Summary:** Session-level token rollup for Tokenomics reconciliation.

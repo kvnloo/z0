@@ -44,3 +44,11 @@ interfaces:
   agenttrace.span.v0:
     owner: agenttrace
     summary: Historical agent span for observability export.
+
+  limitless.tools.v0:
+    owner: limitless
+    summary: Hermes plugin tools limitless_status, limitless_state, limitless_window, limitless_habit, limitless_capture and limitless_scorecard, each returning an evidence envelope.
+
+  limitless.state_card.v0:
+    owner: limitless
+    summary: Hermes pre_llm_call hook adding a state card of at most 6 coarse-label lines (digits masked by default).

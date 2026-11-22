@@ -539,6 +539,49 @@ components:
       gate: generic
       steps: []
 
+  limitless:
+    name: Limitless
+    repo: kvnloo/limitless
+    kind: plugin
+    status: experimental
+    execution: canary
+    owner: Personal Intelligence
+    summary: >
+      Hermes Agent plugin for the Limitless Protocol: read-mostly state tools,
+      a coarse pre_llm_call state card, and one gated send path for proactive messages.
+    required: false
+    profiles: []
+    depends_on: []
+    integrates_with: []
+    provides:
+      - limitless.tools.v0
+      - limitless.state_card.v0
+    consumes: []
+    install:
+      clone: https://github.com/kvnloo/limitless.git
+      branch: main
+      ref: 8e939ae6b724ed882dd075b9fe92c5a13052aeb5
+      command: echo 'Hermes directory plugin — place the repo at the Hermes plugins dir as limitless and enable it; see README'
+    verify:
+      command: python3 -I -m unittest discover -s tests
+    docs:
+      readme: README.md
+      architecture: docs/decision-window.md
+    boundaries:
+      owns: [limitless state tools, state card hook, send gate, decision windows, evidence envelope]
+      not_here: [wearable/phone data collection, message transport, harness runtime]
+    onboard:
+      gate: generic
+      requires: {tools: ["git", "python>=3.9"]}
+      hardware: {os: [linux, darwin], arch: [x86_64, arm64], min_ram_gib: 1, min_disk_gib: 1, gpu: none}
+      public_ready: [revs_on_origin]
+      steps:
+        - {id: limitless.source, kind: adopt_or_clone, consent: {class: C0}, network: true, where: mirror,
+           probe: {exists: "$Z0_HOME/repos/{name}"}}
+        - {id: limitless.verify, kind: check, consent: {class: C0}, where: build, needs: [limitless.source],
+           argv: [python3, -I, -m, unittest, discover, -s, tests], legacy_projection: true}
+      acceptance: {tiers: [{name: verify, checks: [limitless.verify]}]}
+
   dash:
     name: Dash
     repo: kvnloo/dash
