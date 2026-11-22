@@ -9,6 +9,7 @@
 | `flow` | Flow | desktop | experimental | shadow | `kvnloo/.files` | `5259013185d9` |
 | `frontier-kb` | frontier-kb | research | experimental | shadow | `kvnloo/frontier-kb` | `22b4c0f1088a` |
 | `kerdoios` | Kerdoios | compute | experimental | live | `kvnloo/kerdoios` | `cdb43b05a328` |
+| `limitless` | Limitless | plugin | experimental | canary | `kvnloo/limitless` | `8e939ae6b724` |
 | `memento` | Memento | memory | idea | shadow | `kvnloo/Memento` | `513a80c2ba15` |
 | `oh-my-pi` | OMP (Oh My Pi) | runtime | canary | canary | `kvnloo/oh-my-pi` | `d707478d4c5c` |
 | `tokenomics` | Tokenomics | measurement | experimental | live | `kvnloo/tokenomics` | `65e8f2dd9d6c` |
