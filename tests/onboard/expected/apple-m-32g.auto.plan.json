@@ -78,7 +78,7 @@
   "llm": "local",
   "mode": "auto",
   "pin_policy": "pinned",
-  "plan_hash": "8cc0df299988242db379239bd3f57df1516cdd1b915bdebf0834faa3b17fe07a",
+  "plan_hash": "5d95a59765f9592de91e2637a69e8fd6671aa1002f8fa4df8ef6aeadb94387e2",
   "prepared_path": [
     "/opt/homebrew/bin",
     "/usr/bin",
@@ -86,7 +86,7 @@
   ],
   "profile": "personal",
   "registry": {
-    "registry/components.yaml": "cd5a1a49e97aa911b3ba63919370956bf22b14343197d0a6b663ff43ded75a94",
+    "registry/components.yaml": "a6e52cf7be5a08d2f4d99b09df3d59589295e446262eb8fda74336d7ce1f9e00",
     "registry/harnesses.yaml": "1c2b9ba37ca974e4aa1ed1f6990561ea303fc7e1f73c0fb4c6cc4802d5b4a7b8",
     "registry/onboarding.yaml": "81fd5227e9ba0d0c90cb7a99fd21a3891bc50c3e46c210913b8af389db65fa7c",
     "registry/profiles.yaml": "8ef0b2b147bf7db252328ee9cfc981a81867bcf6533362621138bee1abd2e6eb",

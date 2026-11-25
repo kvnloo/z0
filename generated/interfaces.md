@@ -20,13 +20,21 @@
 - **Owner:** `kerdoios`
 - **Summary:** Model/provider routing decision with cost estimate.
 
+## `limitless.cron_job_spec.v0`
+- **Owner:** `limitless`
+- **Summary:** Keyword arguments for a Hermes host's cron.jobs.create_job, one per sending job (event poll, no-agent script, local delivery, window_class, stale_after_s), printed by bin/limitless-cron-spec; --check, --plan and --plan --cli compare against the host's job records and make no call.
+
 ## `limitless.state_card.v0`
 - **Owner:** `limitless`
-- **Summary:** Hermes pre_llm_call hook adding a state card of at most 6 coarse-label lines (digits masked by default).
+- **Summary:** Hermes pre_llm_call hook adding a short state card of coarse-label lines (digits masked by default).
 
 ## `limitless.tools.v0`
 - **Owner:** `limitless`
-- **Summary:** Hermes plugin tools limitless_status, limitless_state, limitless_window, limitless_habit, limitless_capture and limitless_scorecard, each returning an evidence envelope.
+- **Summary:** Hermes plugin tools listed under provides_tools in the plugin's plugin.yaml (limitless_status, limitless_state, limitless_window and the rest), each result an evidence envelope.
+
+## `limitless.window_provider.v0`
+- **Owner:** `limitless`
+- **Summary:** Provider a Hermes host takes through ctx.register_window_provider; current(now) names the open cron window_class (peak, trough, anytime, wind_down) from events, or None (asleep, focus block, unknown) so windowed jobs hold.
 
 ## `omp.session.aggregate`
 - **Owner:** `oh-my-pi`

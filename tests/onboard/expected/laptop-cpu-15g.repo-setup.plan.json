@@ -126,7 +126,7 @@
     }
   ],
   "pin_policy": "pinned",
-  "plan_hash": "e5f05ab89c1e4c6a9ddb1d8674e88baceac36c54cbb1b230b94b99042601eef3",
+  "plan_hash": "90801f82e416c2b9732b8471c910648e3e777c832585f06455539654285bf906",
   "prepared_path": [
     "$Z0_HOME/bin/links",
     "~/.bun/bin",
@@ -137,7 +137,7 @@
   "profile": "personal",
   "registry": {
     "kvnloo/z0evals@b6e3da7ad9eda4f87f9f8e94c6ab0fc97d44bb10:zer0.repo.yaml": "5e642b7ecd24468cbd4f0d28d222393226487c9e07fcebb8f5ba9df0771b56d0",
-    "registry/components.yaml": "cd5a1a49e97aa911b3ba63919370956bf22b14343197d0a6b663ff43ded75a94",
+    "registry/components.yaml": "a6e52cf7be5a08d2f4d99b09df3d59589295e446262eb8fda74336d7ce1f9e00",
     "registry/harnesses.yaml": "1c2b9ba37ca974e4aa1ed1f6990561ea303fc7e1f73c0fb4c6cc4802d5b4a7b8",
     "registry/onboarding.yaml": "81fd5227e9ba0d0c90cb7a99fd21a3891bc50c3e46c210913b8af389db65fa7c",
     "registry/profiles.yaml": "8ef0b2b147bf7db252328ee9cfc981a81867bcf6533362621138bee1abd2e6eb",

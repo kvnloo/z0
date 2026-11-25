@@ -36,22 +36,34 @@
 - **Purpose:** Bound agent execution with explicit capability rules, evidence requirements, staged promotion, adversarial verification, rollback, and non-self-authorizing evolution.
 - **Implemented by:** `kvnloo/hermes-keel`
 
+## `limitless-cron-job-spec` — Windowed cron job spec
+- **Kind:** contract
+- **Stage:** experimental
+- **Purpose:** Derive the host cron job each sending job would be (an interval that only polls for events, a script run with no agent turn, local delivery so the send gate stays the only sender, and the job's window class and staleness), then compare it with the host's job records as a verdict per job, a plan of create and update calls, or the host's own CLI lines. It never creates, resumes or deletes a job.
+- **Implemented by:** `limitless`
+
 ## `limitless-decision-window-gate` — Decision-window gate
 - **Kind:** interaction
 - **Stage:** experimental
-- **Purpose:** Let a proactive job declare a window class (peak, trough, wind_down, anytime) and return deliver, hold or drop with a one-line reason from the window a pluggable provider reports from events, never from clock times.
+- **Purpose:** Let a proactive job declare a window class (peak, trough, wind_down, anytime) and return deliver, hold or drop with a one-line reason from the window a pluggable provider reports from events, never from clock times. On a host whose cron gate takes a window provider, the same window is registered as that provider; asleep, a focus block or an unknown window hold every windowed job.
 - **Implemented by:** `limitless`
 
 ## `limitless-evidence-envelope` — Evidence envelope
 - **Kind:** evidence
 - **Stage:** experimental
-- **Purpose:** Return every tool value as {value, modality, age_h, evidence_tier}, with modality measured, imported, proxy or self_report and a tier label (direct, indirect, stale, none); missing data is a null value with a reason, never a guess.
+- **Purpose:** Return every tool value as {value, modality, age_h, evidence_tier}, with modality measured, imported, proxy, self_report or messages and a tier label (direct, indirect, stale, none); missing data is a null value with a reason, never a guess, and an optional label beside the value never changes those fields.
+- **Implemented by:** `limitless`
+
+## `limitless-message-shape` — Push message shape
+- **Kind:** interaction
+- **Stage:** experimental
+- **Purpose:** Keep every push short with the most important line first: the first line (the TLDR) stays in place, the closing reply-choices line and the "Why now" line are never folded or cut, extra middle lines fold into one line said in words, and a long line is cut at a word boundary unless it carries a link. Nothing is reworded and no digit is added; a message that already fits is unchanged.
 - **Implemented by:** `limitless`
 
 ## `limitless-send-gate` — Proactive send gate
 - **Kind:** interaction
 - **Stage:** experimental
-- **Purpose:** Pass every proactive push through one policy: drop repeats of the same message within 12 h, enforce a daily cap, hold non-critical sends while asleep, fold repeated pending-asks into one brief line, and strip internal card ids.
+- **Purpose:** Pass every proactive push through one policy: drop a repeat of the same message inside the dedupe window and a second send for an event key already claimed, enforce a daily cap, drop every push while pushes are muted, hold non-critical sends while asleep or outside the job's decision window, fold pending-asks into the brief, strip internal card ids, and end each push with one plain-words "Why now" line.
 - **Implemented by:** `limitless`
 
 ## `mesh-signed-intent-transport` — Signed Mesh intent transport

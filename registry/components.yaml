@@ -547,8 +547,11 @@ components:
     execution: canary
     owner: Personal Intelligence
     summary: >
-      Hermes Agent plugin for the Limitless Protocol: read-mostly state tools,
-      a coarse pre_llm_call state card, and one gated send path for proactive messages.
+      Hermes Agent plugin for the Limitless Protocol: read-mostly state tools whose
+      every result is an evidence envelope, a coarse pre_llm_call state card, one send
+      gate and message shape for every proactive push, a decision-window provider for
+      the host's cron gate, and dry-run cron job specs for each sending job; operator
+      commands include a sender probe and a FIT ride import from a drop folder.
     required: false
     profiles: []
     depends_on: []
@@ -556,11 +559,13 @@ components:
     provides:
       - limitless.tools.v0
       - limitless.state_card.v0
+      - limitless.window_provider.v0
+      - limitless.cron_job_spec.v0
     consumes: []
     install:
       clone: https://github.com/kvnloo/limitless.git
       branch: main
-      ref: 8e939ae6b724ed882dd075b9fe92c5a13052aeb5
+      ref: 795dffba70092ba1ff3a27bb7837a0b699d80e0e
       command: echo 'Hermes directory plugin — place the repo at the Hermes plugins dir as limitless and enable it; see README'
     verify:
       command: python3 -I -m unittest discover -s tests
@@ -568,8 +573,9 @@ components:
       readme: README.md
       architecture: docs/decision-window.md
     boundaries:
-      owns: [limitless state tools, state card hook, send gate, decision windows, evidence envelope]
-      not_here: [wearable/phone data collection, message transport, harness runtime]
+      owns: [limitless state tools, state card hook, evidence envelope, send gate, message shape,
+             decision windows, cron window provider, cron job specs, sender probe, FIT ride import]
+      not_here: [wearable/phone data collection, message transport, host cron scheduler, harness runtime]
     onboard:
       gate: generic
       requires: {tools: ["git", "python>=3.9"]}
