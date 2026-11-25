@@ -9,6 +9,7 @@
 | `flow` |  |  |  | yes |  |  | yes |
 | `frontier-kb` |  |  |  |  |  | yes | yes |
 | `kerdoios` |  |  |  |  | yes |  | yes |
+| `limitless` |  |  |  |  |  |  |  |
 | `memento` |  |  |  |  |  |  |  |
 | `oh-my-pi` | yes | yes | yes | yes | yes |  | yes |
 | `tokenomics` |  | yes | yes | yes | yes | yes | yes |

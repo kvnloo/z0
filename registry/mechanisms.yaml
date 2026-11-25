@@ -283,3 +283,102 @@ mechanisms:
       - repo: kvnloo/z0archy
     evidence:
       - kvnloo/z0archy:README.md#slow-hierarchy-meta-learning
+
+  # limitless entries below were read at kvnloo/limitless 795dffba70092ba1ff3a27bb7837a0b699d80e0e.
+  limitless-decision-window-gate:
+    name: Decision-window gate
+    kind: interaction
+    stage: experimental
+    purpose: >
+      Let a proactive job declare a window class (peak, trough, wind_down, anytime)
+      and return deliver, hold or drop with a one-line reason from the window a
+      pluggable provider reports from events, never from clock times. On a host
+      whose cron gate takes a window provider, the same window is registered as
+      that provider; asleep, a focus block or an unknown window hold every windowed job.
+    implemented_by:
+      - component: limitless
+        repo: kvnloo/limitless
+    evidence:
+      - kvnloo/limitless:limitless/decision_window.py
+      - kvnloo/limitless:limitless/window_provider.py
+      - kvnloo/limitless:docs/decision-window.md#hermes-cron-window-provider
+      - kvnloo/limitless:tests/test_decision_window.py
+      - kvnloo/limitless:tests/test_send_gate_window.py
+      - kvnloo/limitless:tests/test_window_provider.py
+
+  limitless-send-gate:
+    name: Proactive send gate
+    kind: interaction
+    stage: experimental
+    purpose: >
+      Pass every proactive push through one policy: drop a repeat of the same message
+      inside the dedupe window and a second send for an event key already claimed,
+      enforce a daily cap, drop every push while pushes are muted, hold non-critical
+      sends while asleep or outside the job's decision window, fold pending-asks into
+      the brief, strip internal card ids, and end each push with one plain-words
+      "Why now" line.
+    implemented_by:
+      - component: limitless
+        repo: kvnloo/limitless
+    evidence:
+      - kvnloo/limitless:limitless/send_gate.py
+      - kvnloo/limitless:tests/test_send_gate.py
+      - kvnloo/limitless:tests/test_send_gate_once.py
+      - kvnloo/limitless:tests/test_send_gate_quiet.py
+
+  limitless-message-shape:
+    name: Push message shape
+    kind: interaction
+    stage: experimental
+    purpose: >
+      Keep every push short with the most important line first: the first line (the
+      TLDR) stays in place, the closing reply-choices line and the "Why now" line are
+      never folded or cut, extra middle lines fold into one line said in words, and a
+      long line is cut at a word boundary unless it carries a link. Nothing is
+      reworded and no digit is added; a message that already fits is unchanged.
+    implemented_by:
+      - component: limitless
+        repo: kvnloo/limitless
+    evidence:
+      - kvnloo/limitless:limitless/message_shape.py
+      - kvnloo/limitless:docs/message-shape.md
+      - kvnloo/limitless:tests/test_message_shape.py
+      - kvnloo/limitless:tests/test_message_shape_push.py
+
+  limitless-cron-job-spec:
+    name: Windowed cron job spec
+    kind: contract
+    stage: experimental
+    purpose: >
+      Derive the host cron job each sending job would be (an interval that only polls
+      for events, a script run with no agent turn, local delivery so the send gate
+      stays the only sender, and the job's window class and staleness), then compare
+      it with the host's job records as a verdict per job, a plan of create and update
+      calls, or the host's own CLI lines. It never creates, resumes or deletes a job.
+    implemented_by:
+      - component: limitless
+        repo: kvnloo/limitless
+    evidence:
+      - kvnloo/limitless:limitless/cron_spec.py
+      - kvnloo/limitless:bin/limitless-cron-spec
+      - kvnloo/limitless:docs/decision-window.md#creating-the-jobs-on-a-patched-host
+      - kvnloo/limitless:tests/test_cron_spec.py
+      - kvnloo/limitless:tests/test_cron_records_diff.py
+      - kvnloo/limitless:tests/test_cron_update_plan.py
+      - kvnloo/limitless:tests/test_cron_plan_cli.py
+
+  limitless-evidence-envelope:
+    name: Evidence envelope
+    kind: evidence
+    stage: experimental
+    purpose: >
+      Return every tool value as {value, modality, age_h, evidence_tier}, with
+      modality measured, imported, proxy, self_report or messages and a tier label
+      (direct, indirect, stale, none); missing data is a null value with a reason,
+      never a guess, and an optional label beside the value never changes those fields.
+    implemented_by:
+      - component: limitless
+        repo: kvnloo/limitless
+    evidence:
+      - kvnloo/limitless:limitless/envelope.py
+      - kvnloo/limitless:tests/test_envelope.py

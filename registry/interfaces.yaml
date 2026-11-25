@@ -44,3 +44,19 @@ interfaces:
   agenttrace.span.v0:
     owner: agenttrace
     summary: Historical agent span for observability export.
+
+  limitless.tools.v0:
+    owner: limitless
+    summary: Hermes plugin tools listed under provides_tools in the plugin's plugin.yaml (limitless_status, limitless_state, limitless_window and the rest), each result an evidence envelope.
+
+  limitless.state_card.v0:
+    owner: limitless
+    summary: Hermes pre_llm_call hook adding a short state card of coarse-label lines (digits masked by default).
+
+  limitless.window_provider.v0:
+    owner: limitless
+    summary: Provider a Hermes host takes through ctx.register_window_provider; current(now) names the open cron window_class (peak, trough, anytime, wind_down) from events, or None (asleep, focus block, unknown) so windowed jobs hold.
+
+  limitless.cron_job_spec.v0:
+    owner: limitless
+    summary: Keyword arguments for a Hermes host's cron.jobs.create_job, one per sending job (event poll, no-agent script, local delivery, window_class, stale_after_s), printed by bin/limitless-cron-spec; --check, --plan and --plan --cli compare against the host's job records and make no call.
